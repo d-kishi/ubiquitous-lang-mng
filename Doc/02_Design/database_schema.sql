@@ -13,20 +13,19 @@
 
 -- Users: システム利用者の認証・権限情報管理
 CREATE TABLE Users (
-    UserId BIGINT PRIMARY KEY AUTOINCREMENT,  -- ユーザーID（主キー）
+    UserId BIGINT PRIMARY KEY IDENTITY,  -- ユーザーID（主キー）
     Email NVARCHAR(254) NOT NULL UNIQUE,     -- メールアドレス（ログインID）
     PasswordHash NVARCHAR(255) NOT NULL,     -- パスワードハッシュ値
     Name NVARCHAR(50) NOT NULL,              -- ユーザー氏名
     UserRole NVARCHAR(20) NOT NULL           -- ユーザーロール
         CHECK (UserRole IN ('SuperUser', 'ProjectManager', 'DomainApprover', 'GeneralUser')),
-    IsActive BOOLEAN NOT NULL DEFAULT 1,     -- アクティブフラグ
-    IsFirstLogin BOOLEAN NOT NULL DEFAULT 1, -- 初回ログインフラグ
+    IsActive BIT NOT NULL DEFAULT 1,     -- アクティブフラグ
+    IsFirstLogin BIT NOT NULL DEFAULT 1, -- 初回ログインフラグ
     PasswordResetToken NVARCHAR(255),        -- パスワードリセットトークン
-    PasswordResetExpiry DATETIME,            -- リセットトークン有効期限
+    PasswordResetExpiry DATETIME2(7),            -- リセットトークン有効期限
     UpdatedBy BIGINT NOT NULL,               -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
-    IsDeleted BOOLEAN NOT NULL DEFAULT 0,    -- 論理削除フラグ
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId)
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    IsDeleted BIT NOT NULL DEFAULT 0,    -- 論理削除フラグ
 );
 
 -- Usersテーブルコメント
@@ -50,13 +49,12 @@ COMMENT ON COLUMN Users.IsDeleted IS '論理削除フラグ（0:有効、1:削�
 
 -- Projects: プロジェクト情報の管理
 CREATE TABLE Projects (
-    ProjectId BIGINT PRIMARY KEY AUTOINCREMENT, -- プロジェクトID（主キー）
+    ProjectId BIGINT PRIMARY KEY IDENTITY, -- プロジェクトID（主キー）
     ProjectName NVARCHAR(50) NOT NULL UNIQUE,   -- プロジェクト名（システム内一意）
     Description NVARCHAR(200),                  -- プロジェクト説明
     UpdatedBy BIGINT NOT NULL,                  -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
-    IsDeleted BOOLEAN NOT NULL DEFAULT 0,       -- 論理削除フラグ
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId)
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    IsDeleted BIT NOT NULL DEFAULT 0,       -- 論理削除フラグ
 );
 
 -- Projectsテーブルコメント
@@ -74,15 +72,14 @@ COMMENT ON COLUMN Projects.IsDeleted IS '論理削除フラグ（0:有効、1:�
 
 -- Domains: プロジェクト内ドメイン分類の管理
 CREATE TABLE Domains (
-    DomainId BIGINT PRIMARY KEY AUTOINCREMENT, -- ドメインID（主キー）
+    DomainId BIGINT PRIMARY KEY IDENTITY, -- ドメインID（主キー）
     ProjectId BIGINT NOT NULL,                 -- 所属プロジェクトID
     DomainName NVARCHAR(30) NOT NULL,          -- ドメイン名
     Description NVARCHAR(200),                 -- ドメイン説明
     UpdatedBy BIGINT NOT NULL,                 -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
-    IsDeleted BOOLEAN NOT NULL DEFAULT 0,      -- 論理削除フラグ
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    IsDeleted BIT NOT NULL DEFAULT 0,      -- 論理削除フラグ
     FOREIGN KEY (ProjectId) REFERENCES Projects(ProjectId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
     UNIQUE (ProjectId, DomainName)             -- プロジェクト内ドメイン名一意制約
 );
 
@@ -102,7 +99,7 @@ COMMENT ON COLUMN Domains.IsDeleted IS '論理削除フラグ（0:有効、1:削
 
 -- DraftUbiquitousLang: 編集中・承認申請中のユビキタス言語管理
 CREATE TABLE DraftUbiquitousLang (
-    DraftUbiquitousLangId BIGINT PRIMARY KEY AUTOINCREMENT, -- ドラフトユビキタス言語ID（主キー）
+    DraftUbiquitousLangId BIGINT PRIMARY KEY IDENTITY, -- ドラフトユビキタス言語ID（主キー）
     DomainId BIGINT NOT NULL,                    -- 所属ドメインID
     JapaneseName NVARCHAR(30) NOT NULL,          -- 和名（必須）
     EnglishName NVARCHAR(50),                    -- 英名（任意、半角英数・ハイフン・アンダースコア）
@@ -112,15 +109,14 @@ CREATE TABLE DraftUbiquitousLang (
     Status NVARCHAR(20) NOT NULL DEFAULT 'Draft' -- 状態
         CHECK (Status IN ('Draft', 'PendingApproval')),
     ApplicantId BIGINT,                          -- 申請者ID
-    ApplicationDate DATETIME,                    -- 申請日時
+    ApplicationDate DATETIME2(7),                    -- 申請日時
     RejectionReason NVARCHAR(500),               -- 却下理由
     SourceFormalUbiquitousLangId BIGINT,         -- 編集元正式ユビキタス言語ID
     UpdatedBy BIGINT NOT NULL,                   -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
     FOREIGN KEY (DomainId) REFERENCES Domains(DomainId),
     FOREIGN KEY (ApplicantId) REFERENCES Users(UserId),
     FOREIGN KEY (SourceFormalUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId)
 );
 
 -- DraftUbiquitousLangテーブルコメント
@@ -146,7 +142,7 @@ COMMENT ON COLUMN DraftUbiquitousLang.UpdatedAt IS '最終更新日時';
 
 -- FormalUbiquitousLang: 承認済み確定ユビキタス言語の管理
 CREATE TABLE FormalUbiquitousLang (
-    FormalUbiquitousLangId BIGINT PRIMARY KEY AUTOINCREMENT, -- 正式ユビキタス言語ID（主キー）
+    FormalUbiquitousLangId BIGINT PRIMARY KEY IDENTITY, -- 正式ユビキタス言語ID（主キー）
     DomainId BIGINT NOT NULL,                    -- 所属ドメインID
     JapaneseName NVARCHAR(30) NOT NULL,          -- 和名（必須）
     EnglishName NVARCHAR(50) NOT NULL,           -- 英名（必須）
@@ -154,10 +150,9 @@ CREATE TABLE FormalUbiquitousLang (
     OccurrenceContext NVARCHAR(50),              -- 発生機会（任意）
     Remarks NVARCHAR(500),                       -- 備考（任意、改行可能）
     UpdatedBy BIGINT NOT NULL,                   -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
-    IsDeleted BOOLEAN NOT NULL DEFAULT 0,        -- 論理削除フラグ
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    IsDeleted BIT NOT NULL DEFAULT 0,        -- 論理削除フラグ
     FOREIGN KEY (DomainId) REFERENCES Domains(DomainId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId)
 );
 
 -- FormalUbiquitousLangテーブルコメント
@@ -179,14 +174,13 @@ COMMENT ON COLUMN FormalUbiquitousLang.IsDeleted IS '論理削除フラグ（0:�
 
 -- UserProjects: ユーザーとプロジェクトの多対多関連
 CREATE TABLE UserProjects (
-    UserProjectId BIGINT PRIMARY KEY AUTOINCREMENT, -- ユーザープロジェクトID（主キー）
+    UserProjectId BIGINT PRIMARY KEY IDENTITY, -- ユーザープロジェクトID（主キー）
     UserId BIGINT NOT NULL,                         -- ユーザーID
     ProjectId BIGINT NOT NULL,                      -- プロジェクトID
     UpdatedBy BIGINT NOT NULL,                      -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
     FOREIGN KEY (UserId) REFERENCES Users(UserId),
     FOREIGN KEY (ProjectId) REFERENCES Projects(ProjectId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
     UNIQUE (UserId, ProjectId)                      -- ユーザー・プロジェクト組み合わせ一意制約
 );
 
@@ -200,14 +194,13 @@ COMMENT ON COLUMN UserProjects.UpdatedAt IS '最終更新日時';
 
 -- DomainApprovers: ドメイン承認者の管理
 CREATE TABLE DomainApprovers (
-    DomainApproverId BIGINT PRIMARY KEY AUTOINCREMENT, -- ドメイン承認者ID（主キー）
+    DomainApproverId BIGINT PRIMARY KEY IDENTITY, -- ドメイン承認者ID（主キー）
     DomainId BIGINT NOT NULL,                         -- ドメインID
     ApproverId BIGINT NOT NULL,                       -- 承認者ユーザーID
     UpdatedBy BIGINT NOT NULL,                        -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
     FOREIGN KEY (DomainId) REFERENCES Domains(DomainId),
     FOREIGN KEY (ApproverId) REFERENCES Users(UserId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
     UNIQUE (DomainId, ApproverId)                     -- ドメイン・承認者組み合わせ一意制約
 );
 
@@ -225,14 +218,13 @@ COMMENT ON COLUMN DomainApprovers.UpdatedAt IS '最終更新日時';
 
 -- RelatedUbiquitousLang: ユビキタス言語間の関連性管理
 CREATE TABLE RelatedUbiquitousLang (
-    RelatedUbiquitousLangId BIGINT PRIMARY KEY AUTOINCREMENT, -- 関連ユビキタス言語ID（主キー）
+    RelatedUbiquitousLangId BIGINT PRIMARY KEY IDENTITY, -- 関連ユビキタス言語ID（主キー）
     SourceUbiquitousLangId BIGINT NOT NULL,             -- 関連元ユビキタス言語ID
     TargetUbiquitousLangId BIGINT NOT NULL,             -- 関連先ユビキタス言語ID
     UpdatedBy BIGINT NOT NULL,                          -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
     FOREIGN KEY (SourceUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
     FOREIGN KEY (TargetUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
     UNIQUE (SourceUbiquitousLangId, TargetUbiquitousLangId) -- 同一関連の重複防止
 );
 
@@ -250,14 +242,13 @@ COMMENT ON COLUMN RelatedUbiquitousLang.UpdatedAt IS '最終更新日時';
 
 -- DraftUbiquitousLangRelations: ドラフトユビキタス言語間の関連性管理
 CREATE TABLE DraftUbiquitousLangRelations (
-    DraftUbiquitousLangRelationId BIGINT PRIMARY KEY AUTOINCREMENT, -- ドラフト関連ID（主キー）
+    DraftUbiquitousLangRelationId BIGINT PRIMARY KEY IDENTITY, -- ドラフト関連ID（主キー）
     SourceDraftUbiquitousLangId BIGINT NOT NULL,        -- 関連元ドラフトユビキタス言語ID
     TargetFormalUbiquitousLangId BIGINT NOT NULL,       -- 関連先正式ユビキタス言語ID
     UpdatedBy BIGINT NOT NULL,                          -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
+    UpdatedAt DATETIME2(7) NOT NULL DEFAULT CURRENT_TIMESTAMP, -- 最終更新日時
     FOREIGN KEY (SourceDraftUbiquitousLangId) REFERENCES DraftUbiquitousLang(DraftUbiquitousLangId),
     FOREIGN KEY (TargetFormalUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
     UNIQUE (SourceDraftUbiquitousLangId, TargetFormalUbiquitousLangId) -- 同一関連の重複防止
 );
 
@@ -275,7 +266,7 @@ COMMENT ON COLUMN DraftUbiquitousLangRelations.UpdatedAt IS '最終更新日時'
 
 -- FormalUbiquitousLangHistory: 正式ユビキタス言語の変更履歴管理
 CREATE TABLE FormalUbiquitousLangHistory (
-    HistoryId BIGINT PRIMARY KEY AUTOINCREMENT,      -- 履歴ID（主キー）
+    HistoryId BIGINT PRIMARY KEY IDENTITY,      -- 履歴ID（主キー）
     FormalUbiquitousLangId BIGINT NOT NULL,          -- 対象正式ユビキタス言語ID
     DomainId BIGINT NOT NULL,                        -- 所属ドメインID
     JapaneseName NVARCHAR(30) NOT NULL,              -- 和名（必須）
@@ -283,15 +274,12 @@ CREATE TABLE FormalUbiquitousLangHistory (
     Description NVARCHAR(500) NOT NULL,              -- 意味・説明（必須、改行可能）
     OccurrenceContext NVARCHAR(50),                  -- 発生機会（任意）
     Remarks NVARCHAR(500),                           -- 備考（任意、改行可能）
+    RelatedUbiquitousLangSnapshot TEXT,              -- 関連ユビキタス言語スナップショット（JSON形式、PostgreSQL移行時JSONB）
     UpdatedBy BIGINT NOT NULL,                       -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL,                     -- 最終更新日時
-    IsDeleted BOOLEAN NOT NULL,                      -- 論理削除フラグ
-    ArchivedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- アーカイブ日時
-    ArchivedBy BIGINT NOT NULL,                      -- アーカイブ実行者ID
+    UpdatedAt DATETIME2(7) NOT NULL,                     -- 最終更新日時
+    IsDeleted BIT NOT NULL,                      -- 論理削除フラグ
     FOREIGN KEY (FormalUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
     FOREIGN KEY (DomainId) REFERENCES Domains(DomainId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
-    FOREIGN KEY (ArchivedBy) REFERENCES Users(UserId)
 );
 
 -- FormalUbiquitousLangHistoryテーブルコメント
@@ -304,39 +292,11 @@ COMMENT ON COLUMN FormalUbiquitousLangHistory.EnglishName IS '英名（必須、
 COMMENT ON COLUMN FormalUbiquitousLangHistory.Description IS '意味・説明（必須、最大500文字、改行可能）';
 COMMENT ON COLUMN FormalUbiquitousLangHistory.OccurrenceContext IS '発生機会（任意、最大50文字）';
 COMMENT ON COLUMN FormalUbiquitousLangHistory.Remarks IS '備考（任意、最大500文字、改行可能）';
+COMMENT ON COLUMN FormalUbiquitousLangHistory.RelatedUbiquitousLangSnapshot IS '関連ユビキタス言語スナップショット（JSON形式、履歴作成時点での関連ユビキタス言語情報）';
 COMMENT ON COLUMN FormalUbiquitousLangHistory.UpdatedBy IS '最終更新者ユーザーID';
 COMMENT ON COLUMN FormalUbiquitousLangHistory.UpdatedAt IS '最終更新日時';
 COMMENT ON COLUMN FormalUbiquitousLangHistory.IsDeleted IS '論理削除フラグ（0:有効、1:削除済み）';
-COMMENT ON COLUMN FormalUbiquitousLangHistory.ArchivedAt IS 'アーカイブ日時';
-COMMENT ON COLUMN FormalUbiquitousLangHistory.ArchivedBy IS 'アーカイブ実行者ユーザーID';
 
--- RelatedUbiquitousLangHistory: 関連ユビキタス言語の変更履歴管理
-CREATE TABLE RelatedUbiquitousLangHistory (
-    HistoryId BIGINT PRIMARY KEY AUTOINCREMENT,      -- 履歴ID（主キー）
-    RelatedUbiquitousLangId BIGINT NOT NULL,         -- 対象関連ユビキタス言語ID
-    SourceUbiquitousLangId BIGINT NOT NULL,          -- 関連元ユビキタス言語ID
-    TargetUbiquitousLangId BIGINT NOT NULL,          -- 関連先ユビキタス言語ID
-    UpdatedBy BIGINT NOT NULL,                       -- 最終更新者ID
-    UpdatedAt DATETIME NOT NULL,                     -- 最終更新日時
-    ArchivedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- アーカイブ日時
-    ArchivedBy BIGINT NOT NULL,                      -- アーカイブ実行者ID
-    FOREIGN KEY (RelatedUbiquitousLangId) REFERENCES RelatedUbiquitousLang(RelatedUbiquitousLangId),
-    FOREIGN KEY (SourceUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
-    FOREIGN KEY (TargetUbiquitousLangId) REFERENCES FormalUbiquitousLang(FormalUbiquitousLangId),
-    FOREIGN KEY (UpdatedBy) REFERENCES Users(UserId),
-    FOREIGN KEY (ArchivedBy) REFERENCES Users(UserId)
-);
-
--- RelatedUbiquitousLangHistoryテーブルコメント
-COMMENT ON TABLE RelatedUbiquitousLangHistory IS '関連ユビキタス言語の変更履歴を保持、関連性変更の監査証跡を提供';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.HistoryId IS '履歴ID（主キー）';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.RelatedUbiquitousLangId IS '対象関連ユビキタス言語ID';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.SourceUbiquitousLangId IS '関連元ユビキタス言語ID';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.TargetUbiquitousLangId IS '関連先ユビキタス言語ID';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.UpdatedBy IS '最終更新者ユーザーID';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.UpdatedAt IS '最終更新日時';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.ArchivedAt IS 'アーカイブ日時';
-COMMENT ON COLUMN RelatedUbiquitousLangHistory.ArchivedBy IS 'アーカイブ実行者ユーザーID';
 
 -- ===============================================
 -- 10. インデックス作成
@@ -391,13 +351,9 @@ CREATE INDEX IX_DraftUbiquitousLangRelations_TargetFormal ON DraftUbiquitousLang
 
 -- FormalUbiquitousLangHistory テーブルインデックス
 CREATE INDEX IX_FormalUbiquitousLangHistory_FormalUbiquitousLangId ON FormalUbiquitousLangHistory(FormalUbiquitousLangId);
-CREATE INDEX IX_FormalUbiquitousLangHistory_ArchivedAt ON FormalUbiquitousLangHistory(ArchivedAt DESC);
-CREATE INDEX IX_FormalUbiquitousLangHistory_Formal_ArchivedAt ON FormalUbiquitousLangHistory(FormalUbiquitousLangId, ArchivedAt DESC);
+CREATE INDEX IX_FormalUbiquitousLangHistory_UpdatedAt ON FormalUbiquitousLangHistory(UpdatedAt DESC);
+CREATE INDEX IX_FormalUbiquitousLangHistory_Formal_UpdatedAt ON FormalUbiquitousLangHistory(FormalUbiquitousLangId, UpdatedAt DESC);
 
--- RelatedUbiquitousLangHistory テーブルインデックス
-CREATE INDEX IX_RelatedUbiquitousLangHistory_RelatedUbiquitousLangId ON RelatedUbiquitousLangHistory(RelatedUbiquitousLangId);
-CREATE INDEX IX_RelatedUbiquitousLangHistory_ArchivedAt ON RelatedUbiquitousLangHistory(ArchivedAt DESC);
-CREATE INDEX IX_RelatedUbiquitousLangHistory_Related_ArchivedAt ON RelatedUbiquitousLangHistory(RelatedUbiquitousLangId, ArchivedAt DESC);
 
 -- ===============================================
 -- 11. 初期データ挿入
@@ -426,12 +382,12 @@ VALUES (
 PostgreSQL移行時の主な変更点:
 
 1. データ型変更
-   - BIGINT → BIGSERIAL (PRIMARY KEY AUTOINCREMENT、64bit整数)
+   - BIGINT → BIGSERIAL (PRIMARY KEY IDENTITY、64bit整数)
    - BIGINT (FK) → BIGINT (外部キー、64bit整数)
    - NVARCHAR → VARCHAR
-   - BOOLEAN → BOOLEAN (PostgreSQLネイティブサポート)
-   - DATETIME → TIMESTAMP
-   - TEXT → TEXT (そのまま)
+   - BIT → BOOLEAN (PostgreSQLネイティブサポート)
+   - DATETIME2(7) → TIMESTAMP
+   - TEXT → JSONB (RelatedUbiquitousLangSnapshot列)
 
 2. 制約・インデックス
    - CHECK制約の構文確認
@@ -441,7 +397,7 @@ PostgreSQL移行時の主な変更点:
 3. 関数・機能
    - CURRENT_TIMESTAMP → NOW() または CURRENT_TIMESTAMP
    - 自動増分の仕組み（SERIAL型）
-   - JSON型の活用（FormalUbiquitousLangHistoryのデータ格納）
+   - JSONB型の活用（FormalUbiquitousLangHistoryの関連ユビキタス言語スナップショット格納）
 
 4. パフォーマンス最適化
    - インデックス戦略の見直し
@@ -450,5 +406,9 @@ PostgreSQL移行時の主な変更点:
 */
 
 -- ===============================================
--- 完了: A5:SQL Mk-2 対応データベーススキーマ（11テーブル構成）
+-- 完了: A5:SQL Mk-2 対応データベーススキーマ（10テーブル構成）
+-- 変更内容:
+-- - RelatedUbiquitousLangHistoryテーブル削除
+-- - FormalUbiquitousLangHistoryにRelatedUbiquitousLangSnapshot列追加（JSON/JSONB型）
+-- - 用語表記統一ルール適用（ADR_003準拠）
 -- ===============================================
