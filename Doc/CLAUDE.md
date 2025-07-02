@@ -18,19 +18,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **ADR_001**: 図表にMermaid記法を採用
 - **ADR_002**: MermaidのER図記法統一
 - **ADR_004**: コミュニケーション課題状態管理システム
+- **ADR_005**: PostgreSQL Docker Container採用（データ移行コスト削除）
 
 ### データベース設計
-- **開発環境**: SQLite（軽量セットアップ）
-- **本番環境**: PostgreSQL（部門承認待ち）
+- **全環境共通**: PostgreSQL（Docker Container → クラウドDBサービス）
+- **データ移行**: 不要（全環境PostgreSQL統一により）
 - **アーキテクチャ**: Clean Architectureによるレイヤード構造
 - **データ階層**: 組織 → プロジェクト → ドメイン → ユビキタス言語
+- **PostgreSQL最適化**: TIMESTAMPTZ、JSONB、GINインデックス等固有機能活用
 
 ## コミュニケーション・セッション管理
 
-### 🔴 セッション開始時必読（2-3分）
-1. `/Doc/06_Issues/コミュニケーション改善課題.md` - コミュニケーション課題と改善策
-2. `/Doc/03_Meetings/申し送り事項.md` - プロジェクト状況と次回予定
-3. `/Doc/04_Daily/` 直近3日 - 継続課題・未完了事項
+### 🔴 セッション開始時必読（5分以内・標準プロセス）
+**毎セッション開始時に必ず以下の順序で実施**:
+1. `/Doc/Claude.md` - プロジェクト概要・技術構成・フェーズ状況
+2. `/Doc/Readme.md` - ドキュメント管理体制・読み込みガイド
+3. `/Doc/06_Issues/コミュニケーション改善課題.md` - コミュニケーション課題と改善策
+4. `/Doc/03_Meetings/申し送り事項.md` - プロジェクト状況と次回予定
+5. `/Doc/04_Daily/` 直近3日の作業記録 - 継続課題・未完了事項確認
 
 ### 🟡 フェーズ依存読み込み（2分、作業内容により選択）
 - `/Doc/07_Decisions/ADR_XXX_*.md` - 関連するアーキテクチャ決定
