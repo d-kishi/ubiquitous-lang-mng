@@ -31,7 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 🔴 セッション開始時必読（5分以内・標準プロセス）
 **毎セッション開始時に必ず以下の順序で実施**:
-1. `/Doc/Claude.md` - プロジェクト概要・技術構成・フェーズ状況
+1. `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況
 2. `/Doc/Readme.md` - ドキュメント管理体制・読み込みガイド
 3. `/Doc/06_Issues/コミュニケーション改善課題.md` - コミュニケーション課題と改善策
 4. `/Doc/03_Meetings/申し送り事項.md` - プロジェクト状況と次回予定
