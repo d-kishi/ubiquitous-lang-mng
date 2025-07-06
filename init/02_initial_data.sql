@@ -2,7 +2,9 @@
 -- ユビキタス言語管理システム 初期データ投入
 -- 
 -- 作成日: 2025-07-06
+-- 最終更新: 2025-07-06
 -- 目的: 開発・テスト用初期データセットアップ
+-- 用語統一: ADR_003準拠（UbiquitousLang表記）
 -- ===============================================
 
 -- ===============================================
@@ -96,38 +98,22 @@ INSERT INTO Users (
 -- ECサイト構築プロジェクト
 INSERT INTO Projects (
     ProjectName,
-    ProjectDescription,
-    ProjectManager,
-    StartDate,
-    EndDate,
-    ProjectStatus,
+    Description,
     UpdatedBy
 ) VALUES (
     'ECサイト構築プロジェクト',
     'オンライン販売システムの構築プロジェクト',
-    2, -- project.manager@ubiquitous-lang.com
-    '2025-01-01',
-    '2025-12-31',
-    'Active',
     1
 );
 
 -- 顧客管理システム
 INSERT INTO Projects (
     ProjectName,
-    ProjectDescription,
-    ProjectManager,
-    StartDate,
-    EndDate,
-    ProjectStatus,
+    Description,
     UpdatedBy
 ) VALUES (
     '顧客管理システム',
     'CRM機能を持つ顧客管理システムの開発',
-    2, -- project.manager@ubiquitous-lang.com
-    '2025-02-01',
-    '2025-11-30',
-    'Active',
     1
 );
 
@@ -139,16 +125,12 @@ INSERT INTO Projects (
 INSERT INTO Domains (
     ProjectId,
     DomainName,
-    DomainDescription,
-    DomainApprover,
-    DomainStatus,
+    Description,
     UpdatedBy
 ) VALUES (
     1, -- ECサイト構築プロジェクト
     '商品管理',
     '商品カタログ、在庫管理、価格設定に関するドメイン',
-    3, -- domain.approver@ubiquitous-lang.com
-    'Active',
     1
 );
 
@@ -156,16 +138,12 @@ INSERT INTO Domains (
 INSERT INTO Domains (
     ProjectId,
     DomainName,
-    DomainDescription,
-    DomainApprover,
-    DomainStatus,
+    Description,
     UpdatedBy
 ) VALUES (
     1, -- ECサイト構築プロジェクト
     '注文管理',
     '注文処理、決済、配送に関するドメイン',
-    3, -- domain.approver@ubiquitous-lang.com
-    'Active',
     1
 );
 
@@ -173,16 +151,12 @@ INSERT INTO Domains (
 INSERT INTO Domains (
     ProjectId,
     DomainName,
-    DomainDescription,
-    DomainApprover,
-    DomainStatus,
+    Description,
     UpdatedBy
 ) VALUES (
     2, -- 顧客管理システム
     '顧客情報管理',
     '顧客の基本情報、連絡先、履歴管理に関するドメイン',
-    3, -- domain.approver@ubiquitous-lang.com
-    'Active',
     1
 );
 
@@ -194,31 +168,28 @@ INSERT INTO Domains (
 INSERT INTO UserProjects (
     UserId,
     ProjectId,
-    Role,
     UpdatedBy
 ) VALUES 
-(2, 1, 'ProjectManager', 1), -- ECサイト構築プロジェクト
-(2, 2, 'ProjectManager', 1); -- 顧客管理システム
+(2, 1, 1), -- ECサイト構築プロジェクト
+(2, 2, 1); -- 顧客管理システム
 
 -- ドメイン承認者をプロジェクトに割り当て
 INSERT INTO UserProjects (
     UserId,
     ProjectId,
-    Role,
     UpdatedBy
 ) VALUES 
-(3, 1, 'DomainApprover', 1), -- ECサイト構築プロジェクト
-(3, 2, 'DomainApprover', 1); -- 顧客管理システム
+(3, 1, 1), -- ECサイト構築プロジェクト
+(3, 2, 1); -- 顧客管理システム
 
 -- 一般ユーザーをプロジェクトに割り当て
 INSERT INTO UserProjects (
     UserId,
     ProjectId,
-    Role,
     UpdatedBy
 ) VALUES 
-(4, 1, 'GeneralUser', 1), -- ECサイト構築プロジェクト
-(4, 2, 'GeneralUser', 1); -- 顧客管理システム
+(4, 1, 1), -- ECサイト構築プロジェクト
+(4, 2, 1); -- 顧客管理システム
 
 -- ===============================================
 -- 6. ドメイン承認者設定
@@ -235,75 +206,67 @@ INSERT INTO DomainApprovers (
 (3, 3, 1); -- 顧客情報管理ドメイン
 
 -- ===============================================
--- 7. サンプルドラフトユビキタス言語作成
+-- 7. サンプルドラフトユビキタス言語作成（ADR_003準拠）
 -- ===============================================
 
--- 商品管理ドメイン - ドラフト用語
+-- 商品管理ドメイン - ドラフトユビキタス言語
 INSERT INTO DraftUbiquitousLang (
     DomainId,
-    Term,
-    Definition,
-    Context,
-    ExampleUsage,
-    RelatedConcepts,
-    Notes,
+    JapaneseName,
+    EnglishName,
+    Description,
+    OccurrenceContext,
+    Remarks,
     Status,
-    CreatedBy,
     UpdatedBy
 ) VALUES 
-(1, '商品', '販売対象となる物品またはサービス', 'ECサイトにおける販売アイテム', '「この商品は在庫切れです」', 'SKU、在庫、価格', 'デジタル商品と物理商品を区別する', 'Draft', 4, 4),
-(1, 'SKU', '商品の識別コード（Stock Keeping Unit）', '在庫管理と商品識別', '「SKU: ABC-123-XYZ」', '商品、在庫、バリエーション', 'システム内で一意である必要がある', 'Draft', 4, 4),
-(1, '在庫', '販売可能な商品の数量', '在庫管理システム', '「在庫数：50個」', '商品、SKU、入荷、出荷', '予約在庫と実在庫を区別', 'Draft', 4, 4);
+(1, '商品', 'Product', '販売対象となる物品またはサービス', 'ECサイトにおける販売アイテム', 'デジタル商品と物理商品を区別する', 'editing', 4),
+(1, 'SKU', 'StockKeepingUnit', '商品の識別コード（Stock Keeping Unit）', '在庫管理と商品識別', 'システム内で一意である必要がある', 'editing', 4),
+(1, '在庫', 'Inventory', '販売可能な商品の数量', '在庫管理システム', '予約在庫と実在庫を区別', 'editing', 4);
 
--- 注文管理ドメイン - ドラフト用語
+-- 注文管理ドメイン - ドラフトユビキタス言語
 INSERT INTO DraftUbiquitousLang (
     DomainId,
-    Term,
-    Definition,
-    Context,
-    ExampleUsage,
-    RelatedConcepts,
-    Notes,
+    JapaneseName,
+    EnglishName,
+    Description,
+    OccurrenceContext,
+    Remarks,
     Status,
-    CreatedBy,
     UpdatedBy
 ) VALUES 
-(2, '注文', '顧客による商品の購入依頼', '注文処理システム', '「注文番号：ORD-2025-001」', '顧客、商品、決済', '注文確定後のキャンセル処理を含む', 'Draft', 4, 4),
-(2, 'カート', '注文前の商品一時保管領域', 'オンラインショッピング', '「カートに追加」', '商品、セッション、注文', 'セッション終了時の保持期間を定義', 'Draft', 4, 4);
+(2, '注文', 'Order', '顧客による商品の購入依頼', '注文処理システム', '注文確定後のキャンセル処理を含む', 'editing', 4),
+(2, 'カート', 'ShoppingCart', '注文前の商品一時保管領域', 'オンラインショッピング', 'セッション終了時の保持期間を定義', 'editing', 4);
 
 -- ===============================================
--- 8. サンプル正式ユビキタス言語作成
+-- 8. サンプル正式ユビキタス言語作成（ADR_003準拠）
 -- ===============================================
 
--- 承認済み用語の例
+-- 承認済みユビキタス言語の例
 INSERT INTO FormalUbiquitousLang (
     DomainId,
-    Term,
-    Definition,
-    Context,
-    ExampleUsage,
-    RelatedConcepts,
-    Notes,
-    ApprovedBy,
-    SourceDraftId,
+    JapaneseName,
+    EnglishName,
+    Description,
+    OccurrenceContext,
+    Remarks,
     UpdatedBy
 ) VALUES 
-(3, '顧客', 'サービスを利用する個人または法人', '顧客管理システム', '「顧客ID：CUST-001」', '会員、ユーザー、取引先', '見込み客と既存客を区別', 3, null, 3),
-(3, 'リード', '見込み客となる可能性のある潜在顧客', '営業管理', '「リード獲得数：100件」', '顧客、見込み客、商談', 'マーケティング活動で獲得', 3, null, 3);
+(3, '顧客', 'Customer', 'サービスを利用する個人または法人', '顧客管理システム', '見込み客と既存客を区別', 1),
+(3, 'リード', 'Lead', '見込み客となる可能性のある潜在顧客', '営業管理', 'マーケティング活動で獲得', 1);
 
 -- ===============================================
--- 9. 関連ユビキタス言語設定
+-- 9. 関連ユビキタス言語設定（ADR_003準拠）
 -- ===============================================
 
--- 正式用語間の関連性
+-- 正式ユビキタス言語間の関連性
 INSERT INTO RelatedUbiquitousLang (
     SourceFormalUbiquitousLangId,
     TargetFormalUbiquitousLangId,
     RelationType,
-    RelationDescription,
     UpdatedBy
 ) VALUES 
-(1, 2, '発展関係', 'リードが顧客に発展する可能性がある', 3);
+(2, 1, 'child', 1); -- リードが顧客の子概念
 
 -- ===============================================
 -- 10. 完了メッセージ
@@ -315,7 +278,8 @@ BEGIN
     RAISE NOTICE '作成ユーザー数: 4';
     RAISE NOTICE '作成プロジェクト数: 2';
     RAISE NOTICE '作成ドメイン数: 3';
-    RAISE NOTICE '作成ドラフト用語数: 5';
-    RAISE NOTICE '作成正式用語数: 2';
+    RAISE NOTICE '作成ドラフトユビキタス言語数: 5';
+    RAISE NOTICE '作成正式ユビキタス言語数: 2';
     RAISE NOTICE 'デフォルトパスワード: admin123';
+    RAISE NOTICE '用語統一: ADR_003準拠（UbiquitousLang表記）';
 END $$;

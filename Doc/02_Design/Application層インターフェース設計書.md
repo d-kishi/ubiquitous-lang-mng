@@ -256,7 +256,7 @@ public interface IUserManagementService
 
 public record GetUsersQuery : PageQuery
 {
-    public string? SearchTerm { get; init; }
+    public string? SearchKeyword { get; init; }
     public UserRole? Role { get; init; }
     public bool? IsActive { get; init; }
     public long? ProjectId { get; init; }
@@ -534,7 +534,7 @@ public interface IUbiquitousLanguageService
     Task<Result> WithdrawApprovalRequestAsync(long draftId);
     
     /// <summary>関連用語の設定</summary>
-    Task<Result> UpdateRelatedTermsAsync(UpdateRelatedTermsCommand command);
+    Task<Result> UpdateRelatedUbiquitousLangAsync(UpdateRelatedUbiquitousLangCommand command);
     
     /// <summary>用語検索</summary>
     Task<Result<IReadOnlyList<UbiquitousLanguageSearchResultDto>>> SearchAsync(SearchUbiquitousLanguageQuery query);
@@ -545,7 +545,7 @@ public record GetUbiquitousLanguagesQuery : PageQuery
     public long? ProjectId { get; init; }
     public long? DomainId { get; init; }
     public UbiquitousLanguageStatus? Status { get; init; }
-    public string? SearchTerm { get; init; }
+    public string? SearchKeyword { get; init; }
     public DateTime? UpdatedAfter { get; init; }
 }
 
@@ -567,13 +567,13 @@ public record UbiquitousLanguageDto
 
 public record UbiquitousLanguageDetailDto : UbiquitousLanguageDto
 {
-    public IReadOnlyList<RelatedTermDto> RelatedTerms { get; init; } = Array.Empty<RelatedTermDto>();
+    public IReadOnlyList<RelatedUbiquitousLangDto> RelatedUbiquitousLang { get; init; } = Array.Empty<RelatedUbiquitousLangDto>();
     public IReadOnlyList<UbiquitousLanguageHistoryDto> History { get; init; } = Array.Empty<UbiquitousLanguageHistoryDto>();
     public long? DraftId { get; init; }
     public UbiquitousLanguageDto? DraftVersion { get; init; }
 }
 
-public record RelatedTermDto
+public record RelatedUbiquitousLangDto
 {
     public long RelatedUbiquitousLanguageId { get; init; }
     public string JapaneseName { get; init; } = string.Empty;
@@ -616,13 +616,13 @@ public record SubmitForApprovalCommand
     public string? SubmissionComment { get; init; }
 }
 
-public record UpdateRelatedTermsCommand
+public record UpdateRelatedUbiquitousLangCommand
 {
     public long UbiquitousLanguageId { get; init; }
-    public IReadOnlyList<RelatedTermRequest> RelatedTerms { get; init; } = Array.Empty<RelatedTermRequest>();
+    public IReadOnlyList<RelatedUbiquitousLangRequest> RelatedUbiquitousLang { get; init; } = Array.Empty<RelatedUbiquitousLangRequest>();
 }
 
-public record RelatedTermRequest
+public record RelatedUbiquitousLangRequest
 {
     public long RelatedUbiquitousLanguageId { get; init; }
     public string RelationType { get; init; } = string.Empty;
@@ -631,7 +631,7 @@ public record RelatedTermRequest
 
 public record SearchUbiquitousLanguageQuery
 {
-    public string SearchTerm { get; init; } = string.Empty;
+    public string SearchKeyword { get; init; } = string.Empty;
     public long? ProjectId { get; init; }
     public long? DomainId { get; init; }
     public bool IncludeDrafts { get; init; } = false;
@@ -704,7 +704,7 @@ public record PendingApprovalDto
     public string SubmittedByUserName { get; init; } = string.Empty;
     public DateTime SubmittedAt { get; init; }
     public string? SubmissionComment { get; init; }
-    public bool IsNewTerm { get; init; }
+    public bool IsNewUbiquitousLang { get; init; }
     public long? OriginalUbiquitousLanguageId { get; init; }
 }
 
