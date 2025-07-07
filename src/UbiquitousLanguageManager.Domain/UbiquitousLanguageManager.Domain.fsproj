@@ -13,7 +13,6 @@
     <Compile Include="Entities.fs" />
     <Compile Include="DomainServices.fs" />
     <Compile Include="Specifications.fs" />
-    <Compile Include="Result.fs" />
   </ItemGroup>
 
 

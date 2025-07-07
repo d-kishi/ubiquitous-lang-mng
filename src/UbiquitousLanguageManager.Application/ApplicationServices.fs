@@ -21,7 +21,7 @@ type UserApplicationService(
             return!
                 match existingUserResult with
                 | Error err -> Task.FromResult(Error err)
-                | Success existingUser ->
+                | Ok existingUser ->
                     match existingUser with
                     | Some _ -> Task.FromResult(Error "指定されたメールアドレスは既に使用されています")
                     | None ->
@@ -43,12 +43,12 @@ type UserApplicationService(
             return
                 match loginResult with
                 | Error err -> Error err
-                | Success user ->
+                | Ok user ->
                     // 🎯 初回ログインチェック: パスワード変更必須判定
                     if user.IsFirstLogin then
                         Error "初回ログインのため、パスワード変更が必要です"
                     else
-                        Success user
+                        Ok user
         }
     
     // 🔐 パスワード変更: セキュリティポリシーに準拠した更新
@@ -59,14 +59,14 @@ type UserApplicationService(
             
             match changeResult with
             | Error err -> return Error err
-            | Success () ->
+            | Ok () ->
                 // 🔍 ユーザー情報の更新: 初回ログインフラグのクリア
                 let! userResult = userRepository.GetByIdAsync(userId)
                 
                 return!
                     match userResult with
                     | Error err -> Task.FromResult(Error err)
-                    | Success userOpt ->
+                    | Ok userOpt ->
                         match userOpt with
                         | None -> Task.FromResult(Error "ユーザーが見つかりません")
                         | Some user ->
@@ -76,7 +76,7 @@ type UserApplicationService(
                                 let! saveResult = userRepository.SaveAsync(updatedUser)
                                 return
                                     match saveResult with
-                                    | Success _ -> Success ()
+                                    | Ok _ -> Ok ()
                                     | Error err -> Error err
                             }
         }
@@ -98,14 +98,14 @@ type UbiquitousLanguageApplicationService(
             return!
                 match domainResult with
                 | Error err -> Task.FromResult(Error err)
-                | Success domainOpt ->
+                | Ok domainOpt ->
                     match domainOpt with
                     | None -> Task.FromResult(Error "指定されたドメインが見つかりません")
                     | Some domain ->
                         // 🔐 ドメインサービス: 作成権限の検証
                         match DomainService.validateUserCanCreateInDomain createdBy domain with
                         | Error err -> Task.FromResult(Error err)
-                        | Success () ->
+                        | Ok () ->
                             // 🔍 重複チェック: 同一ドメイン内での名前重複確認
                             task {
                                 let! existingTermsResult = ubiquitousLanguageRepository.GetFormalsByDomainIdAsync(domainId)
@@ -113,11 +113,11 @@ type UbiquitousLanguageApplicationService(
                                 return!
                                     match existingTermsResult with
                                     | Error err -> Task.FromResult(Error err)
-                                    | Success existingTerms ->
+                                    | Ok existingTerms ->
                                         // 🎯 ドメインサービス: 重複検証
                                         match DomainService.validateUniqueNamesInDomain japaneseName englishName existingTerms with
                                         | Error err -> Task.FromResult(Error err)
-                                        | Success () ->
+                                        | Ok () ->
                                             // 🔧 ドメインエンティティ作成
                                             let draft = DraftUbiquitousLanguage.create domainId japaneseName englishName description createdBy
                                             
@@ -138,14 +138,14 @@ type UbiquitousLanguageApplicationService(
             return!
                 match draftResult with
                 | Error err -> Task.FromResult(Error err)
-                | Success draftOpt ->
+                | Ok draftOpt ->
                     match draftOpt with
                     | None -> Task.FromResult(Error "指定された下書き用語が見つかりません")
                     | Some draft ->
                         // 🎯 ドメインロジック: 承認申請処理
                         match draft.submitForApproval submittedBy with
                         | Error err -> Task.FromResult(Error err)
-                        | Success updatedDraft ->
+                        | Ok updatedDraft ->
                             // 💾 更新の永続化
                             task {
                                 let! saveResult = ubiquitousLanguageRepository.SaveDraftAsync(updatedDraft)
@@ -168,7 +168,7 @@ type UbiquitousLanguageApplicationService(
             return!
                 match draftResult, approverResult with
                 | Error err, _ | _, Error err -> Task.FromResult(Error err)
-                | Success draftOpt, Success approverOpt ->
+                | Ok draftOpt, Ok approverOpt ->
                     match draftOpt, approverOpt with
                     | None, _ -> Task.FromResult(Error "指定された下書き用語が見つかりません")
                     | _, None -> Task.FromResult(Error "承認者の情報が見つかりません")
@@ -180,22 +180,22 @@ type UbiquitousLanguageApplicationService(
                             return!
                                 match domainResult with
                                 | Error err -> Task.FromResult(Error err)
-                                | Success domainOpt ->
+                                | Ok domainOpt ->
                                     match domainOpt with
                                     | None -> Task.FromResult(Error "関連するドメインが見つかりません")
                                     | Some domain ->
                                         // 🔐 承認権限の検証
                                         match DomainService.validateApprovalAuthorization approvedBy approver.Role domain with
                                         | Error err -> Task.FromResult(Error err)
-                                        | Success () ->
+                                        | Ok () ->
                                             // 🎯 ドメインロジック: 承認処理
                                             match draft.approve approvedBy with
                                             | Error err -> Task.FromResult(Error err)
-                                            | Success approvedDraft ->
+                                            | Ok approvedDraft ->
                                                 // 🔄 正式版への変換
                                                 match FormalUbiquitousLanguage.createFromDraft approvedDraft approvedBy with
                                                 | Error err -> Task.FromResult(Error err)
-                                                | Success formalVersion ->
+                                                | Ok formalVersion ->
                                                     // 💾 正式版の永続化
                                                     task {
                                                         let! saveResult = ubiquitousLanguageRepository.SaveFormalAsync(formalVersion)

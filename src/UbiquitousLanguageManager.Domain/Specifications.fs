@@ -98,7 +98,7 @@ module SpecificationHelpers =
     // 🔧 仕様を適用してResult型で結果を返すヘルパー
     let applySpecification<'T> (spec: ISpecification<'T>) (item: 'T) =
         if spec.IsSatisfiedBy(item) then
-            Success item
+            Ok item
         else
             match spec.GetReasonForFailure(item) with
             | Some reason -> Error reason
@@ -110,5 +110,5 @@ module SpecificationHelpers =
         |> List.fold (fun acc spec ->
             match acc with
             | Error _ -> acc
-            | Success _ -> applySpecification spec item
-        ) (Success item)
+            | Ok _ -> applySpecification spec item
+        ) (Ok item)

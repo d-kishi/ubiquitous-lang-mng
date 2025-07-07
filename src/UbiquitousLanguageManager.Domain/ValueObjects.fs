@@ -6,7 +6,7 @@ namespace UbiquitousLanguageManager.Domain
 // 📧 メールアドレス値オブジェクト
 type Email = 
     private Email of string
-    
+with
     // 🔧 静的ファクトリーメソッド: 検証を伴う安全な生成
     static member create (emailStr: string) =
         if System.String.IsNullOrWhiteSpace(emailStr) then
@@ -14,7 +14,7 @@ type Email =
         elif not (emailStr.Contains("@")) then
             Error "有効なメールアドレス形式ではありません"
         else
-            Success (Email emailStr)
+            Ok (Email emailStr)
     
     // 📤 値の取得: プライベートコンストラクタのため専用メソッドで値を取得
     member this.Value = 
@@ -24,14 +24,14 @@ type Email =
 // 👤 ユーザー名値オブジェクト
 type UserName = 
     private UserName of string
-    
+with
     static member create (nameStr: string) =
         if System.String.IsNullOrWhiteSpace(nameStr) then
             Error "ユーザー名が入力されていません"
         elif nameStr.Length > 50 then
             Error "ユーザー名は50文字以内で入力してください"
         else
-            Success (UserName nameStr)
+            Ok (UserName nameStr)
     
     member this.Value = 
         let (UserName name) = this
@@ -40,14 +40,14 @@ type UserName =
 // 🌍 日本語名値オブジェクト
 type JapaneseName = 
     private JapaneseName of string
-    
+with
     static member create (nameStr: string) =
         if System.String.IsNullOrWhiteSpace(nameStr) then
             Error "日本語名が入力されていません"
         elif nameStr.Length > 100 then
             Error "日本語名は100文字以内で入力してください"
         else
-            Success (JapaneseName nameStr)
+            Ok (JapaneseName nameStr)
     
     member this.Value = 
         let (JapaneseName name) = this
@@ -56,14 +56,14 @@ type JapaneseName =
 // 🔤 英語名値オブジェクト
 type EnglishName = 
     private EnglishName of string
-    
+with
     static member create (nameStr: string) =
         if System.String.IsNullOrWhiteSpace(nameStr) then
             Error "英語名が入力されていません"
         elif nameStr.Length > 100 then
             Error "英語名は100文字以内で入力してください"
         else
-            Success (EnglishName nameStr)
+            Ok (EnglishName nameStr)
     
     member this.Value = 
         let (EnglishName name) = this
@@ -72,14 +72,14 @@ type EnglishName =
 // 📝 説明文値オブジェクト
 type Description = 
     private Description of string
-    
+with
     static member create (descStr: string) =
         if System.String.IsNullOrWhiteSpace(descStr) then
             Error "説明が入力されていません"
         elif descStr.Length > 1000 then
             Error "説明は1000文字以内で入力してください"
         else
-            Success (Description descStr)
+            Ok (Description descStr)
     
     member this.Value = 
         let (Description desc) = this

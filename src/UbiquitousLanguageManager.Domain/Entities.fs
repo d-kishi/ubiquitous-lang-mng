@@ -31,10 +31,10 @@ type User = {
     // 📧 メールアドレス変更: ビジネスルールを適用した更新
     member this.changeEmail newEmail updatedBy =
         if this.IsActive then
-            Success { this with 
-                Email = newEmail
-                UpdatedAt = DateTime.UtcNow
-                UpdatedBy = updatedBy }
+            Ok { this with 
+                    Email = newEmail
+                    UpdatedAt = DateTime.UtcNow
+                    UpdatedBy = updatedBy }
         else
             Error "非アクティブなユーザーのメールアドレスは変更できません"
 
@@ -106,20 +106,20 @@ type DraftUbiquitousLanguage = {
     member this.submitForApproval submittedBy =
         match this.Status with
         | Draft -> 
-            Success { this with 
-                Status = Submitted
-                UpdatedAt = DateTime.UtcNow
-                UpdatedBy = submittedBy }
+            Ok { this with 
+                    Status = Submitted
+                    UpdatedAt = DateTime.UtcNow
+                    UpdatedBy = submittedBy }
         | _ -> Error "下書き状態でない用語は承認申請できません"
     
     // ✅ 承認処理
     member this.approve approvedBy =
         match this.Status with
         | Submitted -> 
-            Success { this with 
-                Status = Approved
-                UpdatedAt = DateTime.UtcNow
-                UpdatedBy = approvedBy }
+            Ok { this with 
+                    Status = Approved
+                    UpdatedAt = DateTime.UtcNow
+                    UpdatedBy = approvedBy }
         | _ -> Error "申請中でない用語は承認できません"
 
 // ✅ 正式ユビキタス言語エンティティ: 承認済みの確定用語
@@ -137,7 +137,7 @@ type FormalUbiquitousLanguage = {
     // 🔧 下書きから正式版への変換
     static member createFromDraft (draft: DraftUbiquitousLanguage) (approvedBy: UserId) =
         if draft.Status = Approved then
-            Success {
+            Ok {
                 Id = draft.Id
                 DomainId = draft.DomainId
                 JapaneseName = draft.JapaneseName

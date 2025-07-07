@@ -7,11 +7,11 @@ open System
 open System.Reflection
 
 
-[<assembly: System.Reflection.AssemblyCompanyAttribute("UbiquitousLanguageManager.Domain")>]
+[<assembly: System.Reflection.AssemblyCompanyAttribute("UbiquitousLanguageManager.Application")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
 [<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0668ef993c0f63cef259962e4ba2579082606301")>]
-[<assembly: System.Reflection.AssemblyProductAttribute("UbiquitousLanguageManager.Domain")>]
-[<assembly: System.Reflection.AssemblyTitleAttribute("UbiquitousLanguageManager.Domain")>]
+[<assembly: System.Reflection.AssemblyProductAttribute("UbiquitousLanguageManager.Application")>]
+[<assembly: System.Reflection.AssemblyTitleAttribute("UbiquitousLanguageManager.Application")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]
 do()

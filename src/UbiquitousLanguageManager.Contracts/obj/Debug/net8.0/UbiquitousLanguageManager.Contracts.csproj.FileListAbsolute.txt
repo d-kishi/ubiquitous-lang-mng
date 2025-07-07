@@ -1,0 +1,6 @@
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/Debug/net8.0/UbiquitousLanguageManager.Contracts.csproj.AssemblyReference.cache
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/Debug/net8.0/UbiquitousLanguageManager.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/Debug/net8.0/UbiquitousLanguageManager.Contracts.AssemblyInfoInputs.cache
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/Debug/net8.0/UbiquitousLanguageManager.Contracts.AssemblyInfo.cs
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/Debug/net8.0/UbiquitousLanguageManager.Contracts.csproj.CoreCompileInputs.cache
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/Debug/net8.0/UbiquitousLanguageManager.Contracts.sourcelink.json

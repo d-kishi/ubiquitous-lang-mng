@@ -11,7 +11,7 @@ module DomainService =
         if not domain.IsActive then
             Error "非アクティブなドメインではユビキタス言語を作成できません"
         else
-            Success () // 👍 基本的な検証は通過（詳細な権限チェックはApplication層で実施）
+            Ok () // 👍 基本的な検証は通過（詳細な権限チェックはApplication層で実施）
     
     // 🔍 重複チェック: 同一ドメイン内での用語名重複を防止
     let validateUniqueNamesInDomain (japaneseName: JapaneseName) (englishName: EnglishName) 
@@ -31,21 +31,21 @@ module DomainService =
         | true, true -> Error "日本語名・英語名ともに既に使用されています"
         | true, false -> Error "日本語名が既に使用されています"
         | false, true -> Error "英語名が既に使用されています"
-        | false, false -> Success () // ✅ 重複なし
+        | false, false -> Ok () // ✅ 重複なし
     
     // 🔄 承認ワークフロー検証: 承認者の権限チェック
     let validateApprovalAuthorization (approverId: UserId) (approverRole: UserRole) (domain: Domain) =
         match approverRole with
-        | SuperUser -> Success () // 🎖️ スーパーユーザーは全ドメイン承認可能
-        | ProjectManager -> Success () // 👨‍💼 プロジェクト管理者も承認可能
-        | DomainApprover -> Success () // ✅ ドメイン承認者は担当ドメインの承認可能
+        | SuperUser -> Ok () // 🎖️ スーパーユーザーは全ドメイン承認可能
+        | ProjectManager -> Ok () // 👨‍💼 プロジェクト管理者も承認可能
+        | DomainApprover -> Ok () // ✅ ドメイン承認者は担当ドメインの承認可能
         | GeneralUser -> Error "一般ユーザーは承認権限がありません" // ❌ 一般ユーザーは承認不可
     
     // 📊 ステータス遷移検証: 正しいワークフローでのステータス変更を保証
     let validateStatusTransition (currentStatus: ApprovalStatus) (targetStatus: ApprovalStatus) =
         match currentStatus, targetStatus with
-        | Draft, Submitted -> Success () // 下書き → 申請
-        | Submitted, Approved -> Success () // 申請 → 承認
-        | Submitted, Rejected -> Success () // 申請 → 却下
-        | Rejected, Draft -> Success () // 却下 → 下書き（修正のため）
+        | Draft, Submitted -> Ok () // 下書き → 申請
+        | Submitted, Approved -> Ok () // 申請 → 承認
+        | Submitted, Rejected -> Ok () // 申請 → 却下
+        | Rejected, Draft -> Ok () // 却下 → 下書き（修正のため）
         | _ -> Error $"ステータス '{currentStatus}' から '{targetStatus}' への変更は許可されていません"

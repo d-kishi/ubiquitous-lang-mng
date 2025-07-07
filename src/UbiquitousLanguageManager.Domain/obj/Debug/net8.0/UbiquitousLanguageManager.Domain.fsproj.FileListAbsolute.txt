@@ -3,3 +3,12 @@
 /mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.AssemblyInfo.fs
 /mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.fsproj.CoreCompileInputs.cache
 /mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.sourcelink.json
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/bin/Debug/net8.0/UbiquitousLanguageManager.Domain.deps.json
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/bin/Debug/net8.0/UbiquitousLanguageManager.Domain.dll
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/bin/Debug/net8.0/UbiquitousLanguageManager.Domain.pdb
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/bin/Debug/net8.0/UbiquitousLanguageManager.Domain.xml
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.dll
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/refint/UbiquitousLanguageManager.Domain.dll
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.xml
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.pdb
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/ref/UbiquitousLanguageManager.Domain.dll
