@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02688EE2-8AEE-4950-8936-00BE6FC51818}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UbiquitousLanguageManager.Domain", "src\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj", "{70FB7080-0A43-4FB6-9C9E-C04DAC4220D6}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UbiquitousLanguageManager.Application", "src\UbiquitousLanguageManager.Application\UbiquitousLanguageManager.Application.fsproj", "{9489145C-E8B1-441E-8264-6D190FC09B51}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UbiquitousLanguageManager.Contracts", "src\UbiquitousLanguageManager.Contracts\UbiquitousLanguageManager.Contracts.csproj", "{F2BFC5AB-00DD-496A-8F4D-7FA73C02EDF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UbiquitousLanguageManager.Infrastructure", "src\UbiquitousLanguageManager.Infrastructure\UbiquitousLanguageManager.Infrastructure.csproj", "{D3053BA7-9C1B-4E2A-8AFD-53E38F78C5B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UbiquitousLanguageManager.Web", "src\UbiquitousLanguageManager.Web\UbiquitousLanguageManager.Web.csproj", "{AE560045-7957-4B0B-BEA3-609C67A8BFE1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70FB7080-0A43-4FB6-9C9E-C04DAC4220D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70FB7080-0A43-4FB6-9C9E-C04DAC4220D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70FB7080-0A43-4FB6-9C9E-C04DAC4220D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70FB7080-0A43-4FB6-9C9E-C04DAC4220D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9489145C-E8B1-441E-8264-6D190FC09B51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9489145C-E8B1-441E-8264-6D190FC09B51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9489145C-E8B1-441E-8264-6D190FC09B51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9489145C-E8B1-441E-8264-6D190FC09B51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2BFC5AB-00DD-496A-8F4D-7FA73C02EDF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2BFC5AB-00DD-496A-8F4D-7FA73C02EDF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2BFC5AB-00DD-496A-8F4D-7FA73C02EDF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2BFC5AB-00DD-496A-8F4D-7FA73C02EDF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3053BA7-9C1B-4E2A-8AFD-53E38F78C5B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3053BA7-9C1B-4E2A-8AFD-53E38F78C5B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3053BA7-9C1B-4E2A-8AFD-53E38F78C5B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3053BA7-9C1B-4E2A-8AFD-53E38F78C5B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE560045-7957-4B0B-BEA3-609C67A8BFE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE560045-7957-4B0B-BEA3-609C67A8BFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE560045-7957-4B0B-BEA3-609C67A8BFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE560045-7957-4B0B-BEA3-609C67A8BFE1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{70FB7080-0A43-4FB6-9C9E-C04DAC4220D6} = {02688EE2-8AEE-4950-8936-00BE6FC51818}
+		{9489145C-E8B1-441E-8264-6D190FC09B51} = {02688EE2-8AEE-4950-8936-00BE6FC51818}
+		{F2BFC5AB-00DD-496A-8F4D-7FA73C02EDF0} = {02688EE2-8AEE-4950-8936-00BE6FC51818}
+		{D3053BA7-9C1B-4E2A-8AFD-53E38F78C5B8} = {02688EE2-8AEE-4950-8936-00BE6FC51818}
+		{AE560045-7957-4B0B-BEA3-609C67A8BFE1} = {02688EE2-8AEE-4950-8936-00BE6FC51818}
+	EndGlobalSection
+EndGlobal

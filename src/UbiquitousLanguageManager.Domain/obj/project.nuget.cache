@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "JjKnsQNQAsGw7rwnEI/APNyJ4lObLBTLBOXFqmghWbEHQRm8JKJnCEsY9ckcFoNTaos40D4qv5Pn8jw7TQRkAw==",
+  "success": true,
+  "projectFilePath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj",
+  "expectedPackageFiles": [
+    "/home/ka837/.nuget/packages/fsharp.core/8.0.102/fsharp.core.8.0.102.nupkg.sha512"
+  ],
+  "logs": []
+}

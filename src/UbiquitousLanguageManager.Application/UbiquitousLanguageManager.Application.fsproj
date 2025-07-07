@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors>FS0025</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Interfaces.fs" />
+    <Compile Include="ApplicationServices.fs" />
+    <Compile Include="UseCases.fs" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />
+  </ItemGroup>
+
+</Project>

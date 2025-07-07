@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\UbiquitousLanguageManager.Application\UbiquitousLanguageManager.Application.fsproj" />
+    <ProjectReference Include="..\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />
+  </ItemGroup>
+
+</Project>

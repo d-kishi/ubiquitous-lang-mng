@@ -1,0 +1,105 @@
+{
+  // F# 開発設定
+  "FSharp.enableTreeView": true,
+  "FSharp.showExplorerOnStartup": true,
+  "FSharp.suggestGitignore": true,
+  "FSharp.enableLsp": true,
+  "FSharp.enableAnalyzers": true,
+  "FSharp.inlayHints.enabled": true,
+  "FSharp.inlayHints.typeAnnotations": true,
+  "FSharp.inlayHints.parameterNames": true,
+  // .NET / C# 開発設定
+  "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+  "dotnet.inlayHints.enableInlayHintsForParameters": true,
+  "dotnet.inlayHints.enableInlayHintsForLiteralParameters": true,
+  "dotnet.inlayHints.enableInlayHintsForIndexerParameters": true,
+  "dotnet.inlayHints.enableInlayHintsForObjectCreationParameters": true,
+  "dotnet.inlayHints.enableInlayHintsForOtherParameters": true,
+  "dotnet.inlayHints.enableInlayHintsForTypes": true,
+  "dotnet.inlayHints.enableInlayHintsForImplicitVariableTypes": true,
+  "dotnet.inlayHints.enableInlayHintsForLambdaParameterTypes": true,
+  "dotnet.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.enableImportCompletion": true,
+  // パフォーマンス最適化
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/.vs": true,
+    "**/node_modules": true,
+    "**/.git": false
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/.vs/**": true,
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true
+  },
+  // エディタ設定
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.inlayHints.enabled": "on",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  // 言語別設定
+  "[fsharp]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.rulers": [
+      80,
+      120
+    ],
+    "editor.wordWrap": "bounded",
+    "editor.wordWrapColumn": 120
+  },
+  "[csharp]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.rulers": [
+      80,
+      120
+    ]
+  },
+  "[razor]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  // Git 設定
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  // Cursor 特有の AI 設定
+  "cursor.cpp.disabledLanguages": [],
+  "cursor.general.enableCodeActions": true,
+  "cursor.chat.enabled": true,
+  "cursor.prediction.enabled": true,
+  "cursor.autocomplete.enabled": true,
+  // テーマ設定（コメントアウト済み - 必要に応じて有効化）
+  // "workbench.colorTheme": "Default Dark+",
+  // "workbench.iconTheme": "vs-seti",
+  // 開発環境設定
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  // デバッグ設定
+  "debug.allowBreakpointsEverywhere": true,
+  "debug.inlineValues": "on",
+  // 問題表示設定
+  "problems.decorations.enabled": true,
+  "problems.showCurrentInStatus": true
+}

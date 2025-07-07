@@ -1,0 +1,5 @@
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.fsproj.AssemblyReference.cache
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.AssemblyInfoInputs.cache
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.AssemblyInfo.fs
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.fsproj.CoreCompileInputs.cache
+/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/Debug/net8.0/UbiquitousLanguageManager.Domain.sourcelink.json
