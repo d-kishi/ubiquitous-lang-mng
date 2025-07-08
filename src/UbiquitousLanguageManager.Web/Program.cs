@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using UbiquitousLanguageManager.Infrastructure.Data;
 using UbiquitousLanguageManager.Infrastructure.Services;
@@ -21,7 +22,7 @@ builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // 🔐 認証・認可設定: ASP.NET Core Identity
-builder.Services.AddDefaultIdentity<IdentityUser>(options => 
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => 
 {
     // 🔑 パスワードポリシー設定
     options.Password.RequireDigit = true;

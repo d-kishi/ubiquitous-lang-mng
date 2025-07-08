@@ -1,53 +1,41 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\UbiquitousLanguageManager.Web.csproj": {}
+    "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/UbiquitousLanguageManager.Web.csproj": {}
   },
   "projects": {
-    "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj": {
+    "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj",
+        "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj",
         "projectName": "UbiquitousLanguageManager.Application",
-        "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj",
-        "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
-        "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\obj\\",
+        "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj",
+        "packagesPath": "/home/ka837/.nuget/packages/",
+        "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/ka837/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\sdk\\9.0.301\\FSharp\\library-packs": {},
+          "/usr/lib/dotnet/sdk/8.0.117/FSharp/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj"
               }
             }
           }
         },
         "warningProperties": {
           "allWarningsAsErrors": true
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -56,7 +44,7 @@
             "FSharp.Core": {
               "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
               "target": "Package",
-              "version": "[9.0.300, )",
+              "version": "[8.0.102, )",
               "generatePathProperty": true
             }
           },
@@ -76,43 +64,37 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj": {
+    "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj",
+        "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj",
         "projectName": "UbiquitousLanguageManager.Contracts",
-        "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj",
-        "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
-        "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\obj\\",
+        "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj",
+        "packagesPath": "/home/ka837/.nuget/packages/",
+        "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/ka837/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj"
               },
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj"
               }
             }
           }
@@ -122,13 +104,7 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -149,33 +125,27 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj": {
+    "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj",
+        "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj",
         "projectName": "UbiquitousLanguageManager.Domain",
-        "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj",
-        "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
-        "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\obj\\",
+        "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj",
+        "packagesPath": "/home/ka837/.nuget/packages/",
+        "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/ka837/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\sdk\\9.0.301\\FSharp\\library-packs": {},
+          "/usr/lib/dotnet/sdk/8.0.117/FSharp/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -186,13 +156,7 @@
         },
         "warningProperties": {
           "allWarningsAsErrors": true
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -201,7 +165,7 @@
             "FSharp.Core": {
               "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
               "target": "Package",
-              "version": "[9.0.300, )",
+              "version": "[8.0.102, )",
               "generatePathProperty": true
             }
           },
@@ -221,43 +185,37 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj": {
+    "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj",
+        "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj",
         "projectName": "UbiquitousLanguageManager.Infrastructure",
-        "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
-        "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\obj\\",
+        "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj",
+        "packagesPath": "/home/ka837/.nuget/packages/",
+        "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/ka837/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Application\\UbiquitousLanguageManager.Application.fsproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Application/UbiquitousLanguageManager.Application.fsproj"
               },
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj"
               }
             }
           }
@@ -267,13 +225,7 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -328,43 +280,37 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\UbiquitousLanguageManager.Web.csproj": {
+    "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/UbiquitousLanguageManager.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\UbiquitousLanguageManager.Web.csproj",
+        "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/UbiquitousLanguageManager.Web.csproj",
         "projectName": "UbiquitousLanguageManager.Web",
-        "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\UbiquitousLanguageManager.Web.csproj",
-        "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
-        "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\obj\\",
+        "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/UbiquitousLanguageManager.Web.csproj",
+        "packagesPath": "/home/ka837/.nuget/packages/",
+        "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/ka837/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj"
               },
-              "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj": {
-                "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj"
+              "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj": {
+                "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj"
               }
             }
           }
@@ -374,13 +320,7 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -422,7 +362,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

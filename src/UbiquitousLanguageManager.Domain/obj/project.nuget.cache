@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "jeErE3SDrxk=",
+  "dgSpecHash": "JjKnsQNQAsGw7rwnEI/APNyJ4lObLBTLBOXFqmghWbEHQRm8JKJnCEsY9ckcFoNTaos40D4qv5Pn8jw7TQRkAw==",
   "success": true,
-  "projectFilePath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj",
+  "projectFilePath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj",
   "expectedPackageFiles": [
-    "C:\\Users\\ka837\\.nuget\\packages\\fsharp.core\\9.0.300\\fsharp.core.9.0.300.nupkg.sha512"
+    "/home/ka837/.nuget/packages/fsharp.core/8.0.102/fsharp.core.8.0.102.nupkg.sha512"
   ],
   "logs": []
 }

@@ -10,7 +10,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("UbiquitousLanguageManager.Application")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0668ef993c0f63cef259962e4ba2579082606301")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fb3405d4747f8f08bddde4b6c45e4401e9778e34")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("UbiquitousLanguageManager.Application")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("UbiquitousLanguageManager.Application")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

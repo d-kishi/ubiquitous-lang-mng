@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>UbiquitousLanguageManager.Web</name>
+    </assembly>
+    <members>
+        <member name="T:InitialSuperUserSettings">
+            <summary>
+            初期スーパーユーザー設定クラス
+            appsettings.jsonの"InitialSuperUser"セクションにバインド
+            </summary>
+        </member>
+        <member name="P:InitialSuperUserSettings.Email">
+            <summary>
+            初期スーパーユーザーのメールアドレス
+            </summary>
+        </member>
+        <member name="P:InitialSuperUserSettings.Name">
+            <summary>
+            初期スーパーユーザーの名前
+            </summary>
+        </member>
+        <member name="P:InitialSuperUserSettings.Password">
+            <summary>
+            初期パスワード（"su"固定）
+            </summary>
+        </member>
+        <member name="P:InitialSuperUserSettings.IsFirstLogin">
+            <summary>
+            初回ログインフラグ（パスワード変更必須）
+            </summary>
+        </member>
+    </members>
+</doc>

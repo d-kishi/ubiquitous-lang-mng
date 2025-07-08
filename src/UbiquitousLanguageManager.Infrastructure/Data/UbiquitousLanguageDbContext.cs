@@ -27,7 +27,7 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<IdentityUser>
     /// ユーザーテーブル
     /// システム独自のユーザー管理（ASP.NET Core Identity とは別管理）
     /// </summary>
-    public DbSet<UserEntity> Users { get; set; } = null!;
+    public new DbSet<UserEntity> Users { get; set; } = null!;
 
     // 🔧 今後追加予定のテーブル:
     // public DbSet<ProjectEntity> Projects { get; set; } = null!;

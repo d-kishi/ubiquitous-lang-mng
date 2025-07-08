@@ -1,0 +1,661 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>UbiquitousLanguageManager.Contracts</name>
+    </assembly>
+    <members>
+        <member name="T:UbiquitousLanguageManager.Contracts.Converters.TypeConverters">
+            <summary>
+            F#ドメインエンティティとC# DTOの型変換クラス（簡易版）
+            段階的に機能を追加していく予定
+            </summary>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Converters.TypeConverters.ToDto(UbiquitousLanguageManager.Domain.User)">
+            <summary>
+            一時的な簡易変換メソッド（ビルド成功のため）
+            </summary>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Converters.TypeConverters.ToDto(UbiquitousLanguageManager.Domain.Project)">
+            <summary>
+            一時的な簡易変換メソッド（ビルド成功のため）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.DomainDto">
+            <summary>
+            ドメイン情報のデータ転送オブジェクト
+            F#ドメインエンティティとC#プレゼンテーション層の境界で使用
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.Id">
+            <summary>
+            ドメインID（主キー）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.ProjectId">
+            <summary>
+            所属プロジェクトID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.Name">
+            <summary>
+            ドメイン名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.Description">
+            <summary>
+            ドメイン説明
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.IsActive">
+            <summary>
+            アクティブ状態フラグ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.UpdatedAt">
+            <summary>
+            最終更新日時（UTC）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.UpdatedBy">
+            <summary>
+            最終更新者ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.Project">
+            <summary>
+            所属プロジェクト情報（参照用）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.UbiquitousLanguageCount">
+            <summary>
+            ドメイン内のユビキタス言語数（参照用）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.DomainDto.PendingApprovalCount">
+            <summary>
+            承認待ちユビキタス言語数（参照用）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.CreateDomainDto">
+            <summary>
+            ドメイン作成用DTO
+            新規ドメイン作成時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateDomainDto.ProjectId">
+            <summary>
+            所属プロジェクトID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateDomainDto.Name">
+            <summary>
+            ドメイン名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateDomainDto.Description">
+            <summary>
+            ドメイン説明
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateDomainDto.CreatedBy">
+            <summary>
+            作成者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.UpdateDomainDto">
+            <summary>
+            ドメイン更新用DTO
+            既存ドメイン更新時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateDomainDto.Id">
+            <summary>
+            ドメインID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateDomainDto.Name">
+            <summary>
+            ドメイン名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateDomainDto.Description">
+            <summary>
+            ドメイン説明
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateDomainDto.IsActive">
+            <summary>
+            アクティブ状態フラグ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateDomainDto.UpdatedBy">
+            <summary>
+            更新者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto">
+            <summary>
+            プロジェクト情報のデータ転送オブジェクト
+            F#ドメインエンティティとC#プレゼンテーション層の境界で使用
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.Id">
+            <summary>
+            プロジェクトID（主キー）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.Name">
+            <summary>
+            プロジェクト名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.Description">
+            <summary>
+            プロジェクト説明
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.IsActive">
+            <summary>
+            アクティブ状態フラグ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.UpdatedAt">
+            <summary>
+            最終更新日時（UTC）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.UpdatedBy">
+            <summary>
+            最終更新者ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.Domains">
+            <summary>
+            関連するドメイン一覧（参照用）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ProjectDto.MemberCount">
+            <summary>
+            プロジェクト参加ユーザー数（参照用）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.CreateProjectDto">
+            <summary>
+            プロジェクト作成用DTO
+            新規プロジェクト作成時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateProjectDto.Name">
+            <summary>
+            プロジェクト名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateProjectDto.Description">
+            <summary>
+            プロジェクト説明
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateProjectDto.CreatedBy">
+            <summary>
+            作成者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto">
+            <summary>
+            プロジェクト更新用DTO
+            既存プロジェクト更新時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto.Id">
+            <summary>
+            プロジェクトID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto.Name">
+            <summary>
+            プロジェクト名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto.Description">
+            <summary>
+            プロジェクト説明
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto.IsActive">
+            <summary>
+            アクティブ状態フラグ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto.UpdatedBy">
+            <summary>
+            更新者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto">
+            <summary>
+            ユビキタス言語のデータ転送オブジェクト
+            F#ドメインエンティティとC#プレゼンテーション層の境界で使用
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.Id">
+            <summary>
+            ユビキタス言語ID（主キー）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.DomainId">
+            <summary>
+            所属ドメインID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.JapaneseName">
+            <summary>
+            日本語名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.EnglishName">
+            <summary>
+            英語名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.Description">
+            <summary>
+            説明文
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.Status">
+            <summary>
+            承認状態
+            Draft, Submitted, Approved, Rejected のいずれか
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.UpdatedAt">
+            <summary>
+            最終更新日時（UTC）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.UpdatedBy">
+            <summary>
+            最終更新者ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.ApprovedAt">
+            <summary>
+            承認日時（正式版のみ）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UbiquitousLanguageDto.ApprovedBy">
+            <summary>
+            承認者ID（正式版のみ）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto">
+            <summary>
+            ユビキタス言語作成用DTO
+            新規用語作成時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto.DomainId">
+            <summary>
+            所属ドメインID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto.JapaneseName">
+            <summary>
+            日本語名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto.EnglishName">
+            <summary>
+            英語名
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto.Description">
+            <summary>
+            説明文
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto.CreatedBy">
+            <summary>
+            作成者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.SubmitForApprovalDto">
+            <summary>
+            承認申請用DTO
+            ワークフロー開始時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.SubmitForApprovalDto.UbiquitousLanguageId">
+            <summary>
+            ユビキタス言語ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.SubmitForApprovalDto.SubmittedBy">
+            <summary>
+            申請者ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.SubmitForApprovalDto.Comment">
+            <summary>
+            申請時のコメント（オプション）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.ApprovalDto">
+            <summary>
+            承認処理用DTO
+            承認者による最終決定のための入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ApprovalDto.UbiquitousLanguageId">
+            <summary>
+            ユビキタス言語ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ApprovalDto.ApprovedBy">
+            <summary>
+            承認者ID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ApprovalDto.IsApproved">
+            <summary>
+            承認・却下フラグ（true: 承認, false: 却下）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ApprovalDto.ApprovalComment">
+            <summary>
+            承認・却下時のコメント（オプション）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.UserDto">
+            <summary>
+            ユーザー情報のデータ転送オブジェクト
+            F#ドメインエンティティとC#プレゼンテーション層の境界で使用
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.Id">
+            <summary>
+            ユーザーID（主キー）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.Email">
+            <summary>
+            メールアドレス（ログインID）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.Name">
+            <summary>
+            ユーザー名（表示名）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.Role">
+            <summary>
+            ユーザーロール
+            SuperUser, ProjectManager, DomainApprover, GeneralUser のいずれか
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.IsActive">
+            <summary>
+            アクティブ状態フラグ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.IsFirstLogin">
+            <summary>
+            初回ログインフラグ（パスワード変更が必要な状態）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.UpdatedAt">
+            <summary>
+            最終更新日時（UTC）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.UserDto.UpdatedBy">
+            <summary>
+            最終更新者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.CreateUserDto">
+            <summary>
+            ユーザー登録用DTO
+            新規ユーザー作成時の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUserDto.Email">
+            <summary>
+            メールアドレス（ログインID）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUserDto.Name">
+            <summary>
+            ユーザー名（表示名）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUserDto.Role">
+            <summary>
+            ユーザーロール
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.CreateUserDto.CreatedBy">
+            <summary>
+            作成者ID
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.LoginDto">
+            <summary>
+            ログイン用DTO
+            認証情報の入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.LoginDto.Email">
+            <summary>
+            メールアドレス（ログインID）
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.LoginDto.Password">
+            <summary>
+            パスワード
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.DTOs.ChangePasswordDto">
+            <summary>
+            パスワード変更用DTO
+            セキュアなパスワード更新のための入力データ構造
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ChangePasswordDto.UserId">
+            <summary>
+            ユーザーID
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ChangePasswordDto.OldPassword">
+            <summary>
+            現在のパスワード
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ChangePasswordDto.NewPassword">
+            <summary>
+            新しいパスワード
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.DTOs.ChangePasswordDto.ConfirmPassword">
+            <summary>
+            新しいパスワード（確認用）
+            </summary>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService">
+            <summary>
+            Application層への統一アクセスインターフェース
+            Presentation層からApplication層への境界を定義
+            F#のApplication ServiceをC#から利用するための橋渡し役
+            </summary>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.CreateUserAsync(UbiquitousLanguageManager.Contracts.DTOs.CreateUserDto)">
+            <summary>
+            新規ユーザー登録
+            ビジネスルールを適用したユーザー作成処理
+            </summary>
+            <param name="createUserDto">作成するユーザー情報</param>
+            <returns>作成されたユーザー情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.LoginAsync(UbiquitousLanguageManager.Contracts.DTOs.LoginDto)">
+            <summary>
+            ユーザーログイン
+            認証処理と初回ログインチェック
+            </summary>
+            <param name="loginDto">ログイン情報</param>
+            <returns>認証されたユーザー情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.ChangePasswordAsync(UbiquitousLanguageManager.Contracts.DTOs.ChangePasswordDto)">
+            <summary>
+            パスワード変更
+            セキュリティポリシーに準拠したパスワード更新
+            </summary>
+            <param name="changePasswordDto">パスワード変更情報</param>
+            <returns>変更結果、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetUsersAsync(System.Nullable{System.Int64})">
+            <summary>
+            ユーザー一覧取得
+            プロジェクト単位でのユーザー一覧取得
+            </summary>
+            <param name="projectId">プロジェクトID（null の場合は全ユーザー）</param>
+            <returns>ユーザー一覧</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetUserByIdAsync(System.Int64)">
+            <summary>
+            ユーザー詳細取得
+            指定されたIDのユーザー情報を取得
+            </summary>
+            <param name="userId">ユーザーID</param>
+            <returns>ユーザー詳細情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.CreateProjectAsync(UbiquitousLanguageManager.Contracts.DTOs.CreateProjectDto)">
+            <summary>
+            新規プロジェクト作成
+            ビジネスルールを適用したプロジェクト作成処理
+            </summary>
+            <param name="createProjectDto">作成するプロジェクト情報</param>
+            <returns>作成されたプロジェクト情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetActiveProjectsAsync">
+            <summary>
+            プロジェクト一覧取得
+            アクティブなプロジェクト一覧を取得
+            </summary>
+            <returns>プロジェクト一覧</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetProjectByIdAsync(System.Int64)">
+            <summary>
+            プロジェクト詳細取得
+            指定されたIDのプロジェクト情報を取得
+            </summary>
+            <param name="projectId">プロジェクトID</param>
+            <returns>プロジェクト詳細情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.UpdateProjectAsync(UbiquitousLanguageManager.Contracts.DTOs.UpdateProjectDto)">
+            <summary>
+            プロジェクト更新
+            既存プロジェクトの情報更新
+            </summary>
+            <param name="updateProjectDto">更新するプロジェクト情報</param>
+            <returns>更新されたプロジェクト情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.CreateDomainAsync(UbiquitousLanguageManager.Contracts.DTOs.CreateDomainDto)">
+            <summary>
+            新規ドメイン作成
+            プロジェクト内でのドメイン作成処理
+            </summary>
+            <param name="createDomainDto">作成するドメイン情報</param>
+            <returns>作成されたドメイン情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetDomainsByProjectIdAsync(System.Int64)">
+            <summary>
+            プロジェクト別ドメイン一覧取得
+            指定されたプロジェクトのドメイン一覧を取得
+            </summary>
+            <param name="projectId">プロジェクトID</param>
+            <returns>ドメイン一覧</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetDomainByIdAsync(System.Int64)">
+            <summary>
+            ドメイン詳細取得
+            指定されたIDのドメイン情報を取得
+            </summary>
+            <param name="domainId">ドメインID</param>
+            <returns>ドメイン詳細情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.CreateUbiquitousLanguageAsync(UbiquitousLanguageManager.Contracts.DTOs.CreateUbiquitousLanguageDto)">
+            <summary>
+            新規ユビキタス言語作成（下書き）
+            ドメイン内での新規用語作成処理
+            </summary>
+            <param name="createDto">作成するユビキタス言語情報</param>
+            <returns>作成されたユビキタス言語情報、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.GetUbiquitousLanguagesByDomainIdAsync(System.Int64)">
+            <summary>
+            ドメイン別ユビキタス言語一覧取得
+            指定されたドメインのユビキタス言語一覧（下書き・正式版両方）を取得
+            </summary>
+            <param name="domainId">ドメインID</param>
+            <returns>ユビキタス言語一覧</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.SubmitForApprovalAsync(UbiquitousLanguageManager.Contracts.DTOs.SubmitForApprovalDto)">
+            <summary>
+            承認申請処理
+            下書きから承認フローへの移行
+            </summary>
+            <param name="submitDto">承認申請情報</param>
+            <returns>申請結果、またはエラーメッセージ</returns>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.IApplicationService.ProcessApprovalAsync(UbiquitousLanguageManager.Contracts.DTOs.ApprovalDto)">
+            <summary>
+            承認・却下処理
+            申請された用語の承認・却下決定
+            </summary>
+            <param name="approvalDto">承認・却下情報</param>
+            <returns>処理結果、またはエラーメッセージ</returns>
+        </member>
+        <member name="T:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1">
+            <summary>
+            Application層からの処理結果を表現するクラス
+            F#のResult型をC#で使いやすくラップ
+            </summary>
+            <typeparam name="T">成功時のデータ型</typeparam>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.IsSuccess">
+            <summary>
+            処理が成功したかどうか
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.Data">
+            <summary>
+            成功時のデータ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.ErrorMessage">
+            <summary>
+            エラーメッセージ
+            </summary>
+        </member>
+        <member name="P:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.ValidationErrors">
+            <summary>
+            検証エラーの詳細情報
+            </summary>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.Success(`0)">
+            <summary>
+            成功結果の作成
+            </summary>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.Error(System.String)">
+            <summary>
+            エラー結果の作成
+            </summary>
+        </member>
+        <member name="M:UbiquitousLanguageManager.Contracts.Interfaces.ServiceResult`1.ValidationError(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            検証エラー結果の作成
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -44,19 +44,60 @@ module UseCaseResult =
     // 🔄 Result型からUseCaseResultへの変換
     let fromResult result =
         match result with
-        | Success data -> success data
+        | Ok data -> success data
         | Error message -> error message
+
+// 🔧 コマンド定義: Application層の公開API契約
+// Clean Architecture推奨：コマンドはUse Case外部に定義し、型安全性と明確性を確保
+
+// ユーザー登録コマンド: 入力データの構造化
+type RegisterUserCommand = {
+    Email: string
+    Name: string
+    Role: string
+    CreatedBy: int64
+}
+
+// ログインコマンド: 認証と初回ログインチェック用
+type LoginCommand = {
+    Email: string
+    Password: string
+}
+
+// パスワード変更コマンド: セキュリティポリシー適用
+type ChangePasswordCommand = {
+    UserId: int64
+    OldPassword: string
+    NewPassword: string
+    ConfirmPassword: string
+}
+
+// 用語作成コマンド: 下書き用語作成のための入力データ
+type CreateUbiquitousLanguageCommand = {
+    DomainId: int64
+    JapaneseName: string
+    EnglishName: string
+    Description: string
+    CreatedBy: int64
+}
+
+// 承認申請コマンド: ワークフロー開始処理用
+type SubmitForApprovalCommand = {
+    UbiquitousLanguageId: int64
+    SubmittedBy: int64
+    Comment: string option // 申請時のコメント（オプション）
+}
+
+// 承認処理コマンド: 承認者による最終決定用
+type ApprovalCommand = {
+    UbiquitousLanguageId: int64
+    ApprovedBy: int64
+    ApprovalComment: string option // 承認時のコメント（オプション）
+    IsApproved: bool // true: 承認, false: 却下
+}
 
 // 👥 ユーザー管理ユースケース: ユーザー関連の業務フロー
 type UserManagementUseCase(userAppService: UserApplicationService) =
-    
-    // 🔧 ユーザー登録コマンド: 入力データの構造化
-    type RegisterUserCommand = {
-        Email: string
-        Name: string
-        Role: string
-        CreatedBy: int64
-    }
     
     // 👥 新規ユーザー登録: 入力検証からドメイン処理までの一連のフロー
     member this.RegisterUserAsync(command: RegisterUserCommand) =
@@ -68,15 +109,15 @@ type UserManagementUseCase(userAppService: UserApplicationService) =
             // 🎭 ロール文字列の解析
             let roleResult = 
                 match command.Role.ToLower() with
-                | "superuser" -> Success SuperUser
-                | "projectmanager" -> Success ProjectManager
-                | "domainapprover" -> Success DomainApprover
-                | "generaluser" -> Success GeneralUser
+                | "superuser" -> Ok SuperUser
+                | "projectmanager" -> Ok ProjectManager
+                | "domainapprover" -> Ok DomainApprover
+                | "generaluser" -> Ok GeneralUser
                 | _ -> Error "無効なユーザーロールです"
             
             // 🔧 検証結果の集約
             match emailResult, nameResult, roleResult with
-            | Success email, Success name, Success role ->
+            | Ok email, Ok name, Ok role ->
                 // ✅ 検証成功: ドメイン処理実行
                 let! result = userAppService.CreateUserAsync(email, name, role, UserId command.CreatedBy)
                 return UseCaseResult.fromResult result
@@ -95,30 +136,18 @@ type UserManagementUseCase(userAppService: UserApplicationService) =
         }
     
     // 🔑 ログイン処理: 認証と初回ログインチェック
-    type LoginCommand = {
-        Email: string
-        Password: string
-    }
-    
     member this.LoginAsync(command: LoginCommand) =
         task {
             // 📧 メールアドレス検証
             match Email.create command.Email with
             | Error msg -> return UseCaseResult.validationError [("Email", msg)]
-            | Success email ->
+            | Ok email ->
                 // 🔐 認証処理実行
                 let! result = userAppService.LoginAsync(email, command.Password)
                 return UseCaseResult.fromResult result
         }
     
     // 🔐 パスワード変更: セキュリティポリシー適用
-    type ChangePasswordCommand = {
-        UserId: int64
-        OldPassword: string
-        NewPassword: string
-        ConfirmPassword: string
-    }
-    
     member this.ChangePasswordAsync(command: ChangePasswordCommand) =
         task {
             // 🔒 パスワード確認チェック
@@ -138,15 +167,6 @@ type UserManagementUseCase(userAppService: UserApplicationService) =
 // 📝 ユビキタス言語管理ユースケース: 用語管理の業務フロー
 type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: UbiquitousLanguageApplicationService) =
     
-    // 📝 用語作成コマンド: 下書き用語作成のための入力データ
-    type CreateUbiquitousLanguageCommand = {
-        DomainId: int64
-        JapaneseName: string
-        EnglishName: string
-        Description: string
-        CreatedBy: int64
-    }
-    
     // 📝 新規用語作成: 入力検証からドメイン処理までの完全なフロー
     member this.CreateDraftAsync(command: CreateUbiquitousLanguageCommand) =
         task {
@@ -157,7 +177,7 @@ type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: Ubiquitou
             
             // 🔧 検証結果の集約処理
             match japaneseNameResult, englishNameResult, descriptionResult with
-            | Success japaneseName, Success englishName, Success description ->
+            | Ok japaneseName, Ok englishName, Ok description ->
                 // ✅ 検証成功: ドメイン処理実行
                 let! result = ubiquitousLanguageAppService.CreateDraftAsync(
                     DomainId command.DomainId, 
@@ -180,13 +200,7 @@ type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: Ubiquitou
                 return UseCaseResult.validationError errors
         }
     
-    // 📤 承認申請ユースケース: ワークフロー開始処理
-    type SubmitForApprovalCommand = {
-        UbiquitousLanguageId: int64
-        SubmittedBy: int64
-        Comment: string option // 申請時のコメント（オプション）
-    }
-    
+    // 📤 承認申請ユースケース: ワークフロー開始処理  
     member this.SubmitForApprovalAsync(command: SubmitForApprovalCommand) =
         task {
             // 🎯 承認申請の実行: ID変換とドメイン処理
@@ -197,13 +211,6 @@ type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: Ubiquitou
         }
     
     // ✅ 承認処理ユースケース: 承認者による最終決定
-    type ApprovalCommand = {
-        UbiquitousLanguageId: int64
-        ApprovedBy: int64
-        ApprovalComment: string option // 承認時のコメント（オプション）
-        IsApproved: bool // true: 承認, false: 却下
-    }
-    
     member this.ProcessApprovalAsync(command: ApprovalCommand) =
         task {
             if command.IsApproved then

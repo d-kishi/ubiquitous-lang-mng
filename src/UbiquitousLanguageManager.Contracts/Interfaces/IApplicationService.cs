@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using UbiquitousLanguageManager.Contracts.DTOs;
 
 namespace UbiquitousLanguageManager.Contracts.Interfaces;
