@@ -15,7 +15,7 @@
           }
         }
       },
-      "FSharp.Core/8.0.102": {
+      "FSharp.Core/9.0.300": {
         "type": "package",
         "compile": {
           "lib/netstandard2.1/FSharp.Core.dll": {
@@ -1049,7 +1049,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
-          "FSharp.Core": "8.0.102",
+          "FSharp.Core": "9.0.300",
           "UbiquitousLanguageManager.Domain": "1.0.0"
         },
         "compile": {
@@ -1077,7 +1077,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v8.0",
         "dependencies": {
-          "FSharp.Core": "8.0.102"
+          "FSharp.Core": "9.0.300"
         },
         "compile": {
           "bin/placeholder/UbiquitousLanguageManager.Domain.dll": {}
@@ -1142,14 +1142,15 @@
         "readme.md"
       ]
     },
-    "FSharp.Core/8.0.102": {
-      "sha512": "i5oBHjnjSDwI1XRaRtACEPXlVHRYdX2q+t2z3rVkZ7e0xsEkO1aAWA5D8tPImcv2CO2WD1Dl34NBtnBjruwV2A==",
+    "FSharp.Core/9.0.300": {
+      "sha512": "2ZDoF/N7WPidmaflrTnPucUJfaV5XkIHCh4h77yET7ihuv2dR2ksSsIiiDd34Z9YmwyYEQocpDl1r6RXFr0DMg==",
       "type": "package",
-      "path": "fsharp.core/8.0.102",
+      "path": "fsharp.core/9.0.300",
       "files": [
         ".nupkg.metadata",
+        ".signature.p7s",
         "Icon.png",
-        "fsharp.core.8.0.102.nupkg.sha512",
+        "fsharp.core.9.0.300.nupkg.sha512",
         "fsharp.core.nuspec",
         "lib/netstandard2.0/FSharp.Core.dll",
         "lib/netstandard2.0/FSharp.Core.xml",
@@ -2743,35 +2744,42 @@
     ]
   },
   "packageFolders": {
-    "/home/ka837/.nuget/packages/": {}
+    "C:\\Users\\ka837\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/UbiquitousLanguageManager.Web.csproj",
+      "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\UbiquitousLanguageManager.Web.csproj",
       "projectName": "UbiquitousLanguageManager.Web",
-      "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/UbiquitousLanguageManager.Web.csproj",
-      "packagesPath": "/home/ka837/.nuget/packages/",
-      "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Web/obj/",
+      "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\UbiquitousLanguageManager.Web.csproj",
+      "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
+      "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/ka837/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj": {
-              "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Contracts/UbiquitousLanguageManager.Contracts.csproj"
+            "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj": {
+              "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Contracts\\UbiquitousLanguageManager.Contracts.csproj"
             },
-            "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj": {
-              "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Infrastructure/UbiquitousLanguageManager.Infrastructure.csproj"
+            "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj": {
+              "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Infrastructure\\UbiquitousLanguageManager.Infrastructure.csproj"
             }
           }
         }
@@ -2781,7 +2789,13 @@
         "warnAsError": [
           "NU1605"
         ]
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -2823,7 +2837,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

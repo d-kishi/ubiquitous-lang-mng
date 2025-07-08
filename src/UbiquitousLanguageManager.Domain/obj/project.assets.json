@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net8.0": {
-      "FSharp.Core/8.0.102": {
+      "FSharp.Core/9.0.300": {
         "type": "package",
         "compile": {
           "lib/netstandard2.1/FSharp.Core.dll": {
@@ -59,14 +59,15 @@
     }
   },
   "libraries": {
-    "FSharp.Core/8.0.102": {
-      "sha512": "i5oBHjnjSDwI1XRaRtACEPXlVHRYdX2q+t2z3rVkZ7e0xsEkO1aAWA5D8tPImcv2CO2WD1Dl34NBtnBjruwV2A==",
+    "FSharp.Core/9.0.300": {
+      "sha512": "2ZDoF/N7WPidmaflrTnPucUJfaV5XkIHCh4h77yET7ihuv2dR2ksSsIiiDd34Z9YmwyYEQocpDl1r6RXFr0DMg==",
       "type": "package",
-      "path": "fsharp.core/8.0.102",
+      "path": "fsharp.core/9.0.300",
       "files": [
         ".nupkg.metadata",
+        ".signature.p7s",
         "Icon.png",
-        "fsharp.core.8.0.102.nupkg.sha512",
+        "fsharp.core.9.0.300.nupkg.sha512",
         "fsharp.core.nuspec",
         "lib/netstandard2.0/FSharp.Core.dll",
         "lib/netstandard2.0/FSharp.Core.xml",
@@ -103,29 +104,36 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
-      "FSharp.Core >= 8.0.102"
+      "FSharp.Core >= 9.0.300"
     ]
   },
   "packageFolders": {
-    "/home/ka837/.nuget/packages/": {}
+    "C:\\Users\\ka837\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj",
+      "projectUniqueName": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj",
       "projectName": "UbiquitousLanguageManager.Domain",
-      "projectPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/UbiquitousLanguageManager.Domain.fsproj",
-      "packagesPath": "/home/ka837/.nuget/packages/",
-      "outputPath": "/mnt/c/Develop/ubiquitous-lang-mng/src/UbiquitousLanguageManager.Domain/obj/",
+      "projectPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\UbiquitousLanguageManager.Domain.fsproj",
+      "packagesPath": "C:\\Users\\ka837\\.nuget\\packages\\",
+      "outputPath": "C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Domain\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/ka837/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\ka837\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "/usr/lib/dotnet/sdk/8.0.117/FSharp/library-packs": {},
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\sdk\\9.0.301\\FSharp\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -136,7 +144,13 @@
       },
       "warningProperties": {
         "allWarningsAsErrors": true
-      }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -145,7 +159,7 @@
           "FSharp.Core": {
             "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
             "target": "Package",
-            "version": "[8.0.102, )",
+            "version": "[9.0.300, )",
             "generatePathProperty": true
           }
         },
@@ -165,7 +179,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.301/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

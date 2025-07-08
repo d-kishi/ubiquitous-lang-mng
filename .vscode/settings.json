@@ -20,7 +20,6 @@
   "dotnet.inlayHints.enableInlayHintsForLambdaParameterTypes": true,
   "dotnet.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
   "omnisharp.enableEditorConfigSupport": true,
-  "omnisharp.enableImportCompletion": true,
   // パフォーマンス最適化
   "files.exclude": {
     "**/bin": true,

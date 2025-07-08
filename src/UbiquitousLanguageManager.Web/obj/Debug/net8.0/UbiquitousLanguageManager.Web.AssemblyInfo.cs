@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UbiquitousLanguageManager.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ea75e323f658122d9f5058b18dd91994be9bc42a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3c3b014a9b3e3d16e4fe1d356218b9ef3c36fea4")]
 [assembly: System.Reflection.AssemblyProductAttribute("UbiquitousLanguageManager.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UbiquitousLanguageManager.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
