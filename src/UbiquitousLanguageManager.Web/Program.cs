@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using UbiquitousLanguageManager.Infrastructure.Data;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,12 +47,14 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 
 // 🎯 Clean Architecture: 依存関係注入設定
 // Repository実装の登録
-// builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepository>();
+// 将来の拡張用（現在は実装なし）
 // builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 // builder.Services.AddScoped<IDomainRepository, DomainRepository>();
 // builder.Services.AddScoped<IUbiquitousLanguageRepository, UbiquitousLanguageRepository>();
 
 // Application Service実装の登録
+// 将来の拡張用（現在は実装なし）
 // builder.Services.AddScoped<UserApplicationService>();
 // builder.Services.AddScoped<UbiquitousLanguageApplicationService>();
 
@@ -62,6 +65,16 @@ builder.Services.AddScoped<InitialDataService>();
 builder.Services.Configure<InitialSuperUserSettings>(
     builder.Configuration.GetSection("InitialSuperUser"));
 
+// 🏥 ヘルスチェック設定: アプリケーション・データベースの正常性監視
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<UbiquitousLanguageDbContext>(
+        name: "database",
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded,
+        tags: new[] { "ready", "db" })
+    .AddCheck("liveness", () => 
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Application is alive"),
+        tags: new[] { "live" });
+
 var app = builder.Build();
 
 // 🌍 開発環境設定: エラーページとHTTPS設定
@@ -70,6 +83,9 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts(); // 🔒 HTTP Strict Transport Security
 }
+
+// 🚨 グローバル例外ハンドリング: 全体的な例外処理
+app.UseGlobalExceptionHandling();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -84,6 +100,41 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapBlazorHub(); // 🌐 SignalR Hubマッピング（Blazor Serverの双方向通信）
 app.MapFallbackToPage("/_Host");
+
+// 🏥 ヘルスチェックエンドポイント: 監視・運用のためのエンドポイント
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        // JSON形式のレスポンス
+        context.Response.ContentType = "application/json";
+        var result = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(entry => new
+            {
+                name = entry.Key,
+                status = entry.Value.Status.ToString(),
+                description = entry.Value.Description,
+                duration = entry.Value.Duration.ToString()
+            }),
+            totalDuration = report.TotalDuration.ToString()
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
+
+// 🏥 詳細ヘルスチェック: データベース接続確認
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+// 🏥 軽量ヘルスチェック: アプリケーション生存確認
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
 
 // 🔧 初期データ投入: アプリケーション起動時の自動実行
 using (var scope = app.Services.CreateScope())

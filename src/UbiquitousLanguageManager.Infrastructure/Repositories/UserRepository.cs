@@ -117,4 +117,116 @@ public class UserRepository : IUserRepository
             return FSharpResult<Unit, string>.NewError(ex.Message);
         }
     }
+
+    // =================================================================
+    // 🔄 プライベートヘルパーメソッド：Entity ⇄ Domain変換
+    // =================================================================
+
+    /// <summary>
+    /// C#のUserEntityをF#のUserドメインエンティティに変換
+    /// F#のValue Objectのスマートコンストラクタを使用して安全に変換
+    /// </summary>
+    /// <param name="entity">C#のUserEntity</param>
+    /// <returns>F#のResult型でラップされたUser</returns>
+    private static FSharpResult<User, string> ToDomainUser(UserEntity entity)
+    {
+        if (entity == null)
+        {
+            return FSharpResult<User, string>.NewError("UserEntity cannot be null");
+        }
+
+        try
+        {
+            // F#のValue Objectのスマートコンストラクタを使用
+            var emailResult = Email.create(entity.Email);
+            if (emailResult.IsError)
+            {
+                return FSharpResult<User, string>.NewError($"Invalid email: {emailResult.ErrorValue}");
+            }
+
+            var nameResult = UserName.create(entity.Name);
+            if (nameResult.IsError)
+            {
+                return FSharpResult<User, string>.NewError($"Invalid name: {nameResult.ErrorValue}");
+            }
+
+            // UserRoleの文字列をF#の判別共用体に変換
+            var roleResult = StringToUserRole(entity.UserRole);
+            if (roleResult.IsError)
+            {
+                return FSharpResult<User, string>.NewError($"Invalid role: {roleResult.ErrorValue}");
+            }
+
+            // F#のUserレコードを作成
+            var user = new User(
+                UserId.NewUserId(entity.Id),
+                emailResult.ResultValue,
+                nameResult.ResultValue,
+                roleResult.ResultValue,
+                entity.IsActive,
+                entity.IsFirstLogin,
+                entity.UpdatedAt,
+                UserId.NewUserId(entity.UpdatedBy)
+            );
+
+            return FSharpResult<User, string>.NewOk(user);
+        }
+        catch (Exception ex)
+        {
+            return FSharpResult<User, string>.NewError($"Conversion error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// F#のUserドメインエンティティをC#のUserEntityに変換
+    /// F#のValue Objectから値を取得してC#のPOCOに設定
+    /// </summary>
+    /// <param name="user">F#のUser</param>
+    /// <returns>C#のUserEntity</returns>
+    private static UserEntity ToEntity(User user)
+    {
+        return new UserEntity
+        {
+            Id = user.Id.Item,                           // F#のUserId判別共用体から値を取得
+            Email = user.Email.Value,                     // F#のEmail値オブジェクトから値を取得
+            Name = user.Name.Value,                       // F#のUserName値オブジェクトから値を取得
+            UserRole = UserRoleToString(user.Role),       // F#のUserRole判別共用体を文字列に変換
+            IsActive = user.IsActive,
+            IsFirstLogin = user.IsFirstLogin,
+            UpdatedAt = user.UpdatedAt,
+            UpdatedBy = user.UpdatedBy.Item,              // F#のUserId判別共用体から値を取得
+            PasswordHash = "" // 実装時に適切なハッシュ値を設定
+        };
+    }
+
+    /// <summary>
+    /// 文字列をF#のUserRole判別共用体に変換
+    /// </summary>
+    /// <param name="roleString">ロールの文字列表現</param>
+    /// <returns>F#のResult型でラップされたUserRole</returns>
+    private static FSharpResult<UserRole, string> StringToUserRole(string roleString)
+    {
+        return roleString switch
+        {
+            "SuperUser" => FSharpResult<UserRole, string>.NewOk(UserRole.SuperUser),
+            "ProjectManager" => FSharpResult<UserRole, string>.NewOk(UserRole.ProjectManager),
+            "DomainApprover" => FSharpResult<UserRole, string>.NewOk(UserRole.DomainApprover),
+            "GeneralUser" => FSharpResult<UserRole, string>.NewOk(UserRole.GeneralUser),
+            _ => FSharpResult<UserRole, string>.NewError($"無効なユーザーロールです: {roleString}")
+        };
+    }
+
+    /// <summary>
+    /// F#のUserRole判別共用体を文字列に変換
+    /// </summary>
+    /// <param name="role">F#のUserRole判別共用体</param>
+    /// <returns>文字列表現</returns>
+    private static string UserRoleToString(UserRole role)
+    {
+        if (role.IsSuperUser) return "SuperUser";
+        if (role.IsProjectManager) return "ProjectManager";
+        if (role.IsDomainApprover) return "DomainApprover";
+        if (role.IsGeneralUser) return "GeneralUser";
+        return "Unknown";
+    }
 }
