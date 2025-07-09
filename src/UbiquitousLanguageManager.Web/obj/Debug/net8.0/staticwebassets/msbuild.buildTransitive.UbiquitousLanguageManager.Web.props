@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/UbiquitousLanguageManager.Web.props" />
-</Project>
