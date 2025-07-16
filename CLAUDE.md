@@ -31,6 +31,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 🔴 セッション開始時必読（5分以内・標準プロセス）
 **毎セッション開始時に必ず以下の順序で実施**:
+
+⚠️ **Phase開始時（各PhaseのSession1）追加必読**：
+- `/Doc/07_Decisions/ADR_012_階層構造統一ルール.md` - 階層構造の統一ルール
 1. `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況
 2. `/Doc/06_Issues/コミュニケーション改善課題.md` - コミュニケーション課題と改善策
 3. `/Doc/プロジェクト状況.md` - 最新状況・次回予定・重要な制約（簡潔な現状把握）
@@ -63,6 +66,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **ADR_007-009**: エラーハンドリング・ログ・テスト
 - **ADR_010**: 実装規約（Blazor Server・F#コメント）
 - **ADR_011**: スクラム開発サイクル
+- **ADR_012**: 階層構造統一ルール（**Phase開始時必読**）
 
 #### **設計書**
 作業対象に応じて選択：
@@ -80,10 +84,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 📋 フェーズ別推奨パターン（参考）
 
 #### **実装フェーズ推奨**
-🔴 必読 + 関連ADR + 作業対象設計書 + 組織設計（Phase適応型使用時）
+🔴 必読 + ADR_012（階層構造統一ルール） + 関連ADR + 作業対象設計書 + 組織設計（Phase適応型使用時）
 
 #### **レビュー・修正フェーズ推奨**  
-🔴 必読 + 品質関連ADR + 関連設計書 + 組織設計 + 直近実装記録
+🔴 必読 + ADR_012（階層構造統一ルール） + 品質関連ADR + 関連設計書 + 組織設計 + 直近実装記録
 
 ### 🔚 セッション終了時確認プロセス
 **セッション目的達成時に必ず実施**:
