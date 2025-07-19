@@ -1,0 +1,143 @@
+@using Microsoft.AspNetCore.Components.Web
+@inject ILogger<ErrorBoundary> Logger
+
+@if (CurrentException != null)
+{
+    <div class="error-boundary">
+        <div class="alert alert-danger" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                <div>
+                    <h4 class="alert-heading">システムエラーが発生しました</h4>
+                    <p class="mb-2">
+                        申し訳ございません。予期しないエラーが発生しました。<br>
+                        問題が解決しない場合は、システム管理者にお問い合わせください。
+                    </p>
+                    
+                    @if (_showDetails)
+                    {
+                        <hr>
+                        <div class="error-details">
+                            <h6>エラー詳細:</h6>
+                            <code class="text-break">@CurrentException.Message</code>
+                            @if (!string.IsNullOrEmpty(CurrentException.StackTrace))
+                            {
+                                <details class="mt-2">
+                                    <summary>スタックトレース</summary>
+                                    <pre class="mt-2 small">@CurrentException.StackTrace</pre>
+                                </details>
+                            }
+                        </div>
+                    }
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-outline-danger btn-sm me-2" @onclick="ToggleDetails">
+                            @if (_showDetails)
+                            {
+                                <i class="bi bi-eye-slash me-1"></i><span>詳細を隠す</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-eye me-1"></i><span>詳細を表示</span>
+                            }
+                        </button>
+                        <button class="btn btn-primary btn-sm" @onclick="Recover">
+                            <i class="bi bi-arrow-clockwise me-1"></i>再試行
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    public Exception? CurrentException { get; set; }
+
+    private bool _showDetails = false;
+
+    /// <summary>
+    /// エラー発生時の処理
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// ユーザー定義のエラーハンドリングにより、
+    /// 予期しない例外をキャッチして適切に表示します。
+    /// これにより、ユーザーフレンドリーなエラー画面を提供できます。
+    /// </summary>
+    public void SetException(Exception exception)
+    {
+        CurrentException = exception;
+        
+        // エラー情報をログに記録
+        Logger.LogError(exception, "ErrorBoundaryでエラーをキャッチしました");
+        
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// エラー詳細表示の切り替え
+    /// </summary>
+    private void ToggleDetails()
+    {
+        _showDetails = !_showDetails;
+    }
+
+    /// <summary>
+    /// エラー状態からの復旧
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// CurrentExceptionをnullにすることで、
+    /// 通常のコンテンツ表示に戻ります。
+    /// </summary>
+    private void Recover()
+    {
+        CurrentException = null;
+        _showDetails = false;
+        StateHasChanged();
+    }
+}
+
+<style>
+    .error-boundary {
+        margin: 1rem 0;
+    }
+
+    .error-details {
+        background-color: #f8f9fa;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        border-left: 4px solid #dc3545;
+    }
+
+    .error-details code {
+        background-color: transparent;
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .error-details pre {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+        max-height: 200px;
+        overflow-y: auto;
+        color: #495057;
+    }
+
+    details summary {
+        cursor: pointer;
+        color: #0d6efd;
+        font-weight: 500;
+    }
+
+    details summary:hover {
+        text-decoration: underline;
+    }
+</style>

@@ -1,0 +1,67 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using UbiquitousLanguageManager.Web.Shared
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <h4 class="alert-heading">アクセス権限がありません</h4>
+                            <p>このページにアクセスする権限がありません。</p>
+                            <hr>
+                            <p class="mb-0">必要な権限についてはシステム管理者にお問い合わせください。</p>
+                        </div>
+                    }
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">認証確認中...</span>
+                        </div>
+                    </div>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>ページが見つかりません</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">ページが見つかりません</h4>
+                    <p>お探しのページは存在しないか、移動された可能性があります。</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="/" class="btn btn-primary">ホームに戻る</a>
+                    </p>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+@* 
+【Blazor Server初学者向け解説】
+このApp.razorファイルはBlazor Serverアプリケーションのルートコンポーネントです。
+
+主要な機能：
+1. CascadingAuthenticationState: 認証状態を全コンポーネントに提供
+2. Router: URLルーティングを処理
+3. AuthorizeRouteView: 認証・認可を考慮したページ表示
+4. NotAuthorized: 認証されていない、または権限不足の場合の表示
+5. Authorizing: 認証確認中の表示
+6. NotFound: 存在しないページへのアクセス時の表示
+
+認証状態の管理：
+- 未認証ユーザーは自動的にログイン画面にリダイレクト
+- 認証済みだが権限不足の場合は適切なエラーメッセージを表示
+- 認証確認中はローディング表示
+*@

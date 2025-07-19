@@ -6,6 +6,9 @@ open System
 // IDによって同一性が決まり、ライフサイクルを持つ
 
 // 👤 ユーザーエンティティ: システム利用者の表現
+// 【F#初学者向け解説】
+// option型を使用することで、認証機能の段階的追加を実現しています。
+// 既存データとの互換性を保ちながら、新しい認証属性を追加できます。
 type User = {
     Id: UserId
     Email: Email
@@ -13,17 +16,46 @@ type User = {
     Role: UserRole
     IsActive: bool
     IsFirstLogin: bool
+    // 認証関連の拡張プロパティ（option型で後方互換性を確保）
+    PasswordHash: PasswordHash option
+    SecurityStamp: SecurityStamp option
+    ConcurrencyStamp: ConcurrencyStamp option
+    LockoutEnd: DateTime option  // アカウントロックアウト終了時刻
+    AccessFailedCount: int       // ログイン失敗回数
     UpdatedAt: DateTime
     UpdatedBy: UserId
 } with
     // 🔧 ユーザー作成: 新規ユーザーのファクトリーメソッド
     static member create (email: Email) (name: UserName) (role: UserRole) (createdBy: UserId) = {
-        Id = UserId 0L  // 🔄 実際のIDはInfrastructure層で設定
+        Id = UserId.create 0L  // 🔄 実際のIDはInfrastructure層で設定
         Email = email
         Name = name
         Role = role
         IsActive = true
         IsFirstLogin = true
+        PasswordHash = None
+        SecurityStamp = Some (SecurityStamp.createNew())
+        ConcurrencyStamp = Some (ConcurrencyStamp.createNew())
+        LockoutEnd = None
+        AccessFailedCount = 0
+        UpdatedAt = DateTime.UtcNow
+        UpdatedBy = createdBy
+    }
+    
+    // 🔐 認証用ユーザー作成: パスワードハッシュを含む完全な作成
+    static member createWithAuthentication (email: Email) (name: UserName) (role: UserRole) 
+                                         (passwordHash: PasswordHash) (createdBy: UserId) = {
+        Id = UserId.create 0L
+        Email = email
+        Name = name
+        Role = role
+        IsActive = true
+        IsFirstLogin = true
+        PasswordHash = Some passwordHash
+        SecurityStamp = Some (SecurityStamp.createNew())
+        ConcurrencyStamp = Some (ConcurrencyStamp.createNew())
+        LockoutEnd = None
+        AccessFailedCount = 0
         UpdatedAt = DateTime.UtcNow
         UpdatedBy = createdBy
     }
@@ -33,10 +65,51 @@ type User = {
         if this.IsActive then
             Ok { this with 
                     Email = newEmail
+                    SecurityStamp = Some (SecurityStamp.createNew()) // メール変更時はセキュリティスタンプも更新
                     UpdatedAt = DateTime.UtcNow
                     UpdatedBy = updatedBy }
         else
             Error "非アクティブなユーザーのメールアドレスは変更できません"
+    
+    // 🔑 パスワード変更: セキュリティルールに従った更新
+    member this.changePassword (newPasswordHash: PasswordHash) updatedBy =
+        if this.IsActive then
+            Ok { this with 
+                    PasswordHash = Some newPasswordHash
+                    SecurityStamp = Some (SecurityStamp.createNew()) // パスワード変更時もセキュリティスタンプ更新
+                    IsFirstLogin = false  // パスワード変更後は初回ログインフラグをオフ
+                    UpdatedAt = DateTime.UtcNow
+                    UpdatedBy = updatedBy }
+        else
+            Error "非アクティブなユーザーのパスワードは変更できません"
+    
+    // 🔒 ログイン失敗記録: アカウントロックアウト機能のサポート
+    member this.recordFailedAccess maxFailedAttempts lockoutDuration =
+        let newFailedCount = this.AccessFailedCount + 1
+        if newFailedCount >= maxFailedAttempts then
+            // ロックアウト発動
+            { this with 
+                AccessFailedCount = newFailedCount
+                LockoutEnd = Some (DateTime.UtcNow.Add(lockoutDuration))
+                UpdatedAt = DateTime.UtcNow }
+        else
+            // 失敗回数のみ増加
+            { this with 
+                AccessFailedCount = newFailedCount
+                UpdatedAt = DateTime.UtcNow }
+    
+    // ✅ ログイン成功記録: 失敗カウントのリセット
+    member this.recordSuccessfulAccess () =
+        { this with 
+            AccessFailedCount = 0
+            LockoutEnd = None
+            UpdatedAt = DateTime.UtcNow }
+    
+    // 🔓 ロックアウト状態確認
+    member this.isLockedOut () =
+        match this.LockoutEnd with
+        | Some lockoutEnd -> DateTime.UtcNow < lockoutEnd
+        | None -> false
 
 // 📁 プロジェクトエンティティ: ドメイン領域の管理単位
 type Project = {

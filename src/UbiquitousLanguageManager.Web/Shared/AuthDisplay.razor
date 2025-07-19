@@ -1,0 +1,112 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using UbiquitousLanguageManager.Web.Services
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <div class="auth-display">
+            <span class="user-info">
+                <i class="bi bi-person-circle me-1"></i>
+                @if (_currentUser != null)
+                {
+                    <span class="user-name">@_currentUser.Name</span>
+                    <span class="user-role">(@_currentUser.Role)</span>
+                }
+            </span>
+            <button class="btn btn-outline-secondary btn-sm ms-2" @onclick="HandleLogoutAsync">
+                <i class="bi bi-box-arrow-right me-1"></i>
+                ログアウト
+            </button>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="auth-display">
+            <a href="Account/Login" class="btn btn-primary btn-sm">
+                <i class="bi bi-box-arrow-in-right me-1"></i>
+                ログイン
+            </a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private UbiquitousLanguageManager.Contracts.DTOs.Authentication.AuthenticatedUserDto? _currentUser;
+
+    /// <summary>
+    /// コンポーネント初期化
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// OnInitializedAsyncは、コンポーネントが初回レンダリングされる前に
+    /// 一度だけ実行される非同期初期化メソッドです。
+    /// ここで現在のユーザー情報を取得し、表示に使用します。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser = await AuthService.GetCurrentUserAsync();
+    }
+
+    /// <summary>
+    /// ログアウト処理
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// ログアウト後は、StateHasChanged()を呼ぶ必要はありません。
+    /// NavigationManagerによるページ遷移により、
+    /// 新しいページで認証状態が正しく反映されます。
+    /// </summary>
+    private async Task HandleLogoutAsync()
+    {
+        try
+        {
+            await AuthService.LogoutAsync();
+            
+            // ログアウト後はホーム画面にリダイレクト
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            // エラーハンドリング（Phase A1では簡易実装）
+            Console.WriteLine($"Logout error: {ex.Message}");
+        }
+    }
+}
+
+<style>
+    .auth-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .user-name {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .user-role {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .bi {
+        font-size: 0.875rem;
+    }
+
+    @@media (max-width: 640.98px) {
+        .user-role {
+            display: none;
+        }
+        
+        .user-info {
+            font-size: 0.75rem;
+        }
+    }
+</style>

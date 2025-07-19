@@ -1,0 +1,142 @@
+@inherits InputText
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="validated-input-group">
+    <div class="input-group">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="input-group-text">
+                <i class="@Icon"></i>
+            </span>
+        }
+        <input @attributes="AdditionalAttributes" 
+               class="@CssClass" 
+               @bind="CurrentValueAsString" 
+               @bind:event="oninput"
+               placeholder="@Placeholder" />
+        @if (ShowValidationIcon)
+        {
+            <span class="input-group-text validation-icon">
+                @if (IsValid)
+                {
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                }
+                else if (HasError)
+                {
+                    <i class="bi bi-exclamation-circle-fill text-danger"></i>
+                }
+                else
+                {
+                    <i class="bi bi-circle text-muted"></i>
+                }
+            </span>
+        }
+    </div>
+    
+    @if (HasError && ShowInlineError)
+    {
+        <div class="invalid-feedback d-block">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            @ErrorMessage
+        </div>
+    }
+    
+    @if (!string.IsNullOrEmpty(HelpText))
+    {
+        <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>
+            @HelpText
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// アイコンCSSクラス
+    /// </summary>
+    [Parameter] public string? Icon { get; set; }
+
+    /// <summary>
+    /// プレースホルダーテキスト
+    /// </summary>
+    [Parameter] public string? Placeholder { get; set; }
+
+    /// <summary>
+    /// ヘルプテキスト
+    /// </summary>
+    [Parameter] public string? HelpText { get; set; }
+
+    /// <summary>
+    /// バリデーションアイコンを表示するか
+    /// </summary>
+    [Parameter] public bool ShowValidationIcon { get; set; } = true;
+
+    /// <summary>
+    /// インラインエラーを表示するか
+    /// </summary>
+    [Parameter] public bool ShowInlineError { get; set; } = true;
+
+    /// <summary>
+    /// バリデーション状態の確認
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// EditContextを通じて現在のフィールドの
+    /// バリデーション状態を取得しています。
+    /// </summary>
+    private bool IsValid => EditContext?.GetValidationMessages(FieldIdentifier).Any() == false && !string.IsNullOrEmpty(CurrentValueAsString);
+    
+    private bool HasError => EditContext?.GetValidationMessages(FieldIdentifier).Any() == true;
+    
+    private string? ErrorMessage => EditContext?.GetValidationMessages(FieldIdentifier).FirstOrDefault();
+
+    /// <summary>
+    /// CSSクラスの動的生成
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// バリデーション状態に応じてBootstrapの
+    /// クラスを動的に適用しています。
+    /// </summary>
+    protected override string? FormatValueAsString(string? value) => value;
+
+    protected new string CssClass => $"form-control {(HasError ? "is-invalid" : IsValid ? "is-valid" : "")}".Trim();
+}
+
+<style>
+    .validated-input-group {
+        position: relative;
+    }
+
+    .validation-icon {
+        background-color: transparent !important;
+        border-left: none !important;
+    }
+
+    .form-control.is-valid {
+        background-image: none;
+        border-color: #198754;
+    }
+
+    .form-control.is-invalid {
+        background-image: none;
+        border-color: #dc3545;
+    }
+
+    .form-control:focus.is-valid {
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    }
+
+    .form-control:focus.is-invalid {
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+
+    .invalid-feedback {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        color: #6c757d;
+    }
+</style>

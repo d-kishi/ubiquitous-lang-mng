@@ -35,6 +35,29 @@ type UserApplicationService(
                         }
         }
     
+    // 🔐 認証用ユーザー登録: パスワード付きユーザー作成
+    // 【F#初学者向け解説】
+    // 通常のユーザー登録と異なり、パスワードハッシュを含む完全な認証情報を設定します。
+    // Infrastructure層でASP.NET Core Identityと連携して実行されます。
+    member this.RegisterUserWithAuthenticationAsync(email: Email, name: UserName, role: UserRole, password: string, createdBy: UserId) =
+        task {
+            // 🔍 重複チェック
+            let! existingUserResult = userRepository.GetByEmailAsync(email)
+            
+            return!
+                match existingUserResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok existingUser ->
+                    match existingUser with
+                    | Some _ -> Task.FromResult(Error "指定されたメールアドレスは既に使用されています")
+                    | None ->
+                        // 🔐 認証サービスでのユーザー作成（パスワードハッシュ化含む）
+                        task {
+                            let! createResult = authService.RegisterUserAsync(email, name, role, password, createdBy)
+                            return createResult
+                        }
+        }
+    
     // 🔑 ユーザーログイン: 認証処理と初回ログインチェック
     member this.LoginAsync(email: Email, password: string) =
         task {

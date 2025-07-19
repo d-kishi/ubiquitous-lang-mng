@@ -157,7 +157,7 @@ public class UserRepository : IUserRepository
                 return FSharpResult<User, string>.NewError($"Invalid role: {roleResult.ErrorValue}");
             }
 
-            // F#のUserレコードを作成
+            // F#のUserレコードを作成（新しい認証関連プロパティを含む）
             var user = new User(
                 UserId.NewUserId(entity.Id),
                 emailResult.ResultValue,
@@ -165,6 +165,12 @@ public class UserRepository : IUserRepository
                 roleResult.ResultValue,
                 entity.IsActive,
                 entity.IsFirstLogin,
+                // 認証関連プロパティ（option型）
+                FSharpOption<PasswordHash>.None, // PasswordHashは通常レポジトリ経由では設定しない
+                FSharpOption<SecurityStamp>.None, // SecurityStampも同様
+                FSharpOption<ConcurrencyStamp>.None, // ConcurrencyStampも同様
+                FSharpOption<DateTime>.None, // LockoutEnd
+                0, // AccessFailedCount
                 entity.UpdatedAt,
                 UserId.NewUserId(entity.UpdatedBy)
             );

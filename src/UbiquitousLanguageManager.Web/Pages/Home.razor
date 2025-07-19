@@ -1,0 +1,201 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>ホーム - ユビキタス言語管理システム</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="welcome-section">
+                <h1 class="display-4 mb-4">
+                    <i class="bi bi-house-door-fill me-3"></i>
+                    ユビキタス言語管理システム
+                </h1>
+                
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>ログイン中です</strong><br />
+                            ナビゲーションメニューから各機能をご利用ください。
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-list-nested me-2"></i>
+                                            ユビキタス言語管理
+                                        </h5>
+                                        <p class="card-text">
+                                            プロジェクトで使用するドメイン用語の定義・管理を行います。
+                                        </p>
+                                        <a href="ubiquitous-languages" class="btn btn-primary">
+                                            用語を管理
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-folder2-open me-2"></i>
+                                            プロジェクト管理
+                                        </h5>
+                                        <p class="card-text">
+                                            ユビキタス言語を管理するプロジェクトの作成・設定を行います。
+                                        </p>
+                                        <a href="projects" class="btn btn-primary">
+                                            プロジェクトを管理
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-key-fill me-2"></i>
+                                            アカウント設定
+                                        </h5>
+                                        <p class="card-text">
+                                            パスワード変更やプロフィール情報の更新を行います。
+                                        </p>
+                                        <a href="Account/ChangePassword" class="btn btn-outline-primary">
+                                            パスワード変更
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <AuthorizeView Roles="SuperUser,ProjectManager">
+                                <Authorized Context="userContext">
+                                    <div class="col-md-6 col-lg-4 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <h5 class="card-title">
+                                                    <i class="bi bi-people-fill me-2"></i>
+                                                    ユーザー管理
+                                                </h5>
+                                                <p class="card-text">
+                                                    システムユーザーの登録・編集・権限管理を行います。
+                                                </p>
+                                                <a href="users" class="btn btn-warning">
+                                                    ユーザーを管理
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Authorized>
+                            </AuthorizeView>
+                        </div>
+                    </Authorized>
+                    <NotAuthorized>
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <strong>ユビキタス言語管理システムへようこそ</strong><br />
+                            ドメイン駆動設計（DDD）におけるユビキタス言語の管理を効率化するシステムです。<br />
+                            システムをご利用いただくには、ログインが必要です。
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <a href="Account/Login" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                ログイン
+                            </a>
+                        </div>
+                        
+                        <div class="row mt-5">
+                            <div class="col-md-4 mb-4">
+                                <div class="text-center">
+                                    <i class="bi bi-journal-text display-4 text-primary mb-3"></i>
+                                    <h4>用語の統一管理</h4>
+                                    <p class="text-muted">
+                                        プロジェクト内で使用される重要な用語を一元管理し、
+                                        チーム間での理解を統一します。
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="text-center">
+                                    <i class="bi bi-people display-4 text-success mb-3"></i>
+                                    <h4>チーム協力</h4>
+                                    <p class="text-muted">
+                                        開発者、ドメインエキスパート、プロジェクト管理者が
+                                        協力して用語の定義・承認を行います。
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-4">
+                                <div class="text-center">
+                                    <i class="bi bi-graph-up display-4 text-warning mb-3"></i>
+                                    <h4>品質向上</h4>
+                                    <p class="text-muted">
+                                        明確な用語定義により、開発効率と
+                                        システム品質の向上を実現します。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .welcome-section {
+        padding: 2rem 0;
+    }
+
+    .display-4 {
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .card {
+        transition: transform 0.2s;
+        border: 1px solid #dee2e6;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+        color: #495057;
+        font-weight: 600;
+    }
+
+    .bi {
+        color: inherit;
+    }
+
+    .text-primary .bi {
+        color: #0d6efd !important;
+    }
+
+    .text-success .bi {
+        color: #198754 !important;
+    }
+
+    .text-warning .bi {
+        color: #ffc107 !important;
+    }
+
+    @@media (max-width: 768px) {
+        .welcome-section {
+            padding: 1rem 0;
+        }
+        
+        .display-4 {
+            font-size: 2rem;
+        }
+    }
+</style>

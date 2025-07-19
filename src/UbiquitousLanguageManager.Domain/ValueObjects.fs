@@ -11,10 +11,26 @@ with
     static member create (emailStr: string) =
         if System.String.IsNullOrWhiteSpace(emailStr) then
             Error "メールアドレスが入力されていません"
+        elif emailStr.Length > 254 then
+            Error "メールアドレスは254文字以内で入力してください"
         elif not (emailStr.Contains("@")) then
             Error "有効なメールアドレス形式ではありません"
+        elif emailStr.StartsWith("@") || emailStr.EndsWith("@") then
+            Error "有効なメールアドレス形式ではありません"
+        elif emailStr.IndexOf("@") <> emailStr.LastIndexOf("@") then
+            Error "有効なメールアドレス形式ではありません"
+        elif not (emailStr.Contains(".")) then
+            Error "有効なメールアドレス形式ではありません"
         else
-            Ok (Email emailStr)
+            let atIndex = emailStr.IndexOf("@")
+            let localPart = emailStr.Substring(0, atIndex)
+            let domainPart = emailStr.Substring(atIndex + 1)
+            if System.String.IsNullOrWhiteSpace(localPart) || System.String.IsNullOrWhiteSpace(domainPart) then
+                Error "有効なメールアドレス形式ではありません"
+            elif domainPart.IndexOf(".") = -1 then
+                Error "有効なメールアドレス形式ではありません"
+            else
+                Ok (Email emailStr)
     
     // 📤 値の取得: プライベートコンストラクタのため専用メソッドで値を取得
     member this.Value = 
@@ -99,8 +115,91 @@ type ApprovalStatus =
     | Approved  // 承認済み
     | Rejected  // 却下
 
+// 🔐 パスワードハッシュ値オブジェクト
+// 【F#初学者向け解説】
+// パスワードは平文で保存せず、必ずハッシュ化して保存します。
+// このValue Objectは、ハッシュ化されたパスワードのみを受け入れ、
+// ドメイン層でのパスワード処理の安全性を保証します。
+type PasswordHash = 
+    private PasswordHash of string
+with
+    // パスワードハッシュは外部（Infrastructure層）で生成されたものを受け取る
+    static member create (hashStr: string) =
+        if System.String.IsNullOrWhiteSpace(hashStr) then
+            Error "パスワードハッシュが入力されていません"
+        else
+            Ok (PasswordHash hashStr)
+    
+    member this.Value = 
+        let (PasswordHash hash) = this
+        hash
+
+// 🔒 セキュリティスタンプ値オブジェクト
+// ASP.NET Core Identityで使用される、ユーザーの認証状態変更を追跡する値
+type SecurityStamp = 
+    private SecurityStamp of string
+with
+    static member create (stampStr: string) =
+        if System.String.IsNullOrWhiteSpace(stampStr) then
+            // 新規作成時は自動生成
+            Ok (SecurityStamp (System.Guid.NewGuid().ToString("N")))
+        else
+            Ok (SecurityStamp stampStr)
+    
+    static member createNew () =
+        SecurityStamp (System.Guid.NewGuid().ToString("N"))
+    
+    member this.Value = 
+        let (SecurityStamp stamp) = this
+        stamp
+
+// 🔄 並行性スタンプ値オブジェクト
+// Entity Frameworkの楽観的並行性制御で使用
+type ConcurrencyStamp = 
+    private ConcurrencyStamp of string
+with
+    static member create (stampStr: string) =
+        if System.String.IsNullOrWhiteSpace(stampStr) then
+            Ok (ConcurrencyStamp (System.Guid.NewGuid().ToString()))
+        else
+            Ok (ConcurrencyStamp stampStr)
+    
+    static member createNew () =
+        ConcurrencyStamp (System.Guid.NewGuid().ToString())
+    
+    member this.Value = 
+        let (ConcurrencyStamp stamp) = this
+        stamp
+
 // 🆔 識別子型: 型安全なIDの実装
-type UserId = UserId of int64
-type ProjectId = ProjectId of int64
-type DomainId = DomainId of int64
-type UbiquitousLanguageId = UbiquitousLanguageId of int64
+type UserId = 
+    | UserId of int64
+with
+    member this.Value = 
+        let (UserId id) = this
+        id
+    static member create(id: int64) = UserId id
+
+type ProjectId = 
+    | ProjectId of int64
+with
+    member this.Value = 
+        let (ProjectId id) = this
+        id
+    static member create(id: int64) = ProjectId id
+
+type DomainId = 
+    | DomainId of int64
+with
+    member this.Value = 
+        let (DomainId id) = this
+        id
+    static member create(id: int64) = DomainId id
+
+type UbiquitousLanguageId = 
+    | UbiquitousLanguageId of int64
+with
+    member this.Value = 
+        let (UbiquitousLanguageId id) = this
+        id
+    static member create(id: int64) = UbiquitousLanguageId id

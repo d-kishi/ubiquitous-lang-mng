@@ -2,14 +2,47 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using UbiquitousLanguageManager.Infrastructure.Data;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Web.Middleware;
+
+/// <summary>
+/// Programクラス - テストから参照可能にするためにpublicとして定義
+/// 
+/// 【初学者向け解説】
+/// WebApplicationFactory&lt;T&gt;でテストサーバーを起動する際に、
+/// このProgramクラスを型パラメータとして指定する必要があります。
+/// </summary>
+public partial class Program
+{
+    /// <summary>
+    /// テスト用にMainメソッドを公開
+    /// </summary>
+    public static async Task Main(string[] args)
+    {
+        var app = await CreateApp(args);
+        app.Run();
+    }
+
+    /// <summary>
+    /// アプリケーション作成処理 - テストからも利用可能
+    /// </summary>
+    public static async Task<WebApplication> CreateApp(string[] args)
+    {
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 🔧 Blazor Server設定: サーバーサイドレンダリングとSignalR接続
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+// 🔐 Blazor認証設定
+// 【Blazor Server初学者向け解説】
+// AuthorizationCoreは、Blazorコンポーネントで[Authorize]属性を使用するために必要です。
+// AuthenticationStateProviderは、認証状態をBlazor全体で管理するサービスです。
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider, 
+    UbiquitousLanguageManager.Web.Authentication.CustomAuthenticationStateProvider>();
 
 // 📊 データベース設定: PostgreSQL + Entity Framework Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -23,7 +56,9 @@ builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // 🔐 認証・認可設定: ASP.NET Core Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => 
+// ApplicationUser を使用した Identity 統合により、
+// 業務固有のユーザープロパティと認証機能を統合しています
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => 
 {
     // 🔑 パスワードポリシー設定
     options.Password.RequireDigit = true;
@@ -42,8 +77,28 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.User.AllowedUserNameCharacters =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.User.RequireUniqueEmail = true;
+
+    // 🔐 サインイン設定
+    options.SignIn.RequireConfirmedAccount = false; // Phase A1では無効化
+    options.SignIn.RequireConfirmedEmail = false;    // Phase A1では無効化
+    options.SignIn.RequireConfirmedPhoneNumber = false;
 })
-.AddEntityFrameworkStores<UbiquitousLanguageDbContext>();
+.AddEntityFrameworkStores<UbiquitousLanguageDbContext>()
+.AddDefaultTokenProviders(); // パスワードリセットトークン等の生成用
+
+// 🍪 Cookie認証設定
+// 【Blazor Server初学者向け解説】
+// Blazor Server アプリケーションでは、Cookie ベースの認証が一般的です。
+// SignalR 接続でも認証状態が維持されるため、セキュアな双方向通信が可能です。
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromHours(24); // 24時間有効
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.SlidingExpiration = true; // アクティブなユーザーは自動延長
+});
 
 // 🎯 Clean Architecture: 依存関係注入設定
 // Repository実装の登録
@@ -61,8 +116,11 @@ builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository
 // 🔧 初期データサービスの登録
 builder.Services.AddScoped<InitialDataService>();
 
+// 🔐 Web層認証サービスの登録
+builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.AuthenticationService>();
+
 // 📋 設定オブジェクトの登録
-builder.Services.Configure<InitialSuperUserSettings>(
+builder.Services.Configure<UbiquitousLanguageManager.Infrastructure.Services.InitialSuperUserSettings>(
     builder.Configuration.GetSection("InitialSuperUser"));
 
 // 🏥 ヘルスチェック設定: アプリケーション・データベースの正常性監視
@@ -159,31 +217,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Run();
-
-/// <summary>
-/// 初期スーパーユーザー設定クラス
-/// appsettings.jsonの"InitialSuperUser"セクションにバインド
-/// </summary>
-public class InitialSuperUserSettings
-{
-    /// <summary>
-    /// 初期スーパーユーザーのメールアドレス
-    /// </summary>
-    public string Email { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 初期スーパーユーザーの名前
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 初期パスワード（"su"固定）
-    /// </summary>
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 初回ログインフラグ（パスワード変更必須）
-    /// </summary>
-    public bool IsFirstLogin { get; set; } = true;
+        return app;
+    }
 }
+
