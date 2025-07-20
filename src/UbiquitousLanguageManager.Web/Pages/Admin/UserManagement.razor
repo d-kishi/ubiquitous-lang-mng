@@ -1,0 +1,756 @@
+@page "/admin/users"
+@using UbiquitousLanguageManager.Contracts
+@using UbiquitousLanguageManager.Domain
+@using UbiquitousLanguageManager.Application
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.FSharp.Core
+@using UbiquitousLanguageManager.Web.Pages.Admin.Components
+@using UbiquitousLanguageManager.Web.Components.Authorization
+@inject UserApplicationService UserApplicationService
+@inject IJSRuntime JSRuntime
+@attribute [Authorize(Roles = "SuperUser,ProjectManager")]
+
+<PageTitle>ユーザー管理</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-users me-2"></i>
+                    ユーザー管理
+                </h2>
+                <SecureButton Text="新規ユーザー作成"
+                             IconClass="fas fa-plus"
+                             CssClass="btn btn-primary"
+                             RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+                             RequiredPermission="CreateUser"
+                             OnClick="ShowCreateUserModal"
+                             FallbackText="作成権限なし" />
+            </div>
+
+            @* 検索・フィルター Section *@
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">検索キーワード</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="名前・メールアドレスで検索"
+                                       @bind="searchTerm" @bind:event="oninput" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="SearchUsers">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ロール</label>
+                            <select class="form-select" value="@selectedRole" @onchange="OnRoleFilterChanged">
+                                <option value="">全てのロール</option>
+                                <AuthorizeViewExtensions ShowForRoles='new List<string> { "SuperUser" }'>
+                                    <option value="SuperUser">スーパーユーザー</option>
+                                </AuthorizeViewExtensions>
+                                <option value="ProjectManager">プロジェクト管理者</option>
+                                <option value="DomainApprover">ドメイン承認者</option>
+                                <option value="GeneralUser">一般ユーザー</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">状態</label>
+                            <select class="form-select" value="@selectedStatus" @onchange="OnStatusFilterChanged">
+                                <option value="active">アクティブのみ</option>
+                                <option value="all">全ユーザー</option>
+                                <option value="inactive">非アクティブのみ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-secondary w-100" @onclick="ClearFilters">
+                                <i class="fas fa-times me-1"></i>
+                                クリア
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Loading State with LoadingOverlay *@
+            <div class="position-relative">
+                <LoadingOverlay IsVisible="@isLoading" 
+                               LoadingText="ユーザー情報を読み込んでいます..." 
+                               SpinnerType="LoadingOverlay.SpinnerStyle.Border" 
+                               Size="LoadingOverlay.SpinnerSize.Medium" />
+                
+                @if (!isLoading)
+                {
+                @* Users DataGrid *@
+                <div class="card">
+                    <div class="card-body p-0">
+                        @if (filteredUsers?.Any() == true)
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th scope="col">
+                                                <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="@(() => SortBy("Name"))">
+                                                    ユーザー名
+                                                    @if (sortColumn == "Name")
+                                                    {
+                                                        <i class="fas @(sortDirection == "asc" ? "fa-sort-up" : "fa-sort-down") ms-1"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                                    }
+                                                </button>
+                                            </th>
+                                            <th scope="col">
+                                                <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="@(() => SortBy("Email"))">
+                                                    メールアドレス
+                                                    @if (sortColumn == "Email")
+                                                    {
+                                                        <i class="fas @(sortDirection == "asc" ? "fa-sort-up" : "fa-sort-down") ms-1"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                                    }
+                                                </button>
+                                            </th>
+                                            <th scope="col">
+                                                <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="@(() => SortBy("Role"))">
+                                                    ロール
+                                                    @if (sortColumn == "Role")
+                                                    {
+                                                        <i class="fas @(sortDirection == "asc" ? "fa-sort-up" : "fa-sort-down") ms-1"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-sort ms-1 text-muted"></i>
+                                                    }
+                                                </button>
+                                            </th>
+                                            <th scope="col">状態</th>
+                                            <th scope="col">最終更新</th>
+                                            <th scope="col" width="120">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var user in paginatedUsers)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-circle me-2 @(user.IsActive ? "bg-success" : "bg-secondary")">
+                                                            @user.Name.Substring(0, 1).ToUpper()
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-semibold">@user.Name</div>
+                                                            @if (user.IsFirstLogin)
+                                                            {
+                                                                <small class="text-warning">
+                                                                    <i class="fas fa-exclamation-triangle me-1"></i>初回ログイン
+                                                                </small>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">@user.Email</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge @GetRoleBadgeClass(user.Role)">
+                                                        @GetRoleDisplayName(user.Role)
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if (user.IsActive)
+                                                    {
+                                                        <span class="badge bg-success">アクティブ</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">非アクティブ</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <span class="text-muted">@user.UpdatedAt.ToString("yyyy/MM/dd HH:mm")</span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <SecureButton IconClass="fas fa-edit"
+                                                                     CssClass="btn btn-sm btn-outline-primary"
+                                                                     RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+                                                                     RequiredPermission="EditUser"
+                                                                     OnClick="@(() => EditUser(user))"
+                                                                     Tooltip="編集"
+                                                                     FallbackIconClass="fas fa-edit-slash"
+                                                                     FallbackTooltip="編集権限がありません" />
+                                                        
+                                                        @if (user.IsActive)
+                                                        {
+                                                            <PermissionGuard RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+                                                                           IsSecuritySensitive="true"
+                                                                           ShowSecurityNotice="false">
+                                                                <SecureButton IconClass="fas fa-ban"
+                                                                             CssClass="btn btn-sm btn-outline-warning"
+                                                                             RequiredPermission="EditUser"
+                                                                             OnClick="@(() => DeactivateUser(user))"
+                                                                             Tooltip="無効化"
+                                                                             CustomAuthorization="@(authUser => authUser.Identity?.Name != user.Email)"
+                                                                             FallbackTooltip="自分自身を無効化することはできません" />
+                                                            </PermissionGuard>
+                                                        }
+                                                        else
+                                                        {
+                                                            <SecureButton IconClass="fas fa-check"
+                                                                         CssClass="btn btn-sm btn-outline-success"
+                                                                         RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+                                                                         RequiredPermission="EditUser"
+                                                                         OnClick="@(() => ActivateUser(user))"
+                                                                         Tooltip="有効化"
+                                                                         FallbackTooltip="有効化権限がありません" />
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            @* Pagination *@
+                            @if (totalPages > 1)
+                            {
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="text-muted">
+                                            @((currentPage - 1) * pageSize + 1) - @Math.Min(currentPage * pageSize, filteredUsers.Count) 
+                                            件 / 全 @filteredUsers.Count 件
+                                        </div>
+                                        <nav>
+                                            <ul class="pagination pagination-sm mb-0">
+                                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                                    <button class="page-link" @onclick="@(() => GoToPage(currentPage - 1))" disabled="@(currentPage == 1)">
+                                                        <i class="fas fa-chevron-left"></i>
+                                                    </button>
+                                                </li>
+                                                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                                {
+                                                    var pageNum = i;
+                                                    <li class="page-item @(currentPage == pageNum ? "active" : "")">
+                                                        <button class="page-link" @onclick="@(() => GoToPage(pageNum))">@pageNum</button>
+                                                    </li>
+                                                }
+                                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                                    <button class="page-link" @onclick="@(() => GoToPage(currentPage + 1))" disabled="@(currentPage == totalPages)">
+                                                        <i class="fas fa-chevron-right"></i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">ユーザーが見つかりませんでした</h5>
+                                <p class="text-muted">検索条件を変更するか、新しいユーザーを作成してください。</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Toast Notifications *@
+<ToastNotification @ref="toastNotification" Position="ToastNotification.ToastPosition.TopRight" />
+
+@* Confirmation Dialog *@
+<ConfirmationDialog @ref="confirmationDialog" 
+                   IsVisible="@showConfirmDialog"
+                   Title="@confirmDialogTitle"
+                   Message="@confirmDialogMessage"
+                   Details="@confirmDialogDetails"
+                   Type="@confirmDialogType"
+                   ConfirmText="@confirmDialogConfirmText"
+                   OnConfirm="HandleConfirmAction" 
+                   OnCancel="HandleCancelAction" />
+
+@* Keyboard Shortcuts *@
+<KeyboardShortcuts @ref="keyboardShortcuts" 
+                  OnShortcutPressed="HandleShortcutPressed" />
+
+<style>
+    .avatar-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 0.75rem;
+    }
+    
+    .table th button {
+        border: none;
+        background: none;
+    }
+    
+    .table th button:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>
+
+@code {
+    // State management for UI
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    
+    // Component references for enhanced UI
+    private ToastNotification? toastNotification;
+    private ConfirmationDialog? confirmationDialog;
+    private KeyboardShortcuts? keyboardShortcuts;
+    private string pendingAction = string.Empty;
+    private UserDto? actionTargetUser;
+    
+    // Confirmation dialog state
+    private bool showConfirmDialog = false;
+    private string confirmDialogTitle = string.Empty;
+    private string confirmDialogMessage = string.Empty;
+    private string confirmDialogDetails = string.Empty;
+    private ConfirmationDialog.DialogType confirmDialogType = ConfirmationDialog.DialogType.Warning;
+    private string confirmDialogConfirmText = "はい";
+
+    // Filter and search state
+    private string searchTerm = string.Empty;
+    private string selectedRole = string.Empty;
+    private string selectedStatus = "active";
+
+    // Sort and pagination state
+    private string sortColumn = "Name";
+    private string sortDirection = "asc";
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalPages = 1;
+
+    // Data collections
+    private List<UserDto> users = new();
+    private List<UserDto> filteredUsers = new();
+    private List<UserDto> paginatedUsers = new();
+    
+    // Modal state
+    private bool showEditModal = false;
+    private bool isNewUser = true;
+    private UserEditModal.UserEditModel? selectedUser = null;
+    private bool canAssignSuperUser = true; // Phase A3で実際の権限チェック
+    private bool canAssignProjectManager = true; // Phase A3で実際の権限チェック
+
+    // Component lifecycle
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            toastNotification?.ShowError($"ユーザー情報の読み込みに失敗しました: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // Data loading methods
+    private async Task LoadUsersAsync()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            // Blazor Server初学者向けコメント: UserApplicationServiceからユーザー一覧を取得
+            // F#のResult型をC#で処理するため、Mapメソッドチェーンを使用
+            // 注：operatorUserは現在ログイン中のユーザー（Phase A3で実装予定）
+            var dummyOperatorUser = CreateDummyOperatorUser(); // Phase A3で実際のログインユーザーに置き換え
+            var includeInactive = selectedStatus == "all" || selectedStatus == "inactive";
+            var result = await UserApplicationService.GetUsersAsync(dummyOperatorUser, includeInactive);
+
+            // F# Result型の処理（Blazor Server初学者向けコメント）
+            // F#のResult<T,TError>をC#で適切に処理するため、IsOkプロパティでSuccess/Errorを判定
+            if (result.IsOk)
+            {
+                // F#のList<User>からC#のList<UserDto>への変換
+                users = result.ResultValue.Select(user => new UserDto
+                {
+                    Id = user.Id.Value.ToString(),
+                    Name = user.Name.Value,
+                    Email = user.Email.Value,
+                    Role = ConvertRoleToString(user.Role),
+                    IsActive = user.IsActive,
+                    IsFirstLogin = user.IsFirstLogin,
+                    UpdatedAt = user.UpdatedAt
+                }).ToList();
+
+                // inactive選択時は非アクティブユーザーのみフィルタリング
+                if (selectedStatus == "inactive")
+                {
+                    users = users.Where(u => !u.IsActive).ToList();
+                }
+
+                ApplyFiltersAndSort();
+            }
+            else
+            {
+                toastNotification?.ShowError($"ユーザー情報の取得に失敗しました: {result.ErrorValue}");
+            }
+        }
+        catch (Exception ex)
+        {
+            toastNotification?.ShowError($"予期しないエラーが発生しました: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged(); // Blazor Server: UI更新を明示的に通知
+        }
+    }
+
+    // Search and filter methods
+    private void SearchUsers()
+    {
+        ApplyFiltersAndSort();
+        StateHasChanged();
+    }
+
+    private void OnRoleFilterChanged(ChangeEventArgs e)
+    {
+        selectedRole = e.Value?.ToString() ?? string.Empty;
+        ApplyFiltersAndSort();
+        StateHasChanged();
+    }
+
+    private async Task OnStatusFilterChanged(ChangeEventArgs e)
+    {
+        selectedStatus = e.Value?.ToString() ?? "active";
+        await LoadUsersAsync(); // ステータス変更時は再読み込みが必要
+    }
+
+    private void ApplyFiltersAndSort()
+    {
+        // フィルタリング処理
+        filteredUsers = users.Where(user =>
+        {
+            // 検索キーワードフィルタ
+            var matchesSearch = string.IsNullOrEmpty(searchTerm) ||
+                user.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                user.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+
+            // ロールフィルタ
+            var matchesRole = string.IsNullOrEmpty(selectedRole) ||
+                user.Role.Equals(selectedRole, StringComparison.OrdinalIgnoreCase);
+
+            return matchesSearch && matchesRole;
+        }).ToList();
+
+        // ソート処理
+        filteredUsers = sortColumn switch
+        {
+            "Name" => sortDirection == "asc" 
+                ? filteredUsers.OrderBy(u => u.Name).ToList()
+                : filteredUsers.OrderByDescending(u => u.Name).ToList(),
+            "Email" => sortDirection == "asc"
+                ? filteredUsers.OrderBy(u => u.Email).ToList()
+                : filteredUsers.OrderByDescending(u => u.Email).ToList(),
+            "Role" => sortDirection == "asc"
+                ? filteredUsers.OrderBy(u => u.Role).ToList()
+                : filteredUsers.OrderByDescending(u => u.Role).ToList(),
+            _ => filteredUsers
+        };
+
+        // ページング計算
+        totalPages = (int)Math.Ceiling((double)filteredUsers.Count / pageSize);
+        currentPage = Math.Min(currentPage, Math.Max(1, totalPages));
+
+        var startIndex = (currentPage - 1) * pageSize;
+        paginatedUsers = filteredUsers.Skip(startIndex).Take(pageSize).ToList();
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = string.Empty;
+        selectedRole = string.Empty;
+        selectedStatus = "active";
+        currentPage = 1;
+        
+        Task.Run(async () => await LoadUsersAsync());
+    }
+
+    // Sort methods
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortDirection = sortDirection == "asc" ? "desc" : "asc";
+        }
+        else
+        {
+            sortColumn = column;
+            sortDirection = "asc";
+        }
+
+        ApplyFiltersAndSort();
+        StateHasChanged();
+    }
+
+    // Pagination methods
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            ApplyFiltersAndSort();
+            StateHasChanged();
+        }
+    }
+
+    // User action methods
+    private void ShowCreateUserModal()
+    {
+        isNewUser = true;
+        selectedUser = null;
+        showEditModal = true;
+        StateHasChanged();
+    }
+
+    private void EditUser(UserDto user)
+    {
+        isNewUser = false;
+        selectedUser = new UserEditModal.UserEditModel
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Name = user.Name,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            ProjectIds = new List<string>() // Phase A3で実際のプロジェクトIDを設定
+        };
+        showEditModal = true;
+        StateHasChanged();
+    }
+
+    private void DeactivateUser(UserDto user)
+    {
+        actionTargetUser = user;
+        pendingAction = "deactivate";
+        
+        // 確認ダイアログを表示
+        confirmDialogTitle = "ユーザー無効化の確認";
+        confirmDialogMessage = $"ユーザー「{user.Name}」を無効化しますか？";
+        confirmDialogDetails = "無効化されたユーザーはシステムにログインできなくなります。";
+        confirmDialogType = ConfirmationDialog.DialogType.Warning;
+        confirmDialogConfirmText = "無効化";
+        showConfirmDialog = true;
+    }
+
+    private void ActivateUser(UserDto user)
+    {
+        actionTargetUser = user;
+        pendingAction = "activate";
+        
+        // 確認ダイアログを表示
+        confirmDialogTitle = "ユーザー有効化の確認";
+        confirmDialogMessage = $"ユーザー「{user.Name}」を有効化しますか？";
+        confirmDialogDetails = "有効化されたユーザーはシステムにログインできるようになります。";
+        confirmDialogType = ConfirmationDialog.DialogType.Success;
+        confirmDialogConfirmText = "有効化";
+        showConfirmDialog = true;
+    }
+
+    // Helper methods
+    private User CreateDummyOperatorUser()
+    {
+        // Phase A3で実際のログインユーザーに置き換え予定
+        var emailResult = Email.create("admin@example.com");
+        var nameResult = UserName.create("System Admin");
+        var role = Role.SuperUser;
+        var userId = UserId.create(1L);
+        
+        if (emailResult.IsOk && nameResult.IsOk)
+        {
+            return User.create(emailResult.ResultValue, nameResult.ResultValue, role, userId);
+        }
+        
+        // エラーケース: デフォルトユーザーを返す
+        return User.create(Email.create("default@example.com").ResultValue, 
+                          UserName.create("Default User").ResultValue, 
+                          Role.GeneralUser, 
+                          userId);
+    }
+    
+    private string ConvertRoleToString(Role role)
+    {
+        // F# Discriminated UnionのRole型を文字列に変換
+        return role.Tag switch
+        {
+            Role.Tags.SuperUser => "SuperUser",
+            Role.Tags.ProjectManager => "ProjectManager", 
+            Role.Tags.DomainApprover => "DomainApprover",
+            Role.Tags.GeneralUser => "GeneralUser",
+            _ => "Unknown"
+        };
+    }
+
+    private string GetRoleDisplayName(string role)
+    {
+        return role switch
+        {
+            "SuperUser" => "スーパーユーザー",
+            "ProjectManager" => "プロジェクト管理者",
+            "DomainApprover" => "ドメイン承認者", 
+            "GeneralUser" => "一般ユーザー",
+            _ => "不明"
+        };
+    }
+
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "SuperUser" => "bg-danger",
+            "ProjectManager" => "bg-warning",
+            "DomainApprover" => "bg-info",
+            "GeneralUser" => "bg-secondary",
+            _ => "bg-light text-dark"
+        };
+    }
+
+    // Enhanced UI event handlers
+    private async Task HandleShortcutPressed(string shortcut)
+    {
+        switch (shortcut)
+        {
+            case "new-user":
+                ShowCreateUserModal();
+                break;
+            case "search":
+                // Focus search input - JavaScript Interop would be needed
+                await JSRuntime.InvokeVoidAsync("focusElement", "input[placeholder*='検索']");
+                break;
+            case "refresh":
+                await LoadUsersAsync();
+                toastNotification?.ShowInfo("ユーザーリストを更新しました");
+                break;
+            case "help":
+                keyboardShortcuts?.ToggleHelp();
+                break;
+            case "cancel":
+                if (showEditModal)
+                {
+                    CloseEditModal();
+                }
+                break;
+        }
+    }
+    
+    private async Task HandleConfirmAction()
+    {
+        if (actionTargetUser == null) return;
+        
+        try
+        {
+            switch (pendingAction)
+            {
+                case "deactivate":
+                    // Phase A3で実装予定: 実際の無効化処理
+                    toastNotification?.ShowWarning($"ユーザー「{actionTargetUser.Name}」無効化機能はPhase A3で実装予定です");
+                    break;
+                case "activate":
+                    // Phase A3で実装予定: 実際の有効化処理
+                    toastNotification?.ShowSuccess($"ユーザー「{actionTargetUser.Name}」有効化機能はPhase A3で実装予定です");
+                    break;
+            }
+            
+            showConfirmDialog = false;
+            actionTargetUser = null;
+            pendingAction = string.Empty;
+            
+            await Task.CompletedTask; // 将来の非同期処理のための仮実装
+        }
+        catch (Exception ex)
+        {
+            toastNotification?.ShowError($"操作中にエラーが発生しました: {ex.Message}");
+        }
+    }
+    
+    private void HandleCancelAction()
+    {
+        showConfirmDialog = false;
+        actionTargetUser = null;
+        pendingAction = string.Empty;
+    }
+    
+    // Modal handling methods
+    private async Task SaveUser(UserEditModal.UserEditModel model)
+    {
+        try
+        {
+            // Phase A3で実装: 実際の保存処理
+            if (isNewUser)
+            {
+                toastNotification?.ShowSuccess($"ユーザー「{model.Name}」を登録しました");
+            }
+            else
+            {
+                toastNotification?.ShowSuccess($"ユーザー「{model.Name}」を更新しました");
+            }
+            
+            showEditModal = false;
+            await LoadUsersAsync(); // リストを更新
+        }
+        catch (Exception ex)
+        {
+            toastNotification?.ShowError($"保存中にエラーが発生しました: {ex.Message}");
+        }
+    }
+    
+    private void CloseEditModal()
+    {
+        showEditModal = false;
+        selectedUser = null;
+        StateHasChanged();
+    }
+
+    // UserDto class for data binding
+    public class UserDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public bool IsFirstLogin { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
+    }
+}
+
+@* ユーザー編集モーダル *@
+<UserEditModal IsVisible="@showEditModal"
+               IsNewUser="@isNewUser"
+               InitialUser="@selectedUser"
+               CanAssignSuperUser="@canAssignSuperUser"
+               CanAssignProjectManager="@canAssignProjectManager"
+               OnSave="SaveUser"
+               OnCancel="CloseEditModal" />

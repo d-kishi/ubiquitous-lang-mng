@@ -1,0 +1,279 @@
+@* ツールチップコンポーネント *@
+@* Blazor Server初学者向け: インタラクティブなツールチップを提供し、 *@
+@* ユーザーガイダンスとヘルプテキストを表示するコンポーネント *@
+
+<div class="tooltip-wrapper" @onmouseenter="ShowTooltip" @onmouseleave="HideTooltip">
+    @ChildContent
+    
+    @if (isVisible && !string.IsNullOrEmpty(Text))
+    {
+        <div class="custom-tooltip @PositionClass @SizeClass show" 
+             style="@GetPositionStyle()" 
+             role="tooltip">
+            <div class="tooltip-arrow"></div>
+            <div class="tooltip-inner">
+                @if (!string.IsNullOrEmpty(Title))
+                {
+                    <div class="tooltip-title">@Title</div>
+                }
+                @if (AllowHtml)
+                {
+                    @((MarkupString)Text)
+                }
+                else
+                {
+                    @Text
+                }
+                @if (ShowIcon && !string.IsNullOrEmpty(IconClass))
+                {
+                    <i class="@IconClass ms-2"></i>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string Text { get; set; } = string.Empty;
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public TooltipPosition Position { get; set; } = TooltipPosition.Top;
+    [Parameter] public TooltipSize Size { get; set; } = TooltipSize.Medium;
+    [Parameter] public bool AllowHtml { get; set; } = false;
+    [Parameter] public bool ShowIcon { get; set; } = false;
+    [Parameter] public string IconClass { get; set; } = "fas fa-info-circle";
+    [Parameter] public int ShowDelay { get; set; } = 500; // ミリ秒
+    [Parameter] public int HideDelay { get; set; } = 200; // ミリ秒
+    [Parameter] public bool Disabled { get; set; } = false;
+    
+    private bool isVisible = false;
+    private Timer? showTimer;
+    private Timer? hideTimer;
+    
+    private string PositionClass => Position switch
+    {
+        TooltipPosition.Top => "tooltip-top",
+        TooltipPosition.Bottom => "tooltip-bottom",
+        TooltipPosition.Left => "tooltip-left",
+        TooltipPosition.Right => "tooltip-right",
+        _ => "tooltip-top"
+    };
+    
+    private string SizeClass => Size switch
+    {
+        TooltipSize.Small => "tooltip-sm",
+        TooltipSize.Large => "tooltip-lg",
+        _ => ""
+    };
+    
+    private void ShowTooltip()
+    {
+        if (Disabled || string.IsNullOrEmpty(Text)) return;
+        
+        hideTimer?.Dispose();
+        showTimer = new Timer(async _ =>
+        {
+            isVisible = true;
+            await InvokeAsync(StateHasChanged);
+            showTimer?.Dispose();
+        }, null, ShowDelay, Timeout.Infinite);
+    }
+    
+    private void HideTooltip()
+    {
+        showTimer?.Dispose();
+        hideTimer = new Timer(async _ =>
+        {
+            isVisible = false;
+            await InvokeAsync(StateHasChanged);
+            hideTimer?.Dispose();
+        }, null, HideDelay, Timeout.Infinite);
+    }
+    
+    private string GetPositionStyle()
+    {
+        // JavaScript相当の位置計算をC#で実装（簡易版）
+        return Position switch
+        {
+            TooltipPosition.Top => "bottom: 100%; left: 50%; transform: translateX(-50%);",
+            TooltipPosition.Bottom => "top: 100%; left: 50%; transform: translateX(-50%);",
+            TooltipPosition.Left => "right: 100%; top: 50%; transform: translateY(-50%);",
+            TooltipPosition.Right => "left: 100%; top: 50%; transform: translateY(-50%);",
+            _ => "bottom: 100%; left: 50%; transform: translateX(-50%);"
+        };
+    }
+    
+    public void Dispose()
+    {
+        showTimer?.Dispose();
+        hideTimer?.Dispose();
+    }
+    
+    public enum TooltipPosition
+    {
+        Top,
+        Bottom,
+        Left,
+        Right
+    }
+    
+    public enum TooltipSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+}
+
+<style>
+    .tooltip-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .custom-tooltip {
+        position: absolute;
+        z-index: 1070;
+        display: block;
+        font-family: var(--bs-font-sans-serif);
+        font-style: normal;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: left;
+        text-decoration: none;
+        text-shadow: none;
+        text-transform: none;
+        letter-spacing: normal;
+        word-break: normal;
+        word-spacing: normal;
+        white-space: normal;
+        line-break: auto;
+        font-size: 0.875rem;
+        word-wrap: break-word;
+        opacity: 0;
+        animation: tooltipFadeIn 0.15s ease-in forwards;
+    }
+    
+    .custom-tooltip.show {
+        opacity: 0.9;
+    }
+    
+    .tooltip-inner {
+        max-width: 200px;
+        padding: 0.5rem 0.75rem;
+        color: #fff;
+        text-align: center;
+        background-color: #000;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tooltip-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 0.8125rem;
+    }
+    
+    /* サイズバリエーション */
+    .tooltip-sm .tooltip-inner {
+        max-width: 150px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .tooltip-lg .tooltip-inner {
+        max-width: 300px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9375rem;
+    }
+    
+    /* 矢印スタイル */
+    .tooltip-arrow {
+        position: absolute;
+        display: block;
+        width: 0.8rem;
+        height: 0.4rem;
+    }
+    
+    .tooltip-arrow::before {
+        position: absolute;
+        content: "";
+        border-color: transparent;
+        border-style: solid;
+    }
+    
+    /* 上部配置 */
+    .tooltip-top .tooltip-arrow {
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .tooltip-top .tooltip-arrow::before {
+        top: 0;
+        border-width: 0.4rem 0.4rem 0;
+        border-top-color: #000;
+    }
+    
+    /* 下部配置 */
+    .tooltip-bottom .tooltip-arrow {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .tooltip-bottom .tooltip-arrow::before {
+        bottom: 0;
+        border-width: 0 0.4rem 0.4rem;
+        border-bottom-color: #000;
+    }
+    
+    /* 左側配置 */
+    .tooltip-left .tooltip-arrow {
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .tooltip-left .tooltip-arrow::before {
+        left: 0;
+        border-width: 0.4rem 0 0.4rem 0.4rem;
+        border-left-color: #000;
+    }
+    
+    /* 右側配置 */
+    .tooltip-right .tooltip-arrow {
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .tooltip-right .tooltip-arrow::before {
+        right: 0;
+        border-width: 0.4rem 0.4rem 0.4rem 0;
+        border-right-color: #000;
+    }
+    
+    @@keyframes tooltipFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 0.9;
+            transform: scale(1);
+        }
+    }
+    
+    /* レスポンシブ対応 */
+    @@media (max-width: 576px) {
+        .tooltip-inner {
+            max-width: 250px;
+            font-size: 0.8125rem;
+        }
+        
+        .tooltip-lg .tooltip-inner {
+            max-width: 280px;
+        }
+    }
+</style>

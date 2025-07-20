@@ -6,56 +6,243 @@ open System.Threading.Tasks
 // 🎯 Application Service: ユースケースの実装とドメインロジックの調整
 // Clean Architectureにおけるアプリケーション層の中核
 
-// 👤 ユーザー管理サービス: ユーザー関連のユースケース実装
+// 👤 Phase A2: ユーザー管理アプリケーションサービス（大幅拡張版）
+// 【F#初学者向け解説】
+// Application Serviceは、ドメインロジックをUIから呼び出し可能にするサービス層です。
+// ビジネスルールの実行順序やエラーハンドリング、外部サービスとの連携を管理します。
 type UserApplicationService(
     userRepository: IUserRepository,
     authService: IAuthenticationService,
-    notificationService: INotificationService) =
+    notificationService: INotificationService,
+    logger: ILogger<UserApplicationService>) =
     
-    // 👥 新規ユーザー登録: 業務フローに応じたユーザー作成
-    member this.CreateUserAsync(email: Email, name: UserName, role: UserRole, createdBy: UserId) =
+    // 👥 新規ユーザー作成: 権限チェック・重複確認・ドメインサービス活用
+    // 【F#初学者向け解説】
+    // task計算式を使用して非同期処理を行います。F#のtask{}は、
+    // C#のasync/awaitと同様の機能を提供し、データベースアクセス等の
+    // 非同期操作を効率的に処理できます。
+    member this.CreateUserAsync(email: Email, name: UserName, role: Role, operatorUser: User) =
         task {
-            // 🔍 重複チェック: 既存ユーザーとの競合確認
-            let! existingUserResult = userRepository.GetByEmailAsync(email)
-            
-            return!
-                match existingUserResult with
-                | Error err -> Task.FromResult(Error err)
-                | Ok existingUser ->
-                    match existingUser with
-                    | Some _ -> Task.FromResult(Error "指定されたメールアドレスは既に使用されています")
-                    | None ->
-                        // 🔧 ドメインエンティティ作成: ファクトリーメソッド使用
-                        let newUser = User.create email name role createdBy
-                        
-                        // 💾 永続化: Infrastructureへの委譲
-                        task {
-                            let! saveResult = userRepository.SaveAsync(newUser)
-                            return saveResult
-                        }
+            // 🔐 ドメインサービス: ユーザー作成権限の検証
+            match UserDomainService.validateUserCreationPermission operatorUser role with
+            | Error err -> return Error err
+            | Ok () ->
+                // 🔍 既存ユーザー取得: 重複チェック用
+                let! allUsersResult = userRepository.GetAllActiveUsersAsync()
+                
+                return!
+                    match allUsersResult with
+                    | Error err -> Task.FromResult(Error err)
+                    | Ok existingUsers ->
+                        // 🔐 ドメインサービス: メールアドレス重複チェック
+                        match UserDomainService.validateUniqueEmail email existingUsers with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok () ->
+                            // 🔧 ドメインエンティティ作成: ファクトリーメソッド使用
+                            let newUser = User.create email name role operatorUser.Id
+                            
+                            // 💾 永続化: Infrastructure層への委譲
+                            task {
+                                let! saveResult = userRepository.SaveAsync(newUser)
+                                
+                                match saveResult with
+                                | Ok savedUser ->
+                                    // 📧 ウェルカムメール送信（非同期）
+                                    let! _ = notificationService.SendWelcomeEmailAsync(savedUser.Email)
+                                    return Ok savedUser
+                                | Error err -> return Error err
+                            }
         }
     
-    // 🔐 認証用ユーザー登録: パスワード付きユーザー作成
-    // 【F#初学者向け解説】
-    // 通常のユーザー登録と異なり、パスワードハッシュを含む完全な認証情報を設定します。
-    // Infrastructure層でASP.NET Core Identityと連携して実行されます。
-    member this.RegisterUserWithAuthenticationAsync(email: Email, name: UserName, role: UserRole, password: string, createdBy: UserId) =
+    // 🔐 認証付きユーザー作成: パスワード設定を含む完全なユーザー登録
+    member this.CreateUserWithPasswordAsync(email: Email, name: UserName, role: Role, password: Password, operatorUser: User) =
         task {
-            // 🔍 重複チェック
-            let! existingUserResult = userRepository.GetByEmailAsync(email)
+            // 🔐 ドメインサービス: ユーザー作成権限の検証
+            match UserDomainService.validateUserCreationPermission operatorUser role with
+            | Error err -> return Error err
+            | Ok () ->
+                // 🔍 既存ユーザー取得: 重複チェック用
+                let! allUsersResult = userRepository.GetAllActiveUsersAsync()
+                
+                return!
+                    match allUsersResult with
+                    | Error err -> Task.FromResult(Error err)
+                    | Ok existingUsers ->
+                        // 🔐 ドメインサービス: メールアドレス重複チェック
+                        match UserDomainService.validateUniqueEmail email existingUsers with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok () ->
+                            // 🔐 認証サービス: パスワードハッシュ化とユーザー作成
+                            task {
+                                let! createResult = authService.CreateUserWithPasswordAsync(email, name, role, password, operatorUser.Id)
+                                
+                                match createResult with
+                                | Ok createdUser ->
+                                    // 📧 ウェルカムメール送信（非同期）
+                                    let! _ = notificationService.SendWelcomeEmailAsync(createdUser.Email)
+                                    return Ok createdUser
+                                | Error err -> return Error err
+                            }
+        }
+    
+    // 👤 ユーザープロフィール更新: プロフィール情報の更新
+    member this.UpdateUserProfileAsync(userId: UserId, newProfile: UserProfile, operatorUser: User) =
+        task {
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
             
             return!
-                match existingUserResult with
+                match userResult with
                 | Error err -> Task.FromResult(Error err)
-                | Ok existingUser ->
-                    match existingUser with
-                    | Some _ -> Task.FromResult(Error "指定されたメールアドレスは既に使用されています")
-                    | None ->
-                        // 🔐 認証サービスでのユーザー作成（パスワードハッシュ化含む）
-                        task {
-                            let! createResult = authService.RegisterUserAsync(email, name, role, password, createdBy)
-                            return createResult
-                        }
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🔐 ドメインサービス: ユーザー管理権限の検証
+                        match UserDomainService.validateUserManagementOperation operatorUser (Some targetUser) "profile_update" with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok () ->
+                            // 🎯 ドメインロジック: プロフィール更新
+                            match targetUser.updateProfile newProfile operatorUser.Id with
+                            | Error err -> Task.FromResult(Error err)
+                            | Ok updatedUser ->
+                                // 💾 永続化
+                                task {
+                                    let! saveResult = userRepository.SaveAsync(updatedUser)
+                                    return saveResult
+                                }
+        }
+    
+    // 🎭 ユーザーロール変更: 権限システムでのロール変更管理
+    member this.ChangeUserRoleAsync(userId: UserId, newRole: Role, operatorUser: User) =
+        task {
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
+            
+            return!
+                match userResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🔐 ドメインサービス: ロール変更権限の検証
+                        match UserDomainService.validateRoleChangeAuthorization operatorUser targetUser newRole with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok () ->
+                            // 🎯 ドメインロジック: ロール変更
+                            match targetUser.changeRole newRole operatorUser operatorUser.Id with
+                            | Error err -> Task.FromResult(Error err)
+                            | Ok updatedUser ->
+                                // 💾 永続化
+                                task {
+                                    let! saveResult = userRepository.SaveAsync(updatedUser)
+                                    
+                                    match saveResult with
+                                    | Ok savedUser ->
+                                        // 📧 ロール変更通知メール
+                                        let! _ = notificationService.SendRoleChangeNotificationAsync(savedUser.Email, newRole)
+                                        return Ok savedUser
+                                    | Error err -> return Error err
+                                }
+        }
+    
+    // 🏢 プロジェクト権限設定: プロジェクトスコープ権限の管理
+    member this.SetProjectPermissionsAsync(userId: UserId, projectPermissions: ProjectPermission list, operatorUser: User) =
+        task {
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
+            
+            return!
+                match userResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🎯 ドメインロジック: プロジェクト権限設定
+                        match targetUser.setProjectPermissions projectPermissions operatorUser operatorUser.Id with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok updatedUser ->
+                            // 🔐 ドメインサービス: 権限整合性チェック
+                            task {
+                                match UserDomainService.validateProjectPermissionsConsistency updatedUser with
+                                | Error warning ->
+                                    // Warning: 権限重複があるが、動作に影響なし
+                                    let! _ = logger.LogWarningAsync($"権限重複警告: {warning}")
+                                    
+                                    // 💾 永続化（警告があっても保存）
+                                    let! saveResult = userRepository.SaveAsync(updatedUser)
+                                    return saveResult
+                                | Ok () ->
+                                    // 💾 永続化
+                                    let! saveResult = userRepository.SaveAsync(updatedUser)
+                                    return saveResult
+                            }
+        }
+    
+    // 🔒 ユーザー無効化: 論理削除による無効化
+    member this.DeactivateUserAsync(userId: UserId, operatorUser: User) =
+        task {
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
+            
+            return!
+                match userResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🔐 ドメインサービス: 無効化権限の検証
+                        match UserDomainService.validateUserDeactivationPermission operatorUser targetUser with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok () ->
+                            // 🎯 ドメインロジック: ユーザー無効化
+                            match targetUser.deactivate operatorUser operatorUser.Id with
+                            | Error err -> Task.FromResult(Error err)
+                            | Ok deactivatedUser ->
+                                // 💾 永続化
+                                task {
+                                    let! saveResult = userRepository.SaveAsync(deactivatedUser)
+                                    
+                                    match saveResult with
+                                    | Ok savedUser ->
+                                        // 📧 無効化通知メール
+                                        let! _ = notificationService.SendAccountDeactivationNotificationAsync(savedUser.Email)
+                                        return Ok savedUser
+                                    | Error err -> return Error err
+                                }
+        }
+    
+    // ✅ ユーザー有効化: 無効化されたユーザーの再有効化
+    member this.ActivateUserAsync(userId: UserId, operatorUser: User) =
+        task {
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
+            
+            return!
+                match userResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🎯 ドメインロジック: ユーザー有効化
+                        match targetUser.activate operatorUser operatorUser.Id with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok activatedUser ->
+                            // 💾 永続化
+                            task {
+                                let! saveResult = userRepository.SaveAsync(activatedUser)
+                                
+                                match saveResult with
+                                | Ok savedUser ->
+                                    // 📧 有効化通知メール
+                                    let! _ = notificationService.SendAccountActivationNotificationAsync(savedUser.Email)
+                                    return Ok savedUser
+                                | Error err -> return Error err
+                            }
         }
     
     // 🔑 ユーザーログイン: 認証処理と初回ログインチェック
@@ -63,44 +250,138 @@ type UserApplicationService(
         task {
             let! loginResult = authService.LoginAsync(email, password)
             
-            return
+            return!
                 match loginResult with
-                | Error err -> Error err
+                | Error err -> Task.FromResult(Error err)
                 | Ok user ->
-                    // 🎯 初回ログインチェック: パスワード変更必須判定
-                    if user.IsFirstLogin then
-                        Error "初回ログインのため、パスワード変更が必要です"
+                    // 🎯 ユーザー状態チェック
+                    if not user.IsActive then
+                        Task.FromResult(Error "アカウントが無効化されています。管理者にお問い合わせください")
+                    elif user.isLockedOut() then
+                        Task.FromResult(Error "アカウントがロックされています。しばらく待ってから再試行してください")
+                    elif user.IsFirstLogin then
+                        Task.FromResult(Error "初回ログインのため、パスワード変更が必要です")
                     else
-                        Ok user
+                        // ✅ ログイン成功の記録
+                        let successUser = user.recordSuccessfulAccess()
+                        task {
+                            let! saveResult = userRepository.SaveAsync(successUser)
+                            return
+                                match saveResult with
+                                | Ok savedUser -> Ok savedUser
+                                | Error err -> Error err
+                        }
         }
     
     // 🔐 パスワード変更: セキュリティポリシーに準拠した更新
-    member this.ChangePasswordAsync(userId: UserId, oldPassword: string, newPassword: string) =
+    member this.ChangePasswordAsync(userId: UserId, currentPassword: string, newPassword: Password, operatorUser: User) =
         task {
-            // 🔐 認証サービスでパスワード変更処理
-            let! changeResult = authService.ChangePasswordAsync(userId, oldPassword, newPassword)
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
             
-            match changeResult with
+            return!
+                match userResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🔐 ドメインサービス: パスワード変更権限の検証
+                        match UserDomainService.validatePasswordChangePermission operatorUser targetUser with
+                        | Error err -> Task.FromResult(Error err)
+                        | Ok () ->
+                            // 🔐 認証サービス: パスワード変更処理（現在のパスワード確認含む）
+                            task {
+                                let! changeResult = authService.ChangePasswordAsync(userId, currentPassword, newPassword)
+                                
+                                match changeResult with
+                                | Error err -> return Error err
+                                | Ok passwordHash ->
+                                    // 🎯 ドメインロジック: パスワード変更
+                                    match targetUser.changePassword passwordHash operatorUser.Id with
+                                    | Error err -> return Error err
+                                    | Ok updatedUser ->
+                                        // 💾 永続化
+                                        let! saveResult = userRepository.SaveAsync(updatedUser)
+                                        
+                                        match saveResult with
+                                        | Ok savedUser ->
+                                            // 📧 パスワード変更通知メール
+                                            let! _ = notificationService.SendPasswordChangeNotificationAsync(savedUser.Email)
+                                            return Ok savedUser
+                                        | Error err -> return Error err
+                            }
+        }
+    
+    // 🔍 ユーザー検索・一覧取得: 権限に応じたユーザー情報取得
+    member this.GetUsersAsync(operatorUser: User, includeInactive: bool) =
+        task {
+            // 🔐 ドメインサービス: ユーザー管理権限の検証
+            match UserDomainService.validateUserManagementOperation operatorUser None "view_users" with
             | Error err -> return Error err
             | Ok () ->
-                // 🔍 ユーザー情報の更新: 初回ログインフラグのクリア
-                let! userResult = userRepository.GetByIdAsync(userId)
-                
-                return!
-                    match userResult with
-                    | Error err -> Task.FromResult(Error err)
-                    | Ok userOpt ->
-                        match userOpt with
-                        | None -> Task.FromResult(Error "ユーザーが見つかりません")
-                        | Some user ->
-                            // 🎯 初回ログインフラグをクリア
-                            let updatedUser = { user with IsFirstLogin = false }
+                // 🔍 ユーザー一覧取得
+                if includeInactive then 
+                    return! userRepository.GetAllUsersAsync()
+                else 
+                    return! userRepository.GetAllActiveUsersAsync()
+        }
+    
+    // 🔍 ユーザー詳細取得: 特定ユーザーの詳細情報取得
+    member this.GetUserByIdAsync(userId: UserId, operatorUser: User) =
+        task {
+            // 🔐 ドメインサービス: ユーザー管理権限の検証
+            match UserDomainService.validateUserManagementOperation operatorUser None "view_user_details" with
+            | Error err -> return Error err
+            | Ok () ->
+                // 🔍 ユーザー詳細取得
+                return! userRepository.GetByIdAsync(userId)
+        }
+    
+    // 📧 メールアドレス変更: メールアドレス更新と確認プロセス
+    member this.ChangeEmailAsync(userId: UserId, newEmail: Email, operatorUser: User) =
+        task {
+            // 🔍 対象ユーザー取得
+            let! userResult = userRepository.GetByIdAsync(userId)
+            
+            return!
+                match userResult with
+                | Error err -> Task.FromResult(Error err)
+                | Ok userOpt ->
+                    match userOpt with
+                    | None -> Task.FromResult(Error "指定されたユーザーが見つかりません")
+                    | Some targetUser ->
+                        // 🔐 権限チェック: 自分または管理者権限が必要
+                        if targetUser.Id <> operatorUser.Id && not (PermissionMappings.hasPermission operatorUser.Role EditUsers) then
+                            Task.FromResult(Error "メールアドレス変更の権限がありません")
+                        else
+                            // 🔍 既存ユーザー取得: 重複チェック用
                             task {
-                                let! saveResult = userRepository.SaveAsync(updatedUser)
-                                return
-                                    match saveResult with
-                                    | Ok _ -> Ok ()
-                                    | Error err -> Error err
+                                let! allUsersResult = userRepository.GetAllActiveUsersAsync()
+                                
+                                return!
+                                    match allUsersResult with
+                                    | Error err -> Task.FromResult(Error err)
+                                    | Ok existingUsers ->
+                                        // 🔐 ドメインサービス: メールアドレス重複チェック
+                                        match UserDomainService.validateUniqueEmail newEmail existingUsers with
+                                        | Error err -> Task.FromResult(Error err)
+                                        | Ok () ->
+                                            // 🎯 ドメインロジック: メールアドレス変更
+                                            match targetUser.changeEmail newEmail operatorUser.Id with
+                                            | Error err -> Task.FromResult(Error err)
+                                            | Ok updatedUser ->
+                                                // 💾 永続化
+                                                task {
+                                                    let! saveResult = userRepository.SaveAsync(updatedUser)
+                                                    
+                                                    match saveResult with
+                                                    | Ok savedUser ->
+                                                        // 📧 メールアドレス変更確認メール（新旧両方のアドレスに送信）
+                                                        let! _ = notificationService.SendEmailChangeConfirmationAsync(targetUser.Email, newEmail)
+                                                        return Ok savedUser
+                                                    | Error err -> return Error err
+                                                }
                             }
         }
 

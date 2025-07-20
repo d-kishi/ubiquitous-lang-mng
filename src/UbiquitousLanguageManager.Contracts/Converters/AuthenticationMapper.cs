@@ -21,7 +21,7 @@ public static class AuthenticationMapper
     {
         // UserId、UserRoleの値を取得
         var userIdValue = user.Id.Value;
-        var roleString = UserRoleToString(user.Role);
+        var roleString = RoleToString(user.Role);
 
         return new AuthenticatedUserDto
         {
@@ -94,9 +94,9 @@ public static class AuthenticationMapper
     }
 
     /// <summary>
-    /// F#のUserRoleを文字列に変換
+    /// F#のRoleを文字列に変換（Phase A2: 新しい権限システム対応）
     /// </summary>
-    private static string UserRoleToString(UserRole role)
+    private static string RoleToString(Role role)
     {
         if (role.IsSuperUser) return "SuperUser";
         if (role.IsProjectManager) return "ProjectManager";
@@ -106,19 +106,19 @@ public static class AuthenticationMapper
     }
 
     /// <summary>
-    /// 文字列をF#のUserRoleに変換
+    /// 文字列をF#のRoleに変換（Phase A2: 新しい権限システム対応）
     /// </summary>
-    public static FSharpResult<UserRole, string> StringToUserRole(string roleString)
+    public static FSharpResult<Role, string> StringToRole(string roleString)
     {
         var normalizedRole = roleString?.ToLower()?.Trim();
         
         return normalizedRole switch
         {
-            "superuser" => FSharpResult<UserRole, string>.NewOk(UserRole.SuperUser),
-            "projectmanager" => FSharpResult<UserRole, string>.NewOk(UserRole.ProjectManager),
-            "domainapprover" => FSharpResult<UserRole, string>.NewOk(UserRole.DomainApprover),
-            "generaluser" => FSharpResult<UserRole, string>.NewOk(UserRole.GeneralUser),
-            _ => FSharpResult<UserRole, string>.NewError($"無効なユーザーロール: {roleString}")
+            "superuser" => FSharpResult<Role, string>.NewOk(Role.SuperUser),
+            "projectmanager" => FSharpResult<Role, string>.NewOk(Role.ProjectManager),
+            "domainapprover" => FSharpResult<Role, string>.NewOk(Role.DomainApprover),
+            "generaluser" => FSharpResult<Role, string>.NewOk(Role.GeneralUser),
+            _ => FSharpResult<Role, string>.NewError($"無効なユーザーロール: {roleString}")
         };
     }
 }

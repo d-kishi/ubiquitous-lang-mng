@@ -1,0 +1,434 @@
+@using UbiquitousLanguageManager.Contracts
+@using UbiquitousLanguageManager.Domain
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using UbiquitousLanguageManager.Web.Validation
+
+@* ユーザー編集モーダルコンポーネント *@
+@* Blazor Server初学者向け: EditFormはBlazorの組み込みフォームコンポーネントで、 *@
+@* DataAnnotationsValidatorと組み合わせてクライアントサイドバリデーションを提供します *@
+
+<div class="modal @(IsVisible ? "show d-block" : "d-none")" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <EditForm Model="@userModel" OnValidSubmit="@HandleValidSubmit">
+                @* Blazor Server初学者向け: DataAnnotationsValidatorは、 *@
+                @* モデルのDataAnnotations属性に基づいてバリデーションを実行します *@
+                <DataAnnotationsValidator />
+                
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas @(IsNewUser ? "fa-user-plus" : "fa-user-edit") me-2"></i>
+                        @(IsNewUser ? "新規ユーザー登録" : "ユーザー情報編集")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Cancel"></button>
+                </div>
+                
+                <div class="modal-body">
+                    @* エラーサマリー表示 *@
+                    <UbiquitousLanguageManager.Web.Pages.Admin.Components.ValidationSummary Errors="@validationErrors" ShowErrors="@validationErrors.Any()" />
+                    
+                    <div class="row g-3">
+                        @* メールアドレス入力 *@
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">
+                                メールアドレス <span class="text-danger">*</span>
+                            </label>
+                            <InputText id="email" class="form-control" @bind-Value="userModel.Email" 
+                                       disabled="@(!IsNewUser)" 
+                                       placeholder="user@example.com" />
+                            <ValidationMessage For="@(() => userModel.Email)" class="text-danger small" />
+                            @if (emailDuplicateError)
+                            {
+                                <div class="text-danger small mt-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    このメールアドレスは既に使用されています
+                                </div>
+                            }
+                        </div>
+                        
+                        @* 名前入力 *@
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">
+                                氏名 <span class="text-danger">*</span>
+                            </label>
+                            <InputText id="name" class="form-control" @bind-Value="userModel.Name" 
+                                       placeholder="山田 太郎" />
+                            <ValidationMessage For="@(() => userModel.Name)" class="text-danger small" />
+                        </div>
+                        
+                        @* ロール選択 *@
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">
+                                ユーザーロール <span class="text-danger">*</span>
+                            </label>
+                            <InputSelect id="role" class="form-select" @bind-Value="userModel.Role">
+                                <option value="">-- ロールを選択 --</option>
+                                @if (CanAssignSuperUser)
+                                {
+                                    <option value="SuperUser">スーパーユーザー</option>
+                                }
+                                @if (CanAssignProjectManager)
+                                {
+                                    <option value="ProjectManager">プロジェクト管理者</option>
+                                }
+                                <option value="DomainApprover">ドメイン承認者</option>
+                                <option value="GeneralUser">一般ユーザー</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => userModel.Role)" class="text-danger small" />
+                        </div>
+                        
+                        @* 初期パスワード（新規登録時のみ） *@
+                        @if (IsNewUser)
+                        {
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">
+                                    初期パスワード <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <InputText id="password" type="@(showPassword ? "text" : "password")" 
+                                               class="form-control" @bind-Value="userModel.Password" />
+                                    <button class="btn btn-outline-secondary" type="button" 
+                                            @onclick="TogglePasswordVisibility">
+                                        <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                                    </button>
+                                </div>
+                                <ValidationMessage For="@(() => userModel.Password)" class="text-danger small" />
+                                <div class="form-text">
+                                    8文字以上、大文字・小文字・数字・記号を含む
+                                </div>
+                            </div>
+                        }
+                        
+                        @* 所属プロジェクト（プロジェクト管理者ロール選択時） *@
+                        @if (userModel.Role == "ProjectManager")
+                        {
+                            <div class="col-12">
+                                <label class="form-label">
+                                    所属プロジェクト
+                                </label>
+                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                    @if (availableProjects.Any())
+                                    {
+                                        @foreach (var project in availableProjects)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="@($"project-{project.Id}")"
+                                                       checked="@userModel.ProjectIds.Contains(project.Id)"
+                                                       @onchange="@(() => ToggleProjectSelection(project.Id))" />
+                                                <label class="form-check-label" for="@($"project-{project.Id}")">
+                                                    @project.Name
+                                                </label>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted mb-0">利用可能なプロジェクトがありません</p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        
+                        @* 状態（編集時のみ） *@
+                        @if (!IsNewUser)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">ユーザー状態</label>
+                                <div class="form-check form-switch">
+                                    <InputCheckbox class="form-check-input" id="isActive" 
+                                                   @bind-Value="userModel.IsActive" />
+                                    <label class="form-check-label" for="isActive">
+                                        @(userModel.IsActive ? "アクティブ" : "非アクティブ")
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            @* パスワードリセット（編集時のみ） *@
+                            <div class="col-md-6">
+                                <label class="form-label">パスワード管理</label>
+                                <button type="button" class="btn btn-outline-warning btn-sm" 
+                                        @onclick="ShowPasswordReset">
+                                    <i class="fas fa-key me-1"></i>
+                                    パスワードリセット
+                                </button>
+                            </div>
+                        }
+                    </div>
+                    
+                    @* パスワードリセットセクション（表示時） *@
+                    @if (showPasswordReset && !IsNewUser)
+                    {
+                        <div class="border rounded p-3 mt-3 bg-light">
+                            <h6 class="mb-3">新しいパスワードを設定</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="newPassword" class="form-label">
+                                        新しいパスワード <span class="text-danger">*</span>
+                                    </label>
+                                    <InputText id="newPassword" type="password" class="form-control" 
+                                               @bind-Value="passwordResetModel.NewPassword" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="confirmPassword" class="form-label">
+                                        パスワード（確認） <span class="text-danger">*</span>
+                                    </label>
+                                    <InputText id="confirmPassword" type="password" class="form-control" 
+                                               @bind-Value="passwordResetModel.ConfirmPassword" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                        <i class="fas fa-times me-1"></i>
+                        キャンセル
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-save me-1"></i>
+                        }
+                        @(IsNewUser ? "登録" : "更新")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsNewUser { get; set; } = true;
+    [Parameter] public EventCallback<UserEditModel> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public UserEditModel? InitialUser { get; set; }
+    
+    // 権限制御用（Phase A3で実際の権限チェックに置き換え）
+    [Parameter] public bool CanAssignSuperUser { get; set; } = true;
+    [Parameter] public bool CanAssignProjectManager { get; set; } = true;
+    
+    private UserEditModel userModel = new();
+    private PasswordResetModel passwordResetModel = new();
+    private List<ProjectDto> availableProjects = new();
+    private List<string> validationErrors = new();
+    private bool isSubmitting = false;
+    private bool showPassword = false;
+    private bool showPasswordReset = false;
+    private bool emailDuplicateError = false;
+    
+    protected override void OnParametersSet()
+    {
+        if (InitialUser != null && !IsNewUser)
+        {
+            // 既存ユーザーの編集時は初期値を設定
+            userModel = new UserEditModel
+            {
+                Id = InitialUser.Id,
+                Email = InitialUser.Email,
+                Name = InitialUser.Name,
+                Role = InitialUser.Role,
+                IsActive = InitialUser.IsActive,
+                ProjectIds = InitialUser.ProjectIds.ToList()
+            };
+        }
+        else
+        {
+            // 新規登録時は空のモデル
+            userModel = new UserEditModel();
+        }
+        
+        // Phase A3で実際のプロジェクトリストを取得
+        LoadAvailableProjects();
+    }
+    
+    private void LoadAvailableProjects()
+    {
+        // Phase A3で実装: 実際のプロジェクトリストを取得
+        availableProjects = new List<ProjectDto>
+        {
+            new() { Id = "1", Name = "ECサイトプロジェクト" },
+            new() { Id = "2", Name = "在庫管理システム" },
+            new() { Id = "3", Name = "会計システム" }
+        };
+    }
+    
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        validationErrors.Clear();
+        emailDuplicateError = false;
+        
+        try
+        {
+            // カスタムバリデーション
+            if (!await ValidateForm())
+            {
+                isSubmitting = false;
+                return;
+            }
+            
+            // 保存処理を親コンポーネントに委譲
+            await OnSave.InvokeAsync(userModel);
+        }
+        catch (Exception ex)
+        {
+            validationErrors.Add($"保存中にエラーが発生しました: {ex.Message}");
+            isSubmitting = false;
+        }
+    }
+    
+    private async Task<bool> ValidateForm()
+    {
+        var isValid = true;
+        
+        // メールアドレスの重複チェック（新規登録時のみ）
+        if (IsNewUser)
+        {
+            // Phase A3で実装: 実際の重複チェック
+            emailDuplicateError = false; // 仮実装
+        }
+        
+        // パスワード強度チェック（新規登録時）
+        if (IsNewUser && !string.IsNullOrWhiteSpace(userModel.Password))
+        {
+            if (!IsPasswordStrong(userModel.Password))
+            {
+                validationErrors.Add("パスワードは8文字以上で、大文字・小文字・数字・記号を含む必要があります");
+                isValid = false;
+            }
+        }
+        
+        // パスワードリセット時の確認
+        if (showPasswordReset && !IsNewUser)
+        {
+            if (string.IsNullOrWhiteSpace(passwordResetModel.NewPassword))
+            {
+                validationErrors.Add("新しいパスワードを入力してください");
+                isValid = false;
+            }
+            else if (passwordResetModel.NewPassword != passwordResetModel.ConfirmPassword)
+            {
+                validationErrors.Add("新しいパスワードと確認用パスワードが一致しません");
+                isValid = false;
+            }
+            else if (!IsPasswordStrong(passwordResetModel.NewPassword))
+            {
+                validationErrors.Add("新しいパスワードは8文字以上で、大文字・小文字・数字・記号を含む必要があります");
+                isValid = false;
+            }
+        }
+        
+        await Task.CompletedTask; // バリデーション処理がPhase A3で非同期化されるまでの仮実装
+        return isValid;
+    }
+    
+    private bool IsPasswordStrong(string password)
+    {
+        // パスワード強度チェック
+        if (password.Length < 8) return false;
+        
+        bool hasUpperCase = password.Any(char.IsUpper);
+        bool hasLowerCase = password.Any(char.IsLower);
+        bool hasDigit = password.Any(char.IsDigit);
+        bool hasSpecialChar = password.Any(ch => !char.IsLetterOrDigit(ch));
+        
+        return hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
+    }
+    
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+    
+    private void ToggleProjectSelection(string projectId)
+    {
+        if (userModel.ProjectIds.Contains(projectId))
+        {
+            userModel.ProjectIds.Remove(projectId);
+        }
+        else
+        {
+            userModel.ProjectIds.Add(projectId);
+        }
+    }
+    
+    private void ShowPasswordReset()
+    {
+        showPasswordReset = !showPasswordReset;
+        passwordResetModel = new PasswordResetModel();
+    }
+    
+    private async Task Cancel()
+    {
+        // フォームをリセット
+        userModel = new UserEditModel();
+        passwordResetModel = new PasswordResetModel();
+        validationErrors.Clear();
+        emailDuplicateError = false;
+        showPassword = false;
+        showPasswordReset = false;
+        isSubmitting = false;
+        
+        await OnCancel.InvokeAsync();
+    }
+    
+    // モデルクラス
+    public class UserEditModel
+    {
+        public string Id { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "メールアドレスは必須です")]
+        [EmailAddress(ErrorMessage = "正しいメールアドレス形式で入力してください")]
+        public string Email { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "氏名は必須です")]
+        [StringLength(50, MinimumLength = 1, ErrorMessage = "氏名は1文字以上50文字以内で入力してください")]
+        public string Name { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "ロールを選択してください")]
+        public string Role { get; set; } = string.Empty;
+        
+        // 新規登録時のみ必須
+        [PasswordStrength(8, true, true, true, true)]
+        public string Password { get; set; } = string.Empty;
+        
+        public bool IsActive { get; set; } = true;
+        public List<string> ProjectIds { get; set; } = new();
+    }
+    
+    public class PasswordResetModel
+    {
+        [Required(ErrorMessage = "新しいパスワードを入力してください")]
+        [PasswordStrength(8, true, true, true, true)]
+        public string NewPassword { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "確認用パスワードを入力してください")]
+        [PasswordMatch(nameof(NewPassword))]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+    
+    public class ProjectDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
+}
+
+<style>
+    .modal.show {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+</style>

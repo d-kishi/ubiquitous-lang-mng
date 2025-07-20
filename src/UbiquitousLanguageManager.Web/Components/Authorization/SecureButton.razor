@@ -1,0 +1,250 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@inherits ComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@* セキュアボタンコンポーネント *@
+@* Blazor Server初学者向け: 権限に基づいてボタンの表示・有効化を制御し、 *@
+@* セキュリティ強化されたアクションボタンを提供 *@
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        @if (ShouldShowButton(authContext.User))
+        {
+            <button type="@ButtonType" 
+                    class="@GetButtonClass()" 
+                    @onclick="HandleClick"
+                    disabled="@(IsDisabled || !CanExecuteAction(authContext.User))"
+                    title="@GetTooltipText(authContext.User)"
+                    data-bs-toggle="@(ShowTooltip ? "tooltip" : "")"
+                    data-bs-placement="top">
+                
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                }
+                else if (!string.IsNullOrEmpty(IconClass))
+                {
+                    <i class="@IconClass me-1"></i>
+                }
+                
+                @if (!string.IsNullOrEmpty(Text))
+                {
+                    @Text
+                }
+                else
+                {
+                    @ChildContent
+                }
+            </button>
+        }
+        else if (ShowFallback)
+        {
+            <button type="button" 
+                    class="@GetFallbackButtonClass()" 
+                    disabled="true"
+                    title="@FallbackTooltip"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top">
+                @if (!string.IsNullOrEmpty(FallbackIconClass))
+                {
+                    <i class="@FallbackIconClass me-1"></i>
+                }
+                @(FallbackText ?? Text ?? "権限なし")
+            </button>
+        }
+    </Authorized>
+    <NotAuthorized>
+        @if (ShowWhenNotAuthenticated)
+        {
+            <button type="button" 
+                    class="btn btn-outline-secondary" 
+                    disabled="true"
+                    title="ログインが必要です">
+                <i class="fas fa-lock me-1"></i>
+                ログイン必要
+            </button>
+        }
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public string Text { get; set; } = string.Empty;
+    [Parameter] public string IconClass { get; set; } = string.Empty;
+    [Parameter] public string ButtonType { get; set; } = "button";
+    [Parameter] public string CssClass { get; set; } = "btn btn-primary";
+    [Parameter] public bool IsDisabled { get; set; } = false;
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    
+    // 権限制御
+    [Parameter] public List<string> RequiredRoles { get; set; } = new();
+    [Parameter] public List<string> ForbiddenRoles { get; set; } = new();
+    [Parameter] public string RequiredPermission { get; set; } = string.Empty;
+    [Parameter] public Func<ClaimsPrincipal, bool>? CustomAuthorization { get; set; }
+    
+    // フォールバック表示
+    [Parameter] public bool ShowFallback { get; set; } = true;
+    [Parameter] public string FallbackText { get; set; } = string.Empty;
+    [Parameter] public string FallbackIconClass { get; set; } = "fas fa-ban";
+    [Parameter] public string FallbackCssClass { get; set; } = "btn btn-outline-secondary";
+    [Parameter] public string FallbackTooltip { get; set; } = "この操作を実行する権限がありません";
+    
+    // 未認証時の表示
+    [Parameter] public bool ShowWhenNotAuthenticated { get; set; } = false;
+    
+    // ツールチップ
+    [Parameter] public bool ShowTooltip { get; set; } = true;
+    [Parameter] public string Tooltip { get; set; } = string.Empty;
+    
+    // イベント
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback<bool> OnAuthorizationChanged { get; set; }
+    
+    private bool ShouldShowButton(ClaimsPrincipal user)
+    {
+        // 禁止ロールチェック
+        if (ForbiddenRoles?.Any() == true)
+        {
+            foreach (var role in ForbiddenRoles)
+            {
+                if (user.IsInRole(role))
+                    return false;
+            }
+        }
+        
+        // 必須ロールチェック
+        if (RequiredRoles?.Any() == true)
+        {
+            var hasRequiredRole = RequiredRoles.Any(role => user.IsInRole(role));
+            if (!hasRequiredRole)
+                return false;
+        }
+        
+        // 必須権限チェック
+        if (!string.IsNullOrEmpty(RequiredPermission))
+        {
+            if (!AuthorizeViewExtensions.CanPerformAction(user, RequiredPermission))
+                return false;
+        }
+        
+        // カスタム認証チェック
+        if (CustomAuthorization != null)
+        {
+            return CustomAuthorization(user);
+        }
+        
+        return true;
+    }
+    
+    private bool CanExecuteAction(ClaimsPrincipal user)
+    {
+        // より厳密な実行権限チェック（表示権限より厳しい）
+        return ShouldShowButton(user) && !IsDisabled;
+    }
+    
+    private async Task HandleClick()
+    {
+        if (IsLoading || IsDisabled) return;
+        
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true && CanExecuteAction(authState.User))
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+    
+    private string GetButtonClass()
+    {
+        var classes = new List<string> { CssClass };
+        
+        if (IsLoading)
+            classes.Add("loading");
+            
+        if (IsDisabled)
+            classes.Add("disabled");
+            
+        return string.Join(" ", classes);
+    }
+    
+    private string GetFallbackButtonClass()
+    {
+        return FallbackCssClass + " disabled";
+    }
+    
+    private string GetTooltipText(ClaimsPrincipal user)
+    {
+        if (!string.IsNullOrEmpty(Tooltip))
+            return Tooltip;
+            
+        if (!CanExecuteAction(user))
+            return FallbackTooltip;
+            
+        return Text;
+    }
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var isAuthorized = authState.User.Identity?.IsAuthenticated == true && 
+                          ShouldShowButton(authState.User);
+        
+        await OnAuthorizationChanged.InvokeAsync(isAuthorized);
+    }
+}
+
+<style>
+    .btn.loading {
+        position: relative;
+        pointer-events: none;
+    }
+    
+    .btn.loading::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: inherit;
+    }
+    
+    /* セキュリティ強化スタイル */
+    .btn[disabled]:not(.btn-outline-secondary) {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn[disabled]:not(.btn-outline-secondary)::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn[disabled]:hover:not(.btn-outline-secondary)::before {
+        left: 100%;
+    }
+</style>
+
+@* 使用例のコメント：
+<SecureButton Text="ユーザー削除" 
+              IconClass="fas fa-trash"
+              CssClass="btn btn-danger btn-sm"
+              RequiredRoles='new List<string> { "SuperUser" }'
+              RequiredPermission="DeleteUser"
+              FallbackText="削除権限なし"
+              OnClick="DeleteUser" />
+
+<SecureButton RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+              CustomAuthorization="@(user => user.Identity.Name != selectedUser?.Email)">
+    <i class="fas fa-edit me-1"></i>
+    編集
+</SecureButton>
+*@

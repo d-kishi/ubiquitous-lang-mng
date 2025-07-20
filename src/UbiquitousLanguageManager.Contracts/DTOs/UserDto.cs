@@ -47,6 +47,61 @@ public class UserDto
     public bool IsFirstLogin { get; set; } = true;
 
     /// <summary>
+    /// Phase A2: ユーザープロフィール情報
+    /// </summary>
+    public UserProfileDto? Profile { get; set; }
+
+    /// <summary>
+    /// Phase A2: プロジェクトスコープ権限
+    /// </summary>
+    public List<ProjectPermissionDto> ProjectPermissions { get; set; } = new();
+
+    /// <summary>
+    /// Phase A2: メールアドレス確認フラグ
+    /// </summary>
+    public bool EmailConfirmed { get; set; }
+
+    /// <summary>
+    /// Phase A2: 電話番号
+    /// </summary>
+    public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Phase A2: 電話番号確認フラグ
+    /// </summary>
+    public bool PhoneNumberConfirmed { get; set; }
+
+    /// <summary>
+    /// Phase A2: 二要素認証有効フラグ
+    /// </summary>
+    public bool TwoFactorEnabled { get; set; }
+
+    /// <summary>
+    /// Phase A2: ロックアウト機能有効フラグ
+    /// </summary>
+    public bool LockoutEnabled { get; set; }
+
+    /// <summary>
+    /// Phase A2: ロックアウト終了時刻
+    /// </summary>
+    public DateTime? LockoutEnd { get; set; }
+
+    /// <summary>
+    /// Phase A2: ログイン失敗回数
+    /// </summary>
+    public int AccessFailedCount { get; set; }
+
+    /// <summary>
+    /// 作成日時（UTC）
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// 作成者ID
+    /// </summary>
+    public long CreatedBy { get; set; }
+
+    /// <summary>
     /// 最終更新日時（UTC）
     /// </summary>
     public DateTime UpdatedAt { get; set; }
@@ -139,4 +194,107 @@ public class ChangePasswordDto
     [Required(ErrorMessage = "パスワード確認は必須です")]
     [Compare(nameof(NewPassword), ErrorMessage = "新しいパスワードと確認パスワードが一致しません")]
     public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Phase A2: ユーザープロフィール情報DTO
+/// ユーザーの詳細プロフィール情報の転送オブジェクト
+/// </summary>
+public class UserProfileDto
+{
+    /// <summary>
+    /// 表示名（任意）
+    /// </summary>
+    [StringLength(100, ErrorMessage = "表示名は100文字以内で入力してください")]
+    public string? DisplayName { get; set; }
+
+    /// <summary>
+    /// 所属部署（任意）
+    /// </summary>
+    [StringLength(100, ErrorMessage = "所属部署は100文字以内で入力してください")]
+    public string? Department { get; set; }
+
+    /// <summary>
+    /// 電話番号（任意）
+    /// </summary>
+    [Phone(ErrorMessage = "有効な電話番号形式で入力してください")]
+    public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// 備考（任意）
+    /// </summary>
+    [StringLength(500, ErrorMessage = "備考は500文字以内で入力してください")]
+    public string? Notes { get; set; }
+}
+
+/// <summary>
+/// Phase A2: プロジェクトスコープ権限DTO
+/// プロジェクト単位での細かな権限制御のための転送オブジェクト
+/// </summary>
+public class ProjectPermissionDto
+{
+    /// <summary>
+    /// プロジェクトID
+    /// </summary>
+    public long ProjectId { get; set; }
+
+    /// <summary>
+    /// プロジェクト名（表示用）
+    /// </summary>
+    public string ProjectName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 権限一覧（文字列配列）
+    /// ViewUsers, CreateUsers, EditUsers, etc.
+    /// </summary>
+    public List<string> Permissions { get; set; } = new();
+}
+
+/// <summary>
+/// Phase A2: ユーザーロール変更用DTO
+/// ユーザーロール変更時の入力データ構造
+/// </summary>
+public class ChangeUserRoleDto
+{
+    /// <summary>
+    /// 対象ユーザーID
+    /// </summary>
+    public long UserId { get; set; }
+
+    /// <summary>
+    /// 新しいロール
+    /// </summary>
+    [Required(ErrorMessage = "新しいロールは必須です")]
+    public string NewRole { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 変更理由（任意）
+    /// </summary>
+    [StringLength(500, ErrorMessage = "変更理由は500文字以内で入力してください")]
+    public string? Reason { get; set; }
+}
+
+/// <summary>
+/// Phase A2: メールアドレス変更用DTO
+/// メールアドレス変更時の入力データ構造
+/// </summary>
+public class ChangeEmailDto
+{
+    /// <summary>
+    /// 対象ユーザーID
+    /// </summary>
+    public long UserId { get; set; }
+
+    /// <summary>
+    /// 新しいメールアドレス
+    /// </summary>
+    [Required(ErrorMessage = "新しいメールアドレスは必須です")]
+    [EmailAddress(ErrorMessage = "有効なメールアドレス形式で入力してください")]
+    public string NewEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 現在のパスワード（本人確認用）
+    /// </summary>
+    [Required(ErrorMessage = "現在のパスワードによる確認が必要です")]
+    public string CurrentPassword { get; set; } = string.Empty;
 }

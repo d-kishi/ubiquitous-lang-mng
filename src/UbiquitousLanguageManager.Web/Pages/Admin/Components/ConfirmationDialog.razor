@@ -1,0 +1,279 @@
+@* 確認ダイアログコンポーネント *@
+@* Blazor Server初学者向け: 削除や重要な操作の確認を行うモーダルダイアログ *@
+@* EventCallbackを使用して親コンポーネントとの連携を実現 *@
+
+<div class="modal @(IsVisible ? "show d-block" : "d-none")" tabindex="-1" role="dialog" aria-hidden="@(!IsVisible)">
+    <div class="modal-dialog @SizeClass" role="document">
+        <div class="modal-content">
+            <div class="modal-header @HeaderClass">
+                <h5 class="modal-title">
+                    @if (!string.IsNullOrEmpty(IconClass))
+                    {
+                        <i class="@IconClass me-2"></i>
+                    }
+                    @Title
+                </h5>
+                @if (ShowCloseButton)
+                {
+                    <button type="button" class="btn-close" @onclick="Cancel" aria-label="閉じる"></button>
+                }
+            </div>
+            
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(Message))
+                {
+                    <p class="mb-3">@Message</p>
+                }
+                
+                @if (ChildContent != null)
+                {
+                    @ChildContent
+                }
+                
+                @if (ShowDetails && !string.IsNullOrEmpty(Details))
+                {
+                    <div class="alert alert-light border">
+                        <small class="text-muted">
+                            <strong>詳細情報:</strong><br />
+                            @Details
+                        </small>
+                    </div>
+                }
+                
+                @if (RequireConfirmationText && !string.IsNullOrEmpty(ConfirmationTextRequired))
+                {
+                    <div class="mb-3">
+                        <label class="form-label">
+                            以下のテキストを入力して操作を確認してください: 
+                            <strong class="text-danger">@ConfirmationTextRequired</strong>
+                        </label>
+                        <input type="text" class="form-control" @bind="confirmationText" 
+                               @bind:event="oninput" placeholder="@ConfirmationTextRequired" />
+                        @if (!string.IsNullOrEmpty(confirmationText) && confirmationText != ConfirmationTextRequired)
+                        {
+                            <div class="text-danger small mt-1">
+                                入力されたテキストが一致しません
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Cancel" disabled="@isProcessing">
+                    <i class="fas fa-times me-1"></i>
+                    @CancelText
+                </button>
+                
+                <button type="button" class="btn @ConfirmButtonClass" 
+                        @onclick="Confirm" 
+                        disabled="@(isProcessing || !CanConfirm)">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    }
+                    else if (!string.IsNullOrEmpty(ConfirmIconClass))
+                    {
+                        <i class="@ConfirmIconClass me-1"></i>
+                    }
+                    @ConfirmText
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string Title { get; set; } = "確認";
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public string Details { get; set; } = string.Empty;
+    [Parameter] public bool ShowDetails { get; set; } = false;
+    [Parameter] public string IconClass { get; set; } = "fas fa-exclamation-triangle";
+    [Parameter] public DialogType Type { get; set; } = DialogType.Warning;
+    [Parameter] public DialogSize Size { get; set; } = DialogSize.Medium;
+    [Parameter] public string ConfirmText { get; set; } = "はい";
+    [Parameter] public string CancelText { get; set; } = "キャンセル";
+    [Parameter] public string ConfirmIconClass { get; set; } = string.Empty;
+    [Parameter] public bool ShowCloseButton { get; set; } = true;
+    [Parameter] public bool RequireConfirmationText { get; set; } = false;
+    [Parameter] public string ConfirmationTextRequired { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    
+    private string confirmationText = string.Empty;
+    private bool isProcessing = false;
+    
+    private string SizeClass => Size switch
+    {
+        DialogSize.Small => "modal-sm",
+        DialogSize.Large => "modal-lg",
+        DialogSize.ExtraLarge => "modal-xl",
+        _ => ""
+    };
+    
+    private string HeaderClass => Type switch
+    {
+        DialogType.Danger => "bg-danger text-white",
+        DialogType.Warning => "bg-warning",
+        DialogType.Info => "bg-info text-white",
+        DialogType.Success => "bg-success text-white",
+        _ => ""
+    };
+    
+    private string ConfirmButtonClass => Type switch
+    {
+        DialogType.Danger => "btn-danger",
+        DialogType.Warning => "btn-warning",
+        DialogType.Info => "btn-info",
+        DialogType.Success => "btn-success",
+        _ => "btn-primary"
+    };
+    
+    private bool CanConfirm
+    {
+        get
+        {
+            if (RequireConfirmationText && !string.IsNullOrEmpty(ConfirmationTextRequired))
+            {
+                return confirmationText == ConfirmationTextRequired;
+            }
+            return true;
+        }
+    }
+    
+    protected override void OnParametersSet()
+    {
+        if (!IsVisible)
+        {
+            // ダイアログが閉じられた時に状態をリセット
+            confirmationText = string.Empty;
+            isProcessing = false;
+        }
+    }
+    
+    private async Task Confirm()
+    {
+        if (!CanConfirm) return;
+        
+        isProcessing = true;
+        StateHasChanged();
+        
+        try
+        {
+            await OnConfirm.InvokeAsync();
+        }
+        finally
+        {
+            isProcessing = false;
+            // 通常は親コンポーネントがIsVisibleをfalseに設定するため、
+            // ここでは処理中フラグのみリセット
+        }
+    }
+    
+    private async Task Cancel()
+    {
+        if (isProcessing) return;
+        
+        confirmationText = string.Empty;
+        await OnCancel.InvokeAsync();
+    }
+    
+    /// <summary>
+    /// 外部からダイアログを表示するためのメソッド
+    /// </summary>
+    public void Show()
+    {
+        IsVisible = true;
+        confirmationText = string.Empty;
+        isProcessing = false;
+        StateHasChanged();
+    }
+    
+    /// <summary>
+    /// 外部からダイアログを非表示にするためのメソッド
+    /// </summary>
+    public void Hide()
+    {
+        IsVisible = false;
+        confirmationText = string.Empty;
+        isProcessing = false;
+        StateHasChanged();
+    }
+    
+    public enum DialogType
+    {
+        Info,
+        Warning,
+        Danger,
+        Success
+    }
+    
+    public enum DialogSize
+    {
+        Small,
+        Medium,
+        Large,
+        ExtraLarge
+    }
+}
+
+<style>
+    .modal.show {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .modal-header.bg-danger,
+    .modal-header.bg-info,
+    .modal-header.bg-success {
+        border-bottom: none;
+    }
+    
+    .modal-header.bg-warning {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    
+    /* 確認ダイアログ特有のスタイル */
+    .confirmation-dialog .modal-body {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .confirmation-dialog .modal-body p {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* アニメーション効果 */
+    .modal.show .modal-dialog {
+        animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @@keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    /* レスポンシブ対応 */
+    @@media (max-width: 576px) {
+        .modal-dialog {
+            margin: 1rem;
+        }
+        
+        .modal-dialog.modal-sm {
+            max-width: none;
+        }
+    }
+</style>

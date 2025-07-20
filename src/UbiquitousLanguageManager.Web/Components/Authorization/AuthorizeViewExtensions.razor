@@ -1,0 +1,196 @@
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using UbiquitousLanguageManager.Domain
+@using System.Security.Claims
+
+@* 権限ベースUI制御拡張コンポーネント *@
+@* Blazor Server初学者向け: ASP.NET Core Identityと連携し、 *@
+@* より細かい権限制御をDomainのRole型と連携して提供 *@
+
+@inherits ComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@* ロールベース表示制御 *@
+@if (ShowForRoles?.Any() == true)
+{
+    <AuthorizeView Roles="@string.Join(",", ShowForRoles)">
+        <Authorized Context="authContext">
+            @if (ShouldShow(authContext.User))
+            {
+                @ChildContent
+            }
+            else if (FallbackContent != null)
+            {
+                @FallbackContent
+            }
+        </Authorized>
+        <NotAuthorized>
+            @if (UnauthorizedContent != null)
+            {
+                @UnauthorizedContent
+            }
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else if (RequireAllRoles?.Any() == true)
+{
+    <AuthorizeView>
+        <Authorized Context="authContext">
+            @if (HasAllRoles(authContext.User, RequireAllRoles))
+            {
+                @ChildContent
+            }
+            else if (FallbackContent != null)
+            {
+                @FallbackContent
+            }
+        </Authorized>
+        <NotAuthorized>
+            @if (UnauthorizedContent != null)
+            {
+                @UnauthorizedContent
+            }
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else
+{
+    @* デフォルト：認証済みユーザーのみ表示 *@
+    <AuthorizeView>
+        <Authorized>
+            @ChildContent
+        </Authorized>
+        <NotAuthorized>
+            @if (UnauthorizedContent != null)
+            {
+                @UnauthorizedContent
+            }
+        </NotAuthorized>
+    </AuthorizeView>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? FallbackContent { get; set; }
+    [Parameter] public RenderFragment? UnauthorizedContent { get; set; }
+    
+    // 基本的な権限制御
+    [Parameter] public List<string> ShowForRoles { get; set; } = new();
+    [Parameter] public List<string> RequireAllRoles { get; set; } = new();
+    [Parameter] public List<string> HideForRoles { get; set; } = new();
+    
+    // より細かい制御
+    [Parameter] public bool RequireSuperUser { get; set; } = false;
+    [Parameter] public bool RequireProjectManager { get; set; } = false;
+    [Parameter] public bool RequireDomainApprover { get; set; } = false;
+    [Parameter] public bool AllowGeneralUser { get; set; } = true;
+    
+    // プロジェクト固有の権限
+    [Parameter] public string? RequireProjectAccess { get; set; }
+    
+    // カスタム権限チェック
+    [Parameter] public Func<ClaimsPrincipal, bool>? CustomPermissionCheck { get; set; }
+    
+    private bool ShouldShow(ClaimsPrincipal user)
+    {
+        // Phase A3で実装予定：より詳細な権限チェック
+        
+        // 基本的なロールチェック
+        if (RequireSuperUser && !user.IsInRole("SuperUser"))
+            return false;
+            
+        if (RequireProjectManager && !user.IsInRole("ProjectManager") && !user.IsInRole("SuperUser"))
+            return false;
+            
+        if (RequireDomainApprover && 
+            !user.IsInRole("DomainApprover") && 
+            !user.IsInRole("ProjectManager") && 
+            !user.IsInRole("SuperUser"))
+            return false;
+            
+        if (!AllowGeneralUser && user.IsInRole("GeneralUser") && 
+            !user.IsInRole("DomainApprover") && 
+            !user.IsInRole("ProjectManager") && 
+            !user.IsInRole("SuperUser"))
+            return false;
+        
+        // 非表示対象ロールチェック
+        if (HideForRoles?.Any() == true)
+        {
+            foreach (var role in HideForRoles)
+            {
+                if (user.IsInRole(role))
+                    return false;
+            }
+        }
+        
+        // プロジェクト固有権限チェック（Phase A3で実装）
+        if (!string.IsNullOrEmpty(RequireProjectAccess))
+        {
+            // 仮実装：プロジェクト権限は常に許可
+            // Phase A3で実際のプロジェクト権限チェックを実装
+        }
+        
+        // カスタム権限チェック
+        if (CustomPermissionCheck != null)
+        {
+            return CustomPermissionCheck(user);
+        }
+        
+        return true;
+    }
+    
+    private bool HasAllRoles(ClaimsPrincipal user, List<string> roles)
+    {
+        return roles.All(role => user.IsInRole(role));
+    }
+    
+    /// <summary>
+    /// 簡易ロール権限チェック（静的メソッド）
+    /// </summary>
+    public static bool CanPerformAction(ClaimsPrincipal user, string action)
+    {
+        return action switch
+        {
+            "CreateUser" => user.IsInRole("SuperUser") || user.IsInRole("ProjectManager"),
+            "EditUser" => user.IsInRole("SuperUser") || user.IsInRole("ProjectManager"),
+            "DeleteUser" => user.IsInRole("SuperUser"),
+            "ManageProjects" => user.IsInRole("SuperUser") || user.IsInRole("ProjectManager"),
+            "ApproveDomain" => user.IsInRole("SuperUser") || 
+                              user.IsInRole("ProjectManager") || 
+                              user.IsInRole("DomainApprover"),
+            "ViewReports" => user.IsInRole("SuperUser") || 
+                           user.IsInRole("ProjectManager") || 
+                           user.IsInRole("DomainApprover"),
+            _ => false
+        };
+    }
+    
+    /// <summary>
+    /// ユーザーの最高権限レベルを取得
+    /// </summary>
+    public static string GetHighestRole(ClaimsPrincipal user)
+    {
+        if (user.IsInRole("SuperUser")) return "SuperUser";
+        if (user.IsInRole("ProjectManager")) return "ProjectManager";
+        if (user.IsInRole("DomainApprover")) return "DomainApprover";
+        if (user.IsInRole("GeneralUser")) return "GeneralUser";
+        return "Unknown";
+    }
+}
+
+@* 使用例のコメント：
+<AuthorizeViewExtensions RequireSuperUser="true">
+    <div>スーパーユーザーのみ表示</div>
+    <FallbackContent>
+        <div class="alert alert-warning">この機能には管理者権限が必要です</div>
+    </FallbackContent>
+</AuthorizeViewExtensions>
+
+<AuthorizeViewExtensions ShowForRoles='new List<string> { "SuperUser", "ProjectManager" }'>
+    <button class="btn btn-primary">新規作成</button>
+    <UnauthorizedContent>
+        <button class="btn btn-secondary" disabled>新規作成（権限なし）</button>
+    </UnauthorizedContent>
+</AuthorizeViewExtensions>
+*@

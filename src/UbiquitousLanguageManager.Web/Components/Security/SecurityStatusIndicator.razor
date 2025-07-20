@@ -1,0 +1,510 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@* セキュリティ状態インジケーター *@
+@* Blazor Server初学者向け: ユーザーのセキュリティ状態と権限レベルを表示し、 *@
+@* セキュリティ意識の向上を図るコンポーネント *@
+
+<div class="security-indicator @SizeClass">
+    <AuthorizeView>
+        <Authorized Context="authContext">
+            <div class="security-status @GetSecurityLevelClass(authContext.User)">
+                <div class="indicator-icon">
+                    <i class="@GetSecurityIcon(authContext.User)"></i>
+                </div>
+                <div class="indicator-content">
+                    <div class="security-level">
+                        @GetSecurityLevelText(authContext.User)
+                    </div>
+                    @if (ShowDetails)
+                    {
+                        <div class="security-details">
+                            <small class="text-muted">
+                                @GetUserRoleText(authContext.User)
+                                @if (ShowSessionInfo)
+                                {
+                                    <br />
+                                    <span>セッション: @(GetSessionStatus())</span>
+                                }
+                            </small>
+                        </div>
+                    }
+                </div>
+                
+                @if (ShowActions)
+                {
+                    <div class="security-actions">
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                @onclick="ShowSecurityDetails"
+                                title="セキュリティ詳細">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                        @if (CanChangePassword(authContext.User))
+                        {
+                            <button class="btn btn-sm btn-outline-warning" 
+                                    @onclick="PromptPasswordChange"
+                                    title="パスワード変更">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+            
+            @if (ShowPasswordExpiryWarning && IsPasswordExpiringSoon(authContext.User))
+            {
+                <div class="password-expiry-warning mt-2">
+                    <div class="alert alert-warning alert-sm" role="alert">
+                        <i class="fas fa-clock me-1"></i>
+                        パスワードの有効期限が近づいています。
+                        <a href="/change-password" class="alert-link">変更する</a>
+                    </div>
+                </div>
+            }
+            
+            @if (ShowSecurityTips && ShouldShowSecurityTips(authContext.User))
+            {
+                <div class="security-tips mt-2">
+                    <div class="alert alert-info alert-sm" role="alert">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        <strong>セキュリティヒント:</strong> @GetRandomSecurityTip()
+                    </div>
+                </div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <div class="security-status security-unauthenticated">
+                <div class="indicator-icon">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+                <div class="indicator-content">
+                    <div class="security-level">未認証</div>
+                    @if (ShowDetails)
+                    {
+                        <div class="security-details">
+                            <small class="text-muted">ログインが必要です</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@if (showSecurityModal)
+{
+    <div class="modal show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        セキュリティ状態詳細
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="HideSecurityDetails"></button>
+                </div>
+                <div class="modal-body">
+                    <AuthorizeView>
+                        <Authorized Context="authContext">
+                            <div class="security-details-grid">
+                                <div class="detail-item">
+                                    <strong>ユーザー名:</strong>
+                                    <span>@(authContext.User.Identity?.Name ?? "不明")</span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>権限レベル:</strong>
+                                    <span class="@GetSecurityLevelClass(authContext.User)">
+                                        @GetUserRoleText(authContext.User)
+                                    </span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>ログイン時刻:</strong>
+                                    <span>@GetLoginTime(authContext.User)</span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>セッション状態:</strong>
+                                    <span class="text-success">アクティブ</span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>セキュリティレベル:</strong>
+                                    <span class="@GetSecurityLevelClass(authContext.User)">
+                                        @GetSecurityLevelText(authContext.User)
+                                    </span>
+                                </div>
+                                <div class="detail-item">
+                                    <strong>最終パスワード変更:</strong>
+                                    <span>@GetPasswordChangeDate(authContext.User)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <h6>セキュリティ推奨事項</h6>
+                                <ul class="security-recommendations">
+                                    @foreach (var recommendation in GetSecurityRecommendations(authContext.User))
+                                    {
+                                        <li>@recommendation</li>
+                                    }
+                                </ul>
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideSecurityDetails">
+                        閉じる
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public SecurityIndicatorSize Size { get; set; } = SecurityIndicatorSize.Medium;
+    [Parameter] public bool ShowDetails { get; set; } = true;
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public bool ShowSessionInfo { get; set; } = false;
+    [Parameter] public bool ShowPasswordExpiryWarning { get; set; } = true;
+    [Parameter] public bool ShowSecurityTips { get; set; } = false;
+    [Parameter] public EventCallback OnPasswordChangeRequested { get; set; }
+    
+    private bool showSecurityModal = false;
+    
+    private string SizeClass => Size switch
+    {
+        SecurityIndicatorSize.Small => "indicator-sm",
+        SecurityIndicatorSize.Large => "indicator-lg",
+        _ => ""
+    };
+    
+    private string GetSecurityLevelClass(ClaimsPrincipal user)
+    {
+        var role = GetHighestRole(user);
+        return role switch
+        {
+            "SuperUser" => "security-high",
+            "ProjectManager" => "security-medium",
+            "DomainApprover" => "security-medium",
+            "GeneralUser" => "security-low",
+            _ => "security-none"
+        };
+    }
+    
+    private string GetSecurityIcon(ClaimsPrincipal user)
+    {
+        var role = GetHighestRole(user);
+        return role switch
+        {
+            "SuperUser" => "fas fa-crown",
+            "ProjectManager" => "fas fa-shield-alt",
+            "DomainApprover" => "fas fa-certificate",
+            "GeneralUser" => "fas fa-user",
+            _ => "fas fa-user-slash"
+        };
+    }
+    
+    private string GetSecurityLevelText(ClaimsPrincipal user)
+    {
+        var role = GetHighestRole(user);
+        return role switch
+        {
+            "SuperUser" => "最高権限",
+            "ProjectManager" => "管理者権限",
+            "DomainApprover" => "承認者権限",
+            "GeneralUser" => "一般権限",
+            _ => "権限なし"
+        };
+    }
+    
+    private string GetUserRoleText(ClaimsPrincipal user)
+    {
+        var role = GetHighestRole(user);
+        return role switch
+        {
+            "SuperUser" => "スーパーユーザー",
+            "ProjectManager" => "プロジェクト管理者",
+            "DomainApprover" => "ドメイン承認者",
+            "GeneralUser" => "一般ユーザー",
+            _ => "未認証"
+        };
+    }
+    
+    private string GetHighestRole(ClaimsPrincipal user)
+    {
+        if (user.IsInRole("SuperUser")) return "SuperUser";
+        if (user.IsInRole("ProjectManager")) return "ProjectManager";
+        if (user.IsInRole("DomainApprover")) return "DomainApprover";
+        if (user.IsInRole("GeneralUser")) return "GeneralUser";
+        return "None";
+    }
+    
+    private string GetSessionStatus()
+    {
+        // Phase A3で実装: 実際のセッション情報
+        return "アクティブ";
+    }
+    
+    private string GetLoginTime(ClaimsPrincipal user)
+    {
+        // Phase A3で実装: 実際のログイン時刻
+        return DateTime.Now.ToString("yyyy/MM/dd HH:mm");
+    }
+    
+    private string GetPasswordChangeDate(ClaimsPrincipal user)
+    {
+        // Phase A3で実装: 実際のパスワード変更日
+        return "2024/01/01";
+    }
+    
+    private bool CanChangePassword(ClaimsPrincipal user)
+    {
+        return user.Identity?.IsAuthenticated == true;
+    }
+    
+    private bool IsPasswordExpiringSoon(ClaimsPrincipal user)
+    {
+        // Phase A3で実装: パスワード有効期限チェック
+        return false; // 仮実装
+    }
+    
+    private bool ShouldShowSecurityTips(ClaimsPrincipal user)
+    {
+        // 新しいユーザーまたは一般ユーザーにヒントを表示
+        return user.IsInRole("GeneralUser");
+    }
+    
+    private string GetRandomSecurityTip()
+    {
+        var tips = new[]
+        {
+            "定期的にパスワードを変更しましょう",
+            "画面から離れる際はロックしましょう",
+            "不審なアクティビティを発見したら報告しましょう",
+            "パスワードは他人と共有しないでください",
+            "公共のWi-Fiでの重要な作業は避けましょう"
+        };
+        
+        return tips[Random.Shared.Next(tips.Length)];
+    }
+    
+    private List<string> GetSecurityRecommendations(ClaimsPrincipal user)
+    {
+        var recommendations = new List<string>();
+        
+        if (user.IsInRole("SuperUser"))
+        {
+            recommendations.Add("管理者権限を持つため、すべての操作に注意してください");
+            recommendations.Add("定期的なセキュリティ監査を実施してください");
+        }
+        else if (user.IsInRole("GeneralUser"))
+        {
+            recommendations.Add("パスワードを定期的に変更してください");
+            recommendations.Add("不審なアクティビティを発見したら管理者に報告してください");
+        }
+        
+        recommendations.Add("ブラウザを閉じる前に必ずログアウトしてください");
+        recommendations.Add("画面から離れる際は画面をロックしてください");
+        
+        return recommendations;
+    }
+    
+    private void ShowSecurityDetails()
+    {
+        showSecurityModal = true;
+    }
+    
+    private void HideSecurityDetails()
+    {
+        showSecurityModal = false;
+    }
+    
+    private async Task PromptPasswordChange()
+    {
+        await OnPasswordChangeRequested.InvokeAsync();
+    }
+    
+    public enum SecurityIndicatorSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+}
+
+<style>
+    .security-indicator {
+        display: inline-block;
+    }
+    
+    .security-status {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e1e5e9;
+        background: white;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .security-status:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .indicator-icon {
+        margin-right: 0.75rem;
+        font-size: 1.25rem;
+    }
+    
+    .indicator-content {
+        flex: 1;
+    }
+    
+    .security-level {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .security-details {
+        margin-top: 0.25rem;
+    }
+    
+    .security-actions {
+        margin-left: 0.75rem;
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    /* セキュリティレベル別スタイル */
+    .security-high {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+    }
+    
+    .security-high .indicator-icon {
+        color: #dc3545;
+    }
+    
+    .security-high .security-level {
+        color: #dc3545;
+    }
+    
+    .security-medium {
+        border-color: #fd7e14;
+        background: linear-gradient(135deg, #fff8f0 0%, #ffeaa7 100%);
+    }
+    
+    .security-medium .indicator-icon {
+        color: #fd7e14;
+    }
+    
+    .security-medium .security-level {
+        color: #fd7e14;
+    }
+    
+    .security-low {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #f8fff8 0%, #e6f7e6 100%);
+    }
+    
+    .security-low .indicator-icon {
+        color: #28a745;
+    }
+    
+    .security-low .security-level {
+        color: #28a745;
+    }
+    
+    .security-unauthenticated {
+        border-color: #6c757d;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .security-unauthenticated .indicator-icon {
+        color: #6c757d;
+    }
+    
+    .security-unauthenticated .security-level {
+        color: #6c757d;
+    }
+    
+    /* サイズバリエーション */
+    .indicator-sm .security-status {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .indicator-sm .indicator-icon {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+    
+    .indicator-sm .security-level {
+        font-size: 0.75rem;
+    }
+    
+    .indicator-lg .security-status {
+        padding: 0.75rem 1.25rem;
+    }
+    
+    .indicator-lg .indicator-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    
+    .indicator-lg .security-level {
+        font-size: 1rem;
+    }
+    
+    /* モーダル内のスタイル */
+    .security-details-grid {
+        display: grid;
+        gap: 0.75rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+    
+    .security-recommendations {
+        font-size: 0.875rem;
+        margin-bottom: 0;
+    }
+    
+    .alert-sm {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* アニメーション */
+    .password-expiry-warning {
+        animation: pulse 2s infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+    
+    /* レスポンシブ対応 */
+    @@media (max-width: 576px) {
+        .security-status {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .security-actions {
+            margin-left: 0;
+            margin-top: 0.5rem;
+        }
+    }
+</style>

@@ -1,0 +1,153 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Linq.Expressions
+@typeparam TValue
+
+@* フィールドバリデーターコンポーネント *@
+@* Blazor Server初学者向け: 個別フィールドのリアルタイムバリデーション表示を提供 *@
+
+<div class="mb-3">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label for="@FieldId" class="form-label">
+            @Label
+            @if (IsRequired)
+            {
+                <span class="text-danger">*</span>
+            }
+        </label>
+    }
+    
+    <div class="@(HasIcon ? "input-group" : "")">
+        @if (!string.IsNullOrEmpty(IconClass))
+        {
+            <span class="input-group-text">
+                <i class="@IconClass"></i>
+            </span>
+        }
+        
+        @ChildContent
+        
+        @if (ShowPasswordToggle && IsPasswordField)
+        {
+            <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">
+                <i class="fas @(_showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+            </button>
+        }
+    </div>
+    
+    @if (!string.IsNullOrEmpty(HelpText) && !HasErrors)
+    {
+        <div class="form-text">@HelpText</div>
+    }
+    
+    @if (ShowValidationMessage)
+    {
+        <ValidationMessage For="@For" />
+    }
+    
+    @if (ShowValidationIcon && HasValidation)
+    {
+        @if (HasErrors)
+        {
+            <div class="field-validation-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>@GetErrorMessage()</span>
+            </div>
+        }
+        else if (IsModified && !HasErrors)
+        {
+            <div class="field-validation-valid">
+                <i class="fas fa-check-circle"></i>
+                <span>@SuccessMessage</span>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public Expression<Func<TValue>>? For { get; set; }
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string FieldId { get; set; } = Guid.NewGuid().ToString();
+    [Parameter] public bool IsRequired { get; set; }
+    [Parameter] public string HelpText { get; set; } = string.Empty;
+    [Parameter] public string IconClass { get; set; } = string.Empty;
+    [Parameter] public bool HasIcon { get; set; }
+    [Parameter] public bool ShowValidationMessage { get; set; } = true;
+    [Parameter] public bool ShowValidationIcon { get; set; } = true;
+    [Parameter] public string SuccessMessage { get; set; } = "入力内容は有効です";
+    [Parameter] public bool IsPasswordField { get; set; }
+    [Parameter] public bool ShowPasswordToggle { get; set; }
+    
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+    
+    private FieldIdentifier _fieldIdentifier;
+    private bool _showPassword = false;
+    private bool HasValidation => EditContext != null && For != null;
+    private bool IsModified => HasValidation && EditContext!.IsModified(_fieldIdentifier);
+    private bool HasErrors => HasValidation && EditContext!.GetValidationMessages(_fieldIdentifier).Any();
+    
+    protected override void OnInitialized()
+    {
+        if (EditContext != null && For != null)
+        {
+            _fieldIdentifier = FieldIdentifier.Create(For);
+        }
+    }
+    
+    protected override void OnParametersSet()
+    {
+        HasIcon = !string.IsNullOrEmpty(IconClass);
+    }
+    
+    private string GetErrorMessage()
+    {
+        if (!HasValidation || !HasErrors) return string.Empty;
+        
+        var messages = EditContext!.GetValidationMessages(_fieldIdentifier);
+        return messages.FirstOrDefault() ?? string.Empty;
+    }
+    
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+}
+
+@* カスタムフィールドバリデーションスタイル *@
+<style>
+    .field-validator {
+        position: relative;
+    }
+    
+    .field-validator .form-control {
+        transition: border-color 0.15s ease-in-out;
+    }
+    
+    .field-validator .field-validation-error,
+    .field-validator .field-validation-valid {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* バリデーション状態に応じたフォーカススタイル */
+    .field-validator .form-control:focus.is-invalid {
+        border-color: var(--bs-danger);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-danger-rgb), 0.25);
+    }
+    
+    .field-validator .form-control:focus.is-valid {
+        border-color: var(--bs-success);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25);
+    }
+</style>

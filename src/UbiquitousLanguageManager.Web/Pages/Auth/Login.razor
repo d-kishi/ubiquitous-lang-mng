@@ -1,0 +1,411 @@
+@page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@using UbiquitousLanguageManager.Web.Components.Authorization
+@using UbiquitousLanguageManager.Web.Pages.Admin.Components
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@* ログイン画面 *@
+@* Blazor Server初学者向け: ASP.NET Core Identityと連携したセキュアな認証UI *@
+
+<PageTitle>ログイン - ユビキタス言語管理システム</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-section">
+                <i class="fas fa-language fa-3x text-primary mb-3"></i>
+                <h2 class="text-center mb-1">ユビキタス言語管理システム</h2>
+                <p class="text-center text-muted">ドメイン知識の共有と管理</p>
+            </div>
+        </div>
+        
+        <div class="login-body">
+            @if (showSecurityAlert)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <strong>セキュリティ注意:</strong> 
+                    このシステムには機密情報が含まれています。権限のない方のアクセスは禁止されています。
+                    <button type="button" class="btn-close" @onclick="DismissSecurityAlert"></button>
+                </div>
+            }
+            
+            <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+                <DataAnnotationsValidator />
+                
+                <div class="mb-3">
+                    <label for="email" class="form-label">
+                        <i class="fas fa-envelope me-1"></i>
+                        メールアドレス
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-at"></i>
+                        </span>
+                        <InputText id="email" 
+                                   class="@($"form-control {GetValidationClass("Email")}")" 
+                                   @bind-Value="loginModel.Email" 
+                                   placeholder="user@example.com"
+                                   autocomplete="username" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Email)" class="text-danger small" />
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock me-1"></i>
+                        パスワード
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-key"></i>
+                        </span>
+                        <InputText id="password" 
+                                   type="@(showPassword ? "text" : "password")"
+                                   class="@($"form-control {GetValidationClass("Password")}")" 
+                                   @bind-Value="loginModel.Password" 
+                                   placeholder="パスワードを入力"
+                                   autocomplete="current-password" />
+                        <button class="btn btn-outline-secondary" type="button" @onclick="TogglePasswordVisibility">
+                            <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                        </button>
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Password)" class="text-danger small" />
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="loginModel.RememberMe" />
+                        <label class="form-check-label" for="rememberMe">
+                            このデバイスでログイン状態を保持する
+                        </label>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @errorMessage
+                    </div>
+                }
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                        }
+                        ログイン
+                    </button>
+                </div>
+            </EditForm>
+            
+            <div class="login-footer mt-4">
+                <div class="text-center">
+                    <a href="/forgot-password" class="text-decoration-none">
+                        <i class="fas fa-question-circle me-1"></i>
+                        パスワードをお忘れですか？
+                    </a>
+                </div>
+                
+                @if (showDemoCredentials)
+                {
+                    <div class="demo-credentials mt-3">
+                        <details>
+                            <summary class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                デモ用アカウント情報
+                            </summary>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>スーパーユーザー:</strong> admin@example.com / Password123!<br />
+                                    <strong>プロジェクト管理者:</strong> manager@example.com / Password123!<br />
+                                    <strong>ドメイン承認者:</strong> approver@example.com / Password123!<br />
+                                    <strong>一般ユーザー:</strong> user@example.com / Password123!
+                                </small>
+                            </div>
+                        </details>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="security-notice">
+        <small class="text-muted">
+            <i class="fas fa-shield-alt me-1"></i>
+            このシステムはSSL/TLSで保護されています。
+            ログイン試行はセキュリティ監査のため記録されます。
+        </small>
+    </div>
+</div>
+
+@* Toast Notifications *@
+<ToastNotification @ref="toastNotification" Position="ToastNotification.ToastPosition.TopCenter" />
+
+@code {
+    private LoginModel loginModel = new();
+    private bool isLoading = false;
+    private bool showPassword = false;
+    private bool showSecurityAlert = true;
+    private bool showDemoCredentials = true; // Phase A3で false に変更
+    private string errorMessage = string.Empty;
+    private ToastNotification? toastNotification;
+    
+    [Parameter] public string? ReturnUrl { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // 既にログイン済みの場合はリダイレクト
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo(ReturnUrl ?? "/", replace: true);
+        }
+    }
+    
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        StateHasChanged();
+        
+        try
+        {
+            // Phase A3で実装: 実際の認証処理
+            // 現在は仮実装
+            await Task.Delay(1000); // ネットワーク遅延をシミュレート
+            
+            // デモ用認証チェック
+            if (IsValidDemoCredentials())
+            {
+                toastNotification?.ShowSuccess("ログインしています...", "認証成功");
+                
+                // Phase A3で実装: 実際のCookie認証
+                // 現在は仮のリダイレクト
+                await Task.Delay(500);
+                Navigation.NavigateTo(ReturnUrl ?? "/admin/users", replace: true);
+            }
+            else
+            {
+                errorMessage = "メールアドレスまたはパスワードが正しくありません。";
+                
+                // セキュリティ: ログイン失敗のログ記録
+                LogFailedLogin();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"ログイン処理中にエラーが発生しました: {ex.Message}";
+            toastNotification?.ShowError("ログインに失敗しました", "システムエラー");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private bool IsValidDemoCredentials()
+    {
+        // Phase A3で削除: デモ用の認証チェック
+        var validCredentials = new Dictionary<string, string>
+        {
+            { "admin@example.com", "Password123!" },
+            { "manager@example.com", "Password123!" },
+            { "approver@example.com", "Password123!" },
+            { "user@example.com", "Password123!" }
+        };
+        
+        return validCredentials.TryGetValue(loginModel.Email, out var password) && 
+               password == loginModel.Password;
+    }
+    
+    private void LogFailedLogin()
+    {
+        // Phase A3で実装: セキュリティログの記録
+        Console.WriteLine($"[SECURITY] Failed login attempt for: {loginModel.Email}");
+        
+        // 実装予定:
+        // - IP アドレスの記録
+        // - ブルートフォース攻撃の検出
+        // - アカウントロックアウト機能
+        // - セキュリティアラートの送信
+    }
+    
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+    
+    private void DismissSecurityAlert()
+    {
+        showSecurityAlert = false;
+    }
+    
+    private string GetValidationClass(string fieldName)
+    {
+        // Phase A3で実装: リアルタイムバリデーション
+        return string.Empty;
+    }
+    
+    // ログインモデル
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "メールアドレスは必須です")]
+        [EmailAddress(ErrorMessage = "正しいメールアドレス形式で入力してください")]
+        public string Email { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "パスワードは必須です")]
+        [MinLength(8, ErrorMessage = "パスワードは8文字以上で入力してください")]
+        public string Password { get; set; } = string.Empty;
+        
+        public bool RememberMe { get; set; } = false;
+    }
+}
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 1rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        width: 100%;
+        max-width: 400px;
+        overflow: hidden;
+    }
+    
+    .login-header {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem 1.5rem 1rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .login-body {
+        padding: 2rem 1.5rem;
+    }
+    
+    .logo-section h2 {
+        font-weight: 700;
+        color: #333;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+        border: 1px solid #e1e5e9;
+        padding: 0.75rem 1rem;
+        transition: all 0.15s ease-in-out;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #e1e5e9;
+        color: #6c757d;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: transform 0.15s ease-in-out;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+    
+    .demo-credentials {
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+    
+    .demo-credentials details > summary {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .security-notice {
+        margin-top: 1.5rem;
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        backdrop-filter: blur(5px);
+    }
+    
+    /* アニメーション */
+    .login-card {
+        animation: slideInUp 0.6s ease-out;
+    }
+    
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* レスポンシブ対応 */
+    @@media (max-width: 576px) {
+        .login-card {
+            margin: 1rem;
+            max-width: none;
+        }
+        
+        .login-header,
+        .login-body {
+            padding: 1.5rem 1rem;
+        }
+    }
+    
+    /* アクセシビリティ */
+    @@media (prefers-reduced-motion: reduce) {
+        .login-card {
+            animation: none;
+        }
+        
+        .btn-primary:hover {
+            transform: none;
+        }
+    }
+</style>

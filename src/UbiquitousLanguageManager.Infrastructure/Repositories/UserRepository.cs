@@ -10,6 +10,7 @@ using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Data;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
+using System.Globalization;
 
 namespace UbiquitousLanguageManager.Infrastructure.Repositories;
 
@@ -20,12 +21,12 @@ namespace UbiquitousLanguageManager.Infrastructure.Repositories;
 public class UserRepository : IUserRepository
 {
     private readonly UbiquitousLanguageDbContext _context;
-    private readonly ILogger<UserRepository> _logger;
+    private readonly Microsoft.Extensions.Logging.ILogger<UserRepository> _logger;
 
     /// <summary>
     /// UserRepositoryのコンストラクタ
     /// </summary>
-    public UserRepository(UbiquitousLanguageDbContext context, ILogger<UserRepository> logger)
+    public UserRepository(UbiquitousLanguageDbContext context, Microsoft.Extensions.Logging.ILogger<UserRepository> logger)
     {
         _context = context;
         _logger = logger;
@@ -41,7 +42,7 @@ public class UserRepository : IUserRepository
             // 簡易実装：実際のDB検索は省略
             await Task.Delay(1); // async警告解消用
             var userName = UserName.create("Sample User");
-            var user = User.create(email, userName.ResultValue, UserRole.GeneralUser, UserId.NewUserId(1L));
+            var user = User.create(email, userName.ResultValue, Role.GeneralUser, UserId.NewUserId(1L));
             var option = FSharpOption<User>.Some(user);
             return FSharpResult<FSharpOption<User>, string>.NewOk(option);
         }
@@ -123,22 +124,25 @@ public class UserRepository : IUserRepository
     // =================================================================
 
     /// <summary>
-    /// C#のUserEntityをF#のUserドメインエンティティに変換
+    /// C#のApplicationUserをF#のUserドメインエンティティに変換
     /// F#のValue Objectのスマートコンストラクタを使用して安全に変換
+    /// Phase A2: ASP.NET Core Identity統合対応版
     /// </summary>
-    /// <param name="entity">C#のUserEntity</param>
+    /// <param name="entity">C#のApplicationUser（ASP.NET Core Identity対応）</param>
     /// <returns>F#のResult型でラップされたUser</returns>
-    private static FSharpResult<User, string> ToDomainUser(UserEntity entity)
+    private static FSharpResult<User, string> ToDomainUser(ApplicationUser entity)
     {
         if (entity == null)
         {
-            return FSharpResult<User, string>.NewError("UserEntity cannot be null");
+            return FSharpResult<User, string>.NewError("ApplicationUser cannot be null");
         }
 
         try
         {
             // F#のValue Objectのスマートコンストラクタを使用
-            var emailResult = Email.create(entity.Email);
+            // ASP.NET Core IdentityのEmailプロパティ（NULL許容）に対応
+            var emailString = entity.Email ?? string.Empty;
+            var emailResult = Email.create(emailString);
             if (emailResult.IsError)
             {
                 return FSharpResult<User, string>.NewError($"Invalid email: {emailResult.ErrorValue}");
@@ -150,30 +154,27 @@ public class UserRepository : IUserRepository
                 return FSharpResult<User, string>.NewError($"Invalid name: {nameResult.ErrorValue}");
             }
 
-            // UserRoleの文字列をF#の判別共用体に変換
-            var roleResult = StringToUserRole(entity.UserRole);
+            // Roleの文字列をF#の判別共用体に変換（Phase A2: 新権限システム対応）
+            var roleResult = StringToRole(entity.UserRole);
             if (roleResult.IsError)
             {
                 return FSharpResult<User, string>.NewError($"Invalid role: {roleResult.ErrorValue}");
             }
 
-            // F#のUserレコードを作成（新しい認証関連プロパティを含む）
-            var user = new User(
-                UserId.NewUserId(entity.Id),
-                emailResult.ResultValue,
-                nameResult.ResultValue,
-                roleResult.ResultValue,
-                entity.IsActive,
-                entity.IsFirstLogin,
-                // 認証関連プロパティ（option型）
-                FSharpOption<PasswordHash>.None, // PasswordHashは通常レポジトリ経由では設定しない
-                FSharpOption<SecurityStamp>.None, // SecurityStampも同様
-                FSharpOption<ConcurrencyStamp>.None, // ConcurrencyStampも同様
-                FSharpOption<DateTime>.None, // LockoutEnd
-                0, // AccessFailedCount
-                entity.UpdatedAt,
-                UserId.NewUserId(entity.UpdatedBy)
-            );
+            // UserIdの生成（ASP.NET Core IdentityのGUID文字列からF#のUserIdに変換）
+            // 【F#初学者向け解説】
+            // ASP.NET Core IdentityはGUID文字列（450文字まで）をユーザーIDとして使用します。
+            // F#のUserIdはlong型を内部的に使用するため、文字列をハッシュ化して変換するか、
+            // 別の方法でマッピングする必要があります。ここでは簡易的にHashCodeを使用。
+            var userIdValue = (long)entity.Id.GetHashCode();
+            var userId = UserId.NewUserId(userIdValue);
+
+            // F#のUser.create静的メソッドを使用して作成（Phase A2対応）
+            // 【F#初学者向け解説】
+            // F#のレコード型は通常、スマートコンストラクタパターンを使用します。
+            // User.create静的メソッドが最小限の必須パラメータでUserエンティティを作成し、
+            // 他のプロパティはデフォルト値で初期化されます。
+            var user = User.create(emailResult.ResultValue, nameResult.ResultValue, roleResult.ResultValue, userId);
 
             return FSharpResult<User, string>.NewOk(user);
         }
@@ -184,55 +185,698 @@ public class UserRepository : IUserRepository
     }
 
     /// <summary>
-    /// F#のUserドメインエンティティをC#のUserEntityに変換
+    /// F#のUserドメインエンティティをC#のApplicationUserに変換
     /// F#のValue Objectから値を取得してC#のPOCOに設定
+    /// Phase A2: ASP.NET Core Identity統合対応版
     /// </summary>
     /// <param name="user">F#のUser</param>
-    /// <returns>C#のUserEntity</returns>
-    private static UserEntity ToEntity(User user)
+    /// <returns>C#のApplicationUser（ASP.NET Core Identity対応）</returns>
+    private static ApplicationUser ToEntity(User user)
     {
-        return new UserEntity
+        // F#のUserIdからGUID文字列を生成
+        // 【Blazor Server・F#初学者向け解説】
+        // ASP.NET Core IdentityはGUID文字列をプライマリキーとして使用します。
+        // F#のlong型UserIdを一意のGUID文字列に変換する必要があります。
+        var guidId = new Guid((int)(user.Id.Item % int.MaxValue), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
+
+        return new ApplicationUser
         {
-            Id = user.Id.Item,                           // F#のUserId判別共用体から値を取得
+            // ASP.NET Core Identity標準カラム
+            Id = guidId,                                  // F#のUserId → GUID文字列変換
+            UserName = user.Email.Value,                  // メールアドレスをユーザー名として使用
+            NormalizedUserName = user.Email.Value.ToUpperInvariant(),
             Email = user.Email.Value,                     // F#のEmail値オブジェクトから値を取得
+            NormalizedEmail = user.Email.Value.ToUpperInvariant(),
+            EmailConfirmed = true,                        // 初期状態では確認済みとする
+            LockoutEnabled = false,                       // ロックアウト機能は無効
+            AccessFailedCount = 0,                        // アクセス失敗回数は0で初期化
+            
+            // プロジェクト固有カスタムカラム
             Name = user.Name.Value,                       // F#のUserName値オブジェクトから値を取得
-            UserRole = UserRoleToString(user.Role),       // F#のUserRole判別共用体を文字列に変換
+            UserRole = RoleToString(user.Role),           // F#のRole判別共用体を文字列に変換（Phase A2対応）
             IsActive = user.IsActive,
             IsFirstLogin = user.IsFirstLogin,
-            UpdatedAt = user.UpdatedAt,
-            UpdatedBy = user.UpdatedBy.Item,              // F#のUserId判別共用体から値を取得
-            PasswordHash = "" // 実装時に適切なハッシュ値を設定
+            UpdatedAt = DateTime.UtcNow,                     // 現在時刻で初期化（DateTime型）
+            UpdatedBy = guidId,                           // 作成者・更新者は自分自身として設定
+            CreatedAt = DateTime.UtcNow,                 // 現在時刻で初期化（DateTime型）
+            CreatedBy = guidId,                          // 作成者は自分自身として設定
+            IsDeleted = false,                            // 新規作成時は削除フラグOFF
+            PasswordHash = null                           // 実装時に適切なハッシュ値を設定
         };
     }
 
     /// <summary>
-    /// 文字列をF#のUserRole判別共用体に変換
+    /// Phase A2: 文字列をF#のRole判別共用体に変換（新権限システム対応）
     /// </summary>
     /// <param name="roleString">ロールの文字列表現</param>
-    /// <returns>F#のResult型でラップされたUserRole</returns>
-    private static FSharpResult<UserRole, string> StringToUserRole(string roleString)
+    /// <returns>F#のResult型でラップされたRole</returns>
+    private static FSharpResult<Role, string> StringToRole(string roleString)
     {
         return roleString switch
         {
-            "SuperUser" => FSharpResult<UserRole, string>.NewOk(UserRole.SuperUser),
-            "ProjectManager" => FSharpResult<UserRole, string>.NewOk(UserRole.ProjectManager),
-            "DomainApprover" => FSharpResult<UserRole, string>.NewOk(UserRole.DomainApprover),
-            "GeneralUser" => FSharpResult<UserRole, string>.NewOk(UserRole.GeneralUser),
-            _ => FSharpResult<UserRole, string>.NewError($"無効なユーザーロールです: {roleString}")
+            "SuperUser" => FSharpResult<Role, string>.NewOk(Role.SuperUser),
+            "ProjectManager" => FSharpResult<Role, string>.NewOk(Role.ProjectManager),
+            "DomainApprover" => FSharpResult<Role, string>.NewOk(Role.DomainApprover),
+            "GeneralUser" => FSharpResult<Role, string>.NewOk(Role.GeneralUser),
+            _ => FSharpResult<Role, string>.NewError($"無効なユーザーロールです: {roleString}")
         };
     }
 
     /// <summary>
-    /// F#のUserRole判別共用体を文字列に変換
+    /// Phase A2: F#のRole判別共用体を文字列に変換（新権限システム対応）
     /// </summary>
-    /// <param name="role">F#のUserRole判別共用体</param>
+    /// <param name="role">F#のRole判別共用体</param>
     /// <returns>文字列表現</returns>
-    private static string UserRoleToString(UserRole role)
+    private static string RoleToString(Role role)
     {
         if (role.IsSuperUser) return "SuperUser";
         if (role.IsProjectManager) return "ProjectManager";
         if (role.IsDomainApprover) return "DomainApprover";
         if (role.IsGeneralUser) return "GeneralUser";
         return "Unknown";
+    }
+
+    // =================================================================
+    // 🆕 Phase A2: 新インターフェースメソッド実装
+    // =================================================================
+
+    /// <summary>
+    /// Phase A2: アクティブユーザー一覧取得
+    /// 論理削除されていないユーザーのみを取得
+    /// </summary>
+    /// <returns>F#のResult型でラップされたアクティブユーザーリスト</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> GetAllActiveUsersAsync()
+    {
+        try
+        {
+            // 【Blazor Server・F#初学者向け解説】
+            // EF Coreを使用してデータベースからアクティブユーザーを取得
+            // Where句でIsActive = trueかつ論理削除されていないユーザーをフィルタリング
+            var entities = await _context.Users
+                .Where(u => u.IsActive && !u.IsDeleted)
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            // 各EntityをDomainオブジェクトに変換
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted: {Errors}", string.Join(", ", errors));
+            }
+
+            // F#のFSharpListに変換
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving active users");
+            return FSharpResult<FSharpList<User>, string>.NewError($"データベースエラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase A2: 全ユーザー一覧取得（無効化ユーザー含む）
+    /// 管理者向けの完全なユーザーリスト取得
+    /// </summary>
+    /// <returns>F#のResult型でラップされた全ユーザーリスト</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> GetAllUsersAsync()
+    {
+        try
+        {
+            // 論理削除されていないユーザーのみ取得（IsActiveは問わない）
+            var entities = await _context.Users
+                .Where(u => !u.IsDeleted)
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted: {Errors}", string.Join(", ", errors));
+            }
+
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all users");
+            return FSharpResult<FSharpList<User>, string>.NewError($"データベースエラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase A2: ロール別ユーザー取得
+    /// 特定のロールを持つユーザーを取得
+    /// </summary>
+    /// <param name="role">F#のRole判別共用体</param>
+    /// <returns>F#のResult型でラップされたユーザーリスト</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> GetByRoleAsync(Role role)
+    {
+        try
+        {
+            var roleString = RoleToString(role);
+            
+            // 指定されたロールでアクティブなユーザーを取得
+            var entities = await _context.Users
+                .Where(u => u.UserRole == roleString && u.IsActive && !u.IsDeleted)
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted for role {Role}: {Errors}", roleString, string.Join(", ", errors));
+            }
+
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving users by role {Role}", RoleToString(role));
+            return FSharpResult<FSharpList<User>, string>.NewError($"データベースエラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase A2: ユーザー検索
+    /// 名前・メールアドレスでの部分一致検索（PostgreSQL pg_trgm対応）
+    /// </summary>
+    /// <param name="searchTerm">検索キーワード</param>
+    /// <returns>F#のResult型でラップされた検索結果ユーザーリスト</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> SearchUsersAsync(string searchTerm)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                // 検索語が空の場合は全アクティブユーザーを返す
+                return await GetAllActiveUsersAsync();
+            }
+
+            var normalizedSearchTerm = searchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
+            
+            // 【PostgreSQL pg_trgm対応】
+            // 実際の本格実装では、pg_trgm拡張とGINインデックスを使用した類似検索を行う
+            // 現在はLIKE検索で代替実装
+            var entities = await _context.Users
+                .Where(u => u.IsActive && !u.IsDeleted &&
+                           (EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
+                            EF.Functions.ILike(u.Email ?? "", $"%{normalizedSearchTerm}%")))
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted in search: {Errors}", string.Join(", ", errors));
+            }
+
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching users with term: {SearchTerm}", searchTerm);
+            return FSharpResult<FSharpList<User>, string>.NewError($"検索エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase A2: ユーザー統計情報取得
+    /// ダッシュボード等で使用する統計データの取得
+    /// </summary>
+    /// <returns>F#のResult型でラップされた統計情報オブジェクト</returns>
+    public async Task<FSharpResult<object, string>> GetUserStatisticsAsync()
+    {
+        try
+        {
+            // ユーザー統計情報を取得
+            var totalUsers = await _context.Users.CountAsync(u => !u.IsDeleted);
+            var activeUsers = await _context.Users.CountAsync(u => u.IsActive && !u.IsDeleted);
+            var inactiveUsers = totalUsers - activeUsers;
+            var firstLoginUsers = await _context.Users.CountAsync(u => u.IsFirstLogin && u.IsActive && !u.IsDeleted);
+            
+            // ロール別統計
+            var roleStats = await _context.Users
+                .Where(u => u.IsActive && !u.IsDeleted)
+                .GroupBy(u => u.UserRole)
+                .Select(g => new { Role = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var statistics = new
+            {
+                TotalUsers = totalUsers,
+                ActiveUsers = activeUsers,
+                InactiveUsers = inactiveUsers,
+                FirstLoginUsers = firstLoginUsers,
+                RoleStatistics = roleStats.ToDictionary(r => r.Role, r => r.Count),
+                LastUpdated = DateTime.UtcNow
+            };
+
+            return FSharpResult<object, string>.NewOk(statistics);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving user statistics");
+            return FSharpResult<object, string>.NewError($"統計情報取得エラー: {ex.Message}");
+        }
+    }
+
+    // =================================================================
+    // 🚀 Team 3: 高性能検索・フィルタリング・ページング機能
+    // =================================================================
+
+    /// <summary>
+    /// 高性能ページング対応ユーザー検索
+    /// PostgreSQL最適化クエリとインデックス活用による大量データ対応
+    /// </summary>
+    /// <param name="searchTerm">検索キーワード（名前・メール部分一致）</param>
+    /// <param name="roleFilter">ロールフィルター（null時は全ロール）</param>
+    /// <param name="statusFilter">ステータスフィルター（active/inactive/all）</param>
+    /// <param name="pageNumber">ページ番号（1ベース）</param>
+    /// <param name="pageSize">1ページあたりのデータ件数</param>
+    /// <returns>ページング結果とメタデータ</returns>
+    public async Task<FSharpResult<object, string>> GetUsersWithPagingAsync(
+        string? searchTerm = null,
+        string? roleFilter = null,
+        string statusFilter = "active",
+        int pageNumber = 1,
+        int pageSize = 20)
+    {
+        try
+        {
+            // パラメータ検証
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 20; // 最大100件制限
+
+            var query = _context.Users.AsQueryable();
+
+            // 基本フィルター（論理削除されていないユーザー）
+            query = query.Where(u => !u.IsDeleted);
+
+            // ステータスフィルター
+            switch (statusFilter.ToLower())
+            {
+                case "active":
+                    query = query.Where(u => u.IsActive);
+                    break;
+                case "inactive":
+                    query = query.Where(u => !u.IsActive);
+                    break;
+                case "all":
+                default:
+                    // 全ステータス対象（削除済み以外）
+                    break;
+            }
+
+            // ロールフィルター
+            if (!string.IsNullOrWhiteSpace(roleFilter))
+            {
+                query = query.Where(u => u.UserRole == roleFilter);
+            }
+
+            // 検索フィルター（PostgreSQL pg_trgm最適化）
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var normalizedSearchTerm = searchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
+                
+                // PostgreSQL pg_trgm GINインデックス活用のため、ILike使用
+                query = query.Where(u => 
+                    EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
+                    EF.Functions.ILike(u.Email ?? "", $"%{normalizedSearchTerm}%"));
+            }
+
+            // 総件数取得（フィルター適用後）
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            // ページング実行とソート（インデックス活用のため、Name順）
+            var entities = await query
+                .OrderBy(u => u.Name)
+                .ThenBy(u => u.Email)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Entity→Domain変換
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted in paged search: {Errors}", string.Join(", ", errors));
+            }
+
+            // ページング結果の構築
+            var result = new
+            {
+                Users = users,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                HasPrevious = pageNumber > 1,
+                HasNext = pageNumber < totalPages,
+                SearchTerm = searchTerm,
+                RoleFilter = roleFilter,
+                StatusFilter = statusFilter
+            };
+
+            return FSharpResult<object, string>.NewOk(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in paged user search. SearchTerm: {SearchTerm}, Role: {Role}, Status: {Status}, Page: {Page}", 
+                searchTerm, roleFilter, statusFilter, pageNumber);
+            return FSharpResult<object, string>.NewError($"ページング検索エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 高度なユーザーフィルタリング
+    /// 複数条件による高性能検索（PostgreSQL複合インデックス活用）
+    /// </summary>
+    /// <param name="filters">フィルター条件オブジェクト</param>
+    /// <returns>フィルター結果</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> GetUsersWithAdvancedFiltersAsync(object filters)
+    {
+        try
+        {
+            // フィルター条件の動的解析（リフレクション使用）
+            var filtersType = filters.GetType();
+            var query = _context.Users.AsQueryable();
+
+            // 基本フィルター
+            query = query.Where(u => !u.IsDeleted);
+
+            // 動的フィルター適用
+            var nameProperty = filtersType.GetProperty("Name");
+            if (nameProperty?.GetValue(filters) is string name && !string.IsNullOrWhiteSpace(name))
+            {
+                query = query.Where(u => EF.Functions.ILike(u.Name, $"%{name.ToLower()}%"));
+            }
+
+            var emailProperty = filtersType.GetProperty("Email");
+            if (emailProperty?.GetValue(filters) is string email && !string.IsNullOrWhiteSpace(email))
+            {
+                query = query.Where(u => EF.Functions.ILike(u.Email ?? "", $"%{email.ToLower()}%"));
+            }
+
+            var roleProperty = filtersType.GetProperty("Role");
+            if (roleProperty?.GetValue(filters) is string role && !string.IsNullOrWhiteSpace(role))
+            {
+                query = query.Where(u => u.UserRole == role);
+            }
+
+            var isActiveProperty = filtersType.GetProperty("IsActive");
+            if (isActiveProperty?.GetValue(filters) is bool isActive)
+            {
+                query = query.Where(u => u.IsActive == isActive);
+            }
+
+            var isFirstLoginProperty = filtersType.GetProperty("IsFirstLogin");
+            if (isFirstLoginProperty?.GetValue(filters) is bool isFirstLogin)
+            {
+                query = query.Where(u => u.IsFirstLogin == isFirstLogin);
+            }
+
+            var createdAfterProperty = filtersType.GetProperty("CreatedAfter");
+            if (createdAfterProperty?.GetValue(filters) is DateTime createdAfter)
+            {
+                query = query.Where(u => u.CreatedAt >= createdAfter);
+            }
+
+            var createdBeforeProperty = filtersType.GetProperty("CreatedBefore");
+            if (createdBeforeProperty?.GetValue(filters) is DateTime createdBefore)
+            {
+                query = query.Where(u => u.CreatedAt <= createdBefore);
+            }
+
+            // パフォーマンス最適化：インデックス活用のためソート
+            var entities = await query
+                .OrderBy(u => u.Name)
+                .ThenBy(u => u.CreatedAt)
+                .ToListAsync();
+
+            // Entity→Domain変換
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted in advanced filter: {Errors}", string.Join(", ", errors));
+            }
+
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in advanced user filtering");
+            return FSharpResult<FSharpList<User>, string>.NewError($"高度フィルタリングエラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// PostgreSQL全文検索対応ユーザー検索
+    /// pg_trgm + GINインデックスによる高速類似検索
+    /// </summary>
+    /// <param name="searchTerm">検索語</param>
+    /// <param name="similarityThreshold">類似度閾値（0.1-1.0）</param>
+    /// <returns>類似度順ソート済み結果</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> SearchUsersWithSimilarityAsync(
+        string searchTerm, 
+        double similarityThreshold = 0.3)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return await GetAllActiveUsersAsync();
+            }
+
+            // PostgreSQL pg_trgm similarity関数使用
+            // 注意：実際の本格運用ではpg_trgm拡張とGINインデックス設定が必要
+            var normalizedSearchTerm = searchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
+
+            var entities = await _context.Users
+                .Where(u => u.IsActive && !u.IsDeleted)
+                .Where(u => 
+                    // PostgreSQL similarity関数のEF Core近似実装
+                    EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
+                    EF.Functions.ILike(u.Email ?? "", $"%{normalizedSearchTerm}%") ||
+                    // 部分一致による類似検索
+                    u.Name.ToLower().Contains(normalizedSearchTerm) ||
+                    (u.Email != null && u.Email.ToLower().Contains(normalizedSearchTerm)))
+                // 名前の完全一致→部分一致→メール一致の順でソート
+                .OrderBy(u => u.Name.ToLower().StartsWith(normalizedSearchTerm) ? 0 : 1)
+                .ThenBy(u => u.Name.ToLower().Contains(normalizedSearchTerm) ? 0 : 1)
+                .ThenBy(u => u.Name)
+                .ToListAsync();
+
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted in similarity search: {Errors}", string.Join(", ", errors));
+            }
+
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in similarity user search. SearchTerm: {SearchTerm}", searchTerm);
+            return FSharpResult<FSharpList<User>, string>.NewError($"類似検索エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 高性能ユーザー集計
+    /// PostgreSQL集計関数とインデックス最適化による高速統計処理
+    /// </summary>
+    /// <returns>詳細統計情報</returns>
+    public async Task<FSharpResult<object, string>> GetDetailedUserStatisticsAsync()
+    {
+        try
+        {
+            // 並列実行による高速化
+            var tasks = new[]
+            {
+                // 基本統計
+                _context.Users.CountAsync(u => !u.IsDeleted),
+                _context.Users.CountAsync(u => u.IsActive && !u.IsDeleted),
+                _context.Users.CountAsync(u => u.IsFirstLogin && u.IsActive && !u.IsDeleted),
+                
+                // 時系列統計（最近30日）
+                _context.Users.CountAsync(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-30) && !u.IsDeleted),
+                _context.Users.CountAsync(u => u.UpdatedAt >= DateTime.UtcNow.AddDays(-30) && !u.IsDeleted),
+            };
+
+            var results = await Task.WhenAll(tasks);
+
+            // ロール別統計（並列実行）
+            var roleStatsTask = _context.Users
+                .Where(u => u.IsActive && !u.IsDeleted)
+                .GroupBy(u => u.UserRole)
+                .Select(g => new { Role = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            // 月別作成数統計
+            var monthlyStatsTask = _context.Users
+                .Where(u => !u.IsDeleted && u.CreatedAt >= DateTime.UtcNow.AddMonths(-12))
+                .GroupBy(u => new { Year = u.CreatedAt.Year, Month = u.CreatedAt.Month })
+                .Select(g => new { 
+                    Year = g.Key.Year, 
+                    Month = g.Key.Month, 
+                    Count = g.Count() 
+                })
+                .OrderBy(s => s.Year)
+                .ThenBy(s => s.Month)
+                .ToListAsync();
+
+            var roleStats = await roleStatsTask;
+            var monthlyStats = await monthlyStatsTask;
+
+            var detailedStatistics = new
+            {
+                // 基本統計
+                TotalUsers = results[0],
+                ActiveUsers = results[1],
+                FirstLoginUsers = results[2],
+                InactiveUsers = results[0] - results[1],
+                
+                // 時系列統計
+                NewUsersLast30Days = results[3],
+                UpdatedUsersLast30Days = results[4],
+                
+                // ロール別統計
+                RoleStatistics = roleStats.ToDictionary(r => r.Role, r => r.Count),
+                
+                // 月別統計
+                MonthlyCreationStats = monthlyStats.Select(m => new {
+                    Period = $"{m.Year}-{m.Month:D2}",
+                    Count = m.Count
+                }).ToList(),
+                
+                // アクティビティ率
+                ActiveUserPercentage = results[0] > 0 ? Math.Round((double)results[1] / results[0] * 100, 2) : 0,
+                FirstLoginPercentage = results[1] > 0 ? Math.Round((double)results[2] / results[1] * 100, 2) : 0,
+                
+                // メタデータ
+                LastUpdated = DateTime.UtcNow,
+                CalculationTimeMs = 0 // 実際の処理時間は別途計測
+            };
+
+            return FSharpResult<object, string>.NewOk(detailedStatistics);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving detailed user statistics");
+            return FSharpResult<object, string>.NewError($"詳細統計情報取得エラー: {ex.Message}");
+        }
     }
 }

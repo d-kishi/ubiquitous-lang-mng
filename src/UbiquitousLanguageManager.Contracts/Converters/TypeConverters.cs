@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.FSharp.Core;
+using Microsoft.FSharp.Collections;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Domain;
 using DomainEntity = UbiquitousLanguageManager.Domain.Domain;
@@ -19,8 +21,9 @@ public static class TypeConverters
     // =================================================================
 
     /// <summary>
-    /// F#のUserエンティティをC#のUserDTOに変換
+    /// Phase A2: F#のUserエンティティをC#のUserDTOに変換（拡張版）
     /// F#のRecord型とValue Objectを適切にC#のプロパティにマッピング
+    /// 新しい権限システム・プロフィール・プロジェクト権限に対応
     /// </summary>
     /// <param name="user">F#で定義されたUserエンティティ</param>
     /// <returns>C#のUserDTO</returns>
@@ -28,13 +31,62 @@ public static class TypeConverters
     {
         return new UserDto
         {
-            Id = user.Id.Item,                      // F#のUserId判別共用体から値を取得
-            Email = user.Email.Value,                // F#のEmail値オブジェクトから値を取得
-            Name = user.Name.Value,                  // F#のUserName値オブジェクトから値を取得
-            Role = UserRoleToString(user.Role),      // F#の判別共用体をstring型に変換
-            IsFirstLogin = user.IsFirstLogin,
-            UpdatedAt = user.UpdatedAt,
-            UpdatedBy = user.UpdatedBy.Item          // F#のUserId判別共用体から値を取得
+            Id = user.Id.Item,                                  // F#のUserId判別共用体から値を取得
+            Email = user.Email.Value,                            // F#のEmail値オブジェクトから値を取得
+            Name = user.Name.Value,                              // F#のUserName値オブジェクトから値を取得
+            Role = RoleToString(user.Role),                      // F#のRole判別共用体をstring型に変換
+            IsActive = user.IsActive,                            // アクティブ状態
+            IsFirstLogin = user.IsFirstLogin,                    // 初回ログインフラグ
+            // Phase A2: 新機能対応
+            Profile = ToDto(user.Profile),                       // プロフィール情報変換
+            ProjectPermissions = user.ProjectPermissions.Select(ToDto).ToList(), // プロジェクト権限変換（F#ListはIEnumerable扱い）
+            EmailConfirmed = user.EmailConfirmed,                // メールアドレス確認フラグ
+            PhoneNumber = user.PhoneNumber != null && FSharpOption<string>.get_IsSome(user.PhoneNumber) ? user.PhoneNumber.Value : null, // F#option型からC#null可能型へ変換
+            PhoneNumberConfirmed = user.PhoneNumberConfirmed,    // 電話番号確認フラグ
+            TwoFactorEnabled = user.TwoFactorEnabled,            // 二要素認証有効フラグ
+            LockoutEnabled = user.LockoutEnabled,                // ロックアウト機能有効フラグ
+            LockoutEnd = user.LockoutEnd != null && FSharpOption<DateTime>.get_IsSome(user.LockoutEnd) ? user.LockoutEnd.Value : (DateTime?)null, // F#option型からC#nullable型へ変換
+            AccessFailedCount = user.AccessFailedCount,          // ログイン失敗回数
+            // 監査情報
+            CreatedAt = user.CreatedAt,                          // 作成日時
+            CreatedBy = user.CreatedBy.Item,                     // 作成者ID
+            UpdatedAt = user.UpdatedAt,                          // 更新日時
+            UpdatedBy = user.UpdatedBy.Item                      // 更新者ID
+        };
+    }
+
+    /// <summary>
+    /// Phase A2: F#のUserProfileをC#のUserProfileDTOに変換
+    /// F#のオプション型を適切にC#のnullable型にマッピング
+    /// </summary>
+    /// <param name="profile">F#で定義されたUserProfile</param>
+    /// <returns>C#のUserProfileDTO</returns>
+    public static UserProfileDto ToDto(UserProfile profile)
+    {
+        return new UserProfileDto
+        {
+            DisplayName = profile.DisplayName?.Value,    // F#のoption型からnullable stringに変換
+            Department = profile.Department?.Value,      // F#のoption型からnullable stringに変換
+            PhoneNumber = profile.PhoneNumber?.Value,    // F#のoption型からnullable stringに変換
+            Notes = profile.Notes?.Value                 // F#のoption型からnullable stringに変換
+        };
+    }
+
+    /// <summary>
+    /// Phase A2: F#のProjectPermissionをC#のProjectPermissionDTOに変換
+    /// F#のSet型をC#のList型に変換
+    /// </summary>
+    /// <param name="projectPermission">F#で定義されたProjectPermission</param>
+    /// <returns>C#のProjectPermissionDTO</returns>
+    public static ProjectPermissionDto ToDto(ProjectPermission projectPermission)
+    {
+        return new ProjectPermissionDto
+        {
+            ProjectId = projectPermission.ProjectId.Item,                    // F#のProjectId判別共用体から値を取得
+            ProjectName = "プロジェクト名取得予定",                              // 実装時に適切なプロジェクト名取得ロジックを追加
+            Permissions = SetModule.ToArray(projectPermission.Permissions)   // F#のSet<Permission>を配列に変換してからLINQ使用
+                .Select(PermissionToString)
+                .ToList()
         };
     }
 
@@ -134,7 +186,7 @@ public static class TypeConverters
         // 各Value Objectのcreateメソッドは検証を含む
         var emailResult = Email.create(dto.Email ?? "");
         var nameResult = UserName.create(dto.Name ?? "");
-        var roleResult = StringToUserRole(dto.Role ?? "");
+        var roleResult = StringToRole(dto.Role ?? "");
         var createdByResult = CreateUserId(dto.CreatedBy);
 
         // 複数のResult型をチェック（すべて成功した場合のみUserエンティティを作成）
@@ -218,12 +270,12 @@ public static class TypeConverters
     // =================================================================
 
     /// <summary>
-    /// F#のUserRole判別共用体をC#のstring型に変換
+    /// Phase A2: F#のRole判別共用体をC#のstring型に変換
     /// パターンマッチングを使用して安全に変換
     /// </summary>
-    /// <param name="role">F#のUserRole判別共用体</param>
+    /// <param name="role">F#のRole判別共用体</param>
     /// <returns>文字列表現</returns>
-    private static string UserRoleToString(UserRole role)
+    private static string RoleToString(Role role)
     {
         // F#の判別共用体は、C#からはプロパティとして各ケースにアクセス可能
         if (role.IsSuperUser) return "SuperUser";
@@ -234,21 +286,81 @@ public static class TypeConverters
     }
 
     /// <summary>
-    /// C#のstring型をF#のUserRole判別共用体に変換
+    /// Phase A2: C#のstring型をF#のRole判別共用体に変換
     /// 無効な値が渡された場合はResult型のErrorを返す
     /// </summary>
     /// <param name="roleString">ロールの文字列表現</param>
-    /// <returns>F#のResult型（成功時はUserRole、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<UserRole, string> StringToUserRole(string roleString)
+    /// <returns>F#のResult型（成功時はRole、失敗時はエラーメッセージ）</returns>
+    private static FSharpResult<Role, string> StringToRole(string roleString)
     {
         // F#の判別共用体は、C#からはNewXxxという静的メソッドでケースを作成
         return roleString switch
         {
-            "SuperUser" => FSharpResult<UserRole, string>.NewOk(UserRole.SuperUser),
-            "ProjectManager" => FSharpResult<UserRole, string>.NewOk(UserRole.ProjectManager),
-            "DomainApprover" => FSharpResult<UserRole, string>.NewOk(UserRole.DomainApprover),
-            "GeneralUser" => FSharpResult<UserRole, string>.NewOk(UserRole.GeneralUser),
-            _ => FSharpResult<UserRole, string>.NewError($"無効なユーザーロールです: {roleString}")
+            "SuperUser" => FSharpResult<Role, string>.NewOk(Role.SuperUser),
+            "ProjectManager" => FSharpResult<Role, string>.NewOk(Role.ProjectManager),
+            "DomainApprover" => FSharpResult<Role, string>.NewOk(Role.DomainApprover),
+            "GeneralUser" => FSharpResult<Role, string>.NewOk(Role.GeneralUser),
+            _ => FSharpResult<Role, string>.NewError($"無効なユーザーロールです: {roleString}")
+        };
+    }
+
+    /// <summary>
+    /// Phase A2: F#のPermission判別共用体をC#のstring型に変換
+    /// 新しい権限システムの権限種別を文字列に変換
+    /// </summary>
+    /// <param name="permission">F#のPermission判別共用体</param>
+    /// <returns>文字列表現</returns>
+    private static string PermissionToString(Permission permission)
+    {
+        // F#の判別共用体の各ケースをチェックして文字列に変換
+        if (permission.IsViewUsers) return "ViewUsers";
+        if (permission.IsCreateUsers) return "CreateUsers";
+        if (permission.IsEditUsers) return "EditUsers";
+        if (permission.IsDeleteUsers) return "DeleteUsers";
+        if (permission.IsManageUserRoles) return "ManageUserRoles";
+        if (permission.IsViewProjects) return "ViewProjects";
+        if (permission.IsCreateProjects) return "CreateProjects";
+        if (permission.IsManageProjects) return "ManageProjects";
+        if (permission.IsDeleteProjects) return "DeleteProjects";
+        if (permission.IsViewDomains) return "ViewDomains";
+        if (permission.IsManageDomains) return "ManageDomains";
+        if (permission.IsApproveDomains) return "ApproveDomains";
+        if (permission.IsViewUbiquitousLanguages) return "ViewUbiquitousLanguages";
+        if (permission.IsCreateUbiquitousLanguages) return "CreateUbiquitousLanguages";
+        if (permission.IsEditUbiquitousLanguages) return "EditUbiquitousLanguages";
+        if (permission.IsApproveUbiquitousLanguages) return "ApproveUbiquitousLanguages";
+        if (permission.IsManageSystemSettings) return "ManageSystemSettings";
+        return "Unknown"; // 予期しないケース（通常は発生しない）
+    }
+
+    /// <summary>
+    /// Phase A2: C#のstring型をF#のPermission判別共用体に変換
+    /// 無効な値が渡された場合はResult型のErrorを返す
+    /// </summary>
+    /// <param name="permissionString">権限の文字列表現</param>
+    /// <returns>F#のResult型（成功時はPermission、失敗時はエラーメッセージ）</returns>
+    private static FSharpResult<Permission, string> StringToPermission(string permissionString)
+    {
+        return permissionString switch
+        {
+            "ViewUsers" => FSharpResult<Permission, string>.NewOk(Permission.ViewUsers),
+            "CreateUsers" => FSharpResult<Permission, string>.NewOk(Permission.CreateUsers),
+            "EditUsers" => FSharpResult<Permission, string>.NewOk(Permission.EditUsers),
+            "DeleteUsers" => FSharpResult<Permission, string>.NewOk(Permission.DeleteUsers),
+            "ManageUserRoles" => FSharpResult<Permission, string>.NewOk(Permission.ManageUserRoles),
+            "ViewProjects" => FSharpResult<Permission, string>.NewOk(Permission.ViewProjects),
+            "CreateProjects" => FSharpResult<Permission, string>.NewOk(Permission.CreateProjects),
+            "ManageProjects" => FSharpResult<Permission, string>.NewOk(Permission.ManageProjects),
+            "DeleteProjects" => FSharpResult<Permission, string>.NewOk(Permission.DeleteProjects),
+            "ViewDomains" => FSharpResult<Permission, string>.NewOk(Permission.ViewDomains),
+            "ManageDomains" => FSharpResult<Permission, string>.NewOk(Permission.ManageDomains),
+            "ApproveDomains" => FSharpResult<Permission, string>.NewOk(Permission.ApproveDomains),
+            "ViewUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.ViewUbiquitousLanguages),
+            "CreateUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.CreateUbiquitousLanguages),
+            "EditUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.EditUbiquitousLanguages),
+            "ApproveUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.ApproveUbiquitousLanguages),
+            "ManageSystemSettings" => FSharpResult<Permission, string>.NewOk(Permission.ManageSystemSettings),
+            _ => FSharpResult<Permission, string>.NewError($"無効な権限です: {permissionString}")
         };
     }
 
@@ -334,4 +446,128 @@ public static class TypeConverters
             return FSharpResult<UbiquitousLanguageId, string>.NewError("ユビキタス言語IDは正の値である必要があります");
         return FSharpResult<UbiquitousLanguageId, string>.NewOk(UbiquitousLanguageId.NewUbiquitousLanguageId(id));
     }
+
+    // =================================================================
+    // 🔄 Phase A2: 新規DTO変換メソッド（C# → F#）
+    // =================================================================
+
+    /// <summary>
+    /// Phase A2: C#のUserProfileDTOからF#のUserProfileを作成
+    /// F#のoption型による適切なnull処理を実装
+    /// </summary>
+    /// <param name="dto">C#のUserProfileDTO</param>
+    /// <returns>F#のResult型（成功時はUserProfile、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<UserProfile, string> FromDto(UserProfileDto dto)
+    {
+        // F#初学者向け解説: UserProfileはstring optionを使用しているため、
+        // 値オブジェクトではなく、直接文字列を渡す
+        var profile = UserProfile.create(dto.DisplayName, dto.Department, dto.PhoneNumber, dto.Notes);
+        return FSharpResult<UserProfile, string>.NewOk(profile);
+    }
+
+    /// <summary>
+    /// Phase A2: C#のProjectPermissionDTOからF#のProjectPermissionを作成
+    /// 権限文字列リストをF#のSet&lt;Permission&gt;に変換
+    /// </summary>
+    /// <param name="dto">C#のProjectPermissionDTO</param>
+    /// <returns>F#のResult型（成功時はProjectPermission、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<ProjectPermission, string> FromDto(ProjectPermissionDto dto)
+    {
+        // ProjectId作成
+        var projectIdResult = CreateProjectId(dto.ProjectId);
+        if (projectIdResult.IsError)
+            return FSharpResult<ProjectPermission, string>.NewError(projectIdResult.ErrorValue);
+
+        // 権限文字列リストをF#のPermission Set型に変換
+        var permissions = new List<Permission>();
+        var errors = new List<string>();
+
+        foreach (var permissionString in dto.Permissions)
+        {
+            var permissionResult = StringToPermission(permissionString);
+            if (permissionResult.IsOk)
+            {
+                permissions.Add(permissionResult.ResultValue);
+            }
+            else
+            {
+                errors.Add(permissionResult.ErrorValue);
+            }
+        }
+
+        if (errors.Count > 0) // List<T>.Any()の代わりにCountを使用
+        {
+            return FSharpResult<ProjectPermission, string>.NewError($"無効な権限が含まれています: {string.Join(", ", errors)}");
+        }
+
+        // F#のList型に変換（ProjectPermission.createはListを期待）
+        var permissionList = ListModule.OfSeq(permissions);
+        
+        // ProjectPermission作成
+        var projectPermission = ProjectPermission.create(projectIdResult.ResultValue, permissionList);
+        return FSharpResult<ProjectPermission, string>.NewOk(projectPermission);
+    }
+
+    /// <summary>
+    /// Phase A2: C#のChangeUserRoleDTOからF#のRoleに変換
+    /// ユーザーロール変更用の安全な型変換
+    /// </summary>
+    /// <param name="dto">C#のChangeUserRoleDTO</param>
+    /// <returns>F#のResult型（成功時はRole、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<Role, string> FromDto(ChangeUserRoleDto dto)
+    {
+        return StringToRole(dto.NewRole);
+    }
+
+    /// <summary>
+    /// Phase A2: C#のChangeEmailDTOからF#のEmailに変換
+    /// メールアドレス変更用の安全な型変換
+    /// </summary>
+    /// <param name="dto">C#のChangeEmailDTO</param>
+    /// <returns>F#のResult型（成功時はEmail、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<Email, string> FromDto(ChangeEmailDto dto)
+    {
+        return Email.create(dto.NewEmail);
+    }
+
+    /// <summary>
+    /// Phase A2: C#のChangePasswordDTOからF#のPasswordに変換
+    /// パスワード変更用の安全な型変換（新しいパスワードのみ）
+    /// </summary>
+    /// <param name="dto">C#のChangePasswordDTO</param>
+    /// <returns>F#のResult型（成功時はPassword、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<Password, string> FromDto(ChangePasswordDto dto)
+    {
+        return Password.create(dto.NewPassword);
+    }
+
+    // =================================================================
+    // 🔄 Phase A2: Value Object変換ヘルパーメソッド
+    // =================================================================
+
+    /// <summary>
+    /// Phase A2: C#のstringからF#のPassword値オブジェクトを作成
+    /// セキュリティポリシーに従ったパスワード検証付き
+    /// </summary>
+    /// <param name="passwordString">パスワード文字列</param>
+    /// <returns>F#のResult型（成功時はPassword、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<Password, string> CreatePassword(string passwordString)
+    {
+        return Password.create(passwordString);
+    }
+
+    /// <summary>
+    /// Phase A2: C#のstringからF#のStrongEmail値オブジェクトを作成
+    /// 強化されたメールアドレス検証付き
+    /// </summary>
+    /// <param name="emailString">メールアドレス文字列</param>
+    /// <returns>F#のResult型（成功時はStrongEmail、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<StrongEmail, string> CreateStrongEmail(string emailString)
+    {
+        return StrongEmail.create(emailString);
+    }
+
+    // 📝 注意: UserProfileは値オブジェクトではなくstring optionを使用しているため、
+    // DisplayName、Department、PhoneNumber、Notes用の値オブジェクトは定義されていません。
+    // 必要に応じて値オブジェクトとして定義することも可能です。
 }

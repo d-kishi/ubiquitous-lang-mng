@@ -1,0 +1,286 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@inherits ComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@* 権限ガードコンポーネント *@
+@* Blazor Server初学者向け: 細かい権限制御とセキュリティ境界を提供し、 *@
+@* 不正アクセスを防ぐためのガード機能を実装 *@
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        @if (IsAuthorized(authContext.User))
+        {
+            @if (ShowSecurityNotice && IsSecuritySensitive && showSecurityNotice)
+            {
+                <div class="alert alert-warning alert-dismissible fade show security-notice" role="alert">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <strong>セキュリティ注意:</strong> この操作は重要な機能です。慎重に実行してください。
+                    <button type="button" class="btn-close" @onclick="DismissSecurityNotice"></button>
+                </div>
+            }
+            @ChildContent
+        }
+        else
+        {
+            @if (ShowAccessDenied)
+            {
+                <div class="access-denied-container">
+                    <div class="alert alert-danger" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-ban fa-2x me-3 text-danger"></i>
+                            <div>
+                                <h5 class="alert-heading">アクセス拒否</h5>
+                                <p class="mb-0">@GetAccessDeniedMessage(authContext.User)</p>
+                                @if (ShowContactInfo)
+                                {
+                                    <small class="text-muted mt-2 d-block">
+                                        権限が必要な場合は、システム管理者にお問い合わせください。
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (FallbackContent != null)
+            {
+                @FallbackContent
+            }
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="authentication-required-container">
+            <div class="alert alert-info" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-sign-in-alt fa-2x me-3 text-info"></i>
+                    <div>
+                        <h5 class="alert-heading">認証が必要です</h5>
+                        <p class="mb-0">この機能を使用するにはログインが必要です。</p>
+                        <a href="/login" class="btn btn-info btn-sm mt-2">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            ログイン
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? FallbackContent { get; set; }
+    
+    // 基本権限設定
+    [Parameter] public List<string> RequiredRoles { get; set; } = new();
+    [Parameter] public List<string> RequiredPermissions { get; set; } = new();
+    [Parameter] public List<string> ForbiddenRoles { get; set; } = new();
+    
+    // 高度な権限制御
+    [Parameter] public bool RequireOwnership { get; set; } = false;
+    [Parameter] public string? ResourceId { get; set; }
+    [Parameter] public Func<ClaimsPrincipal, bool>? CustomAuthorization { get; set; }
+    
+    // セキュリティ強化
+    [Parameter] public bool IsSecuritySensitive { get; set; } = false;
+    [Parameter] public bool ShowSecurityNotice { get; set; } = true;
+    [Parameter] public bool LogAccessAttempts { get; set; } = true;
+    [Parameter] public bool ShowAccessDenied { get; set; } = true;
+    [Parameter] public bool ShowContactInfo { get; set; } = true;
+    
+    // メッセージカスタマイズ
+    [Parameter] public string AccessDeniedMessage { get; set; } = string.Empty;
+    [Parameter] public string InsufficientPermissionsMessage { get; set; } = "この操作を実行する権限がありません。";
+    
+    // イベント
+    [Parameter] public EventCallback<ClaimsPrincipal> OnAccessDenied { get; set; }
+    [Parameter] public EventCallback<ClaimsPrincipal> OnAccessGranted { get; set; }
+    
+    private bool showSecurityNotice = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            var isAuthorized = IsAuthorized(authState.User);
+            
+            if (LogAccessAttempts)
+            {
+                await LogAccess(authState.User, isAuthorized);
+            }
+            
+            if (isAuthorized)
+            {
+                await OnAccessGranted.InvokeAsync(authState.User);
+            }
+            else
+            {
+                await OnAccessDenied.InvokeAsync(authState.User);
+            }
+        }
+    }
+    
+    private bool IsAuthorized(ClaimsPrincipal user)
+    {
+        // 禁止ロールチェック（最優先）
+        if (ForbiddenRoles?.Any() == true)
+        {
+            foreach (var role in ForbiddenRoles)
+            {
+                if (user.IsInRole(role))
+                    return false;
+            }
+        }
+        
+        // 必須ロールチェック
+        if (RequiredRoles?.Any() == true)
+        {
+            var hasRequiredRole = RequiredRoles.Any(role => user.IsInRole(role));
+            if (!hasRequiredRole)
+                return false;
+        }
+        
+        // 必須権限チェック
+        if (RequiredPermissions?.Any() == true)
+        {
+            foreach (var permission in RequiredPermissions)
+            {
+                if (!AuthorizeViewExtensions.CanPerformAction(user, permission))
+                    return false;
+            }
+        }
+        
+        // 所有者権限チェック
+        if (RequireOwnership && !string.IsNullOrEmpty(ResourceId))
+        {
+            // Phase A3で実装: リソース所有者チェック
+            // 現在は仮実装（常に許可）
+            var userId = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
+            // return userId == ResourceOwnerId; // Phase A3で実装
+        }
+        
+        // カスタム認証チェック
+        if (CustomAuthorization != null)
+        {
+            return CustomAuthorization(user);
+        }
+        
+        return true;
+    }
+    
+    private string GetAccessDeniedMessage(ClaimsPrincipal user)
+    {
+        if (!string.IsNullOrEmpty(AccessDeniedMessage))
+            return AccessDeniedMessage;
+        
+        if (RequiredRoles?.Any() == true)
+        {
+            var roleList = string.Join("、", RequiredRoles.Select(GetRoleDisplayName));
+            return $"この機能には次のロールが必要です: {roleList}";
+        }
+        
+        if (RequiredPermissions?.Any() == true)
+        {
+            return $"必要な権限が不足しています。";
+        }
+        
+        return InsufficientPermissionsMessage;
+    }
+    
+    private string GetRoleDisplayName(string role) => role switch
+    {
+        "SuperUser" => "スーパーユーザー",
+        "ProjectManager" => "プロジェクト管理者",
+        "DomainApprover" => "ドメイン承認者",
+        "GeneralUser" => "一般ユーザー",
+        _ => role
+    };
+    
+    private void DismissSecurityNotice()
+    {
+        showSecurityNotice = false;
+        StateHasChanged();
+    }
+    
+    private async Task LogAccess(ClaimsPrincipal user, bool isAuthorized)
+    {
+        // Phase A3で実装: アクセスログの記録
+        // 現在はコンソール出力のみ
+        var userName = user.Identity?.Name ?? "Unknown";
+        var status = isAuthorized ? "GRANTED" : "DENIED";
+        
+        Console.WriteLine($"[SECURITY] Access {status} for user '{userName}' to protected resource");
+        
+        // 実装予定：
+        // - データベースへのアクセスログ記録
+        // - セキュリティ監査ログ出力
+        // - 不正アクセス試行の検出・通知
+        
+        await Task.CompletedTask; // アクセスログ機能がPhase A3で実装されるまでの仮実装
+    }
+}
+
+<style>
+    .access-denied-container,
+    .authentication-required-container {
+        margin: 1rem 0;
+    }
+    
+    .security-notice {
+        border-left: 4px solid #ffc107;
+        background-color: #fff3cd;
+        animation: securityPulse 2s ease-in-out infinite;
+    }
+    
+    @@keyframes securityPulse {
+        0%, 100% {
+            border-left-color: #ffc107;
+        }
+        50% {
+            border-left-color: #fd7e14;
+        }
+    }
+    
+    .alert-danger .fa-ban {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    /* レスポンシブ対応 */
+    @@media (max-width: 576px) {
+        .access-denied-container .d-flex,
+        .authentication-required-container .d-flex {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .access-denied-container .fa-2x,
+        .authentication-required-container .fa-2x {
+            margin-bottom: 1rem;
+            margin-right: 0;
+        }
+    }
+</style>
+
+@* 使用例のコメント：
+<PermissionGuard RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+                IsSecuritySensitive="true"
+                OnAccessDenied="HandleAccessDenied">
+    <button class="btn btn-danger">危険な操作</button>
+</PermissionGuard>
+
+<PermissionGuard RequiredPermissions='new List<string> { "DeleteUser" }'
+                RequireOwnership="true"
+                ResourceId="@userId"
+                AccessDeniedMessage="このユーザーを削除する権限がありません。">
+    <DeleteUserForm />
+</PermissionGuard>
+*@

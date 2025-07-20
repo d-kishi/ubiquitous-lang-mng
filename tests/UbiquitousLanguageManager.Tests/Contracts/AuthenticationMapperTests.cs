@@ -105,7 +105,7 @@ public class AuthenticationMapperTests
             var user = User.create(
                 emailResult.ResultValue,
                 nameResult.ResultValue,
-                UserRole.GeneralUser,
+                Role.GeneralUser,
                 UserId.create(1L)
             );
 
@@ -127,10 +127,10 @@ public class AuthenticationMapperTests
     public class UserRoleConversionTests
     {
         [Fact]
-        public void StringToUserRole_SuperUser_ShouldConvertCorrectly()
+        public void StringToRole_SuperUser_ShouldConvertCorrectly()
         {
             // Act
-            var result = AuthenticationMapper.StringToUserRole("superuser");
+            var result = AuthenticationMapper.StringToRole("superuser");
 
             // Assert
             Assert.True(result.IsOk);
@@ -138,10 +138,10 @@ public class AuthenticationMapperTests
         }
 
         [Fact]
-        public void StringToUserRole_ProjectManager_ShouldConvertCorrectly()
+        public void StringToRole_ProjectManager_ShouldConvertCorrectly()
         {
             // Act
-            var result = AuthenticationMapper.StringToUserRole("projectmanager");
+            var result = AuthenticationMapper.StringToRole("projectmanager");
 
             // Assert
             Assert.True(result.IsOk);
@@ -149,10 +149,10 @@ public class AuthenticationMapperTests
         }
 
         [Fact]
-        public void StringToUserRole_DomainApprover_ShouldConvertCorrectly()
+        public void StringToRole_DomainApprover_ShouldConvertCorrectly()
         {
             // Act
-            var result = AuthenticationMapper.StringToUserRole("domainapprover");
+            var result = AuthenticationMapper.StringToRole("domainapprover");
 
             // Assert
             Assert.True(result.IsOk);
@@ -160,10 +160,10 @@ public class AuthenticationMapperTests
         }
 
         [Fact]
-        public void StringToUserRole_GeneralUser_ShouldConvertCorrectly()
+        public void StringToRole_GeneralUser_ShouldConvertCorrectly()
         {
             // Act
-            var result = AuthenticationMapper.StringToUserRole("generaluser");
+            var result = AuthenticationMapper.StringToRole("generaluser");
 
             // Assert
             Assert.True(result.IsOk);
@@ -171,11 +171,11 @@ public class AuthenticationMapperTests
         }
 
         [Fact]
-        public void StringToUserRole_CaseInsensitive_ShouldWork()
+        public void StringToRole_CaseInsensitive_ShouldWork()
         {
             // Act
-            var result1 = AuthenticationMapper.StringToUserRole("SUPERUSER");
-            var result2 = AuthenticationMapper.StringToUserRole("ProjectManager");
+            var result1 = AuthenticationMapper.StringToRole("SUPERUSER");
+            var result2 = AuthenticationMapper.StringToRole("ProjectManager");
 
             // Assert
             Assert.True(result1.IsOk);
@@ -188,20 +188,20 @@ public class AuthenticationMapperTests
         [InlineData("invalid")]
         [InlineData("")]
         [InlineData("admin")]
-        public void StringToUserRole_InvalidRoles_ShouldReturnError(string roleString)
+        public void StringToRole_InvalidRoles_ShouldReturnError(string roleString)
         {
             // Act
-            var result = AuthenticationMapper.StringToUserRole(roleString);
+            var result = AuthenticationMapper.StringToRole(roleString);
 
             // Assert
             Assert.True(result.IsError);
         }
 
         [Fact]
-        public void StringToUserRole_Null_ShouldReturnError()
+        public void StringToRole_Null_ShouldReturnError()
         {
             // Act
-            var result = AuthenticationMapper.StringToUserRole(null!);
+            var result = AuthenticationMapper.StringToRole(null!);
 
             // Assert
             Assert.True(result.IsError);

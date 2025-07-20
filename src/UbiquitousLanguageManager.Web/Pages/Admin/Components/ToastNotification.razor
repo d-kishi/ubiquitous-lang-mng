@@ -1,0 +1,323 @@
+@* トースト通知コンポーネント *@
+@* Blazor Server初学者向け: 成功・エラー・情報メッセージを画面隅に表示する *@
+@* 自動非表示タイマーとアニメーション効果を提供 *@
+
+<div class="toast-container position-fixed @PositionClass" style="z-index: 1055;">
+    @foreach (var toast in toasts)
+    {
+        <div class="toast @(toast.IsVisible ? "show" : "") @GetToastClass(toast.Type)" 
+             role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header @GetHeaderClass(toast.Type)">
+                <i class="@GetIconClass(toast.Type) me-2"></i>
+                <strong class="me-auto">@GetTypeDisplayName(toast.Type)</strong>
+                @if (toast.ShowTimestamp)
+                {
+                    <small class="text-muted">@toast.CreatedAt.ToString("HH:mm")</small>
+                }
+                <button type="button" class="btn-close @(GetToastClass(toast.Type).Contains("text-white") ? "btn-close-white" : "")" 
+                        @onclick="() => RemoveToast(toast.Id)"></button>
+            </div>
+            <div class="toast-body">
+                @if (!string.IsNullOrEmpty(toast.Title))
+                {
+                    <div class="fw-bold mb-1">@toast.Title</div>
+                }
+                <div>@toast.Message</div>
+                @if (!string.IsNullOrEmpty(toast.Action))
+                {
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                @onclick="() => ExecuteAction(toast)">
+                            @toast.Action
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ToastPosition Position { get; set; } = ToastPosition.TopRight;
+    [Parameter] public int DefaultDuration { get; set; } = 5000; // ミリ秒
+    [Parameter] public int MaxToasts { get; set; } = 5;
+    [Parameter] public EventCallback<string> OnActionClick { get; set; }
+    
+    private List<ToastItem> toasts = new();
+    private readonly Dictionary<string, Timer> timers = new();
+    
+    private string PositionClass => Position switch
+    {
+        ToastPosition.TopLeft => "top-0 start-0 p-3",
+        ToastPosition.TopRight => "top-0 end-0 p-3",
+        ToastPosition.TopCenter => "top-0 start-50 translate-middle-x p-3",
+        ToastPosition.BottomLeft => "bottom-0 start-0 p-3",
+        ToastPosition.BottomRight => "bottom-0 end-0 p-3",
+        ToastPosition.BottomCenter => "bottom-0 start-50 translate-middle-x p-3",
+        _ => "top-0 end-0 p-3"
+    };
+    
+    /// <summary>
+    /// 成功メッセージを表示
+    /// </summary>
+    public void ShowSuccess(string message, string? title = null, int? duration = null)
+    {
+        ShowToast(ToastType.Success, message, title, duration);
+    }
+    
+    /// <summary>
+    /// エラーメッセージを表示
+    /// </summary>
+    public void ShowError(string message, string? title = null, int? duration = null)
+    {
+        ShowToast(ToastType.Error, message, title, duration ?? 8000); // エラーは長めに表示
+    }
+    
+    /// <summary>
+    /// 警告メッセージを表示
+    /// </summary>
+    public void ShowWarning(string message, string? title = null, int? duration = null)
+    {
+        ShowToast(ToastType.Warning, message, title, duration);
+    }
+    
+    /// <summary>
+    /// 情報メッセージを表示
+    /// </summary>
+    public void ShowInfo(string message, string? title = null, int? duration = null)
+    {
+        ShowToast(ToastType.Info, message, title, duration);
+    }
+    
+    /// <summary>
+    /// アクション付きトーストを表示
+    /// </summary>
+    public void ShowWithAction(ToastType type, string message, string actionText, string? title = null, int? duration = null)
+    {
+        var toast = CreateToast(type, message, title, duration);
+        toast.Action = actionText;
+        AddToast(toast);
+    }
+    
+    private void ShowToast(ToastType type, string message, string? title = null, int? duration = null)
+    {
+        var toast = CreateToast(type, message, title, duration);
+        AddToast(toast);
+    }
+    
+    private ToastItem CreateToast(ToastType type, string message, string? title, int? duration)
+    {
+        return new ToastItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            Type = type,
+            Message = message,
+            Title = title ?? string.Empty,
+            Duration = duration ?? DefaultDuration,
+            CreatedAt = DateTime.Now,
+            IsVisible = false,
+            ShowTimestamp = true
+        };
+    }
+    
+    private async void AddToast(ToastItem toast)
+    {
+        // 最大数を超える場合は古いものを削除
+        while (toasts.Count >= MaxToasts)
+        {
+            var oldest = toasts.First();
+            RemoveToast(oldest.Id);
+        }
+        
+        toasts.Add(toast);
+        await InvokeAsync(StateHasChanged);
+        
+        // 少し遅延してアニメーション効果を有効にする
+        await Task.Delay(100);
+        toast.IsVisible = true;
+        await InvokeAsync(StateHasChanged);
+        
+        // 自動非表示タイマーを設定
+        if (toast.Duration > 0)
+        {
+            var timer = new Timer(_ =>
+            {
+                RemoveToast(toast.Id);
+            }, null, toast.Duration, Timeout.Infinite);
+            
+            timers[toast.Id] = timer;
+        }
+    }
+    
+    private async void RemoveToast(string toastId)
+    {
+        var toast = toasts.FirstOrDefault(t => t.Id == toastId);
+        if (toast != null)
+        {
+            // フェードアウトアニメーション
+            toast.IsVisible = false;
+            await InvokeAsync(StateHasChanged);
+            
+            // アニメーション完了後に削除
+            await Task.Delay(300);
+            toasts.Remove(toast);
+            
+            // タイマーをクリーンアップ
+            if (timers.TryGetValue(toastId, out var timer))
+            {
+                timer.Dispose();
+                timers.Remove(toastId);
+            }
+            
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    
+    private async Task ExecuteAction(ToastItem toast)
+    {
+        await OnActionClick.InvokeAsync(toast.Id);
+        RemoveToast(toast.Id);
+    }
+    
+    private string GetToastClass(ToastType type) => type switch
+    {
+        ToastType.Success => "border-success",
+        ToastType.Error => "border-danger",
+        ToastType.Warning => "border-warning",
+        ToastType.Info => "border-info",
+        _ => ""
+    };
+    
+    private string GetHeaderClass(ToastType type) => type switch
+    {
+        ToastType.Success => "bg-success text-white",
+        ToastType.Error => "bg-danger text-white",
+        ToastType.Warning => "bg-warning",
+        ToastType.Info => "bg-info text-white",
+        _ => ""
+    };
+    
+    private string GetIconClass(ToastType type) => type switch
+    {
+        ToastType.Success => "fas fa-check-circle",
+        ToastType.Error => "fas fa-exclamation-triangle",
+        ToastType.Warning => "fas fa-exclamation-triangle",
+        ToastType.Info => "fas fa-info-circle",
+        _ => "fas fa-info-circle"
+    };
+    
+    private string GetTypeDisplayName(ToastType type) => type switch
+    {
+        ToastType.Success => "成功",
+        ToastType.Error => "エラー",
+        ToastType.Warning => "警告",
+        ToastType.Info => "情報",
+        _ => "通知"
+    };
+    
+    public void Dispose()
+    {
+        foreach (var timer in timers.Values)
+        {
+            timer.Dispose();
+        }
+        timers.Clear();
+    }
+    
+    // データクラス
+    private class ToastItem
+    {
+        public string Id { get; set; } = string.Empty;
+        public ToastType Type { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
+        public int Duration { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsVisible { get; set; }
+        public bool ShowTimestamp { get; set; } = true;
+    }
+    
+    public enum ToastType
+    {
+        Success,
+        Error,
+        Warning,
+        Info
+    }
+    
+    public enum ToastPosition
+    {
+        TopLeft,
+        TopRight,
+        TopCenter,
+        BottomLeft,
+        BottomRight,
+        BottomCenter
+    }
+}
+
+<style>
+    .toast-container {
+        max-width: 350px;
+    }
+    
+    .toast {
+        margin-bottom: 0.75rem;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease-in-out;
+    }
+    
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    
+    .toast:not(.show) {
+        transform: translateX(100%);
+    }
+    
+    /* 位置に応じたアニメーション方向 */
+    .top-0.start-0 .toast:not(.show),
+    .bottom-0.start-0 .toast:not(.show) {
+        transform: translateX(-100%);
+    }
+    
+    .top-0.start-50 .toast:not(.show),
+    .bottom-0.start-50 .toast:not(.show) {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    
+    /* トーストヘッダーのカスタムスタイル */
+    .toast-header.bg-success,
+    .toast-header.bg-danger,
+    .toast-header.bg-info {
+        border-bottom: none;
+    }
+    
+    .toast-header.bg-warning {
+        color: #000;
+    }
+    
+    /* レスポンシブ対応 */
+    @@media (max-width: 576px) {
+        .toast-container {
+            max-width: 90vw;
+            left: 5vw !important;
+            right: 5vw !important;
+        }
+        
+        .toast-container.start-50 {
+            transform: none !important;
+        }
+    }
+    
+    /* アクセシビリティ強化 */
+    @@media (prefers-reduced-motion: reduce) {
+        .toast {
+            transition: none;
+        }
+    }
+</style>

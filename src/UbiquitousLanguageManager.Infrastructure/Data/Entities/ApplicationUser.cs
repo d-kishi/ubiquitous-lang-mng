@@ -74,4 +74,34 @@ public class ApplicationUser : IdentityUser
     /// このプロパティにより、両層のエンティティを関連付けることができます。
     /// </summary>
     public long? DomainUserId { get; set; }
+
+    /// <summary>
+    /// アクティブ状態フラグ
+    /// テスト用に追加：論理削除フラグと連動
+    /// </summary>
+    public bool IsActive { get => !IsDeleted; set => IsDeleted = !value; }
+
+    /// <summary>
+    /// 作成日時
+    /// テスト用に追加：アカウント作成日時
+    /// </summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// 作成者ID
+    /// テスト用に追加：作成者の識別
+    /// </summary>
+    public string CreatedBy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 最終更新者ID
+    /// テスト用に追加：更新者の識別
+    /// </summary>
+    public string UpdatedBy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ユーザーロール（ApplicationUser向け）
+    /// プロパティ名の整合性を保つため
+    /// </summary>
+    public string Role { get => UserRole; set => UserRole = value; }
 }

@@ -1,9 +1,14 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using UbiquitousLanguageManager.Web.Components.Authorization
+@using UbiquitousLanguageManager.Web.Components.Security
 @inject AuthenticationStateProvider AuthStateProvider
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">ユビキタス言語管理</a>
+        <a class="navbar-brand" href="">
+            <i class="fas fa-language me-2"></i>
+            ユビキタス言語管理
+        </a>
         <button title="ナビゲーション メニュー" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -12,47 +17,110 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="CollapseNavMenu">
     <nav class="flex-column">
+        
+        @* ユーザー情報とセキュリティ状態 *@
+        <AuthorizeView>
+            <Authorized Context="authContext">
+                <div class="nav-user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle fa-2x"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">@(authContext.User.Identity?.Name ?? "ユーザー")</div>
+                        <SecurityStatusIndicator Size="SecurityStatusIndicator.SecurityIndicatorSize.Small" 
+                                               ShowDetails="false" 
+                                               ShowActions="false" />
+                    </div>
+                </div>
+                <hr class="nav-divider" />
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-login-prompt">
+                    <a href="/login" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-in-alt me-1"></i>
+                        ログイン
+                    </a>
+                </div>
+                <hr class="nav-divider" />
+            </NotAuthorized>
+        </AuthorizeView>
+
+        @* メインナビゲーション *@
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span> ホーム
+                <i class="fas fa-home me-2"></i>
+                ダッシュボード
             </NavLink>
         </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="ubiquitous-languages">
-                        <span class="bi bi-list-nested" aria-hidden="true"></span> ユビキタス言語管理
-                    </NavLink>
+        
+        @* 管理メニュー *@
+        <AuthorizeViewExtensions ShowForRoles='new List<string> { "SuperUser", "ProjectManager" }'>
+            <div class="nav-section">
+                <div class="nav-section-header">
+                    <i class="fas fa-cog me-2"></i>
+                    管理
                 </div>
+                
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="projects">
-                        <span class="bi bi-folder2-open" aria-hidden="true"></span> プロジェクト管理
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/ChangePassword">
-                        <span class="bi bi-key-fill" aria-hidden="true"></span> パスワード変更
+                    <NavLink class="nav-link" href="/admin/users">
+                        <i class="fas fa-users me-2"></i>
+                        ユーザー管理
                     </NavLink>
                 </div>
                 
-                <AuthorizeView Roles="SuperUser,ProjectManager">
-                    <Authorized Context="userContext">
-                        <div class="nav-item px-3">
-                            <NavLink class="nav-link" href="users">
-                                <span class="bi bi-people-fill" aria-hidden="true"></span> ユーザー管理
-                            </NavLink>
-                        </div>
-                    </Authorized>
-                </AuthorizeView>
-            </Authorized>
-            <NotAuthorized>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> ログイン
+                    <NavLink class="nav-link" href="projects">
+                        <i class="fas fa-project-diagram me-2"></i>
+                        プロジェクト管理
                     </NavLink>
                 </div>
-            </NotAuthorized>
+            </div>
+        </AuthorizeViewExtensions>
+        
+        @* ドメイン管理メニュー *@
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <i class="fas fa-book me-2"></i>
+                        ドメイン管理
+                    </div>
+                    
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="ubiquitous-languages">
+                            <i class="fas fa-language me-2"></i>
+                            ユビキタス言語
+                        </NavLink>
+                    </div>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        
+        @* 個人設定 *@
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <i class="fas fa-user me-2"></i>
+                        個人設定
+                    </div>
+                    
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="Account/ChangePassword">
+                            <i class="fas fa-key me-2"></i>
+                            パスワード変更
+                        </NavLink>
+                    </div>
+                </div>
+                
+                <hr class="nav-divider" />
+                <div class="nav-item px-3">
+                    <button class="nav-link btn btn-link text-start w-100" @onclick="Logout">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        ログアウト
+                    </button>
+                </div>
+            </Authorized>
         </AuthorizeView>
     </nav>
 </div>
@@ -81,6 +149,21 @@
     {
         collapseNavMenu = true;
     }
+    
+    /// <summary>
+    /// ログアウト処理
+    /// </summary>
+    private void Logout()
+    {
+        // Phase A3で実装: 実際のログアウト処理
+        Console.WriteLine("ログアウト処理を実行");
+        
+        // 実装予定:
+        // - Cookie認証の無効化
+        // - セッションの破棄
+        // - ログアウトログの記録
+        // - ログイン画面へのリダイレクト
+    }
 }
 
 <style>
@@ -95,6 +178,7 @@
 
     .navbar-brand {
         font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .bi {
@@ -108,15 +192,7 @@
 
     .nav-item {
         font-size: 0.9rem;
-        padding-bottom: 0.5rem;
-    }
-
-    .nav-item:first-of-type {
-        padding-top: 1rem;
-    }
-
-    .nav-item:last-of-type {
-        padding-bottom: 1rem;
+        position: relative;
     }
 
     .nav-link {
@@ -125,18 +201,89 @@
         display: flex;
         align-items: center;
         line-height: 3rem;
+        color: #d7d7d7;
+        text-decoration: none;
+        transition: all 0.15s ease-in-out;
     }
 
     .nav-link:hover {
         background-color: rgba(255,255,255,0.1);
+        color: white;
     }
 
     .nav-link.active {
         background-color: rgba(255,255,255,0.25);
+        color: white;
     }
 
     .nav-scrollable {
-        display: none;
+        height: calc(100vh - 3.5rem);
+        overflow-y: auto;
+    }
+    
+    /* ユーザー情報セクション */
+    .nav-user-info {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        margin: 0.5rem;
+        border-radius: 0.5rem;
+    }
+    
+    .user-avatar {
+        color: #d7d7d7;
+        margin-right: 0.75rem;
+    }
+    
+    .user-details {
+        flex: 1;
+    }
+    
+    .user-name {
+        font-weight: 600;
+        color: white;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .nav-login-prompt {
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    /* セクション分け */
+    .nav-section {
+        margin: 1rem 0;
+    }
+    
+    .nav-section-header {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 0.5rem;
+    }
+    
+    .nav-divider {
+        border-color: rgba(255, 255, 255, 0.1);
+        margin: 1rem 0;
+    }
+    
+    /* ログアウトボタン */
+    .nav-link.btn {
+        border: none;
+        padding: 0;
+        margin: 0;
+        background: none;
+    }
+    
+    .nav-link.btn:hover {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
     }
 
     .navbar-toggler:checked ~ .nav-scrollable,
@@ -152,6 +299,18 @@
         .nav-scrollable {
             display: block !important;
             overflow-y: auto;
+        }
+    }
+    
+    @@media (max-width: 640px) {
+        .nav-user-info {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .user-avatar {
+            margin-right: 0;
+            margin-bottom: 0.5rem;
         }
     }
 </style>

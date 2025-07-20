@@ -36,6 +36,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+// 🔧 HTTP Context Accessor: Blazor ServerでHTTPコンテキストにアクセスするために必要
+builder.Services.AddHttpContextAccessor();
+
 // 🔐 Blazor認証設定
 // 【Blazor Server初学者向け解説】
 // AuthorizationCoreは、Blazorコンポーネントで[Authorize]属性を使用するために必要です。
@@ -109,8 +112,8 @@ builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository
 // builder.Services.AddScoped<IUbiquitousLanguageRepository, UbiquitousLanguageRepository>();
 
 // Application Service実装の登録
+builder.Services.AddScoped<UbiquitousLanguageManager.Application.UserApplicationService>();
 // 将来の拡張用（現在は実装なし）
-// builder.Services.AddScoped<UserApplicationService>();
 // builder.Services.AddScoped<UbiquitousLanguageApplicationService>();
 
 // 🔧 初期データサービスの登録
@@ -157,6 +160,12 @@ app.UseAuthorization();
 // 🎯 Blazor Server設定: ルーティング
 app.MapRazorPages();
 app.MapBlazorHub(); // 🌐 SignalR Hubマッピング（Blazor Serverの双方向通信）
+
+// 🎯 MVC設定: 認証ページ用ルーティング
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.MapFallbackToPage("/_Host");
 
 // 🏥 ヘルスチェックエンドポイント: 監視・運用のためのエンドポイント

@@ -1,0 +1,112 @@
+@{
+    ViewData["Title"] = "ホーム";
+}
+
+@* ホームページ（未認証ユーザー向け） *@
+@* Blazor Server初学者向け: ランディングページの実装例 *@
+
+<div class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 mb-4">
+                    <i class="fas fa-language me-3"></i>
+                    ユビキタス言語管理システム
+                </h1>
+                <p class="lead mb-4">
+                    ドメイン駆動設計（DDD）における用語統一を効率化する
+                    Webアプリケーションです。
+                </p>
+                <a href="/Account/Login" class="btn btn-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    ログインして開始
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h2 class="text-center mb-5">システムの特徴</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">ユーザー管理</h5>
+                        <p class="card-text">
+                            プロジェクト管理者、ドメインエキスパート、一般ユーザーなど、
+                            役割に応じた権限管理が可能です。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-project-diagram fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">プロジェクト管理</h5>
+                        <p class="card-text">
+                            複数のプロジェクトを横断してドメイン知識と
+                            ユビキタス言語を統一管理できます。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-language fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">用語統一</h5>
+                        <p class="card-text">
+                            ドメインエキスパートと開発チーム間での
+                            用語の統一と定義の管理を支援します。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h3 class="mb-4">Clean Architecture採用</h3>
+                <p class="mb-4">
+                    F# Domain層、C# Infrastructure層、Blazor Server Web層による
+                    レイヤードアーキテクチャを採用しています。
+                </p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="bg-white p-3 rounded shadow-sm">
+                            <i class="fas fa-cube text-primary mb-2"></i>
+                            <div><strong>F# Domain</strong></div>
+                            <small class="text-muted">ビジネスロジック</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="bg-white p-3 rounded shadow-sm">
+                            <i class="fas fa-database text-success mb-2"></i>
+                            <div><strong>C# Infrastructure</strong></div>
+                            <small class="text-muted">データアクセス</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="bg-white p-3 rounded shadow-sm">
+                            <i class="fas fa-desktop text-info mb-2"></i>
+                            <div><strong>Blazor Server</strong></div>
+                            <small class="text-muted">ユーザーインターフェース</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

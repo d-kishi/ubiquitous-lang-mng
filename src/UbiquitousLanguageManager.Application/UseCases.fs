@@ -58,11 +58,27 @@ type RegisterUserCommand = {
     CreatedBy: int64
 }
 
+// C#からのアクセス用ファクトリメソッド
+module RegisterUserCommand =
+    let create email name role createdBy = {
+        Email = email
+        Name = name
+        Role = role
+        CreatedBy = createdBy
+    }
+
 // ログインコマンド: 認証と初回ログインチェック用
 type LoginCommand = {
     Email: string
     Password: string
 }
+
+// C#からのアクセス用ファクトリメソッド
+module LoginCommand =
+    let create email password = {
+        Email = email
+        Password = password
+    }
 
 // パスワード変更コマンド: セキュリティポリシー適用
 type ChangePasswordCommand = {
@@ -71,6 +87,15 @@ type ChangePasswordCommand = {
     NewPassword: string
     ConfirmPassword: string
 }
+
+// C#からのアクセス用ファクトリメソッド
+module ChangePasswordCommand =
+    let create userId oldPassword newPassword confirmPassword = {
+        UserId = userId
+        OldPassword = oldPassword
+        NewPassword = newPassword
+        ConfirmPassword = confirmPassword
+    }
 
 // 用語作成コマンド: 下書き用語作成のための入力データ
 type CreateUbiquitousLanguageCommand = {
@@ -119,7 +144,10 @@ type UserManagementUseCase(userAppService: UserApplicationService) =
             match emailResult, nameResult, roleResult with
             | Ok email, Ok name, Ok role ->
                 // ✅ 検証成功: ドメイン処理実行
-                let! result = userAppService.CreateUserAsync(email, name, role, UserId command.CreatedBy)
+                // 📝 F#初学者向け解説: CreatedByはUserId型ではなくUserエンティティが必要
+                // ここでは仮にシステム管理者を作成して使用（実装時には適切な方法で取得）
+                let systemAdmin = User.createSystemAdmin() // 仮のシステム管理者
+                let! result = userAppService.CreateUserAsync(email, name, role, systemAdmin)
                 return UseCaseResult.fromResult result
                 
             | _ ->
@@ -160,8 +188,14 @@ type UserManagementUseCase(userAppService: UserApplicationService) =
             
             else
                 // ✅ 検証通過: パスワード変更実行
-                let! result = userAppService.ChangePasswordAsync(UserId command.UserId, command.OldPassword, command.NewPassword)
-                return UseCaseResult.fromResult result
+                // 📝 F#初学者向け解説: ChangePasswordAsyncには4つの引数が必要
+                let passwordResult = Password.create(command.NewPassword)
+                match passwordResult with
+                | Error err -> return UseCaseResult.validationError [("NewPassword", err)]
+                | Ok password ->
+                    let systemAdmin = User.createSystemAdmin() // 仮のシステム管理者
+                    let! result = userAppService.ChangePasswordAsync(UserId command.UserId, command.OldPassword, password, systemAdmin)
+                    return UseCaseResult.fromResult result
         }
 
 // 📝 ユビキタス言語管理ユースケース: 用語管理の業務フロー

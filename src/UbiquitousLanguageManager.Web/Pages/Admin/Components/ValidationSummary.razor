@@ -1,0 +1,98 @@
+@using Microsoft.AspNetCore.Components.Forms
+
+@* カスタムバリデーションサマリーコンポーネント *@
+@* Blazor Server初学者向け: ValidationSummaryの拡張版で、 *@
+@* よりユーザーフレンドリーなエラー表示を提供します *@
+
+@if (ShowErrors && Errors.Any())
+{
+    <div class="alert @AlertClass alert-dismissible fade show" role="alert">
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <h6 class="alert-heading">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @Title
+            </h6>
+        }
+        
+        @if (Errors.Count == 1)
+        {
+            <p class="mb-0">@Errors.First()</p>
+        }
+        else
+        {
+            <ul class="mb-0">
+                @foreach (var error in Errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        }
+        
+        @if (IsDismissible)
+        {
+            <button type="button" class="btn-close" @onclick="Dismiss"></button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<string> Errors { get; set; } = new();
+    [Parameter] public string Title { get; set; } = "入力エラーがあります";
+    [Parameter] public bool ShowErrors { get; set; } = true;
+    [Parameter] public bool IsDismissible { get; set; } = true;
+    [Parameter] public string AlertClass { get; set; } = "alert-danger";
+    [Parameter] public EventCallback OnDismiss { get; set; }
+    
+    private void Dismiss()
+    {
+        ShowErrors = false;
+        OnDismiss.InvokeAsync();
+    }
+}
+
+@* リアルタイムバリデーションフィードバックコンポーネント *@
+@* 個別フィールドのバリデーション結果を表示 *@
+<style>
+    .field-validation-error {
+        color: var(--bs-danger);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .field-validation-error i {
+        margin-right: 0.25rem;
+    }
+    
+    .field-validation-valid {
+        color: var(--bs-success);
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .field-validation-valid i {
+        margin-right: 0.25rem;
+    }
+    
+    .form-control.is-invalid {
+        border-color: var(--bs-danger);
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-valid {
+        border-color: var(--bs-success);
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+</style>
