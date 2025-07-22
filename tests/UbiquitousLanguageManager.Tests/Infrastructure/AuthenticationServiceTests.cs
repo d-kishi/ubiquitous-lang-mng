@@ -3,6 +3,8 @@ using Microsoft.FSharp.Core;
 using Moq;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Application;
+using Microsoft.AspNetCore.Identity;
 using Xunit;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
@@ -17,13 +19,27 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 /// </summary>
 public class AuthenticationServiceTests
 {
-    private readonly Mock<ILogger<AuthenticationService>> _mockLogger;
+    private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _mockLogger;
+    private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
+    private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
+    private readonly Mock<INotificationService> _notificationServiceMock;
+    private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly AuthenticationService _service;
 
     public AuthenticationServiceTests()
     {
-        _mockLogger = new Mock<ILogger<AuthenticationService>>();
-        _service = new AuthenticationService(_mockLogger.Object);
+        _mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
+        _userManagerMock = CreateUserManagerMock();
+        _signInManagerMock = CreateSignInManagerMock();
+        _notificationServiceMock = new Mock<INotificationService>();
+        _userRepositoryMock = new Mock<IUserRepository>();
+        
+        _service = new AuthenticationService(
+            _mockLogger.Object,
+            _userManagerMock.Object,
+            _signInManagerMock.Object,
+            _notificationServiceMock.Object,
+            _userRepositoryMock.Object);
     }
 
     /// <summary>
@@ -502,5 +518,38 @@ public class AuthenticationServiceTests
             Assert.True(result.IsError);
             Assert.Equal("Phase A3で実装予定", result.ErrorValue);
         }
+    }
+
+    /// <summary>
+    /// UserManager&lt;IdentityUser&gt;のモックを作成
+    /// </summary>
+    /// <returns>UserManagerのモック</returns>
+    private static Mock<UserManager<IdentityUser>> CreateUserManagerMock()
+    {
+        var store = new Mock<IUserStore<IdentityUser>>();
+        var mgr = new Mock<UserManager<IdentityUser>>(
+            store.Object, null, null, null, null, null, null, null, null);
+        mgr.Object.UserValidators.Add(new UserValidator<IdentityUser>());
+        mgr.Object.PasswordValidators.Add(new PasswordValidator<IdentityUser>());
+        return mgr;
+    }
+
+    /// <summary>
+    /// SignInManager&lt;IdentityUser&gt;のモックを作成
+    /// </summary>
+    /// <returns>SignInManagerのモック</returns>
+    private static Mock<SignInManager<IdentityUser>> CreateSignInManagerMock()
+    {
+        var userManagerMock = CreateUserManagerMock();
+        var contextAccessorMock = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var claimsFactoryMock = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        
+        var signInMgr = new Mock<SignInManager<IdentityUser>>(
+            userManagerMock.Object,
+            contextAccessorMock.Object,
+            claimsFactoryMock.Object,
+            null, null, null, null);
+        
+        return signInMgr;
     }
 }

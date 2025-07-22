@@ -97,7 +97,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
                 userManager: null!, 
                 roleManager: null!, 
                 logger: Microsoft.Extensions.Logging.Abstractions.NullLogger<UbiquitousLanguageManager.Infrastructure.Services.InitialDataService>.Instance,
-                settings: Microsoft.Extensions.Options.Options.create(new UbiquitousLanguageManager.Infrastructure.Services.InitialSuperUserSettings
+                settings: Microsoft.Extensions.Options.Options.Create(new UbiquitousLanguageManager.Infrastructure.Services.InitialSuperUserSettings
                 {
                     Email = "test@example.com",
                     Name = "テストユーザー",

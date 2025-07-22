@@ -43,9 +43,13 @@ public class AuthenticationServicePasswordResetTests
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
+        // Phase A3 Step4で追加されたSignInManagerパラメータを追加
+        var signInManagerMock = CreateSignInManagerMock();
+
         _authenticationService = new AuthenticationService(
             _loggerMock.Object,
             _userManagerMock.Object,
+            signInManagerMock.Object,
             _notificationServiceMock.Object,
             _userRepositoryMock.Object);
     }
@@ -399,6 +403,28 @@ public class AuthenticationServicePasswordResetTests
         mgr.Object.UserValidators.Add(new UserValidator<IdentityUser>());
         mgr.Object.PasswordValidators.Add(new PasswordValidator<IdentityUser>());
         return mgr;
+    }
+
+    /// <summary>
+    /// SignInManager&lt;IdentityUser&gt;のモックを作成
+    /// </summary>
+    /// <returns>SignInManagerのモック</returns>
+    /// <remarks>
+    /// Phase A3 Step4で追加されたSignInManager依存関係に対応
+    /// </remarks>
+    private static Mock<SignInManager<IdentityUser>> CreateSignInManagerMock()
+    {
+        var userManagerMock = CreateUserManagerMock();
+        var contextAccessorMock = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var claimsFactoryMock = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        
+        var signInMgr = new Mock<SignInManager<IdentityUser>>(
+            userManagerMock.Object,
+            contextAccessorMock.Object,
+            claimsFactoryMock.Object,
+            null, null, null, null);
+        
+        return signInMgr;
     }
 
     /// <summary>
