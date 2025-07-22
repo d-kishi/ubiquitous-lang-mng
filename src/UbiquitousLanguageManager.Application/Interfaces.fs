@@ -202,3 +202,40 @@ type IReportService =
     
     // 📋 エクスポート: 用語一覧のファイル出力
     abstract member ExportUbiquitousLanguagesAsync: domainId: DomainId * format: string -> Task<Result<byte[], string>>
+
+// 📧 Phase A3: メール送信基盤インターフェース（Clean Architecture基盤レイヤー）
+// 【F#初学者向け解説】
+// INotificationServiceとは異なり、このインターフェースは低レベルなメール送信の基盤を提供します。
+// Infrastructure層でMailKitを使った具体的実装が行われ、INotificationServiceから利用されます。
+// Clean Architectureの依存関係逆転の原則に従い、Application層でインターフェースを定義し、
+// Infrastructure層で実装することで、外部ライブラリ（MailKit）への依存を抽象化します。
+type IEmailSender =
+    // 📮 基本メール送信: HTMLメッセージの送信
+    // 【F#初学者向け解説】
+    // Task<Result<unit, string>>の型は以下の意味を持ちます：
+    // - Task: 非同期処理（C#のasync/await相当）
+    // - Result<unit, string>: 成功時はunit（void相当）、失敗時はエラーメッセージ文字列
+    // - unit: F#でC#のvoid相当を表す型
+    abstract member SendEmailAsync: email: string * subject: string * htmlMessage: string -> Task<Result<unit, string>>
+    
+    // 📮 プレーンテキストメール送信: テキストメッセージの送信
+    abstract member SendPlainTextEmailAsync: email: string * subject: string * textMessage: string -> Task<Result<unit, string>>
+    
+    // 📮 添付ファイル付きメール送信: ファイル添付に対応
+    abstract member SendEmailWithAttachmentAsync: email: string * subject: string * htmlMessage: string * attachmentPath: string * attachmentName: string -> Task<Result<unit, string>>
+
+// 🔄 Phase A3: バックグラウンドメール送信キューインターフェース
+// 【F#初学者向け解説】
+// メール送信は時間のかかる処理のため、リクエストを即座に返すためにバックグラウンドで処理します。
+// このインターフェースは、メール送信要求をキューに登録し、別のスレッドで順次処理する仕組みを提供します。
+// 
+// 【C#互換性について】
+// C#のFunc<CancellationToken, Task>をそのまま使用してF#/C#間の型変換問題を回避します。
+type IBackgroundEmailQueue =
+    // 📨 メール送信要求をキューに追加
+    // System.Func<CancellationToken, Task>は、C#のデリゲート型をそのまま使用
+    abstract member QueueBackgroundWorkItemAsync: workItem: System.Func<System.Threading.CancellationToken, Task> -> Task
+    
+    // 📨 キューからメール送信要求を取り出し
+    // バックグラウンドサービスがこのメソッドを使用してキューを監視し、順次処理します
+    abstract member DequeueAsync: cancellationToken: System.Threading.CancellationToken -> Task<System.Func<System.Threading.CancellationToken, Task>>
