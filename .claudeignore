@@ -1,0 +1,54 @@
+# .claudeignore - Claude Codeが読み込みから除外するファイル
+
+# .NET ビルド出力・生成ファイル
+**/bin/
+**/obj/
+**/*.dll
+**/*.pdb
+**/*.exe
+**/*.xml
+**/*.deps.json
+**/*.runtimeconfig.json
+**/*.runtimeconfig.dev.json
+**/*.sourcelink.json
+
+# NuGet packages
+packages/
+*.nuget.props
+*.nuget.targets
+
+# アーカイブされた古い記録（特定セッションでのみ必要）
+/Doc/04_Daily/2025-06/
+
+# 実験的・一時的ファイル
+experimental/
+scratch/
+temp/
+*.tmp
+*.temp
+*.bak
+*_backup
+
+# 本番環境・機密情報（将来の機密情報対策）
+appsettings.Production.json
+*.secrets.json
+*.private.json
+
+# 個人的メモ・作業ファイル
+personal-notes/
+todo.txt
+notes.md
+
+# 大容量・生成ファイル（.gitignoreに含まれていないもの）
+*.log
+logs/
+coverage-reports/
+
+# IDE固有ファイル（Claude Codeには不要）
+.vscode/settings.json
+.vs/
+*.user
+
+# Package管理ファイル（依存関係参照時のみ必要）
+packages/
+node_modules/
