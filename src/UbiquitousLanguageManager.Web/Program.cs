@@ -122,22 +122,6 @@ builder.Services.AddScoped<InitialDataService>();
 // 🔐 Web層認証サービスの登録
 builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.AuthenticationService>();
 
-// 📧 Phase A3: メール送信基盤サービスの登録
-// Clean Architectureに従い、Application層のインターフェースをInfrastructure層の実装にバインド
-builder.Services.Configure<UbiquitousLanguageManager.Infrastructure.Services.SmtpSettings>(
-    builder.Configuration.GetSection("SmtpSettings"));
-
-// IEmailSender: 基盤メール送信サービス
-builder.Services.AddTransient<UbiquitousLanguageManager.Application.IEmailSender, 
-    UbiquitousLanguageManager.Infrastructure.Services.MailKitEmailSender>();
-
-// IBackgroundEmailQueue: バックグラウンドメール送信キュー（シングルトン）
-builder.Services.AddSingleton<UbiquitousLanguageManager.Application.IBackgroundEmailQueue, 
-    UbiquitousLanguageManager.Infrastructure.Services.BackgroundEmailQueue>();
-
-// EmailSendingBackgroundService: バックグラウンドでメール送信を実行するホステッドサービス
-builder.Services.AddHostedService<UbiquitousLanguageManager.Infrastructure.Services.EmailSendingBackgroundService>();
-
 // 📋 設定オブジェクトの登録
 builder.Services.Configure<UbiquitousLanguageManager.Infrastructure.Services.InitialSuperUserSettings>(
     builder.Configuration.GetSection("InitialSuperUser"));

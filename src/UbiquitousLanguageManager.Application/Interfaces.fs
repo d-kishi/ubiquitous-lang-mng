@@ -143,41 +143,6 @@ type IAuthenticationService =
     
     // 👤 現在ユーザー取得: セッション・認証状態からの現在ユーザー情報取得
     abstract member GetCurrentUserAsync: unit -> Task<Result<User option, string>>
-    
-    // 🔄 Phase A3: パスワードリセット機能
-    // 【F#初学者向け解説】
-    // パスワードリセット機能は、セキュリティ上重要な機能のため、ASP.NET Core Identityの
-    // 標準機能を活用して実装します。トークンベースの安全なリセット方式を採用し、
-    // メール送信による本人確認を含む完全なフローを提供します。
-    
-    // 🔑 パスワードリセット要求: メールアドレスによるリセットトークン生成・メール送信
-    // トークンの有効期限は24時間、セキュリティログ出力を含む
-    abstract member RequestPasswordResetAsync: email: Email -> Task<Result<unit, string>>
-    
-    // 🔑 パスワードリセット実行: トークンを使用した新しいパスワードの設定
-    // トークンの有効性確認、パスワード複雑性チェック、セキュリティログ出力を含む
-    abstract member ResetPasswordAsync: email: Email * token: string * newPassword: Password -> Task<Result<unit, string>>
-    
-    // 🔍 パスワードリセットトークン検証: トークンの有効性確認（UI用）
-    // フロントエンド側でのトークン検証用メソッド
-    abstract member ValidatePasswordResetTokenAsync: email: Email * token: string -> Task<Result<bool, string>>
-    
-    // 🔄 Phase A3: Step4 - 自動ログイン・基本セキュリティ機能
-    // 【F#初学者向け解説】
-    // Step4で追加する基本的なセキュリティ機能とユーザビリティ向上機能です。
-    // パスワードリセット完了後の自動ログイン、Remember Me機能、基本的な監査ログ機能を提供します。
-    
-    // 🔐 自動ログイン: パスワードリセット完了後の自動ログイン実行
-    // SignInManagerを使用してセキュアな自動ログインを実現
-    abstract member AutoLoginAfterPasswordResetAsync: email: Email -> Task<Result<unit, string>>
-    
-    // 📊 ログイン試行記録: 基本監査ログのためのログイン成功/失敗記録
-    // Identity Lockoutと連携した基本的なログイン試行追跡
-    abstract member RecordLoginAttemptAsync: email: Email * isSuccess: bool -> Task<Result<unit, string>>
-    
-    // 🔒 アカウントロック状態確認: Identity Lockout状態の確認
-    // UI表示用のアカウントロック状態取得
-    abstract member IsAccountLockedAsync: email: Email -> Task<Result<bool, string>>
 
 // 📧 Phase A2: 通知サービスインターフェース（ユーザー管理通知対応）
 // 【F#初学者向け解説】
@@ -205,17 +170,6 @@ type INotificationService =
     
     // 🚨 セキュリティアラート: 異常なアクセス・ロックアウト等の通知
     abstract member SendSecurityAlertAsync: email: Email * alertType: string * details: string -> Task<Result<unit, string>>
-    
-    // 🔄 Phase A3: パスワードリセット関連通知
-    // 【F#初学者向け解説】
-    // パスワードリセット機能に関連する通知を抽象化します。
-    // セキュリティ上重要なイベントのため、適切な通知とログ出力を行います。
-    
-    // 🔑 パスワードリセット要求メール: リセットリンク付きメールの送信
-    abstract member SendPasswordResetEmailAsync: email: Email * resetToken: string * resetUrl: string -> Task<Result<unit, string>>
-    
-    // ✅ パスワードリセット完了通知: リセット完了の確認メール送信
-    abstract member SendPasswordResetConfirmationAsync: email: Email -> Task<Result<unit, string>>
     
     // ユビキタス言語管理関連通知（既存）
     // 📤 承認通知: 承認者への通知送信
@@ -248,40 +202,3 @@ type IReportService =
     
     // 📋 エクスポート: 用語一覧のファイル出力
     abstract member ExportUbiquitousLanguagesAsync: domainId: DomainId * format: string -> Task<Result<byte[], string>>
-
-// 📧 Phase A3: メール送信基盤インターフェース（Clean Architecture基盤レイヤー）
-// 【F#初学者向け解説】
-// INotificationServiceとは異なり、このインターフェースは低レベルなメール送信の基盤を提供します。
-// Infrastructure層でMailKitを使った具体的実装が行われ、INotificationServiceから利用されます。
-// Clean Architectureの依存関係逆転の原則に従い、Application層でインターフェースを定義し、
-// Infrastructure層で実装することで、外部ライブラリ（MailKit）への依存を抽象化します。
-type IEmailSender =
-    // 📮 基本メール送信: HTMLメッセージの送信
-    // 【F#初学者向け解説】
-    // Task<Result<unit, string>>の型は以下の意味を持ちます：
-    // - Task: 非同期処理（C#のasync/await相当）
-    // - Result<unit, string>: 成功時はunit（void相当）、失敗時はエラーメッセージ文字列
-    // - unit: F#でC#のvoid相当を表す型
-    abstract member SendEmailAsync: email: string * subject: string * htmlMessage: string -> Task<Result<unit, string>>
-    
-    // 📮 プレーンテキストメール送信: テキストメッセージの送信
-    abstract member SendPlainTextEmailAsync: email: string * subject: string * textMessage: string -> Task<Result<unit, string>>
-    
-    // 📮 添付ファイル付きメール送信: ファイル添付に対応
-    abstract member SendEmailWithAttachmentAsync: email: string * subject: string * htmlMessage: string * attachmentPath: string * attachmentName: string -> Task<Result<unit, string>>
-
-// 🔄 Phase A3: バックグラウンドメール送信キューインターフェース
-// 【F#初学者向け解説】
-// メール送信は時間のかかる処理のため、リクエストを即座に返すためにバックグラウンドで処理します。
-// このインターフェースは、メール送信要求をキューに登録し、別のスレッドで順次処理する仕組みを提供します。
-// 
-// 【C#互換性について】
-// C#のFunc<CancellationToken, Task>をそのまま使用してF#/C#間の型変換問題を回避します。
-type IBackgroundEmailQueue =
-    // 📨 メール送信要求をキューに追加
-    // System.Func<CancellationToken, Task>は、C#のデリゲート型をそのまま使用
-    abstract member QueueBackgroundWorkItemAsync: workItem: System.Func<System.Threading.CancellationToken, Task> -> Task
-    
-    // 📨 キューからメール送信要求を取り出し
-    // バックグラウンドサービスがこのメソッドを使用してキューを監視し、順次処理します
-    abstract member DequeueAsync: cancellationToken: System.Threading.CancellationToken -> Task<System.Func<System.Threading.CancellationToken, Task>>

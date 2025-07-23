@@ -3,7 +3,6 @@ using Microsoft.FSharp.Core;
 using Moq;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
-using UbiquitousLanguageManager.Application;
 using Xunit;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
@@ -18,8 +17,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 /// </summary>
 public class NotificationServiceTests
 {
-    private readonly Mock<Microsoft.Extensions.Logging.ILogger<NotificationService>> _mockLogger;
-    private readonly Mock<IEmailSender> _emailSenderMock;
+    private readonly Mock<ILogger<NotificationService>> _mockLogger;
     private readonly NotificationService _service;
 
     protected User CreateTestUser(string email = "test@example.com", string name = "テストユーザー", Role? role = null)
@@ -40,9 +38,8 @@ public class NotificationServiceTests
 
     public NotificationServiceTests()
     {
-        _mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<NotificationService>>();
-        _emailSenderMock = new Mock<IEmailSender>();
-        _service = new NotificationService(_mockLogger.Object, _emailSenderMock.Object);
+        _mockLogger = new Mock<ILogger<NotificationService>>();
+        _service = new NotificationService(_mockLogger.Object);
     }
 
     /// <summary>
