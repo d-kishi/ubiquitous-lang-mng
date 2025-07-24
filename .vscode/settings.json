@@ -20,6 +20,11 @@
   "dotnet.inlayHints.enableInlayHintsForLambdaParameterTypes": true,
   "dotnet.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
   "omnisharp.enableEditorConfigSupport": true,
+  // C# 拡張機能競合回避設定
+  "csharp.preferOmnisharp": true,
+  "dotnet.preferCSharpExtension": false,
+  "omnisharp.useModernNet": true,
+  "dotnet.defaultSolution": "UbiquitousLanguageManager.sln",
   // パフォーマンス最適化
   "files.exclude": {
     "**/bin": true,
@@ -89,6 +94,10 @@
   "cursor.chat.enabled": true,
   "cursor.prediction.enabled": true,
   "cursor.autocomplete.enabled": true,
+  // AI機能強制有効化
+  "cursor.ai.enabled": true,
+  "cursor.chat.maxTokens": 4000,
+  "cursor.autocomplete.delay": 300,
   // テーマ設定（コメントアウト済み - 必要に応じて有効化）
   // "workbench.colorTheme": "Default Dark+",
   // "workbench.iconTheme": "vs-seti",
