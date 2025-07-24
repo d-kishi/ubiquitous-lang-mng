@@ -126,6 +126,12 @@ builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.Authentication
 builder.Services.Configure<UbiquitousLanguageManager.Infrastructure.Services.InitialSuperUserSettings>(
     builder.Configuration.GetSection("InitialSuperUser"));
 
+// 📧 メール送信設定（Phase A3 Step2）
+builder.Services.Configure<UbiquitousLanguageManager.Infrastructure.Emailing.SmtpSettings>(
+    builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddScoped<UbiquitousLanguageManager.Contracts.Interfaces.IEmailSender, 
+    UbiquitousLanguageManager.Infrastructure.Emailing.SmtpEmailSender>();
+
 // 🏥 ヘルスチェック設定: アプリケーション・データベースの正常性監視
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<UbiquitousLanguageDbContext>(
