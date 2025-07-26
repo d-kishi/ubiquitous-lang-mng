@@ -40,23 +40,28 @@ public class AuthenticationService
     }
 
     /// <summary>
-    /// ユーザーのログアウト処理
+    /// 仕様書10.3.1準拠: ユーザーのログアウト処理
+    /// セッション無効化・Cookie削除・クリーンアップ実行
     /// </summary>
     public async Task LogoutAsync()
     {
         try
         {
+            _logger.LogInformation("ログアウト処理開始");
+
             // ASP.NET Core Identity認証解除
+            // 仕様書10.3.1準拠: セッション無効化・Cookie削除
             await _signInManager.SignOutAsync();
             
             // Blazor認証状態の変更を通知
             _authStateProvider.NotifyUserLogout();
             
-            _logger.LogInformation("ユーザーがログアウトしました");
+            _logger.LogInformation("ログアウト処理完了: セッション無効化・Cookie削除・状態クリーンアップ");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ログアウト処理中にエラーが発生しました");
+            throw; // 呼び出し元でエラーハンドリングできるよう再throw
         }
     }
 
@@ -88,13 +93,80 @@ public class AuthenticationService
     }
 
     /// <summary>
-    /// Phase A3で実装予定：ログイン機能（Web層版）
+    /// 仕様書2.1.1準拠: ログイン機能（Remember Me対応・ロックアウト機構なし）
     /// </summary>
+    /// <param name="request">ログイン要求情報</param>
+    /// <returns>ログイン結果</returns>
     public async Task<UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto> LoginAsync(UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginRequestDto request)
     {
-        await Task.CompletedTask;
-        _logger.LogInformation("LoginAsync called - Phase A3で実装予定");
-        return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("Phase A3で実装予定");
+        try
+        {
+            _logger.LogInformation("ログイン試行: {Email}", request.Email);
+
+            // ユーザー検索
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("ログイン失敗: ユーザーが見つかりません {Email}", request.Email);
+                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("メールアドレスまたはパスワードが正しくありません。");
+            }
+
+            // ログインロックアウト機構確認（仕様書2.1.1準拠: 無効化）
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                _logger.LogWarning("ログイン失敗: アカウントロックアウト {Email}", request.Email);
+                // 仕様書2.1.1準拠では本来発生しないが、念のため対応
+                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("アカウントが一時的に無効になっています。");
+            }
+
+            // 仕様書2.1.1準拠: Remember Me機能を含むログイン実行
+            // lockoutOnFailure=false: ロックアウト機構を無効化
+            var result = await _signInManager.PasswordSignInAsync(
+                user, 
+                request.Password, 
+                isPersistent: request.RememberMe, // 仕様書2.1.1準拠: ログイン状態保持
+                lockoutOnFailure: false); // 仕様書2.1.1準拠: ロックアウト機構は設けない
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("ログイン成功: {Email}, RememberMe: {RememberMe}", request.Email, request.RememberMe);
+                
+                // Blazor認証状態の更新
+                _authStateProvider.NotifyUserAuthentication(_authStateProvider.GetAuthenticationStateAsync());
+
+                // 仕様書2.1.1準拠: ログイン成功時のユーザー情報DTO作成
+                var authenticatedUser = new UbiquitousLanguageManager.Contracts.DTOs.Authentication.AuthenticatedUserDto
+                {
+                    Id = user.DomainUserId ?? 0, // ApplicationUser.DomainUserIdをマッピング（nullの場合は0）
+                    Email = user.Email ?? string.Empty,
+                    Name = user.Name,
+                    Role = user.UserRole, // Phase A3では現在のユーザーロールを使用
+                    IsActive = user.IsActive,
+                    IsFirstLogin = user.IsFirstLogin,
+                    UpdatedAt = user.UpdatedAt
+                };
+
+                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Success(
+                    authenticatedUser, 
+                    user.IsFirstLogin, // 初回ログインフラグを渡す
+                    null); // リダイレクトURLは現在未使用
+            }
+            else if (result.IsNotAllowed)
+            {
+                _logger.LogWarning("ログイン失敗: アカウント未承認 {Email}", request.Email);
+                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("アカウントが有効化されていません。");
+            }
+            else
+            {
+                _logger.LogWarning("ログイン失敗: 認証失敗 {Email}", request.Email);
+                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("メールアドレスまたはパスワードが正しくありません。");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ログイン処理中にエラーが発生しました: {Email}", request.Email);
+            return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("ログイン処理中にエラーが発生しました。管理者にお問い合わせください。");
+        }
     }
 
     /// <summary>

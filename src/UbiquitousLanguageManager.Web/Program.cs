@@ -71,10 +71,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequiredLength = 8;
     options.Password.RequiredUniqueChars = 1;
 
-    // 🔒 ログイン設定
+    // 🔒 ログイン設定（仕様書2.1.1準拠: ロックアウト機構は設けない）
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 999; // 仕様書2.1.1準拠: 実質無制限
+    options.Lockout.AllowedForNewUsers = false; // 仕様書2.1.1準拠: ロックアウト無効
 
     // 📧 ユーザー設定
     options.User.AllowedUserNameCharacters =
@@ -89,18 +89,37 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<UbiquitousLanguageDbContext>()
 .AddDefaultTokenProviders(); // パスワードリセットトークン等の生成用
 
-// 🍪 Cookie認証設定
+// 🍪 Cookie認証設定（仕様書2.1.1・10.1.1準拠）
 // 【Blazor Server初学者向け解説】
 // Blazor Server アプリケーションでは、Cookie ベースの認証が一般的です。
 // SignalR 接続でも認証状態が維持されるため、セキュアな双方向通信が可能です。
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromHours(24); // 24時間有効
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // HTTPS環境ではSecure属性
+    options.Cookie.SameSite = SameSiteMode.Lax; // CSRF攻撃対策
+    
+    // 仕様書10.1.1準拠: セッションタイムアウト2時間
+    options.ExpireTimeSpan = TimeSpan.FromHours(2);
+    
+    // 仕様書2.1.1準拠: Remember Me機能（7日間有効期限）
+    // isPersistent=trueの場合、ExpireTimeSpanが7日間に延長される
+    
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.SlidingExpiration = true; // アクティブなユーザーは自動延長
+    
+    // Remember Me用の延長設定
+    options.Events.OnSigningIn = context =>
+    {
+        // isPersistentがtrueの場合、7日間に延長
+        if (context.Properties?.IsPersistent == true)
+        {
+            context.Properties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7); // 仕様書2.1.1準拠: 7日間
+        }
+        return Task.CompletedTask;
+    };
 });
 
 // 🎯 Clean Architecture: 依存関係注入設定

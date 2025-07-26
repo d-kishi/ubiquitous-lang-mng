@@ -5,9 +5,11 @@
 @using System.ComponentModel.DataAnnotations
 @using UbiquitousLanguageManager.Web.Components.Authorization
 @using UbiquitousLanguageManager.Web.Pages.Admin.Components
+@using UbiquitousLanguageManager.Contracts.DTOs.Authentication
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject UbiquitousLanguageManager.Web.Services.AuthenticationService AuthService
 
 @* ログイン画面 *@
 @* Blazor Server初学者向け: ASP.NET Core Identityと連携したセキュアな認証UI *@
@@ -182,23 +184,40 @@
         
         try
         {
-            // Phase A3で実装: 実際の認証処理
-            // 現在は仮実装
-            await Task.Delay(1000); // ネットワーク遅延をシミュレート
-            
-            // デモ用認証チェック
-            if (IsValidDemoCredentials())
+            // 仕様書2.1.1準拠: Remember Me機能を含む実際の認証処理
+            var loginRequest = new UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginRequestDto
             {
-                toastNotification?.ShowSuccess("ログインしています...", "認証成功");
+                Email = loginModel.Email,
+                Password = loginModel.Password,
+                RememberMe = loginModel.RememberMe // 仕様書2.1.1準拠: ログイン状態保持
+            };
+
+            var result = await AuthService.LoginAsync(loginRequest);
+            
+            if (result.IsSuccess)
+            {
+                toastNotification?.ShowSuccess(
+                    $"ログインに成功しました。{(loginModel.RememberMe ? "7日間ログイン状態を保持します。" : "")}", 
+                    "認証成功");
                 
-                // Phase A3で実装: 実際のCookie認証
-                // 現在は仮のリダイレクト
-                await Task.Delay(500);
-                Navigation.NavigateTo(ReturnUrl ?? "/admin/users", replace: true);
+                // 初回ログインフラグによる分岐処理
+                if (result.IsFirstLogin)
+                {
+                    // 初回ログイン時はパスワード変更画面へリダイレクト
+                    await Task.Delay(500);
+                    Navigation.NavigateTo("/change-password", replace: true);
+                }
+                else
+                {
+                    // 通常ログイン時はメイン画面へリダイレクト
+                    await Task.Delay(500);
+                    Navigation.NavigateTo(result.RedirectUrl ?? ReturnUrl ?? "/admin/users", replace: true);
+                }
             }
             else
             {
-                errorMessage = "メールアドレスまたはパスワードが正しくありません。";
+                errorMessage = result.ErrorMessage ?? "ログインに失敗しました。";
+                toastNotification?.ShowError("ログインに失敗しました", "認証エラー");
                 
                 // セキュリティ: ログイン失敗のログ記録
                 LogFailedLogin();
