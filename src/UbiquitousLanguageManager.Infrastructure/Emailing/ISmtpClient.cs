@@ -14,6 +14,10 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
     public interface ISmtpClient : IDisposable
     {
         /// <summary>
+        /// 接続状態を取得します
+        /// </summary>
+        bool IsConnected { get; }
+        /// <summary>
         /// SMTPサーバーに接続します
         /// </summary>
         Task ConnectAsync(string host, int port, bool useSsl, CancellationToken cancellationToken = default);
@@ -48,6 +52,9 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
         {
             _smtpClient = new SmtpClient();
         }
+
+        /// <inheritdoc/>
+        public bool IsConnected => _smtpClient.IsConnected;
 
         /// <inheritdoc/>
         public async Task ConnectAsync(string host, int port, bool useSsl, CancellationToken cancellationToken = default)

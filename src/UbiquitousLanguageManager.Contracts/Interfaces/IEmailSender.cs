@@ -24,5 +24,17 @@ namespace UbiquitousLanguageManager.Contracts.Interfaces
             string body,
             bool isBodyHtml = true,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// パスワードリセットメールを送信します
+        /// </summary>
+        /// <param name="email">送信先メールアドレス</param>
+        /// <param name="resetToken">リセットトークン</param>
+        /// <returns>送信成功の可否</returns>
+        /// <remarks>
+        /// 仕様書2.1.3準拠: パスワードリセットメール送信
+        /// リセットリンクの有効期限は24時間
+        /// </remarks>
+        Task<bool> SendPasswordResetEmailAsync(string email, string resetToken);
     }
 }

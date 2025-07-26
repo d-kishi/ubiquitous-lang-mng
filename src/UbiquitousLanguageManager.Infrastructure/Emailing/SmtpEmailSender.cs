@@ -86,5 +86,59 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
                 throw;
             }
         }
+
+        /// <summary>
+        /// パスワードリセットメールを送信します
+        /// </summary>
+        /// <param name="email">送信先メールアドレス</param>
+        /// <param name="resetToken">リセットトークン</param>
+        /// <returns>送信成功の可否</returns>
+        /// <remarks>
+        /// 仕様書2.1.3準拠: パスワードリセットメール送信
+        /// リセットリンクの有効期限は24時間
+        /// </remarks>
+        public async Task<bool> SendPasswordResetEmailAsync(string email, string resetToken)
+        {
+            try
+            {
+                // 🔧 入力検証
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    _logger.LogWarning("Invalid email address provided for password reset");
+                    return false;
+                }
+
+                // 📧 リセットURLの生成
+                // TODO: 実際のURLはアプリケーション設定から取得する必要があります
+                var resetUrl = $"https://localhost/reset-password?token={Uri.EscapeDataString(resetToken)}&email={Uri.EscapeDataString(email)}";
+
+                // 📝 メール本文の作成
+                var subject = "パスワードリセットのお知らせ";
+                var body = $@"
+<html>
+<body>
+    <h2>パスワードリセットのお知らせ</h2>
+    <p>パスワードリセットのリクエストを受け付けました。</p>
+    <p>以下のリンクをクリックして、新しいパスワードを設定してください：</p>
+    <p><a href='{resetUrl}'>パスワードをリセットする</a></p>
+    <p>このリンクの有効期限は<strong>24時間</strong>です。</p>
+    <p>心当たりがない場合は、このメールを無視してください。</p>
+    <hr>
+    <p>ユビキタス言語管理システム</p>
+</body>
+</html>";
+
+                // 📧 メール送信
+                await SendEmailAsync(email, subject, body, true);
+                
+                _logger.LogInformation("Password reset email sent successfully to {Email}", email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send password reset email to {Email}", email);
+                return false;
+            }
+        }
     }
 }
