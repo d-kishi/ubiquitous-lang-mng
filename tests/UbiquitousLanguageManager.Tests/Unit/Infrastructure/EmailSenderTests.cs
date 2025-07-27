@@ -97,7 +97,7 @@ namespace UbiquitousLanguageManager.Tests.Unit.Infrastructure
                 _mockSmtpClient.ConnectAsync(
                     _smtpSettings.Host, 
                     _smtpSettings.Port, 
-                    SecureSocketOptions.None, 
+                    _smtpSettings.EnableSsl, 
                     Arg.Any<CancellationToken>());
                 _mockSmtpClient.SendAsync(
                     Arg.Any<MimeMessage>(), 
@@ -115,12 +115,12 @@ namespace UbiquitousLanguageManager.Tests.Unit.Infrastructure
 
             // 🎯 モック設定: SMTP接続失敗
             _mockSmtpClient.IsConnected.Returns(false);
-            _mockSmtpClient.ConnectAsync(
+            _mockSmtpClient.When(x => x.ConnectAsync(
                 Arg.Any<string>(), 
                 Arg.Any<int>(), 
                 Arg.Any<bool>(), 
-                Arg.Any<CancellationToken>())
-                .ThrowsAsync(new Exception("Connection refused"));
+                Arg.Any<CancellationToken>()))
+                .Do(x => throw new Exception("Connection refused"));
 
             // Act
             var result = await _emailSender.SendPasswordResetEmailAsync(toEmail, resetToken);
@@ -234,10 +234,10 @@ namespace UbiquitousLanguageManager.Tests.Unit.Infrastructure
             var body = "本文";
 
             _mockSmtpClient.IsConnected.Returns(true);
-            _mockSmtpClient.SendAsync(
+            _mockSmtpClient.When(x => x.SendAsync(
                 Arg.Any<MimeMessage>(), 
-                Arg.Any<CancellationToken>())
-                .ThrowsAsync(new TimeoutException("Send timeout"));
+                Arg.Any<CancellationToken>()))
+                .Do(x => throw new TimeoutException("Send timeout"));
 
             // Act & Assert
             // ⏱️ タイムアウト例外がそのまま伝播することを確認

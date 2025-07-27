@@ -8,6 +8,7 @@ using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Tests.Stubs;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
 
@@ -23,7 +24,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 /// </summary>
 public class AuditLoggingTests
 {
-    private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _loggerMock;
+    private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _logger;
     private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
     private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
@@ -35,18 +36,13 @@ public class AuditLoggingTests
     /// </summary>
     public AuditLoggingTests()
     {
-        _loggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
+        _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
         _userManagerMock = CreateUserManagerMock();
         _signInManagerMock = CreateSignInManagerMock();
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        _authenticationService = new AuthenticationService(
-            _loggerMock.Object,
-            _userManagerMock.Object,
-            _signInManagerMock.Object,
-            _notificationServiceMock.Object,
-            _userRepositoryMock.Object);
+        _authenticationService = new AuthenticationService(_logger.Object);
     }
 
     #region Login Success Audit Tests
@@ -250,7 +246,7 @@ public class AuditLoggingTests
             .ReturnsAsync("reset-token");
         _notificationServiceMock.Setup(x => x.SendPasswordResetEmailAsync(
                 It.IsAny<Email>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
         // Act
         var result = await _authenticationService.RequestPasswordResetAsync(email);
@@ -284,7 +280,7 @@ public class AuditLoggingTests
         _userManagerMock.Setup(x => x.UpdateSecurityStampAsync(identityUser))
             .ReturnsAsync(IdentityResult.Success);
         _notificationServiceMock.Setup(x => x.SendPasswordResetConfirmationAsync(email))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
         // Act
         var result = await _authenticationService.ResetPasswordAsync(email, token, password);
@@ -444,7 +440,7 @@ public class AuditLoggingTests
     /// </summary>
     private void VerifyLogCalled(LogLevel expectedLevel, string expectedMessage)
     {
-        _loggerMock.Verify(
+        _logger.Verify(
             x => x.Log(
                 expectedLevel,
                 It.IsAny<EventId>(),
@@ -459,7 +455,7 @@ public class AuditLoggingTests
     /// </summary>
     private void VerifyLogStructuredData(string expectedEmail, string expectedStatus)
     {
-        _loggerMock.Verify(
+        _logger.Verify(
             x => x.Log(
                 It.IsAny<LogLevel>(),
                 It.IsAny<EventId>(),
@@ -476,7 +472,7 @@ public class AuditLoggingTests
     /// </summary>
     private void VerifyStructuredLogWithLockoutEnd(string expectedEmail)
     {
-        _loggerMock.Verify(
+        _logger.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
@@ -493,7 +489,7 @@ public class AuditLoggingTests
     /// </summary>
     private void VerifyLogContainsTimestamp()
     {
-        _loggerMock.Verify(
+        _logger.Verify(
             x => x.Log(
                 It.IsAny<LogLevel>(),
                 It.IsAny<EventId>(),
@@ -508,7 +504,7 @@ public class AuditLoggingTests
     /// </summary>
     private void VerifyLogContainsEmail(string expectedEmail)
     {
-        _loggerMock.Verify(
+        _logger.Verify(
             x => x.Log(
                 It.IsAny<LogLevel>(),
                 It.IsAny<EventId>(),

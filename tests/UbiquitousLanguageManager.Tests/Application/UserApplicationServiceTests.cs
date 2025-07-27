@@ -86,7 +86,7 @@ public class UserApplicationServiceTests
                 
             _mockNotificationService
                 .Setup(x => x.SendWelcomeEmailAsync(It.IsAny<Email>()))
-                .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+                .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
             // Act
             var result = await _service.CreateUserAsync(email, name, role, operatorUser);
@@ -289,7 +289,7 @@ public class UserApplicationServiceTests
                 
             _mockNotificationService
                 .Setup(x => x.SendPasswordChangeNotificationAsync(It.IsAny<Email>()))
-                .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+                .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
             // Act
             var result = await _service.ChangePasswordAsync(userId, currentPassword, newPassword, operatorUser);
@@ -389,7 +389,7 @@ public class UserApplicationServiceTests
                 
             _mockNotificationService
                 .Setup(x => x.SendRoleChangeNotificationAsync(It.IsAny<Email>(), newRole))
-                .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+                .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
             // Act
             var result = await _service.ChangeUserRoleAsync(userId, newRole, operatorUser);
@@ -451,7 +451,7 @@ public class UserApplicationServiceTests
                 
             _mockNotificationService
                 .Setup(x => x.SendAccountDeactivationNotificationAsync(It.IsAny<Email>()))
-                .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+                .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
             // Act
             var result = await _service.DeactivateUserAsync(userId, operatorUser);
@@ -489,7 +489,7 @@ public class UserApplicationServiceTests
                 
             _mockNotificationService
                 .Setup(x => x.SendAccountActivationNotificationAsync(It.IsAny<Email>()))
-                .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+                .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
             // Act
             var result = await _service.ActivateUserAsync(userId, operatorUser);

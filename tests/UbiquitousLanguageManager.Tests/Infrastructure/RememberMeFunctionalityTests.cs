@@ -23,7 +23,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 /// </summary>
 public class RememberMeFunctionalityTests
 {
-    private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _loggerMock;
+    private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _logger;
     private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
     private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
@@ -35,18 +35,13 @@ public class RememberMeFunctionalityTests
     /// </summary>
     public RememberMeFunctionalityTests()
     {
-        _loggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
+        _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
         _userManagerMock = CreateUserManagerMock();
         _signInManagerMock = CreateSignInManagerMock();
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        _authenticationService = new AuthenticationService(
-            _loggerMock.Object,
-            _userManagerMock.Object,
-            _signInManagerMock.Object,
-            _notificationServiceMock.Object,
-            _userRepositoryMock.Object);
+        _authenticationService = new AuthenticationService(_logger.Object);
     }
 
     #region Remember Me Login Tests
@@ -300,7 +295,7 @@ public class RememberMeFunctionalityTests
     /// </summary>
     private void VerifyLogCalled(LogLevel expectedLevel, string expectedMessage)
     {
-        _loggerMock.Verify(
+        _logger.Verify(
             x => x.Log(
                 expectedLevel,
                 It.IsAny<EventId>(),

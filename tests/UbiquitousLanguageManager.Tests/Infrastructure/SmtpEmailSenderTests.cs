@@ -5,11 +5,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
-using MailKit.Net.Smtp;
 using UbiquitousLanguageManager.Contracts.Interfaces;
 using MailKit.Security;
+using MailKit;
+using MailKit.Net.Smtp;
 using MimeKit;
 using UbiquitousLanguageManager.Infrastructure.Emailing;
+using InfraISmtpClient = UbiquitousLanguageManager.Infrastructure.Emailing.ISmtpClient;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure
 {
@@ -47,7 +49,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure
         public async Task SendEmailAsync_WithValidParameters_ShouldCallSmtpClient()
         {
             // Arrange
-            var mockSmtpClient = new Mock<ISmtpClient>();
+            var mockSmtpClient = new Mock<InfraISmtpClient>();
             mockSmtpClient.Setup(x => x.ConnectAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
@@ -111,7 +113,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure
         {
             // Arrange
             var capturedMessage = (MimeMessage)null;
-            var mockSmtpClient = new Mock<ISmtpClient>();
+            var mockSmtpClient = new Mock<InfraISmtpClient>();
             
             SetupSmtpClientMock(mockSmtpClient);
             
@@ -147,7 +149,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure
         public async Task SendEmailAsync_WhenSmtpConnectionFails_ShouldThrowException()
         {
             // Arrange
-            var mockSmtpClient = new Mock<ISmtpClient>();
+            var mockSmtpClient = new Mock<InfraISmtpClient>();
             mockSmtpClient.Setup(x => x.ConnectAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
@@ -173,7 +175,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure
         public async Task SendEmailAsync_WhenAuthenticationFails_ShouldLogAndThrow()
         {
             // Arrange
-            var mockSmtpClient = new Mock<ISmtpClient>();
+            var mockSmtpClient = new Mock<InfraISmtpClient>();
             mockSmtpClient.Setup(x => x.ConnectAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
@@ -218,7 +220,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure
             var cts = new CancellationTokenSource();
             cts.Cancel();
             
-            var mockSmtpClient = new Mock<ISmtpClient>();
+            var mockSmtpClient = new Mock<InfraISmtpClient>();
             mockSmtpClient.Setup(x => x.ConnectAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
@@ -238,7 +240,7 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure
                     cts.Token));
         }
 
-        private void SetupSmtpClientMock(Mock<UbiquitousLanguageManager.Infrastructure.Emailing.ISmtpClient> mockSmtpClient)
+        private void SetupSmtpClientMock(Mock<InfraISmtpClient> mockSmtpClient)
         {
             mockSmtpClient.Setup(x => x.ConnectAsync(
                 It.IsAny<string>(),

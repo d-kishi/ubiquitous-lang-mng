@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Moq;
+using UbiquitousLanguageManager.Tests.Stubs;
+// Extension methods are now top-level static classes
 using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
@@ -42,12 +44,8 @@ public class AutoLoginIntegrationTests
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        _authenticationService = new AuthenticationService(
-            _loggerMock.Object,
-            _userManagerMock.Object,
-            _signInManagerMock.Object,
-            _notificationServiceMock.Object,
-            _userRepositoryMock.Object);
+        // Phase A3で変更されたコンストラクタに対応
+        _authenticationService = new AuthenticationService(_loggerMock.Object);
     }
 
     #region Complete Password Reset Flow Tests
@@ -73,7 +71,7 @@ public class AutoLoginIntegrationTests
             .ReturnsAsync(resetToken);
         _notificationServiceMock.Setup(x => x.SendPasswordResetEmailAsync(
                 It.IsAny<Email>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
         // パスワードリセット実行のセットアップ
         _userManagerMock.Setup(x => x.ResetPasswordAsync(identityUser, It.IsAny<string>(), newPassword.Value))
@@ -81,7 +79,7 @@ public class AutoLoginIntegrationTests
         _userManagerMock.Setup(x => x.UpdateSecurityStampAsync(identityUser))
             .ReturnsAsync(IdentityResult.Success);
         _notificationServiceMock.Setup(x => x.SendPasswordResetConfirmationAsync(email))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
         // 自動ログインのセットアップ
         _userManagerMock.Setup(x => x.IsLockedOutAsync(identityUser))
@@ -148,7 +146,7 @@ public class AutoLoginIntegrationTests
         _userManagerMock.Setup(x => x.UpdateSecurityStampAsync(identityUser))
             .ReturnsAsync(IdentityResult.Success);
         _notificationServiceMock.Setup(x => x.SendPasswordResetConfirmationAsync(email))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewOk(null!));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
 
         // 自動ログイン失敗のセットアップ（ロックアウト状態）
         _userManagerMock.Setup(x => x.IsLockedOutAsync(identityUser))
@@ -310,7 +308,7 @@ public class AutoLoginIntegrationTests
         // メール送信失敗のシミュレーション
         _notificationServiceMock.Setup(x => x.SendPasswordResetEmailAsync(
                 It.IsAny<Email>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewError("SMTP server unavailable"));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewError("SMTP server unavailable"));
 
         // Act
         var result = await _authenticationService.RequestPasswordResetAsync(email);
@@ -353,7 +351,7 @@ public class AutoLoginIntegrationTests
         
         // 確認メール送信失敗のシミュレーション
         _notificationServiceMock.Setup(x => x.SendPasswordResetConfirmationAsync(email))
-            .ReturnsAsync(FSharpResult<Unit, string>.NewError("Notification service down"));
+            .ReturnsAsync(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewError("Notification service down"));
 
         // 自動ログイン成功のセットアップ
         _userManagerMock.Setup(x => x.IsLockedOutAsync(identityUser))

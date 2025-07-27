@@ -24,11 +24,11 @@ namespace UbiquitousLanguageManager.Tests.Fixtures
             var services = new ServiceCollection();
             
             // 🔧 テスト用In-Memory Database設定
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<UbiquitousLanguageDbContext>(options =>
                 options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}"));
             
             // 🔐 ASP.NET Core Identity設定
-            services.AddIdentity<User, IdentityRole>(options =>
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 // テスト用にパスワード要件を緩和
                 options.Password.RequireDigit = false;
@@ -40,7 +40,7 @@ namespace UbiquitousLanguageManager.Tests.Fixtures
                 // トークン有効期限設定（仕様書2.1.3: 24時間）
                 options.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultProvider;
             })
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddEntityFrameworkStores<UbiquitousLanguageDbContext>()
             .AddDefaultTokenProviders();
             
             // 📧 メール送信サービス（テスト用モック）
@@ -62,16 +62,16 @@ namespace UbiquitousLanguageManager.Tests.Fixtures
             {
                 options.Host = "localhost";
                 options.Port = 1025;
-                options.UseSsl = false;
-                options.From = "test@example.com";
-                options.FromName = "Test System";
+                options.EnableSsl = false;
+                options.SenderEmail = "test@example.com";
+                options.SenderName = "Test System";
             });
             
             ServiceProvider = services.BuildServiceProvider();
             
             // データベース初期化
             using var scope = ServiceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<UbiquitousLanguageDbContext>();
             context.Database.EnsureCreated();
         }
         
@@ -79,7 +79,7 @@ namespace UbiquitousLanguageManager.Tests.Fixtures
         {
             // 🧹 テスト後のクリーンアップ
             using var scope = ServiceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<UbiquitousLanguageDbContext>();
             context.Database.EnsureDeleted();
             
             if (ServiceProvider is IDisposable disposable)
