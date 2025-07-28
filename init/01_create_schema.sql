@@ -33,6 +33,8 @@ CREATE TABLE AspNetUsers (
     Name VARCHAR(50) NOT NULL,                       -- ユーザー氏名
     IsFirstLogin BOOLEAN NOT NULL DEFAULT true,      -- 初回ログインフラグ
     InitialPassword VARCHAR(100),                    -- 初期パスワード（平文一時保存）
+    PasswordResetToken TEXT,                         -- パスワードリセットトークン（Phase A3必須）
+    PasswordResetExpiry TIMESTAMPTZ,                 -- リセットトークン有効期限（Phase A3必須）
     UpdatedBy VARCHAR(450) NOT NULL,                 -- 最終更新者ID
     UpdatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),    -- 最終更新日時
     IsDeleted BOOLEAN NOT NULL DEFAULT false         -- 論理削除フラグ
@@ -75,6 +77,8 @@ COMMENT ON COLUMN AspNetUsers.AccessFailedCount IS 'アクセス失敗回数';
 COMMENT ON COLUMN AspNetUsers.Name IS 'ユーザー氏名（カスタムフィールド）';
 COMMENT ON COLUMN AspNetUsers.IsFirstLogin IS '初回ログインフラグ（カスタムフィールド）';
 COMMENT ON COLUMN AspNetUsers.InitialPassword IS '初期パスワード（初回ログイン時まで保持）';
+COMMENT ON COLUMN AspNetUsers.PasswordResetToken IS 'パスワードリセットトークン（Phase A3機能）';
+COMMENT ON COLUMN AspNetUsers.PasswordResetExpiry IS 'リセットトークン有効期限（Phase A3機能）';
 COMMENT ON COLUMN AspNetUsers.UpdatedBy IS '最終更新者ID';
 COMMENT ON COLUMN AspNetUsers.UpdatedAt IS '最終更新日時（タイムゾーン付き）';
 COMMENT ON COLUMN AspNetUsers.IsDeleted IS '論理削除フラグ（false:有効、true:削除済み）';
