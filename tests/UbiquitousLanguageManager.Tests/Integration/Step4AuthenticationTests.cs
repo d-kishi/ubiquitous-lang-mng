@@ -111,7 +111,7 @@ public class Step4AuthenticationTests
         await _signInManager.SignOutAsync();
         
         // 3. セッション状態確認
-        var isSignedIn = _signInManager.IsSignedIn(null); // 実装時にHttpContextを適切に設定
+        var isSignedIn = _signInManager.IsSignedIn(null!); // 実装時にHttpContextを適切に設定
         isSignedIn.Should().BeFalse("ログアウト後はサインアウト状態であるはず");
     }
 }

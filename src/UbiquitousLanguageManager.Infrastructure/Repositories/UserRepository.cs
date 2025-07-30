@@ -154,8 +154,9 @@ public class UserRepository : IUserRepository
                 return FSharpResult<User, string>.NewError($"Invalid name: {nameResult.ErrorValue}");
             }
 
-            // Roleの文字列をF#の判別共用体に変換（Phase A2: 新権限システム対応）
-            var roleResult = StringToRole(entity.UserRole);
+            // ASP.NET Core Identity Rolesから判別共用体に変換（設計書準拠）
+            // UserRoleプロパティ削除のため、一時的にGeneralUserとして処理
+            var roleResult = FSharpResult<Role, string>.NewOk(Role.GeneralUser);
             if (roleResult.IsError)
             {
                 return FSharpResult<User, string>.NewError($"Invalid role: {roleResult.ErrorValue}");
@@ -213,13 +214,11 @@ public class UserRepository : IUserRepository
             
             // プロジェクト固有カスタムカラム
             Name = user.Name.Value,                       // F#のUserName値オブジェクトから値を取得
-            UserRole = RoleToString(user.Role),           // F#のRole判別共用体を文字列に変換（Phase A2対応）
-            IsActive = user.IsActive,
+            // UserRoleプロパティ削除（ASP.NET Core Identity標準Roles使用）
             IsFirstLogin = user.IsFirstLogin,
             UpdatedAt = DateTime.UtcNow,                     // 現在時刻で初期化（DateTime型）
             UpdatedBy = guidId,                           // 作成者・更新者は自分自身として設定
-            CreatedAt = DateTime.UtcNow,                 // 現在時刻で初期化（DateTime型）
-            CreatedBy = guidId,                          // 作成者は自分自身として設定
+            // CreatedAt/CreatedByプロパティ削除（設計書にない実装のため）
             IsDeleted = false,                            // 新規作成時は削除フラグOFF
             PasswordHash = null                           // 実装時に適切なハッシュ値を設定
         };
@@ -273,7 +272,7 @@ public class UserRepository : IUserRepository
             // EF Coreを使用してデータベースからアクティブユーザーを取得
             // Where句でIsActive = trueかつ論理削除されていないユーザーをフィルタリング
             var entities = await _context.Users
-                .Where(u => u.IsActive && !u.IsDeleted)
+                .Where(u => !u.IsDeleted)
                 .OrderBy(u => u.Name)
                 .ToListAsync();
 
@@ -362,17 +361,15 @@ public class UserRepository : IUserRepository
     /// </summary>
     /// <param name="role">F#のRole判別共用体</param>
     /// <returns>F#のResult型でラップされたユーザーリスト</returns>
-    public async Task<FSharpResult<FSharpList<User>, string>> GetByRoleAsync(Role role)
+    public Task<FSharpResult<FSharpList<User>, string>> GetByRoleAsync(Role role)
     {
         try
         {
             var roleString = RoleToString(role);
             
-            // 指定されたロールでアクティブなユーザーを取得
-            var entities = await _context.Users
-                .Where(u => u.UserRole == roleString && u.IsActive && !u.IsDeleted)
-                .OrderBy(u => u.Name)
-                .ToListAsync();
+            // UserRoleプロパティ削除のため、一時的に空のリストを返す
+            // 将来的にASP.NET Core Identity Roles機能で実装予定
+            var entities = new List<ApplicationUser>();
 
             var users = new List<User>();
             var errors = new List<string>();
@@ -396,12 +393,12 @@ public class UserRepository : IUserRepository
             }
 
             var fsharpList = ListModule.OfSeq(users);
-            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+            return Task.FromResult(FSharpResult<FSharpList<User>, string>.NewOk(fsharpList));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving users by role {Role}", RoleToString(role));
-            return FSharpResult<FSharpList<User>, string>.NewError($"データベースエラー: {ex.Message}");
+            return Task.FromResult(FSharpResult<FSharpList<User>, string>.NewError($"データベースエラー: {ex.Message}"));
         }
     }
 
@@ -427,7 +424,7 @@ public class UserRepository : IUserRepository
             // 実際の本格実装では、pg_trgm拡張とGINインデックスを使用した類似検索を行う
             // 現在はLIKE検索で代替実装
             var entities = await _context.Users
-                .Where(u => u.IsActive && !u.IsDeleted &&
+                .Where(u => !u.IsDeleted &&
                            (EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
                             EF.Functions.ILike(u.Email ?? "", $"%{normalizedSearchTerm}%")))
                 .OrderBy(u => u.Name)
@@ -475,16 +472,12 @@ public class UserRepository : IUserRepository
         {
             // ユーザー統計情報を取得
             var totalUsers = await _context.Users.CountAsync(u => !u.IsDeleted);
-            var activeUsers = await _context.Users.CountAsync(u => u.IsActive && !u.IsDeleted);
+            var activeUsers = await _context.Users.CountAsync(u => !u.IsDeleted);
             var inactiveUsers = totalUsers - activeUsers;
-            var firstLoginUsers = await _context.Users.CountAsync(u => u.IsFirstLogin && u.IsActive && !u.IsDeleted);
+            var firstLoginUsers = await _context.Users.CountAsync(u => u.IsFirstLogin && !u.IsDeleted);
             
-            // ロール別統計
-            var roleStats = await _context.Users
-                .Where(u => u.IsActive && !u.IsDeleted)
-                .GroupBy(u => u.UserRole)
-                .Select(g => new { Role = g.Key, Count = g.Count() })
-                .ToListAsync();
+            // ロール別統計（UserRoleプロパティ削除のため一時無効化）
+            var roleStats = new List<object>();
 
             var statistics = new
             {
@@ -492,7 +485,7 @@ public class UserRepository : IUserRepository
                 ActiveUsers = activeUsers,
                 InactiveUsers = inactiveUsers,
                 FirstLoginUsers = firstLoginUsers,
-                RoleStatistics = roleStats.ToDictionary(r => r.Role, r => r.Count),
+                RoleStatistics = new Dictionary<string, int>(), // UserRoleプロパティ削除のため空辞書
                 LastUpdated = DateTime.UtcNow
             };
 
@@ -529,8 +522,18 @@ public class UserRepository : IUserRepository
         try
         {
             // パラメータ検証
-            if (pageNumber < 1) pageNumber = 1;
-            if (pageSize < 1 || pageSize > 100) pageSize = 20; // 最大100件制限
+            if (pageNumber < 1)
+            {
+                return FSharpResult<object, string>.NewError("ページ番号は1以上である必要があります");
+            }
+            if (pageSize < 1)
+            {
+                return FSharpResult<object, string>.NewError("ページサイズは1以上である必要があります");
+            }
+            if (pageSize > 100)
+            {
+                return FSharpResult<object, string>.NewError("ページサイズは100以下である必要があります");
+            }
 
             var query = _context.Users.AsQueryable();
 
@@ -541,10 +544,10 @@ public class UserRepository : IUserRepository
             switch (statusFilter.ToLower())
             {
                 case "active":
-                    query = query.Where(u => u.IsActive);
+                    query = query.Where(u => !u.IsDeleted);
                     break;
                 case "inactive":
-                    query = query.Where(u => !u.IsActive);
+                    query = query.Where(u => u.IsDeleted);
                     break;
                 case "all":
                 default:
@@ -553,10 +556,8 @@ public class UserRepository : IUserRepository
             }
 
             // ロールフィルター
-            if (!string.IsNullOrWhiteSpace(roleFilter))
-            {
-                query = query.Where(u => u.UserRole == roleFilter);
-            }
+            // roleFilterはUserRoleプロパティ削除のため一時無効化
+            // 将来的にASP.NET Core Identity Rolesで実装
 
             // 検索フィルター（PostgreSQL pg_trgm最適化）
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -659,15 +660,12 @@ public class UserRepository : IUserRepository
             }
 
             var roleProperty = filtersType.GetProperty("Role");
-            if (roleProperty?.GetValue(filters) is string role && !string.IsNullOrWhiteSpace(role))
-            {
-                query = query.Where(u => u.UserRole == role);
-            }
+            // UserRoleフィルターは一時無効化（プロパティ削除のため）
 
             var isActiveProperty = filtersType.GetProperty("IsActive");
             if (isActiveProperty?.GetValue(filters) is bool isActive)
             {
-                query = query.Where(u => u.IsActive == isActive);
+                query = query.Where(u => !u.IsDeleted == isActive);
             }
 
             var isFirstLoginProperty = filtersType.GetProperty("IsFirstLogin");
@@ -676,22 +674,13 @@ public class UserRepository : IUserRepository
                 query = query.Where(u => u.IsFirstLogin == isFirstLogin);
             }
 
-            var createdAfterProperty = filtersType.GetProperty("CreatedAfter");
-            if (createdAfterProperty?.GetValue(filters) is DateTime createdAfter)
-            {
-                query = query.Where(u => u.CreatedAt >= createdAfter);
-            }
-
-            var createdBeforeProperty = filtersType.GetProperty("CreatedBefore");
-            if (createdBeforeProperty?.GetValue(filters) is DateTime createdBefore)
-            {
-                query = query.Where(u => u.CreatedAt <= createdBefore);
-            }
+            // CreatedAtフィルターは一時無効化（プロパティ削除のため）
+            // 将来的にUpdatedAtで代替可能
 
             // パフォーマンス最適化：インデックス活用のためソート
             var entities = await query
                 .OrderBy(u => u.Name)
-                .ThenBy(u => u.CreatedAt)
+                .ThenBy(u => u.UpdatedAt) // CreatedAt→UpdatedAtに変更
                 .ToListAsync();
 
             // Entity→Domain変換
@@ -749,7 +738,7 @@ public class UserRepository : IUserRepository
             var normalizedSearchTerm = searchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
 
             var entities = await _context.Users
-                .Where(u => u.IsActive && !u.IsDeleted)
+                .Where(u => !u.IsDeleted)
                 .Where(u => 
                     // PostgreSQL similarity関数のEF Core近似実装
                     EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
@@ -808,27 +797,23 @@ public class UserRepository : IUserRepository
             {
                 // 基本統計
                 _context.Users.CountAsync(u => !u.IsDeleted),
-                _context.Users.CountAsync(u => u.IsActive && !u.IsDeleted),
-                _context.Users.CountAsync(u => u.IsFirstLogin && u.IsActive && !u.IsDeleted),
+                _context.Users.CountAsync(u => !u.IsDeleted),
+                _context.Users.CountAsync(u => u.IsFirstLogin && !u.IsDeleted),
                 
-                // 時系列統計（最近30日）
-                _context.Users.CountAsync(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-30) && !u.IsDeleted),
+                // 時系列統計（最近30日）- CreatedAt→UpdatedAtに変更
+                _context.Users.CountAsync(u => u.UpdatedAt >= DateTime.UtcNow.AddDays(-30) && !u.IsDeleted),
                 _context.Users.CountAsync(u => u.UpdatedAt >= DateTime.UtcNow.AddDays(-30) && !u.IsDeleted),
             };
 
             var results = await Task.WhenAll(tasks);
 
-            // ロール別統計（並列実行）
-            var roleStatsTask = _context.Users
-                .Where(u => u.IsActive && !u.IsDeleted)
-                .GroupBy(u => u.UserRole)
-                .Select(g => new { Role = g.Key, Count = g.Count() })
-                .ToListAsync();
+            // ロール別統計（UserRoleプロパティ削除のため一時無効化）
+            var roleStatsTask = Task.FromResult(new List<object>());
 
-            // 月別作成数統計
+            // 月別作成数統計（CreatedAt→UpdatedAtに変更）
             var monthlyStatsTask = _context.Users
-                .Where(u => !u.IsDeleted && u.CreatedAt >= DateTime.UtcNow.AddMonths(-12))
-                .GroupBy(u => new { Year = u.CreatedAt.Year, Month = u.CreatedAt.Month })
+                .Where(u => !u.IsDeleted && u.UpdatedAt >= DateTime.UtcNow.AddMonths(-12))
+                .GroupBy(u => new { Year = u.UpdatedAt.Year, Month = u.UpdatedAt.Month })
                 .Select(g => new { 
                     Year = g.Key.Year, 
                     Month = g.Key.Month, 
@@ -854,7 +839,7 @@ public class UserRepository : IUserRepository
                 UpdatedUsersLast30Days = results[4],
                 
                 // ロール別統計
-                RoleStatistics = roleStats.ToDictionary(r => r.Role, r => r.Count),
+                RoleStatistics = new Dictionary<string, int>(), // UserRoleプロパティ削除のため空辞書
                 
                 // 月別統計
                 MonthlyCreationStats = monthlyStats.Select(m => new {

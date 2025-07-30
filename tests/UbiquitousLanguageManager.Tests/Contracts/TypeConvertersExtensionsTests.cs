@@ -35,7 +35,7 @@ public class TypeConvertersExtensionsTests
         Assert.True(emailResult.IsOk);
         Assert.True(nameResult.IsOk);
 
-        return User.create(
+        return User.createWithId(
             emailResult.ResultValue,
             nameResult.ResultValue,
             role ?? Role.GeneralUser,

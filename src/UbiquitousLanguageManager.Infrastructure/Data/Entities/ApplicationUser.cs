@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using System;
+using System.Collections.Generic;
 
 namespace UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
@@ -55,53 +56,60 @@ public class ApplicationUser : IdentityUser
     public string? InitialPassword { get; set; }
 
     /// <summary>
-    /// ユーザーロール（単一ロール制）
-    /// SuperUser / ProjectManager / DomainApprover / GeneralUser
+    /// パスワードリセットトークン
+    /// パスワードリセット機能で使用する一時的なトークン
     /// 
-    /// 【設計説明】
-    /// ASP.NET Core Identity の標準的なロール管理（多対多）とは別に、
-    /// シンプルな単一ロール制を採用しています。
-    /// 将来的に複数ロールが必要になった場合は、Identity の標準機能に移行します。
+    /// 【Phase A3機能】
+    /// 機能仕様書 2.1.3 パスワードリセット機能に対応
+    /// 24時間の有効期限付きでトークンベースのパスワードリセットを実現
     /// </summary>
-    public string UserRole { get; set; } = "GeneralUser";
+    public string? PasswordResetToken { get; set; }
 
     /// <summary>
-    /// F# Domain 層の User エンティティとの連携用ID
-    /// Domain 層の User.Id と同じ値を保持し、層間でのマッピングを可能にする
+    /// パスワードリセットトークン有効期限
+    /// リセットトークンの有効期限（UTC）
     /// 
-    /// 【アーキテクチャ説明】
-    /// Clean Architecture の原則により、Domain 層と Infrastructure 層は分離されています。
-    /// このプロパティにより、両層のエンティティを関連付けることができます。
+    /// 【Phase A3機能】
+    /// 機能仕様書 2.1.3 パスワードリセット機能に対応
+    /// 24時間後に自動的に無効になるセキュリティ機能
+    /// PostgreSQL の TIMESTAMPTZ 型に対応
     /// </summary>
-    public long? DomainUserId { get; set; }
-
-    /// <summary>
-    /// アクティブ状態フラグ
-    /// テスト用に追加：論理削除フラグと連動
-    /// </summary>
-    public bool IsActive { get => !IsDeleted; set => IsDeleted = !value; }
-
-    /// <summary>
-    /// 作成日時
-    /// テスト用に追加：アカウント作成日時
-    /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    /// <summary>
-    /// 作成者ID
-    /// テスト用に追加：作成者の識別
-    /// </summary>
-    public string CreatedBy { get; set; } = string.Empty;
+    public DateTime? PasswordResetExpiry { get; set; }
 
     /// <summary>
     /// 最終更新者ID
-    /// テスト用に追加：更新者の識別
+    /// データの更新履歴管理用
     /// </summary>
     public string UpdatedBy { get; set; } = string.Empty;
 
+    // ===== 設計書準拠への修正完了（Refactor Phase） =====
+    // ASP.NET Core Identity標準機能への移行完了
+    // 設計書で定義されていない余計な実装を削除
+    // 
+    // 【移行完了事項】
+    // - UserRole → ASP.NET Core Identity Roles移行（AspNetRoles/AspNetUserRoles使用）
+    // - IsActive → 計算プロパティ（!IsDeleted）として残存（設計書では論理削除のみ）
+    // - CreatedAt/CreatedBy → 設計書にない実装のため削除
+    // - DomainUserId → 設計書にない実装のため削除
+    // - Role → エイリアスプロパティのため削除
+
     /// <summary>
-    /// ユーザーロール（ApplicationUser向け）
-    /// プロパティ名の整合性を保つため
+    /// アクティブ状態（計算プロパティ）
+    /// 論理削除フラグの逆転値として算出
+    /// 設計書では明示的に定義されていないが、UI利便性のため保持
     /// </summary>
-    public string Role { get => UserRole; set => UserRole = value; }
+    public bool IsActive => !IsDeleted;
+
+    // Navigation properties for business entities
+    /// <summary>
+    /// このユーザーが参加するプロジェクトとの関連付け
+    /// UserProjectエンティティを通じた多対多の関係
+    /// </summary>
+    public virtual ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
+    
+    /// <summary>
+    /// このユーザーがドメイン承認者として設定されている関係
+    /// DomainApproverエンティティを通じた多対多の関係
+    /// </summary>
+    public virtual ICollection<DomainApprover> DomainApprovers { get; set; } = new List<DomainApprover>();
 }

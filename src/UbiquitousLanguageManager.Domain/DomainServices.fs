@@ -78,7 +78,9 @@ module UserDomainService =
     let validateUniqueEmail (email: Email) (existingUsers: User list) : Result<unit, string> =
         let isDuplicate = 
             existingUsers 
-            |> List.exists (fun user -> user.Email.Value = email.Value && user.IsActive)
+            |> List.exists (fun user -> 
+                System.String.Equals(user.Email.Value, email.Value, System.StringComparison.OrdinalIgnoreCase) 
+                && user.IsActive)
         
         if isDuplicate then
             Error "このメールアドレスは既に使用されています"

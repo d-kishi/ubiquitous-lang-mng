@@ -141,6 +141,10 @@ builder.Services.AddScoped<InitialDataService>();
 // 🔐 Web層認証サービスの登録
 builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.AuthenticationService>();
 
+// 🔑 パスワードリセットサービスの登録（Phase A3）
+builder.Services.AddScoped<UbiquitousLanguageManager.Contracts.Interfaces.IPasswordResetService, 
+    UbiquitousLanguageManager.Infrastructure.Services.PasswordResetService>();
+
 // 📋 設定オブジェクトの登録
 builder.Services.Configure<UbiquitousLanguageManager.Infrastructure.Services.InitialSuperUserSettings>(
     builder.Configuration.GetSection("InitialSuperUser"));

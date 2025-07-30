@@ -27,11 +27,15 @@ public static class TypeConverters
     /// </summary>
     /// <param name="user">F#で定義されたUserエンティティ</param>
     /// <returns>C#のUserDTO</returns>
+    /// <exception cref="ArgumentNullException">userがnullの場合</exception>
     public static UserDto ToDto(User user)
     {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user), "Userエンティティがnullです");
+            
         return new UserDto
         {
-            Id = user.Id.Item,                                  // F#のUserId判別共用体から値を取得
+            Id = user.Id.Value,                                 // F#のUserId判別共用体から値を取得
             Email = user.Email.Value,                            // F#のEmail値オブジェクトから値を取得
             Name = user.Name.Value,                              // F#のUserName値オブジェクトから値を取得
             Role = RoleToString(user.Role),                      // F#のRole判別共用体をstring型に変換
@@ -49,9 +53,9 @@ public static class TypeConverters
             AccessFailedCount = user.AccessFailedCount,          // ログイン失敗回数
             // 監査情報
             CreatedAt = user.CreatedAt,                          // 作成日時
-            CreatedBy = user.CreatedBy.Item,                     // 作成者ID
+            CreatedBy = user.CreatedBy.Value,                    // 作成者ID
             UpdatedAt = user.UpdatedAt,                          // 更新日時
-            UpdatedBy = user.UpdatedBy.Item                      // 更新者ID
+            UpdatedBy = user.UpdatedBy.Value                     // 更新者ID
         };
     }
 
@@ -61,14 +65,18 @@ public static class TypeConverters
     /// </summary>
     /// <param name="profile">F#で定義されたUserProfile</param>
     /// <returns>C#のUserProfileDTO</returns>
+    /// <exception cref="ArgumentNullException">profileがnullの場合</exception>
     public static UserProfileDto ToDto(UserProfile profile)
     {
+        if (profile == null)
+            throw new ArgumentNullException(nameof(profile), "UserProfileがnullです");
+            
         return new UserProfileDto
         {
-            DisplayName = profile.DisplayName?.Value,    // F#のoption型からnullable stringに変換
-            Department = profile.Department?.Value,      // F#のoption型からnullable stringに変換
-            PhoneNumber = profile.PhoneNumber?.Value,    // F#のoption型からnullable stringに変換
-            Notes = profile.Notes?.Value                 // F#のoption型からnullable stringに変換
+            DisplayName = profile.DisplayName != null && FSharpOption<string>.get_IsSome(profile.DisplayName) ? profile.DisplayName.Value : null,    // F#のoption型からnullable stringに変換
+            Department = profile.Department != null && FSharpOption<string>.get_IsSome(profile.Department) ? profile.Department.Value : null,      // F#のoption型からnullable stringに変換
+            PhoneNumber = profile.PhoneNumber != null && FSharpOption<string>.get_IsSome(profile.PhoneNumber) ? profile.PhoneNumber.Value : null,    // F#のoption型からnullable stringに変換
+            Notes = profile.Notes != null && FSharpOption<string>.get_IsSome(profile.Notes) ? profile.Notes.Value : null                 // F#のoption型からnullable stringに変換
         };
     }
 
@@ -82,7 +90,7 @@ public static class TypeConverters
     {
         return new ProjectPermissionDto
         {
-            ProjectId = projectPermission.ProjectId.Item,                    // F#のProjectId判別共用体から値を取得
+            ProjectId = projectPermission.ProjectId.Value,                   // F#のProjectId判別共用体から値を取得
             ProjectName = "プロジェクト名取得予定",                              // 実装時に適切なプロジェクト名取得ロジックを追加
             Permissions = SetModule.ToArray(projectPermission.Permissions)   // F#のSet<Permission>を配列に変換してからLINQ使用
                 .Select(PermissionToString)
@@ -99,11 +107,11 @@ public static class TypeConverters
     {
         return new ProjectDto
         {
-            Id = project.Id.Item,                   // F#のProjectId判別共用体から値を取得
+            Id = project.Id.Value,                  // F#のProjectId判別共用体から値を取得
             Name = project.Name.Value,               // F#のJapaneseName値オブジェクトから値を取得
             Description = project.Description.Value, // F#のDescription値オブジェクトから値を取得
             UpdatedAt = project.UpdatedAt,
-            UpdatedBy = project.UpdatedBy.Item       // F#のUserId判別共用体から値を取得
+            UpdatedBy = project.UpdatedBy.Value      // F#のUserId判別共用体から値を取得
         };
     }
 
@@ -116,13 +124,13 @@ public static class TypeConverters
     {
         return new DomainDto
         {
-            Id = domain.Id.Item,                    // F#のDomainId判別共用体から値を取得
-            ProjectId = domain.ProjectId.Item,       // F#のProjectId判別共用体から値を取得
+            Id = domain.Id.Value,                   // F#のDomainId判別共用体から値を取得
+            ProjectId = domain.ProjectId.Value,      // F#のProjectId判別共用体から値を取得
             Name = domain.Name.Value,                // F#のJapaneseName値オブジェクトから値を取得
             Description = domain.Description.Value,  // F#のDescription値オブジェクトから値を取得
             IsActive = domain.IsActive,
             UpdatedAt = domain.UpdatedAt,
-            UpdatedBy = domain.UpdatedBy.Item        // F#のUserId判別共用体から値を取得
+            UpdatedBy = domain.UpdatedBy.Value       // F#のUserId判別共用体から値を取得
         };
     }
 
@@ -135,14 +143,14 @@ public static class TypeConverters
     {
         return new UbiquitousLanguageDto
         {
-            Id = draft.Id.Item,                         // F#のUbiquitousLanguageId判別共用体から値を取得
-            DomainId = draft.DomainId.Item,              // F#のDomainId判別共用体から値を取得
+            Id = draft.Id.Value,                        // F#のUbiquitousLanguageId判別共用体から値を取得
+            DomainId = draft.DomainId.Value,             // F#のDomainId判別共用体から値を取得
             JapaneseName = draft.JapaneseName.Value,     // F#のJapaneseName値オブジェクトから値を取得
             EnglishName = draft.EnglishName.Value,       // F#のEnglishName値オブジェクトから値を取得
             Description = draft.Description.Value,       // F#のDescription値オブジェクトから値を取得
             Status = ApprovalStatusToString(draft.Status), // F#の判別共用体をstring型に変換
             UpdatedAt = draft.UpdatedAt,
-            UpdatedBy = draft.UpdatedBy.Item,            // F#のUserId判別共用体から値を取得
+            UpdatedBy = draft.UpdatedBy.Value,           // F#のUserId判別共用体から値を取得
             ApprovedAt = null,                           // 下書きなので承認日時は未設定
             ApprovedBy = null                            // 下書きなので承認者は未設定
         };
@@ -157,16 +165,16 @@ public static class TypeConverters
     {
         return new UbiquitousLanguageDto
         {
-            Id = formal.Id.Item,                        // F#のUbiquitousLanguageId判別共用体から値を取得
-            DomainId = formal.DomainId.Item,             // F#のDomainId判別共用体から値を取得
+            Id = formal.Id.Value,                       // F#のUbiquitousLanguageId判別共用体から値を取得
+            DomainId = formal.DomainId.Value,            // F#のDomainId判別共用体から値を取得
             JapaneseName = formal.JapaneseName.Value,    // F#のJapaneseName値オブジェクトから値を取得
             EnglishName = formal.EnglishName.Value,      // F#のEnglishName値オブジェクトから値を取得
             Description = formal.Description.Value,      // F#のDescription値オブジェクトから値を取得
             Status = "Approved",                        // 正式版なので承認済み状態
             UpdatedAt = formal.UpdatedAt,
-            UpdatedBy = formal.UpdatedBy.Item,           // F#のUserId判別共用体から値を取得
+            UpdatedBy = formal.UpdatedBy.Value,          // F#のUserId判別共用体から値を取得
             ApprovedAt = formal.ApprovedAt,              // 承認日時を設定
-            ApprovedBy = formal.ApprovedBy.Item          // F#のUserId判別共用体から承認者ID取得
+            ApprovedBy = formal.ApprovedBy.Value         // F#のUserId判別共用体から承認者ID取得
         };
     }
 

@@ -27,12 +27,22 @@ public class AuthenticationServiceTests
 
     public AuthenticationServiceTests()
     {
-        _mockAuthStateProvider = new Mock<CustomAuthenticationStateProvider>();
+        // CustomAuthenticationStateProviderのMockにコンストラクタ引数を提供
+        var mockHttpContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        var mockUserManager = new Mock<UserManager<ApplicationUser>>(
+            mockUserStore.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        var mockLogger = new Mock<ILogger<CustomAuthenticationStateProvider>>();
+        
+        _mockAuthStateProvider = new Mock<CustomAuthenticationStateProvider>(
+            mockHttpContextAccessor.Object,
+            mockUserManager.Object,
+            mockLogger.Object);
         
         // SignInManagerのモックは複雑なため、必要最小限のセットアップ
-        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        var mockUserStore2 = new Mock<IUserStore<ApplicationUser>>();
         _mockUserManager = new Mock<UserManager<ApplicationUser>>(
-            mockUserStore.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            mockUserStore2.Object, null!, null!, null!, null!, null!, null!, null!, null!);
         
         var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         var mockClaimsFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
@@ -248,34 +258,7 @@ public class AuthenticationServiceTests
     /// </summary>
     public class Phase3StubMethodsTests : AuthenticationServiceTests
     {
-        [Fact]
-        public async Task LoginAsync_ShouldReturnPhaseA3Error_AndLogMessage()
-        {
-            // Arrange
-            var loginRequest = new LoginRequestDto
-            {
-                Email = "test@example.com",
-                Password = "password123",
-                RememberMe = false
-            };
-
-            // Act
-            var result = await _authService.LoginAsync(loginRequest);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal("Phase A3で実装予定", result.ErrorMessage);
-            
-            // ログが出力されることを確認
-            _mockLogger.Verify(
-                x => x.Log(
-                    LogLevel.Information,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("LoginAsync called - Phase A3で実装予定")),
-                    It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
-        }
+        // Phase A3でLoginAsyncは完全実装されているため、このテストは不要
 
         [Fact]
         public async Task GetCurrentUserAsync_ShouldReturnPhaseA3Error_AndLogMessage()

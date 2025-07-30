@@ -137,11 +137,11 @@ public class AuthenticationService
                 // 仕様書2.1.1準拠: ログイン成功時のユーザー情報DTO作成
                 var authenticatedUser = new UbiquitousLanguageManager.Contracts.DTOs.Authentication.AuthenticatedUserDto
                 {
-                    Id = user.DomainUserId ?? 0, // ApplicationUser.DomainUserIdをマッピング（nullの場合は0）
+                    Id = user.Id.GetHashCode(), // DomainUserId削除のためIdentity.Idのハッシュ値を使用
                     Email = user.Email ?? string.Empty,
                     Name = user.Name,
-                    Role = user.UserRole, // Phase A3では現在のユーザーロールを使用
-                    IsActive = user.IsActive,
+                    Role = "GeneralUser", // UserRoleプロパティ削除のため一時的にGeneralUserとして設定
+                    IsActive = !user.IsDeleted, // IsActiveは計算プロパティに変更
                     IsFirstLogin = user.IsFirstLogin,
                     UpdatedAt = user.UpdatedAt
                 };

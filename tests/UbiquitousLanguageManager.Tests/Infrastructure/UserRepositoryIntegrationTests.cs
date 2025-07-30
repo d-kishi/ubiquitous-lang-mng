@@ -30,6 +30,9 @@ public class UserRepositoryIntegrationTests : IDisposable
         services.AddDbContext<UbiquitousLanguageDbContext>(options =>
             options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
         
+        // ロギングサービスを追加
+        services.AddLogging();
+        
         services.AddScoped<UserRepository>();
         
         _serviceProvider = services.BuildServiceProvider();
@@ -53,9 +56,10 @@ public class UserRepositoryIntegrationTests : IDisposable
                 Email = "admin@test.com", 
                 UserName = "admin@test.com", 
                 Name = "管理者ユーザー", 
-                Role = "SuperUser",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow.AddDays(-30)
+                UpdatedAt = DateTime.UtcNow.AddDays(-30)
+                // Role is managed by ASP.NET Core Identity (AspNetUserRoles)
+                // IsActive is calculated property: !IsDeleted
+                // CreatedAt is not in the schema, using UpdatedAt instead
             },
             new ApplicationUser 
             { 
@@ -63,9 +67,9 @@ public class UserRepositoryIntegrationTests : IDisposable
                 Email = "manager@test.com", 
                 UserName = "manager@test.com", 
                 Name = "プロジェクト管理者", 
-                Role = "ProjectManager",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow.AddDays(-20)
+                UpdatedAt = DateTime.UtcNow.AddDays(-20)
+                // Role is managed by ASP.NET Core Identity (AspNetUserRoles)
+                // IsActive is calculated property: !IsDeleted
             },
             new ApplicationUser 
             { 
@@ -73,9 +77,9 @@ public class UserRepositoryIntegrationTests : IDisposable
                 Email = "approver@test.com", 
                 UserName = "approver@test.com", 
                 Name = "ドメイン承認者", 
-                Role = "DomainApprover",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow.AddDays(-15)
+                UpdatedAt = DateTime.UtcNow.AddDays(-15)
+                // Role is managed by ASP.NET Core Identity (AspNetUserRoles)
+                // IsActive is calculated property: !IsDeleted
             },
             new ApplicationUser 
             { 
@@ -83,9 +87,9 @@ public class UserRepositoryIntegrationTests : IDisposable
                 Email = "user@test.com", 
                 UserName = "user@test.com", 
                 Name = "一般ユーザー", 
-                Role = "GeneralUser",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow.AddDays(-10)
+                UpdatedAt = DateTime.UtcNow.AddDays(-10)
+                // Role is managed by ASP.NET Core Identity (AspNetUserRoles)
+                // IsActive is calculated property: !IsDeleted
             },
             new ApplicationUser 
             { 
@@ -93,9 +97,9 @@ public class UserRepositoryIntegrationTests : IDisposable
                 Email = "inactive@test.com", 
                 UserName = "inactive@test.com", 
                 Name = "無効ユーザー", 
-                Role = "GeneralUser",
-                IsActive = false,
-                CreatedAt = DateTime.UtcNow.AddDays(-5)
+                IsDeleted = true, // IsActive = false is equivalent to IsDeleted = true
+                UpdatedAt = DateTime.UtcNow.AddDays(-5)
+                // Role is managed by ASP.NET Core Identity (AspNetUserRoles)
             }
         };
 
@@ -118,10 +122,13 @@ public class UserRepositoryIntegrationTests : IDisposable
             pageSize: 2);
 
         // Assert
+        if (!result.IsOk)
+        {
+            Assert.True(false, $"Expected success but got error: {result.ErrorValue}");
+        }
         Assert.True(result.IsOk);
         
         var data = result.ResultValue;
-        var pagedResult = System.Text.Json.JsonSerializer.Deserialize<dynamic>(data.ToString());
         
         // ページングが正しく動作することを確認
         // 注: 実際の実装では適切な型での検証が必要
@@ -257,9 +264,9 @@ public class UserRepositoryIntegrationTests : IDisposable
             Email = $"bulk{i}@test.com",
             UserName = $"bulk{i}@test.com",
             Name = $"バルクユーザー{i}",
-            Role = "GeneralUser",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow.AddDays(-i)
+            UpdatedAt = DateTime.UtcNow.AddDays(-i)
+            // Role is managed by ASP.NET Core Identity (AspNetUserRoles)
+            // IsActive is calculated property: !IsDeleted
         }).ToArray();
 
         _context.Users.AddRange(largeUserSet);

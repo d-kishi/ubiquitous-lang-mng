@@ -268,7 +268,7 @@ public class PasswordValueObjectTests
         }
 
         [Fact]
-        public void Create_UnicodeCharacters_ShouldReturnOk()
+        public void Create_UnicodeCharacters_ShouldReturnError()
         {
             // Arrange: Unicode文字を含むパスワード
             var password = "パスワード123A";
@@ -277,8 +277,9 @@ public class PasswordValueObjectTests
             var result = Password.create(password);
 
             // Assert
-            Assert.True(result.IsOk);
-            Assert.Equal(password, result.ResultValue.Value);
+            // Unicode文字（ひらがな・カタカナ・漢字）は英小文字として認識されないためエラー
+            Assert.True(result.IsError);
+            Assert.Equal("パスワードには小文字を含めてください", result.ErrorValue);
         }
     }
 

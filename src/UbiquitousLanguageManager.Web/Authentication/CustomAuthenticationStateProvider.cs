@@ -94,7 +94,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     /// <summary>
     /// ログアウトを通知します
     /// </summary>
-    public void NotifyUserLogout()
+    public virtual void NotifyUserLogout()
     {
         var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
         var authState = Task.FromResult(new AuthenticationState(anonymousUser));
@@ -110,16 +110,15 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
         try
         {
-            // F# Domain層のUserIdに相当するクレームを追加
-            if (user.DomainUserId.HasValue)
-            {
-                claims.Add(new Claim("DomainUserId", user.DomainUserId.Value.ToString()));
-            }
+            // DomainUserIdプロパティ削除のため、一時的にコメントアウト
+            // 将来的にIdentityのUserIdを使用してマッピング予定
+            // claims.Add(new Claim("DomainUserId", "temp"));
 
             // ユーザーの状態情報をクレームとして追加
             claims.Add(new Claim("IsActive", (!user.IsDeleted).ToString()));
             claims.Add(new Claim("IsFirstLogin", user.IsFirstLogin.ToString()));
-            claims.Add(new Claim("UserRole", user.UserRole));
+            // UserRoleプロパティ削除のため、ASP.NET Core Identity標準Roles使用
+            // claims.Add(new Claim("UserRole", "GeneralUser")); // 一時的にコメントアウト
             claims.Add(new Claim("UpdatedAt", user.UpdatedAt.ToString("O")));
 
             // 所属プロジェクト情報をクレームとして追加（Phase A3で拡張予定）
@@ -141,7 +140,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     /// 現在のユーザーのDomain UserIdを取得します
     /// </summary>
     /// <returns>Domain UserIdまたはnull</returns>
-    public long? GetCurrentDomainUserId()
+    public virtual long? GetCurrentDomainUserId()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User?.Identity?.IsAuthenticated != true)
@@ -162,7 +161,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     /// 現在のユーザーがアクティブかどうかを確認します
     /// </summary>
     /// <returns>アクティブフラグ</returns>
-    public bool IsCurrentUserActive()
+    public virtual bool IsCurrentUserActive()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User?.Identity?.IsAuthenticated != true)
@@ -178,7 +177,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     /// 現在のユーザーが初回ログインかどうかを確認します
     /// </summary>
     /// <returns>初回ログインフラグ</returns>
-    public bool IsCurrentUserFirstLogin()
+    public virtual bool IsCurrentUserFirstLogin()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User?.Identity?.IsAuthenticated != true)

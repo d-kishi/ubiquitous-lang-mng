@@ -65,6 +65,38 @@ type User = {
         UpdatedBy = createdBy
     }
     
+    // 🔧 ID付きユーザー作成: テスト用・完全指定のファクトリーメソッド（Phase A2拡張版）
+    // 【F#初学者向け解説】
+    // TypeConvertersのテストで使用するため、IDを明示的に指定できるメソッドを追加
+    // C#からF#の境界での型変換テストでIDの整合性を確保するために必要
+    // F#のメソッドオーバーロード制限により異なる名前を使用
+    static member createWithId (email: Email) (name: UserName) (role: Role) (id: UserId) = {
+        Id = id  // 🔄 テスト用にIDを明示的に設定
+        Email = email
+        Name = name
+        Role = role
+        IsActive = true
+        IsFirstLogin = true
+        PasswordHash = None
+        SecurityStamp = Some (SecurityStamp.createNew())
+        ConcurrencyStamp = Some (ConcurrencyStamp.createNew())
+        LockoutEnd = None
+        AccessFailedCount = 0
+        // Phase A2 新規項目の初期値
+        Profile = UserProfile.empty
+        ProjectPermissions = []
+        EmailConfirmed = false
+        PhoneNumber = None
+        PhoneNumberConfirmed = false
+        TwoFactorEnabled = false
+        LockoutEnabled = true
+        // 監査情報
+        CreatedAt = DateTime.UtcNow
+        CreatedBy = id  // 作成者は自分自身
+        UpdatedAt = DateTime.UtcNow
+        UpdatedBy = id
+    }
+    
     // 🔐 認証用ユーザー作成: パスワードハッシュを含む完全な作成（Phase A2拡張版）
     static member createWithAuthentication (email: Email) (name: UserName) (role: Role) 
                                          (passwordHash: PasswordHash) (createdBy: UserId) = {

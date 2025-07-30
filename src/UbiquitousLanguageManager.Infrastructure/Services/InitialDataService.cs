@@ -133,7 +133,8 @@ public class InitialDataService
             UserName = _settings.Email,  // Identity ではメールアドレスをユーザー名として使用
             Email = _settings.Email,
             Name = _settings.Name,
-            UserRole = "SuperUser",  // 🎖️ スーパーユーザー権限
+            // UserRoleプロパティ削除 → ASP.NET Core Identity標準Roles使用
+            UpdatedBy = "system", // 初期作成はsystemとして記録
             IsFirstLogin = _settings.IsFirstLogin,  // 🔑 初回ログイン時のパスワード変更必須
             UpdatedAt = DateTime.UtcNow,
             IsDeleted = false,
