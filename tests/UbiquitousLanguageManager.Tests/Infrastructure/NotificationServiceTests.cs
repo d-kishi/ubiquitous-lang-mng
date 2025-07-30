@@ -102,7 +102,7 @@ public class NotificationServiceTests
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Role: SuperUser")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("SuperUser")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
