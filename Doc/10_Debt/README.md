@@ -4,7 +4,13 @@
 
 ## 📊 目的
 
-実装過程で発生する技術負債（未実装機能・スタブメソッド・将来拡張機能）の体系的管理により、Phase間の継続性確保と開発効率の向上を図る。
+実装過程で発生する技術負債（未実装機能・スタブメソッド・将来拡張機能・場当たり的修正）の体系的管理により、Phase間の継続性確保と開発効率の向上を図る。
+
+## 🚨 **Phase A4重要課題**
+
+**2025-07-31セッション技術的負債**: Dockerポート変更対応中に発生した複雑な技術課題を場当たり的に修正したことによる技術的負債。Phase A4で体系的解決予定。
+
+**詳細**: [2025-07-31_SessionDebt_ApplicationStartupIssues.md](./2025-07-31_SessionDebt_ApplicationStartupIssues.md)
 
 ## 📋 記録ルール
 
@@ -45,6 +51,7 @@
 ├── README.md                           # 本ファイル（管理方針・ルール）
 ├── Phase_A3_Implementation_Planning.md # Phase A3以降実装予定（27メソッド）
 ├── Phase_B1_Implementation_Planning.md # Phase B1以降実装予定（将来作成）
+├── 2025-07-31_SessionDebt_ApplicationStartupIssues.md # Phase A4解決対象技術的負債
 └── [その他Phase]_Implementation_Planning.md
 ```
 

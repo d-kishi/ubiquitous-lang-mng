@@ -88,9 +88,28 @@ Docker Compose version v2.37.1-desktop.1
 Hello from Docker!
 ```
 
-## 4. 基本的なDockerコマンド
+## 4. プロジェクト固有の設定
 
-### 4.1 コンテナ管理
+### 4.1 ポート番号設定
+**重要**: アプリケーションがデフォルトポート5000を使用するため、smtp4devのポートを変更しています。
+
+- **Webアプリケーション**: http://localhost:5000
+- **smtp4dev（メール確認）**: http://localhost:5080
+- **pgAdmin（DB管理）**: http://localhost:8080
+- **PostgreSQL**: localhost:5432
+
+### 4.2 docker-compose.yml の設定
+smtp4devのポート設定は以下のとおりです：
+```yaml
+smtp4dev:
+  ports:
+    - "5080:80"    # Web UI（5000から変更）
+    - "2525:25"    # SMTP Port
+```
+
+## 5. 基本的なDockerコマンド
+
+### 5.1 コンテナ管理
 ```bash
 # コンテナ一覧表示（実行中）
 docker ps

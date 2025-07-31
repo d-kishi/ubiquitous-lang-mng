@@ -37,7 +37,7 @@ services:
     image: rnwood/smtp4dev:v3
     container_name: ubiquitous-lang-smtp4dev
     ports:
-      - "5000:80"    # Web UI
+      - "5080:80"    # Web UI
       - "2525:25"    # SMTP Port
     networks:
       - ubiquitous-lang-network

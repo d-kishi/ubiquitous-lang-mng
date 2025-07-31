@@ -206,8 +206,8 @@ docker-compose up -d postgresql
 
 #### **Phase A3: メール送信基盤開発コマンド**
 ```bash
-# SMTP開発サーバー起動（Phase A3 メール送信テスト用）
-smtp4dev --urls http://localhost:5000 --smtpport 1025
+# SMTP開発サーバー起動（Docker Composeで起動済み）
+# docker-compose up -d smtp4dev
 
 # メール送信関連テスト実行
 dotnet test --filter "ClassName~Email"
@@ -216,7 +216,7 @@ dotnet test --filter "ClassName~Email"
 dotnet test tests/UbiquitousLanguageManager.Tests/Integration/EmailServiceIntegrationTests.cs
 
 # SMTP Web インターフェース確認
-# http://localhost:5000 でメール送信状況を確認
+# http://localhost:5080 でメール送信状況を確認
 ```
 
 #### **その他のコマンド**
