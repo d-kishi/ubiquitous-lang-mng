@@ -112,6 +112,11 @@
 - `/Doc/10_Debt/2025-07-31_SessionDebt_ApplicationStartupIssues.md` - 技術的負債詳細
 - `/Doc/07_Decisions/ADR_013_組織管理サイクル運用規則.md` - 組織的アプローチ
 - `/Doc/08_Organization/Rules/組織管理運用マニュアル.md` - Phase開始プロセス
+- `/Doc/01_Requirements/機能仕様書.md` - 仕様準拠確認対象
+- `/Doc/02_Design/システム設計書.md` - Clean Architecture設計・F#/C#境界設計
+- `/Doc/02_Design/データベース設計書.md` - データベース設計・Entity関係
+- `/Doc/02_Design/Application層インターフェース設計書.md` - F#/C#境界インターフェース設計
+- `/Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` - Phase A1-A3対象UI設計
 - Phase A1-A3完了記録 - 成功パターン参考
 
 ### **Phase開始時実行プロセス**
