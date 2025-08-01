@@ -221,6 +221,15 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// 🎯 エントリーポイント分離パターン実装
+// 【MVC/Blazor統合設計】
+// ルート（/）は MVC HomeController、管理画面（/admin/*）は Blazor Server に分離
+// 
+// ルーティング優先順位:
+// 1. 明示的ルート（MVC Controller/Action）
+// 2. 管理画面パス（/admin/* → Blazor Server）
+// 3. フォールバック（未認証 → MVC、認証済み → Blazor Server）
+app.MapFallbackToPage("/admin/{**path}", "/_Host");
 app.MapFallbackToPage("/_Host");
 
 // 🏥 ヘルスチェックエンドポイント: 監視・運用のためのエンドポイント

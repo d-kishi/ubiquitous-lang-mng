@@ -25,18 +25,41 @@ public class HomeController : Controller
     /// <summary>
     /// ホームページ表示
     /// 認証済みの場合はBlazorアプリケーションにリダイレクト
+    /// 
+    /// 【MVC/Blazor統合設計】
+    /// [AllowAnonymous]属性により未認証ユーザーのアクセスを許可し、
+    /// 認証状態に応じて適切な画面（MVC/Blazor）にルーティングします。
+    /// 
+    /// 【認証状態動的ルーティング】
+    /// - 未認証ユーザー: MVCビュー表示（ログインページへの誘導）
+    /// - 認証済みユーザー: Blazor Server管理画面へリダイレクト
     /// </summary>
     /// <returns>ホームページビューまたはリダイレクト</returns>
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
     public IActionResult Index()
     {
-        // 認証済みユーザーはBlazorアプリケーションにリダイレクト
-        if (User.Identity?.IsAuthenticated == true)
+        try
         {
-            return Redirect("/admin/users");
-        }
+            _logger.LogInformation("HomeController.Index accessed by user: {IsAuthenticated}", 
+                User.Identity?.IsAuthenticated ?? false);
 
-        // 未認証の場合はホームページを表示
-        return View();
+            // 認証済みユーザーはBlazor Server管理画面にリダイレクト
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                _logger.LogInformation("Authenticated user detected, redirecting to Blazor Server admin");
+                return Redirect("/admin/users");
+            }
+
+            // 未認証の場合はMVCホームページを表示
+            _logger.LogInformation("Unauthenticated user, displaying MVC home view");
+            return View();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in HomeController.Index: {Message}", ex.Message);
+            // エラー時は安全にログイン画面へリダイレクト
+            return Redirect("/Account/Login");
+        }
     }
 
     /// <summary>
