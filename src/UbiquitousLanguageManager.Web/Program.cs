@@ -44,8 +44,12 @@ builder.Services.AddHttpContextAccessor();
 // AuthorizationCoreは、Blazorコンポーネントで[Authorize]属性を使用するために必要です。
 // AuthenticationStateProviderは、認証状態をBlazor全体で管理するサービスです。
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider, 
-    UbiquitousLanguageManager.Web.Authentication.CustomAuthenticationStateProvider>();
+
+// CustomAuthenticationStateProviderを具体型としても登録（Web層AuthenticationServiceの依存関係解決用）
+builder.Services.AddScoped<UbiquitousLanguageManager.Web.Authentication.CustomAuthenticationStateProvider>();
+// さらに、AuthenticationStateProviderとしても登録（Blazor認証システム用）
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(provider =>
+    provider.GetRequiredService<UbiquitousLanguageManager.Web.Authentication.CustomAuthenticationStateProvider>());
 
 // 📊 データベース設定: PostgreSQL + Entity Framework Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -55,8 +59,16 @@ builder.Services.AddDbContext<UbiquitousLanguageDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // 🔧 DbContextFactory設定: マルチスレッド環境でのEF Core最適化
-builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>(options =>
-    options.UseNpgsql(connectionString));
+// 【Blazor Server初学者向け解説】
+// Blazor Serverはマルチスレッド環境で動作するため、DbContextの同時実行を防ぐために
+// DbContextFactoryを使用します。これにより、各操作ごとに新しいDbContextインスタンスが作成されます。
+// 
+// ライフタイム競合解決: IServiceProviderを使用してDbContext生成時にサービスを解決
+builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>((serviceProvider, options) =>
+{
+    // DbContextインスタンス生成時に接続文字列を解決（スコープ競合回避）
+    options.UseNpgsql(connectionString);
+});
 
 // 🔐 認証・認可設定: ASP.NET Core Identity
 // ApplicationUser を使用した Identity 統合により、
@@ -129,6 +141,20 @@ builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository
 // builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 // builder.Services.AddScoped<IDomainRepository, DomainRepository>();
 // builder.Services.AddScoped<IUbiquitousLanguageRepository, UbiquitousLanguageRepository>();
+
+// 🔐 Application層の認証サービス実装の登録（Phase A4 Step2で追加）
+// 【F#初学者向け解説】
+// F# Application層で定義されたIAuthenticationServiceインターフェースを
+// C# Infrastructure層のAuthenticationServiceクラスで実装し、DIコンテナに登録します。
+// これにより、F#のUserApplicationServiceがC#の実装を利用できるようになります。
+builder.Services.AddScoped<UbiquitousLanguageManager.Application.IAuthenticationService, UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService>();
+
+// 📧 Application層の通知サービス実装の登録（Phase A4 Step2で追加）
+builder.Services.AddScoped<UbiquitousLanguageManager.Application.INotificationService, UbiquitousLanguageManager.Infrastructure.Services.NotificationService>();
+
+// 📊 Application層のロガーアダプター登録（Phase A4 Step2で追加）
+// F#のILogger<T>インターフェースをMicrosoft.Extensions.LoggingのILogger<T>にアダプト
+builder.Services.AddScoped(typeof(UbiquitousLanguageManager.Application.ILogger<>), typeof(UbiquitousLanguageManager.Infrastructure.Services.FSharpLoggerAdapter<>));
 
 // Application Service実装の登録
 builder.Services.AddScoped<UbiquitousLanguageManager.Application.UserApplicationService>();

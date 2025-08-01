@@ -35,10 +35,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ⚠️ **Phase開始時（各PhaseのSession1）追加必読**：
 - `/Doc/07_Decisions/ADR_012_階層構造統一ルール.md` - 階層構造の統一ルール
 1. `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況
-2. `/Doc/06_Issues/コミュニケーション改善課題.md` - コミュニケーション課題と改善策
-3. `/Doc/プロジェクト状況.md` - 最新状況・次回予定・重要な制約（簡潔な現状把握）
-4. `/Doc/04_Daily/` 直近3日の作業記録 - 詳細履歴・継続課題・技術的文脈確認
-5. **進捗状況・優先事項提示によるセッション目的確認**
+2. `/Doc/プロジェクト状況.md` - 最新状況・次回予定・重要な制約（簡潔な現状把握）
+3. `/Doc/04_Daily/` 直近2日の作業記録 - 詳細履歴・継続課題・技術的文脈確認
+4. **進捗状況・優先事項提示によるセッション目的確認**
    - 読み込んだ情報から現在の進捗状況を整理・提示
    - 今回の優先事項・推奨作業内容を提示
    - ユーザーに今回のセッション目的を明確化してもらう
@@ -81,6 +80,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **/Doc/08_Organization/Active/**: Phase適応型組織実行時
 - **/Doc/09_Environment/**: 環境設定・DB接続作業時
 - **/Doc/06_Issues/課題一覧.md**: 問題解決・技術調査時
+- **/Doc/06_Issues/コミュニケーション改善課題.md**: コミュニケーション問題発生時・プロセス改善検討時
 
 ### 📋 フェーズ別推奨パターン（参考）
 
