@@ -8,6 +8,7 @@ using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
 
@@ -36,12 +37,25 @@ public class RememberMeFunctionalityTests
     public RememberMeFunctionalityTests()
     {
         _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
-        _userManagerMock = CreateUserManagerMock();
-        _signInManagerMock = CreateSignInManagerMock();
+        
+        // UserManager モック作成
+        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        
+        // SignInManager モック作成
+        var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
+        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(_userManagerMock.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        _authenticationService = new AuthenticationService(_logger.Object);
+        _authenticationService = new AuthenticationService(
+            _logger.Object,
+            _userManagerMock.Object,
+            _signInManagerMock.Object,
+            _notificationServiceMock.Object,
+            _userRepositoryMock.Object);
     }
 
     #region Remember Me Login Tests

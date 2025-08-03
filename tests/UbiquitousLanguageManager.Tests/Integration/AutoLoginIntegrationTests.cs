@@ -10,6 +10,7 @@ using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
 namespace UbiquitousLanguageManager.Tests.Integration;
 
@@ -27,8 +28,8 @@ namespace UbiquitousLanguageManager.Tests.Integration;
 public class AutoLoginIntegrationTests
 {
     private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _loggerMock;
-    private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
-    private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
+    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
+    private readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly AuthenticationService _authenticationService;
@@ -39,13 +40,26 @@ public class AutoLoginIntegrationTests
     public AutoLoginIntegrationTests()
     {
         _loggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
-        _userManagerMock = CreateUserManagerMock();
-        _signInManagerMock = CreateSignInManagerMock();
+        
+        // UserManager モック作成
+        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        
+        // SignInManager モック作成
+        var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
+        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(_userManagerMock.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        // Phase A3で変更されたコンストラクタに対応
-        _authenticationService = new AuthenticationService(_loggerMock.Object);
+        // Phase A3本格実装完了に対応
+        _authenticationService = new AuthenticationService(
+            _loggerMock.Object,
+            _userManagerMock.Object,
+            _signInManagerMock.Object,
+            _notificationServiceMock.Object,
+            _userRepositoryMock.Object);
     }
 
     #region Complete Password Reset Flow Tests

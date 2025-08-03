@@ -6,39 +6,22 @@ using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Infrastructure.Services;
 using System.Linq;
+using UbiquitousLanguageManager.Tests.TestUtilities;
 
 namespace UbiquitousLanguageManager.Tests.Integration;
 
 /// <summary>
 /// 依存関係注入設定の統合テスト
 /// Phase A4 Step2: Clean Architecture基盤修正のためのTDDテスト
+/// Phase A4 Step4: WebApplicationFactory DI競合解決
 /// </summary>
-public class DependencyInjectionTests : IClassFixture<WebApplicationFactory<Program>>
+public class DependencyInjectionTests : IClassFixture<TestWebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly TestWebApplicationFactory<Program> _factory;
 
-    public DependencyInjectionTests(WebApplicationFactory<Program> factory)
+    public DependencyInjectionTests(TestWebApplicationFactory<Program> factory)
     {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.ConfigureServices(services =>
-            {
-                // テスト環境用DbContextFactory設定
-                // 既存のDbContextFactory登録を削除し、テスト用設定に置き換え
-                
-                // 既存のDbContextFactory登録を削除
-                var dbContextFactoryDescriptor = services.FirstOrDefault(d => 
-                    d.ServiceType == typeof(IDbContextFactory<UbiquitousLanguageManager.Infrastructure.Data.UbiquitousLanguageDbContext>));
-                if (dbContextFactoryDescriptor != null)
-                {
-                    services.Remove(dbContextFactoryDescriptor);
-                }
-                
-                // テスト用DbContextFactory登録（インメモリデータベース使用）
-                services.AddDbContextFactory<UbiquitousLanguageManager.Infrastructure.Data.UbiquitousLanguageDbContext>(
-                    options => options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-            });
-        });
+        _factory = factory;
     }
 
     /// <summary>

@@ -6,6 +6,9 @@ using Moq;
 using Xunit;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
+using UbiquitousLanguageManager.Application;
+using Microsoft.AspNetCore.Identity;
 using UbiquitousLanguageManager.Tests.Stubs;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
@@ -20,16 +23,38 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 public class AuthenticationServiceAutoLoginTests : IDisposable
 {
     private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _logger;
+    private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
+    private readonly Mock<SignInManager<ApplicationUser>> _mockSignInManager;
+    private readonly Mock<INotificationService> _mockNotificationService;
+    private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly AuthenticationService _authenticationService;
 
     /// <summary>
     /// テスト初期化
-    /// Phase A3実装待ちのため、拡張メソッド使用に修正
+    /// Phase A3本格実装完了に対応
     /// </summary>
     public AuthenticationServiceAutoLoginTests()
     {
         _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
-        _authenticationService = new AuthenticationService(_logger.Object);
+        
+        // UserManager モック作成
+        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        _mockUserManager = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        
+        // SignInManager モック作成
+        var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
+        _mockSignInManager = new Mock<SignInManager<ApplicationUser>>(_mockUserManager.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        
+        _mockNotificationService = new Mock<INotificationService>();
+        _mockUserRepository = new Mock<IUserRepository>();
+        
+        _authenticationService = new AuthenticationService(
+            _logger.Object,
+            _mockUserManager.Object,
+            _mockSignInManager.Object,
+            _mockNotificationService.Object,
+            _mockUserRepository.Object);
     }
 
     public void Dispose()

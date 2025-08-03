@@ -138,7 +138,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 #### **📄 記録・文書化**
 ```
-□ `/Doc/04_Daily/YYYY-MM/YYYY-MM-DD.md`に詳細記録
+□ `/Doc/04_Daily/YYYY-MM/YYYY-MM-DD-{セッション番号}-{セッション概要}.md`に詳細記録
 □ 重要な決定事項のADR化検討（技術選定・アーキテクチャ決定等）
 □ `/Doc/プロジェクト状況.md`の次回セッション情報更新（最優先事項・推奨読み込み範囲）
 □ 週次総括への反映事項確認（週末セッションの場合）

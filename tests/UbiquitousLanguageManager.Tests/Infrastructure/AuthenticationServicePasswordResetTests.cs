@@ -6,6 +6,9 @@ using Moq;
 using Xunit;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
+using UbiquitousLanguageManager.Application;
+using Microsoft.AspNetCore.Identity;
 using UbiquitousLanguageManager.Tests.Stubs;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
@@ -29,7 +32,25 @@ public class AuthenticationServicePasswordResetTests : IDisposable
     public AuthenticationServicePasswordResetTests()
     {
         _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
-        _authenticationService = new AuthenticationService(_logger.Object);
+        
+        // UserManager モック作成
+        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        var mockUserManager = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        
+        // SignInManager モック作成
+        var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
+        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
+        var mockSignInManager = new Mock<SignInManager<ApplicationUser>>(mockUserManager.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        
+        var mockNotificationService = new Mock<INotificationService>();
+        var mockUserRepository = new Mock<IUserRepository>();
+        
+        _authenticationService = new AuthenticationService(
+            _logger.Object,
+            mockUserManager.Object,
+            mockSignInManager.Object,
+            mockNotificationService.Object,
+            mockUserRepository.Object);
     }
 
     public void Dispose()
