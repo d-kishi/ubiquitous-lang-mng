@@ -216,8 +216,14 @@
             }
             else
             {
-                errorMessage = result.ErrorMessage ?? "ログインに失敗しました。";
-                toastNotification?.ShowError("ログインに失敗しました", "認証エラー");
+                // より具体的なエラーメッセージとトースター表示
+                var userFriendlyMessage = GetUserFriendlyErrorMessage(result.ErrorMessage);
+                errorMessage = userFriendlyMessage;
+                
+                toastNotification?.ShowError(
+                    userFriendlyMessage, 
+                    "ログインエラー", 
+                    5000); // 5秒表示
                 
                 // セキュリティ: ログイン失敗のログ記録
                 LogFailedLogin();
@@ -225,8 +231,14 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"ログイン処理中にエラーが発生しました: {ex.Message}";
-            toastNotification?.ShowError("ログインに失敗しました", "システムエラー");
+            errorMessage = "システムエラーが発生しました。しばらく待ってから再度お試しください。";
+            toastNotification?.ShowError(
+                "システムエラーが発生しました", 
+                "エラー", 
+                7000); // システムエラーは7秒表示
+                
+            // 開発時のみ詳細エラーをコンソールに出力
+            Console.WriteLine($"[LOGIN ERROR] {ex.Message}");
         }
         finally
         {
@@ -274,8 +286,53 @@
     
     private string GetValidationClass(string fieldName)
     {
-        // Phase A3で実装: リアルタイムバリデーション
-        return string.Empty;
+        // リアルタイムバリデーション: 入力状態に応じたCSSクラス適用
+        if (string.IsNullOrEmpty(GetFieldValue(fieldName)))
+            return string.Empty;
+            
+        var isValid = ValidateField(fieldName);
+        return isValid ? "is-valid" : "is-invalid";
+    }
+    
+    private string GetFieldValue(string fieldName)
+    {
+        return fieldName switch
+        {
+            "Email" => loginModel.Email,
+            "Password" => loginModel.Password,
+            _ => string.Empty
+        };
+    }
+    
+    private bool ValidateField(string fieldName)
+    {
+        return fieldName switch
+        {
+            "Email" => !string.IsNullOrEmpty(loginModel.Email) && 
+                      System.Text.RegularExpressions.Regex.IsMatch(loginModel.Email, 
+                          @"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
+            "Password" => !string.IsNullOrEmpty(loginModel.Password) && 
+                         loginModel.Password.Length >= 8,
+            _ => false
+        };
+    }
+    
+    private string GetUserFriendlyErrorMessage(string? errorMessage)
+    {
+        // エラーメッセージをユーザーフレンドリーに変換
+        if (string.IsNullOrEmpty(errorMessage))
+            return "ログインに失敗しました。メールアドレスとパスワードをご確認ください。";
+            
+        return errorMessage switch
+        {
+            var msg when msg.Contains("ユーザーが見つかりません") => 
+                "メールアドレスが見つかりません。正しいメールアドレスを入力してください。",
+            var msg when msg.Contains("パスワード") => 
+                "パスワードが正しくありません。再度入力してください。",
+            var msg when msg.Contains("ロックアウト") => 
+                "アカウントが一時的にロックされています。しばらく待ってから再度お試しください。",
+            _ => "ログインに失敗しました。メールアドレスとパスワードをご確認ください。"
+        };
     }
     
     // ログインモデル
@@ -341,6 +398,33 @@
     .form-control:focus, .form-select:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+    
+    /* リアルタイムバリデーション視覚的フィードバック */
+    .form-control.is-valid {
+        border-color: #28a745;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 2.94 2.94-4.88-4.88-.94.94L2.3 6.73z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.4M8.2 4.6l-2.4 2.4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-valid:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    }
+    
+    .form-control.is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
     }
     
     .input-group-text {

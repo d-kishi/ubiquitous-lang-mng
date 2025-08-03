@@ -85,9 +85,9 @@ public class AuthenticationService : IAuthenticationService
                 return FSharpResult<User, string>.NewError("アカウントがロックアウトされています");
             }
 
-            // パスワード検証とサインイン
+            // パスワード検証とサインイン（機能仕様書2.1.1準拠: ロックアウト機構なし）
             var signInResult = await _signInManager.PasswordSignInAsync(
-                applicationUser, password, isPersistent: false, lockoutOnFailure: true);
+                applicationUser, password, isPersistent: false, lockoutOnFailure: false);
 
             if (signInResult.Succeeded)
             {
