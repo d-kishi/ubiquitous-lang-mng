@@ -1,6 +1,6 @@
 /.claude
 .fake
-.vscode
+# .vscode
 
 # .NET build outputs
 **/bin/

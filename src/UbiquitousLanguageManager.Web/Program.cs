@@ -55,20 +55,14 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.Authent
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<UbiquitousLanguageDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
 // 🔧 DbContextFactory設定: マルチスレッド環境でのEF Core最適化
 // 【Blazor Server初学者向け解説】
 // Blazor Serverはマルチスレッド環境で動作するため、DbContextの同時実行を防ぐために
 // DbContextFactoryを使用します。これにより、各操作ごとに新しいDbContextインスタンスが作成されます。
 // 
-// ライフタイム競合解決: IServiceProviderを使用してDbContext生成時にサービスを解決
-builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>((serviceProvider, options) =>
-{
-    // DbContextインスタンス生成時に接続文字列を解決（スコープ競合回避）
-    options.UseNpgsql(connectionString);
-});
+// 設計書推奨: AddDbContextFactoryのみ使用（AddDbContextは内部で自動登録される）
+builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 // 🔐 認証・認可設定: ASP.NET Core Identity
 // ApplicationUser を使用した Identity 統合により、
@@ -99,6 +93,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.SignIn.RequireConfirmedPhoneNumber = false;
 })
 .AddEntityFrameworkStores<UbiquitousLanguageDbContext>()
+.AddUserStore<UbiquitousLanguageManager.Infrastructure.Identity.CustomUserStore>() // カスタムUserStore
+.AddRoleStore<UbiquitousLanguageManager.Infrastructure.Identity.CustomRoleStore>() // カスタムRoleStore
+.AddClaimsPrincipalFactory<UbiquitousLanguageManager.Infrastructure.Identity.CustomUserClaimsPrincipalFactory>() // カスタムClaimsPrincipalFactory
 .AddDefaultTokenProviders(); // パスワードリセットトークン等の生成用
 
 // 🍪 Cookie認証設定（仕様書2.1.1・10.1.1準拠）

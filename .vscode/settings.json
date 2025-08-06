@@ -109,5 +109,10 @@
   "debug.inlineValues": "on",
   // 問題表示設定
   "problems.decorations.enabled": true,
-  "problems.showCurrentInStatus": true
+  "problems.showCurrentInStatus": true,
+  // デバッグ最適化設定（プロセスロック防止）
+  "debug.console.closeOnEnd": true,
+  "debug.internalConsoleOptions": "openOnSessionStart",
+  "dotnet.server.useOmnisharp": false,
+  "omnisharp.enableRoslynAnalyzers": true
 }

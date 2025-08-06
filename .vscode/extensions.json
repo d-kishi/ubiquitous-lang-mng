@@ -1,0 +1,30 @@
+{
+    "recommendations": [
+        // C#開発に必要な拡張機能
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        
+        // F#開発用
+        "ionide.ionide-fsharp",
+        
+        // テスト関連
+        "formulahendry.dotnet-test-explorer",
+        
+        // Docker関連
+        "ms-azuretools.vscode-docker",
+        
+        // データベース関連
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        
+        // Git関連
+        "eamodio.gitlens",
+        
+        // 便利な拡張機能
+        "christian-kohler.path-intellisense",
+        "streetsidesoftware.code-spell-checker",
+        "shardulm94.trailing-spaces",
+        "editorconfig.editorconfig"
+    ]
+}
