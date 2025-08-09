@@ -86,7 +86,8 @@
       "WebFetch(domain:github.com)",
       "Bash(agents)",
       "Bash(dir:*)",
-      "Bash(mcp__serena__initial_instructions)"
+      "Bash(mcp__serena__initial_instructions)",
+      "Bash(code:*)"
     ],
     "deny": []
   }
