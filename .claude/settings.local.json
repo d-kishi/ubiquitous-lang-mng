@@ -92,7 +92,8 @@
       "WebFetch(domain:jamesacres.co.uk)",
       "WebFetch(domain:garysvenson09.medium.com)",
       "WebFetch(domain:glama.ai)",
-      "WebFetch(domain:learn.microsoft.com)"
+      "WebFetch(domain:learn.microsoft.com)",
+      "Bash(time:*)"
     ],
     "deny": []
   }
