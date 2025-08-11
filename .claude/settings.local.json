@@ -87,7 +87,12 @@
       "Bash(agents)",
       "Bash(dir:*)",
       "Bash(mcp__serena__initial_instructions)",
-      "Bash(code:*)"
+      "Bash(code:*)",
+      "Bash(dotnet ef:*)",
+      "WebFetch(domain:jamesacres.co.uk)",
+      "WebFetch(domain:garysvenson09.medium.com)",
+      "WebFetch(domain:glama.ai)",
+      "WebFetch(domain:learn.microsoft.com)"
     ],
     "deny": []
   }

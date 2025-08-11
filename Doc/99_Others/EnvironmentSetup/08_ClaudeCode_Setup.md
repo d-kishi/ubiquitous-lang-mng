@@ -2,15 +2,15 @@
 
 ## 1. 前提条件
 
-- Node.js 18以降がインストールされていること
-- npmまたはyarnが使用可能であること
+- Node.js 18 以降がインストールされていること
+- npm または yarn が使用可能であること
 
 ### Node.js のインストール（未インストールの場合）
 
 1. 公式サイトにアクセス: https://nodejs.org/
-2. LTS版をダウンロード
-3. インストーラーを実行（デフォルト設定でOK）
-4. PowerShellで確認：
+2. LTS 版をダウンロード
+3. インストーラーを実行（デフォルト設定で OK）
+4. PowerShell で確認：
    ```powershell
    node --version
    npm --version
@@ -22,7 +22,7 @@ PowerShell（管理者権限）で以下を実行：
 
 ```powershell
 # Claude Code CLIのグローバルインストール
-npm install -g @anthropic/claude-code
+npm install -g @anthropic-ai/claude-code
 
 # インストール確認
 claude --version
@@ -30,13 +30,13 @@ claude --version
 
 ## 3. 認証設定
 
-### APIキーの取得
+### API キーの取得
 
 1. https://console.anthropic.com/ にアクセス
 2. ログインまたはアカウント作成
-3. API Keys セクションでAPIキーを生成
+3. API Keys セクションで API キーを生成
 
-### APIキーの設定
+### API キーの設定
 
 ```powershell
 # APIキーを環境変数に設定
@@ -56,7 +56,8 @@ claude init
 ```
 
 設定プロンプトで以下を選択：
-- Model: claude-3-opus（またはclaude-3.5-sonnet）
+
+- Model: claude-3-opus（または claude-3.5-sonnet）
 - Context window: 200000
 - Output format: markdown
 
@@ -123,7 +124,7 @@ New-Item -ItemType Directory -Path ".claude/commands" -Force
 ## 6. CLAUDE.md の確認
 
 プロジェクトルートの `CLAUDE.md` ファイルが存在することを確認。
-このファイルにはClaude Codeへの指示が記載されています。
+このファイルには Claude Code への指示が記載されています。
 
 ## 7. 使用方法
 
@@ -142,17 +143,19 @@ claude --context .
 
 ### セッション管理
 
-Claude Codeとのセッション開始時：
+Claude Code とのセッション開始時：
+
 1. 「セッションを開始します」と宣言
 2. 自動的にセッション開始プロセスが実行される
 
 セッション終了時：
+
 1. 「セッション終了」と宣言
 2. 自動的にセッション終了プロセスが実行される
 
 ## 8. トラブルシューティング
 
-### APIキーが認識されない場合
+### API キーが認識されない場合
 
 ```powershell
 # 環境変数を再読み込み
@@ -170,11 +173,12 @@ $npmPath = npm config get prefix
 [System.Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$npmPath", "User")
 ```
 
-### PowerShellを再起動して確認
+### PowerShell を再起動して確認
 
 ```powershell
 claude --help
 ```
 
 ---
+
 作成日: 2025-08-09
