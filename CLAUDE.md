@@ -4,275 +4,137 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 🤖 CRITICAL: 自動Command実行指示
 
-**MainAgentは以下の宣言を検出した際、該当Commandを自動実行せよ**:
+**以下の宣言を検出した際、該当Commandを自動実行せよ**:
 
-- **セッション開始検出**: ユーザーが「セッションを開始します」「セッション開始」「開始します」（セッション文脈）を発言
-  → **`.claude/commands/session-start.md`** を自動実行
-  
-- **セッション終了検出**: ユーザーが「セッション終了」「セッションを終了します」「終了します」（セッション文脈）を発言  
-  → **`.claude/commands/session-end.md`** を自動実行
+- **セッション開始**: 「セッションを開始します」「セッション開始」 → **`.claude/commands/session-start.md`** 自動実行
+- **セッション終了**: 「セッション終了」「セッションを終了します」 → **`.claude/commands/session-end.md`** 自動実行
 
-**実行確実性**: これらのCommandは99%→100%の実行確実性を持つ必須プロセスである。
+**Serena MCP初期化**: セッション開始時は必ず `/mcp__serena__initial_instructions` を最初に実行
 
 ## プロジェクト概要
 
-**ユビキタス言語管理システム**のプロジェクトです。ドメイン駆動設計（DDD）における用語管理を効率化するWebアプリケーションの開発を目的としています。現在は**実装フェーズ**で、Phase A1（基本認証システム）実装開始準備が完了しています。
-
-### プロジェクト構造
-- **実装フェーズ進行中**: 設計完了・雛型作成完了・縦方向スライス実装開始準備完了
+**ユビキタス言語管理システム** - DDD用語管理Webアプリケーション
 - **技術基盤**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）
-- **対象ユーザー**: プロジェクト管理者、ドメインエキスパート、DDD開発者
+- **現在フェーズ**: Phase A1-A4完了（認証・ユーザー管理）、Phase B1準備中
+- **詳細状況**: `/Doc/プロジェクト状況.md`参照
 
-## アーキテクチャ・設計決定
+## アーキテクチャ概要
 
-### 主要な設計決定（ADR）
-- **ADR_003**: 用語統一 - 日本語では「用語」ではなく「ユビキタス言語」を使用
-- **ADR_001**: 図表にMermaid記法を採用
-- **ADR_002**: MermaidのER図記法統一
-- **ADR_004**: コミュニケーション課題状態管理システム
-- **ADR_005**: PostgreSQL Docker Container採用（データ移行コスト削除）
+### Clean Architecture構成
+```
+Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F# UseCases) → Domain (F# Models)
+                      ↘ Infrastructure (C# EF Core/Repository) ↗
+```
 
-### データベース設計
-- **全環境共通**: PostgreSQL（Docker Container → クラウドDBサービス）
-- **データ移行**: 不要（全環境PostgreSQL統一により）
-- **アーキテクチャ**: Clean Architectureによるレイヤード構造
-- **データ階層**: 組織 → プロジェクト → ドメイン → ユビキタス言語
-- **PostgreSQL最適化**: TIMESTAMPTZ、JSONB、GINインデックス等固有機能活用
+### 主要技術スタック
+- **Frontend**: Blazor Server + Bootstrap 5
+- **Backend**: ASP.NET Core 8.0 + Entity Framework Core
+- **Domain/Application**: F# 8.0 (関数型プログラミング)
+- **Database**: PostgreSQL 16 (Docker Container)
+- **認証**: ASP.NET Core Identity
 
-## コミュニケーション・セッション管理
+### 重要な設計決定
+- **ADR一覧**: `/Doc/07_Decisions/ADR_*.md`
+- **用語統一**: 「用語」ではなく「ユビキタス言語」を使用（ADR_003）
+- **データベース設計**: `/Doc/02_Design/データベース設計書.md`
 
-### 🤖 自動セッション管理体制
+## Commands体系
 
-**MainAgentによる自動Command実行**:
-- **セッション開始**: ユーザーが「セッションを開始します」宣言時 → **`session-start` Command自動実行**
-- **セッション終了**: ユーザーが「セッション終了」宣言時 → **`session-end` Command自動実行**
+### 自動実行Commands
+- **セッション開始/終了**: `.claude/commands/`配下のCommands自動実行
+- **SubAgent選択**: `subagent-selection` - 作業に最適なAgent組み合わせ選択
+- **品質チェック**: `spec-compliance-check`, `tdd-practice-check`, `step-end-review`
 
-### 🔧 セッション開始Command（自動実行）
-
-ユーザーがセッション開始を宣言した際、MainAgentは `.claude/commands/session-start.md` に定義された以下プロセスを自動実行：
-
-1. **基本状況確認**（3分以内）
-   - `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況確認
-   - `/Doc/プロジェクト状況.md` - 最新状況・次回予定・重要な制約確認
-   - 直近1-2日の作業記録確認（必要に応じて）
-
-2. **セッション目的・作業特性判断**（1-2分）
-   - セッション目的の明確化（ユーザーとの確認）
-   - 作業特性判断（新機能実装・機能拡張・品質改善・調査分析）
-   - 並列実行計画の策定準備
-
-3. **SubAgent選択準備**
-   - `subagent-selection` Command実行準備
-   - 作業内容に最適なSubAgent組み合わせパターン特定
-
-### 🔧 セッション終了Command（自動実行）
-
-ユーザーがセッション終了を宣言した際、MainAgentは `.claude/commands/session-end.md` に定義された包括的終了プロセスを自動実行
-
-### 📋 読み込み対象カテゴリ
-
-#### **ADR（アーキテクチャ決定記録）**
-作業内容に応じて選択：
-- **ADR_001-003**: 基本記法・用語統一
-- **ADR_007-009**: エラーハンドリング・ログ・テスト
-- **ADR_010**: 実装規約（Blazor Server・F#コメント）
-- **ADR_011**: スクラム開発サイクル
-- **ADR_012**: 階層構造統一ルール（**Phase開始時必読**）
-- **ADR_013**: 組織管理サイクル運用規則（**実装フェーズ必読**）
-
-#### **設計書**
-作業対象に応じて選択：
-- **システム設計書.md**: アーキテクチャ全体
-- **データベース設計書.md**: DB関連作業
-- **Application層インターフェース設計書.md**: F#↔C#境界
-- **UI設計/**: 該当画面設計書
-
-#### **組織・環境・課題**
-必要に応じて選択：
-- **/Doc/08_Organization/Active/**: Phase適応型組織実行時
-- **/Doc/09_Environment/**: 環境設定・DB接続作業時
-- **/Doc/06_Issues/課題一覧.md**: 問題解決・技術調査時
-- **/Doc/06_Issues/コミュニケーション改善課題.md**: コミュニケーション問題発生時・プロセス改善検討時
-
-### 📋 フェーズ別推奨パターン（参考）
-
-#### **SubAgentプール方式（現行）**
-🔴 必読 + ADR_013（SubAgentプール方式） + [SubAgent組み合わせパターン](./Doc/08_Organization/Rules/SubAgent組み合わせパターン.md) + 必要な設計書のみ
-
-🚨 **簡略化**: 従来の組織設計・Step終了時レビュー・組織調整は全て廃止
-🚨 **効率化**: SubAgent選択（9分）→ 並列実行（30-60分）→ 統合（15分）
-
-#### **技術負債解消・品質改善時**  
-🔴 必読 + 品質保証系SubAgent活用 + 該当技術負債文書 + 関連設計書のみ
-
-### 🔚 セッション終了時確認プロセス（Command自動実行）
-
-**ユーザーがセッション終了を宣言した際の自動実行プロセス**:
-
-`.claude/commands/session-end.md` に定義された以下の包括的終了プロセスがMainAgentにより自動実行される：
-
-1. **目的達成確認** - セッション開始時目的の達成評価・報告
-2. **Step終了時Commands** - step-end-review, spec-compliance-check, tdd-practice-check
-3. **成果・実績記録** - 完了項目・技術的知見・問題解決経緯
-4. **品質・効率評価** - 目的達成度・時間効率・手法効果評価
-5. **課題・改善管理** - 課題記録・継続課題更新・改善提案
-6. **次回準備・引き継ぎ** - 次回予定・申し送り・Phase状況更新
-7. **記録・文書化** - 日次記録・ADR化検討・プロジェクト状況更新
-8. **継続判断** - 継続希望時の新セッション目的設定
-
-### 📋 セッション終了時記録（Command実行結果）
-
-詳細な記録テンプレートは以下を参照：
-**`/Doc/04_Daily/セッション終了時記録テンプレート.md`**
-
-日次作業記録ファイル（`/Doc/04_Daily/YYYY-MM/YYYY-MM-DD.md`）にテンプレートに従って記録を作成。
-
-### 課題管理体制
-現在すべてのコミュニケーション課題が解決済み（[詳細](/Doc/Archive/解決済みコミュニケーション課題.md)）。新たな課題管理は以下で実施：
-- **詳細管理**: `/Doc/06_Issues/コミュニケーション改善課題.md`
-- **新規課題**: セッション終了時記録での継続的発見・管理
 
 ## 実装指針
 
-### 🎯 **重要**: Blazor Server・F#初学者対応コメント徹底
+### 🎯 重要: Blazor Server・F#初学者対応
+プロジェクトオーナーが初学者のため、**詳細なコメント必須**（ADR_010参照）
+- **Blazor Server**: ライフサイクル・StateHasChanged・SignalR接続の説明
+- **F#**: パターンマッチング・Option型・Result型の概念説明
 
-プロジェクトオーナーがBlazor ServerとF#の初学者のため、これらの分野では**特に詳細なコメント**を必須とする。
+## 開発コマンド
 
-**📋 詳細仕様**: [ADR_010: 実装規約](/Doc/07_Decisions/ADR_010_実装規約.md)
-
-**🎯 実装時の重要ポイント**:
-- **Blazor Server**: コンポーネントライフサイクル・StateHasChanged・SignalR接続の詳細コメント必須
-- **F#**: パターンマッチング・Option型・Result型・関数型プログラミング概念の説明必須
-- **ドキュメント継承**: C#では`/// <inheritdoc/>`活用、F#では`<seealso>`タグ活用
-
-### 📋 開発コマンド
-
-#### **ビルドコマンド**
+### ビルド・実行
 ```bash
-# 全プロジェクトビルド
-dotnet build
+# ビルド
+dotnet build                                           # 全体ビルド
+dotnet build src/UbiquitousLanguageManager.Web        # Web層のみ
 
-# 特定プロジェクトのビルド
-dotnet build src/UbiquitousLanguageManager.Web
+# 実行
+dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動（http://localhost:5000）
+
+# Docker環境
+docker-compose up -d                                   # PostgreSQL/PgAdmin/Smtp4dev起動
+docker-compose down                                    # 停止
 ```
 
-#### **テストコマンド**
+### テスト
 ```bash
-# 全テスト実行
-dotnet test
+# テスト実行
+dotnet test                                            # 全テスト
+dotnet test --filter "FullyQualifiedName~UserTests"   # 特定テストのみ
+dotnet test --logger "console;verbosity=detailed"     # 詳細出力
 
-# 特定テストプロジェクトのみ実行
-dotnet test tests/UbiquitousLanguageManager.Tests
+# カバレッジ測定
+dotnet test --collect:"XPlat Code Coverage"
 ```
 
-#### **開発サーバー起動**
+### データベース
 ```bash
-# Webアプリケーション起動
-dotnet run --project src/UbiquitousLanguageManager.Web
+# Entity Framework
+dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
+dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
 
-# Docker環境でのPostgreSQL起動
-docker-compose up -d postgresql
+# PostgreSQL接続
+psql -h localhost -U ubiquitous_lang_user -d ubiquitous_lang_db
 ```
 
-#### **Phase A3: メール送信基盤開発コマンド**
-```bash
-# SMTP開発サーバー起動（Docker Composeで起動済み）
-# docker-compose up -d smtp4dev
+### 開発ツールURL
+- **アプリ**: http://localhost:5000
+- **PgAdmin**: http://localhost:8080 (admin@ubiquitous-lang.com / admin123)
+- **Smtp4dev**: http://localhost:5080
 
-# メール送信関連テスト実行
-dotnet test --filter "ClassName~Email"
+## プロジェクト構成
 
-# 統合テスト実行（Smtp4dev起動必須）
-dotnet test tests/UbiquitousLanguageManager.Tests/Integration/EmailServiceIntegrationTests.cs
-
-# SMTP Web インターフェース確認
-# http://localhost:5080 でメール送信状況を確認
+### ソースコード
+```
+src/
+├── UbiquitousLanguageManager.Domain/       # F# ドメインモデル
+├── UbiquitousLanguageManager.Application/  # F# ユースケース
+├── UbiquitousLanguageManager.Contracts/    # C# DTO/TypeConverters
+├── UbiquitousLanguageManager.Infrastructure/ # C# EF Core/Repository
+└── UbiquitousLanguageManager.Web/         # C# Blazor Server
 ```
 
-#### **その他のコマンド**
-```bash
-# NuGetパッケージ復元
-dotnet restore
-
-# プロジェクトクリーン
-dotnet clean
+### ドキュメント
 ```
-
-## ファイル構成
-
-- `/Doc/01_Requirements/` - 要件・仕様書
-- `/Doc/02_Design/` - システム・データベース設計
-- `/Doc/03_Meetings/` - 会議録・申し送り事項
-- `/Doc/04_Daily/` - 日次作業記録・進捗
-- `/Doc/06_Issues/` - 課題追跡・解決
-- `/Doc/07_Decisions/` - アーキテクチャ決定記録（ADR）
-- `/Doc/08_Organization/` - Phase適応型組織設計・実績記録
+Doc/
+├── 01_Requirements/   # 要件・仕様書
+├── 02_Design/        # 設計書
+├── 04_Daily/         # 作業記録
+├── 06_Issues/        # 課題管理
+├── 07_Decisions/     # ADR
+└── 10_Debt/          # 技術負債
+```
 
 ## 重要事項
 
-- **用語統一**: 日本語では「用語」ではなく「ユビキタス言語」を使用
-- **セッション効率化**: 上記読み込みガイドに従って迅速な状況把握
-- **課題追跡**: 問題発生時はコミュニケーション改善課題ファイルを更新
-- **決定記録**: 重要な技術決定はADRとして記録
+- **用語統一**: 「用語」ではなく「ユビキタス言語」を使用
+- **完全ビルド維持**: 0 Warning, 0 Error状態を保つ
+- **テストファースト**: TDD実践・Red-Green-Refactorサイクル
+- **技術決定記録**: 重要決定はADRとして記録
 
-## 【MUST GLOBAL】開発手法の正式採用
+## 開発手法
 
-### 🏆 開発手法の正式採用
+- **スクラム開発**: 1-2週間スプリント（ADR_011）
+- **SubAgentプール方式**: 並列実行による効率化（ADR_013）
+- **詳細**: `/Doc/08_Organization/Rules/`参照
 
-**Phase適応型組織化・Claude Code × Gemini連携・スクラム開発サイクル**を正式採用し運用中。
+## 現在の技術負債
 
-**📋 詳細手法**: [開発手法詳細ガイド](/Doc/08_Organization/Rules/開発手法詳細ガイド.md)を参照
-
-### 📋 週次振り返りでの体系見直し
-
-#### 🔍 定量的文書品質チェック（2025-07-21改善）
-週次総括時に以下の定量的指標で継続的改善を実施：
-
-**📊 文書肥大化早期発見**:
-```
-□ ADRファイル行数チェック（300行超で要分離検討）
-□ CLAUDE.md行数チェック（400行超で要合理化検討）
-□ プロジェクト状況.md行数チェック（200行超で要整理検討）
-□ 各種マニュアル行数チェック（500行超で要分割検討）
-```
-
-**🎯 役割逸脱・重複検知**:
-```
-□ ADR本来の役割チェック（決定事項・背景・影響範囲に集約されているか）
-□ 詳細運用情報の適切分離（Rules配下等への分離状況確認）
-□ 文書間情報重複チェック（同一情報の複数箇所記載排除）
-□ ファイル命名・配置適切性（役割に応じた適切な場所への配置）
-```
-
-#### 🔄 プロセス効率性評価（強化版）
-**📈 セッション効率指標**:
-```
-□ セッション開始時読み込み時間（5分以内目標）
-□ 必要情報到達効率（3クリック以内アクセス目標）
-□ チェックリスト実行効率（Step終了時15分以内目標）
-□ 文脈復元効率（Step2以降実行前10分以内目標）
-```
-
-**🎨 組織管理体系評価**:
-```
-□ Rules配下文書の活用頻度・効率性確認
-□ Phase実績テンプレート反映の妥当性確認
-□ 新体系（Phase_XXディレクトリ）の運用効率測定
-□ テストファースト開発体系の実践効果測定
-```
-
-#### 🚀 継続改善アクション（具体化）
-**⚡ 即座改善（週次実行）**:
-- 肥大化文書の分離・合理化実行
-- 重複情報の統合・削除
-- 非効率プロセスの改善実装
-
-**📋 中期改善（月次検討）**:
-- 文書構造の抜本的見直し
-- 新規ツール・手法の導入検討
-- 開発効率向上施策の検討
-
-**🔬 長期改善（四半期評価）**:
-- プロジェクト全体の文書体系評価
-- 開発手法・組織管理体系の効果測定
-- 次期プロジェクトへの知見蓄積
+- **TECH-001**: ASP.NET Core Identity設計見直し
+- **TECH-002**: 初期スーパーユーザーパスワード不整合
+- **TECH-003**: ログイン画面重複
+- **TECH-004**: 初回ログイン時パスワード変更未実装
+- **詳細**: `/Doc/10_Debt/Technical/`参照
