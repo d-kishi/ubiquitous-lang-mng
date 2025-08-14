@@ -109,8 +109,10 @@
       "mcp__serena__search_for_pattern",
       "WebFetch(domain:stackoverflow.com)",
       "mcp__serena__replace_regex",
-      "Bash(mcp__serena__check_onboarding_performed:*)"
+      "Bash(mcp__serena__check_onboarding_performed:*)",
+      "Bash(/mcp__serena__initial_instructions)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

@@ -114,5 +114,17 @@
   "debug.console.closeOnEnd": true,
   "debug.internalConsoleOptions": "openOnSessionStart",
   "dotnet.server.useOmnisharp": false,
-  "omnisharp.enableRoslynAnalyzers": true
+  "omnisharp.enableRoslynAnalyzers": true,
+  // GitHub Copilot コミットメッセージ 設定
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "text": "必ず日本語で記述してください"
+    },
+    {
+      "text": "コミットメッセージは、最初にConventional Commitsに則って記述してください"
+    },
+    {
+      "text": "その後ファイルごとの詳細な変更内容を記述してください"
+    }
+  ]
 }
