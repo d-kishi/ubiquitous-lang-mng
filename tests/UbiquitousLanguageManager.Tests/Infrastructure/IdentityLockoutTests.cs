@@ -8,7 +8,6 @@ using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
-using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
 
@@ -25,8 +24,8 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 public class IdentityLockoutTests
 {
     private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _logger;
-    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-    private readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
+    private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
+    private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly AuthenticationService _authenticationService;
@@ -39,13 +38,29 @@ public class IdentityLockoutTests
         _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
         
         // UserManager モック作成
-        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        var mockUserStore = new Mock<IUserStore<IdentityUser>>();
+        _userManagerMock = new Mock<UserManager<IdentityUser>>(
+            mockUserStore.Object, 
+            null,
+            new Mock<IPasswordHasher<IdentityUser>>().Object,
+            new IUserValidator<IdentityUser>[0],
+            new IPasswordValidator<IdentityUser>[0],
+            new Mock<ILookupNormalizer>().Object,
+            new Mock<IdentityErrorDescriber>().Object,
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<IdentityUser>>>().Object);
         
         // SignInManager モック作成
         var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
-        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(_userManagerMock.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<IdentityUser>>();
+        _signInManagerMock = new Mock<SignInManager<IdentityUser>>(
+            _userManagerMock.Object, 
+            mockContextAccessor.Object, 
+            mockUserPrincipalFactory.Object, 
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<SignInManager<IdentityUser>>>().Object,
+            null,
+            null);
         
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();

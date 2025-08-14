@@ -64,9 +64,9 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContextFactory<UbiquitousLanguageDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// 🔐 認証・認可設定: ASP.NET Core Identity
-// ApplicationUser を使用した Identity 統合により、
-// 業務固有のユーザープロパティと認証機能を統合しています
+// 🔐 認証・認可設定: ASP.NET Core Identity（Phase A5標準Identity移行）
+// 標準IdentityUser を使用したIdentity統合
+// Phase A5でカスタムApplicationUserから標準Identity実装に移行
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => 
 {
     // 🔑 パスワードポリシー設定
@@ -93,9 +93,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.SignIn.RequireConfirmedPhoneNumber = false;
 })
 .AddEntityFrameworkStores<UbiquitousLanguageDbContext>()
-.AddUserStore<UbiquitousLanguageManager.Infrastructure.Identity.CustomUserStore>() // カスタムUserStore
-.AddRoleStore<UbiquitousLanguageManager.Infrastructure.Identity.CustomRoleStore>() // カスタムRoleStore
-.AddClaimsPrincipalFactory<UbiquitousLanguageManager.Infrastructure.Identity.CustomUserClaimsPrincipalFactory>() // カスタムClaimsPrincipalFactory
 .AddDefaultTokenProviders(); // パスワードリセットトークン等の生成用
 
 // 🍪 Cookie認証設定（仕様書2.1.1・10.1.1準拠）

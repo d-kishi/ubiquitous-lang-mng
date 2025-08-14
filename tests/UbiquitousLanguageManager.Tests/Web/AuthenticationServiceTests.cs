@@ -31,7 +31,15 @@ public class AuthenticationServiceTests
         var mockHttpContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
         var mockUserManager = new Mock<UserManager<ApplicationUser>>(
-            mockUserStore.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            mockUserStore.Object, 
+            null,
+            new Mock<IPasswordHasher<ApplicationUser>>().Object,
+            new IUserValidator<ApplicationUser>[0],
+            new IPasswordValidator<ApplicationUser>[0],
+            new Mock<ILookupNormalizer>().Object,
+            new Mock<IdentityErrorDescriber>().Object,
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<ApplicationUser>>>().Object);
         var mockLogger = new Mock<ILogger<CustomAuthenticationStateProvider>>();
         
         _mockAuthStateProvider = new Mock<CustomAuthenticationStateProvider>(
@@ -42,12 +50,26 @@ public class AuthenticationServiceTests
         // SignInManagerのモックは複雑なため、必要最小限のセットアップ
         var mockUserStore2 = new Mock<IUserStore<ApplicationUser>>();
         _mockUserManager = new Mock<UserManager<ApplicationUser>>(
-            mockUserStore2.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+            mockUserStore2.Object, 
+            null,
+            new Mock<IPasswordHasher<ApplicationUser>>().Object,
+            new IUserValidator<ApplicationUser>[0],
+            new IPasswordValidator<ApplicationUser>[0],
+            new Mock<ILookupNormalizer>().Object,
+            new Mock<IdentityErrorDescriber>().Object,
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<ApplicationUser>>>().Object);
         
         var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         var mockClaimsFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
         _mockSignInManager = new Mock<SignInManager<ApplicationUser>>(
-            _mockUserManager.Object, mockContextAccessor.Object, mockClaimsFactory.Object, null!, null!, null!, null!);
+            _mockUserManager.Object, 
+            mockContextAccessor.Object, 
+            mockClaimsFactory.Object, 
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<SignInManager<ApplicationUser>>>().Object,
+            null,
+            null);
         
         _mockLogger = new Mock<ILogger<AuthenticationService>>();
 

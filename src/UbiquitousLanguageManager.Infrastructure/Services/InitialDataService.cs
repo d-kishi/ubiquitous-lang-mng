@@ -127,18 +127,18 @@ public class InitialDataService
             throw new InvalidOperationException("初期スーパーユーザーのパスワードが設定されていません");
         }
 
-        // 👤 ApplicationUser（Identity統合ユーザー）の作成
+        // 👤 ApplicationUser（カスタムプロパティ対応）の作成
         var superUser = new ApplicationUser
         {
             UserName = _settings.Email,  // Identity ではメールアドレスをユーザー名として使用
             Email = _settings.Email,
-            Name = _settings.Name,
-            // UserRoleプロパティ削除 → ASP.NET Core Identity標準Roles使用
-            UpdatedBy = "system", // 初期作成はsystemとして記録
-            IsFirstLogin = _settings.IsFirstLogin,  // 🔑 初回ログイン時のパスワード変更必須
-            UpdatedAt = DateTime.UtcNow,
-            IsDeleted = false,
-            InitialPassword = _settings.Password  // 一時的に保存（初回ログイン後NULL化）
+            EmailConfirmed = true,  // 初期スーパーユーザーは確認済み
+            LockoutEnabled = false,  // スーパーユーザーはロックアウトしない
+            Name = _settings.Name,  // カスタムプロパティ：ユーザー氏名
+            IsFirstLogin = _settings.IsFirstLogin,  // カスタムプロパティ：初回ログインフラグ
+            UpdatedAt = DateTime.UtcNow,  // カスタムプロパティ：更新日時
+            UpdatedBy = "System",  // カスタムプロパティ：更新者（システム初期化）
+            IsDeleted = false  // カスタムプロパティ：削除フラグ
         };
 
         // 💾 UserManager を使用したユーザー作成

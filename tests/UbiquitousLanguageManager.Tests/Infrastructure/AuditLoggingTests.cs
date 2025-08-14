@@ -7,8 +7,8 @@ using Moq;
 using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
-using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
+using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Tests.Stubs;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
@@ -41,12 +41,28 @@ public class AuditLoggingTests
         
         // UserManager モック作成
         var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            mockUserStore.Object, 
+            null, 
+            new Mock<IPasswordHasher<ApplicationUser>>().Object,
+            new IUserValidator<ApplicationUser>[0],
+            new IPasswordValidator<ApplicationUser>[0],
+            new Mock<ILookupNormalizer>().Object,
+            new Mock<IdentityErrorDescriber>().Object,
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<ApplicationUser>>>().Object);
         
         // SignInManager モック作成
         var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
-        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(_userManagerMock.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(
+            _userManagerMock.Object, 
+            mockContextAccessor.Object, 
+            mockUserPrincipalFactory.Object, 
+            null, 
+            new Mock<Microsoft.Extensions.Logging.ILogger<SignInManager<ApplicationUser>>>().Object, 
+            null, 
+            null);
         
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
@@ -69,7 +85,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -95,7 +111,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -134,7 +150,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -188,7 +204,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
         var lockoutEnd = DateTimeOffset.UtcNow.AddMinutes(15);
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
@@ -221,7 +237,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -250,7 +266,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -285,7 +301,7 @@ public class AuditLoggingTests
         var email = Email.create("user@example.com").ResultValue;
         var password = Password.create("NewPassword123!").ResultValue;
         var token = "valid-token";
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -345,7 +361,7 @@ public class AuditLoggingTests
         var email = Email.create("user@example.com").ResultValue;
         var password = Password.create("NewPassword123!").ResultValue;
         var invalidToken = "invalid-token";
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -374,7 +390,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -399,7 +415,7 @@ public class AuditLoggingTests
     {
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -421,28 +437,28 @@ public class AuditLoggingTests
     #region Helper Methods
 
     /// <summary>
-    /// UserManager<IdentityUser> のモックを作成
+    /// UserManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<UserManager<IdentityUser>> CreateUserManagerMock()
+    private static Mock<UserManager<ApplicationUser>> CreateUserManagerMock()
     {
-        var store = new Mock<IUserStore<IdentityUser>>();
-        var mgr = new Mock<UserManager<IdentityUser>>(
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        var mgr = new Mock<UserManager<ApplicationUser>>(
             store.Object, null, null, null, null, null, null, null, null);
-        mgr.Object.UserValidators.Add(new UserValidator<IdentityUser>());
-        mgr.Object.PasswordValidators.Add(new PasswordValidator<IdentityUser>());
+        mgr.Object.UserValidators.Add(new UserValidator<ApplicationUser>());
+        mgr.Object.PasswordValidators.Add(new PasswordValidator<ApplicationUser>());
         return mgr;
     }
 
     /// <summary>
-    /// SignInManager<IdentityUser> のモックを作成
+    /// SignInManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<SignInManager<IdentityUser>> CreateSignInManagerMock()
+    private static Mock<SignInManager<ApplicationUser>> CreateSignInManagerMock()
     {
         var userManager = CreateUserManagerMock();
         var contextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<ApplicationUser>>();
 
-        return new Mock<SignInManager<IdentityUser>>(
+        return new Mock<SignInManager<ApplicationUser>>(
             userManager.Object,
             contextAccessor.Object,
             claimsFactory.Object,

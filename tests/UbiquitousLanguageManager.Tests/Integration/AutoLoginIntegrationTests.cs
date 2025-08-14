@@ -74,7 +74,7 @@ public class AutoLoginIntegrationTests
         var email = Email.create("user@example.com").ResultValue;
         var newPassword = Password.create("NewPassword123!").ResultValue;
         var resetToken = "valid-reset-token";
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         // パスワードリセット要求のセットアップ
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
@@ -150,7 +150,7 @@ public class AutoLoginIntegrationTests
         var email = Email.create("locked@example.com").ResultValue;
         var newPassword = Password.create("NewPassword123!").ResultValue;
         var resetToken = "valid-reset-token";
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         // パスワードリセット成功のセットアップ
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
@@ -184,7 +184,7 @@ public class AutoLoginIntegrationTests
         VerifyLogCalled(LogLevel.Warning, "Auto login attempted for locked user");
 
         // SignInAsyncが呼ばれないことを確認
-        _signInManagerMock.Verify(x => x.SignInAsync(It.IsAny<IdentityUser>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never);
+        _signInManagerMock.Verify(x => x.SignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never);
     }
 
     #endregion
@@ -199,7 +199,7 @@ public class AutoLoginIntegrationTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -251,7 +251,7 @@ public class AutoLoginIntegrationTests
     {
         // Arrange
         var email = Email.create("recovery@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -310,7 +310,7 @@ public class AutoLoginIntegrationTests
     {
         // Arrange
         var email = Email.create("user@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -353,7 +353,7 @@ public class AutoLoginIntegrationTests
         var email = Email.create("user@example.com").ResultValue;
         var newPassword = Password.create("NewPassword123!").ResultValue;
         var resetToken = "valid-reset-token";
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         // パスワードリセット成功のセットアップ
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
@@ -404,28 +404,28 @@ public class AutoLoginIntegrationTests
     #region Helper Methods
 
     /// <summary>
-    /// UserManager<IdentityUser> のモックを作成
+    /// UserManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<UserManager<IdentityUser>> CreateUserManagerMock()
+    private static Mock<UserManager<ApplicationUser>> CreateUserManagerMock()
     {
-        var store = new Mock<IUserStore<IdentityUser>>();
-        var mgr = new Mock<UserManager<IdentityUser>>(
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        var mgr = new Mock<UserManager<ApplicationUser>>(
             store.Object, null, null, null, null, null, null, null, null);
-        mgr.Object.UserValidators.Add(new UserValidator<IdentityUser>());
-        mgr.Object.PasswordValidators.Add(new PasswordValidator<IdentityUser>());
+        mgr.Object.UserValidators.Add(new UserValidator<ApplicationUser>());
+        mgr.Object.PasswordValidators.Add(new PasswordValidator<ApplicationUser>());
         return mgr;
     }
 
     /// <summary>
-    /// SignInManager<IdentityUser> のモックを作成
+    /// SignInManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<SignInManager<IdentityUser>> CreateSignInManagerMock()
+    private static Mock<SignInManager<ApplicationUser>> CreateSignInManagerMock()
     {
         var userManager = CreateUserManagerMock();
         var contextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<ApplicationUser>>();
 
-        return new Mock<SignInManager<IdentityUser>>(
+        return new Mock<SignInManager<ApplicationUser>>(
             userManager.Object,
             contextAccessor.Object,
             claimsFactory.Object,

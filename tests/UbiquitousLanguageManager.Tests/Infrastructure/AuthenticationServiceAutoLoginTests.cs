@@ -5,8 +5,8 @@ using Microsoft.FSharp.Core;
 using Moq;
 using Xunit;
 using UbiquitousLanguageManager.Domain;
-using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
+using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Application;
 using Microsoft.AspNetCore.Identity;
 using UbiquitousLanguageManager.Tests.Stubs;
@@ -39,12 +39,28 @@ public class AuthenticationServiceAutoLoginTests : IDisposable
         
         // UserManager モック作成
         var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
-        _mockUserManager = new Mock<UserManager<ApplicationUser>>(mockUserStore.Object, null, null, null, null, null, null, null, null);
+        _mockUserManager = new Mock<UserManager<ApplicationUser>>(
+            mockUserStore.Object, 
+            null,
+            new Mock<IPasswordHasher<ApplicationUser>>().Object,
+            new IUserValidator<ApplicationUser>[0],
+            new IPasswordValidator<ApplicationUser>[0],
+            new Mock<ILookupNormalizer>().Object,
+            new Mock<IdentityErrorDescriber>().Object,
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<ApplicationUser>>>().Object);
         
         // SignInManager モック作成
         var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
         var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
-        _mockSignInManager = new Mock<SignInManager<ApplicationUser>>(_mockUserManager.Object, mockContextAccessor.Object, mockUserPrincipalFactory.Object, null, null, null, null);
+        _mockSignInManager = new Mock<SignInManager<ApplicationUser>>(
+            _mockUserManager.Object, 
+            mockContextAccessor.Object, 
+            mockUserPrincipalFactory.Object, 
+            null,
+            new Mock<Microsoft.Extensions.Logging.ILogger<SignInManager<ApplicationUser>>>().Object,
+            null,
+            null);
         
         _mockNotificationService = new Mock<INotificationService>();
         _mockUserRepository = new Mock<IUserRepository>();

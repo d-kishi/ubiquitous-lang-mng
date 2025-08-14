@@ -2,11 +2,11 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Contracts.DTOs.Common;
 using UbiquitousLanguageManager.Contracts.Interfaces;
-using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
 namespace UbiquitousLanguageManager.Infrastructure.Services
 {

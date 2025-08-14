@@ -33,7 +33,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly IUserRepository _userRepository;
 
     /// <summary>
-    /// AuthenticationServiceのコンストラクタ（Phase A3本格実装）
+    /// AuthenticationServiceのコンストラクタ（Phase A5標準Identity移行対応）
     /// </summary>
     /// <param name="logger">ログ出力サービス</param>
     /// <param name="userManager">ASP.NET Core Identity ユーザー管理</param>
@@ -55,7 +55,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// ログイン機能（Phase A3本格実装完了）
+    /// ログイン機能（Phase A5標準Identity移行対応）
     /// 
     /// 【F#初学者向け解説】
     /// F#のEmail型からstring変換し、ASP.NET Core Identityでログイン処理を実行。
@@ -70,31 +70,31 @@ public class AuthenticationService : IAuthenticationService
             _logger.LogInformation("Login attempt for user: {Email}", emailValue);
 
             // ASP.NET Core Identity ユーザー検索
-            var applicationUser = await _userManager.FindByEmailAsync(emailValue);
-            if (applicationUser == null)
+            var identityUser = await _userManager.FindByEmailAsync(emailValue);
+            if (identityUser == null)
             {
                 _logger.LogWarning("Login failed: User not found for email {Email}", emailValue);
                 return FSharpResult<User, string>.NewError("ユーザーが見つかりません");
             }
 
             // ロックアウト状態確認
-            if (await _userManager.IsLockedOutAsync(applicationUser))
+            if (await _userManager.IsLockedOutAsync(identityUser))
             {
                 _logger.LogWarning("Login failed: User {Email} is locked out until {LockoutEnd}", 
-                    emailValue, applicationUser.LockoutEnd);
+                    emailValue, identityUser.LockoutEnd);
                 return FSharpResult<User, string>.NewError("アカウントがロックアウトされています");
             }
 
             // パスワード検証とサインイン（機能仕様書2.1.1準拠: ロックアウト機構なし）
             var signInResult = await _signInManager.PasswordSignInAsync(
-                applicationUser, password, isPersistent: false, lockoutOnFailure: false);
+                identityUser, password, isPersistent: false, lockoutOnFailure: false);
 
             if (signInResult.Succeeded)
             {
                 _logger.LogInformation("Login successful for user: {Email}", emailValue);
                 
-                // F# Domain User型に変換（簡易実装）
-                var domainUser = CreateSimpleDomainUser(applicationUser);
+                // F# Domain User型に変換（標準Identity対応）
+                var domainUser = CreateSimpleDomainUser(identityUser);
                 
                 // 通知サービスに成功通知（簡易実装）
                 _logger.LogInformation("Login success notification for user: {Email}", emailValue);
@@ -120,7 +120,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// ユーザー作成機能（Phase A3本格実装完了）
+    /// ユーザー作成機能（Phase A5標準Identity移行対応）
     /// 
     /// 【F#初学者向け解説】
     /// F#のドメイン型（Email, UserName, Role, Password）をC#で受け取り、
@@ -138,21 +138,23 @@ public class AuthenticationService : IAuthenticationService
             
             _logger.LogInformation("Creating user: {Email} with name: {Name}", emailValue, nameValue);
 
-            // ApplicationUser エンティティ作成
-            var applicationUser = new ApplicationUser
+            // ApplicationUser エンティティ作成（カスタムプロパティ対応）
+            var identityUser = new ApplicationUser
             {
                 UserName = emailValue,
                 Email = emailValue,
-                Name = nameValue,
                 EmailConfirmed = true, // 初期設定では確認済みとする
                 LockoutEnabled = true,  // ロックアウト機能有効
                 AccessFailedCount = 0,
-                // CreatedAt はIdentityUserで自動管理
-                // IsActive は計算プロパティのため設定不要
+                Name = nameValue,  // カスタムプロパティ：ユーザー氏名
+                IsFirstLogin = true,  // カスタムプロパティ：初回ログインフラグ
+                UpdatedAt = DateTime.UtcNow,  // カスタムプロパティ：更新日時
+                UpdatedBy = "System",  // カスタムプロパティ：更新者（システム作成）
+                IsDeleted = false  // カスタムプロパティ：削除フラグ
             };
 
             // ASP.NET Core Identity ユーザー作成
-            var createResult = await _userManager.CreateAsync(applicationUser, passwordValue);
+            var createResult = await _userManager.CreateAsync(identityUser, passwordValue);
             
             if (createResult.Succeeded)
             {
@@ -160,14 +162,14 @@ public class AuthenticationService : IAuthenticationService
                 
                 // ロール割り当て
                 var roleValue = role.ToString();
-                var roleResult = await _userManager.AddToRoleAsync(applicationUser, roleValue);
+                var roleResult = await _userManager.AddToRoleAsync(identityUser, roleValue);
                 
                 if (roleResult.Succeeded)
                 {
                     _logger.LogInformation("Role {Role} assigned to user {Email}", roleValue, emailValue);
                     
-                    // F# Domain User型に変換（簡易実装）
-                    var domainUser = CreateSimpleDomainUser(applicationUser);
+                    // F# Domain User型に変換（標準Identity対応）
+                    var domainUser = CreateSimpleDomainUser(identityUser);
                     
                     // 通知サービスに作成通知（簡易実装）
                     _logger.LogInformation("User creation notification for: {Email}", emailValue);
@@ -196,7 +198,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// パスワード変更機能（Phase A3本格実装完了）
+    /// パスワード変更機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<PasswordHash, string>> ChangePasswordAsync(
         UserId userId, string oldPassword, Password newPassword)
@@ -208,22 +210,22 @@ public class AuthenticationService : IAuthenticationService
             
             _logger.LogInformation("Changing password for user: {UserId}", userIdValue);
 
-            var applicationUser = await _userManager.FindByIdAsync(userIdValue.ToString());
-            if (applicationUser == null)
+            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+            if (identityUser == null)
             {
                 _logger.LogWarning("Password change failed: User not found {UserId}", userIdValue);
                 return FSharpResult<PasswordHash, string>.NewError("ユーザーが見つかりません");
             }
 
             var changeResult = await _userManager.ChangePasswordAsync(
-                applicationUser, oldPassword, newPasswordValue);
+                identityUser, oldPassword, newPasswordValue);
             
             if (changeResult.Succeeded)
             {
                 _logger.LogInformation("Password changed successfully for user: {UserId}", userIdValue);
                 
                 // セキュリティスタンプ更新（既存セッション無効化）
-                await _userManager.UpdateSecurityStampAsync(applicationUser);
+                await _userManager.UpdateSecurityStampAsync(identityUser);
                 
                 // パスワードハッシュを返却（実際の値は外部に公開しない）
                 var passwordHash = CreatePasswordHash("[PROTECTED]");
@@ -244,7 +246,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// パスワードハッシュ生成機能（Phase A3本格実装完了）
+    /// パスワードハッシュ生成機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<PasswordHash, string>> HashPasswordAsync(Password password)
     {
@@ -271,7 +273,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// パスワード検証機能（Phase A3本格実装完了）
+    /// パスワード検証機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<bool, string>> VerifyPasswordAsync(string password, PasswordHash hash)
     {
@@ -301,21 +303,21 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// トークン生成機能（Phase A3本格実装完了）
+    /// トークン生成機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<string, string>> GenerateTokenAsync(User user)
     {
         try
         {
             var userId = user.Id.Value;
-            var applicationUser = await _userManager.FindByIdAsync(userId.ToString());
+            var identityUser = await _userManager.FindByIdAsync(userId.ToString());
             
-            if (applicationUser == null)
+            if (identityUser == null)
             {
                 return FSharpResult<string, string>.NewError("ユーザーが見つかりません");
             }
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(applicationUser);
+            var token = await _userManager.GeneratePasswordResetTokenAsync(identityUser);
             _logger.LogInformation("Token generated for user: {UserId}", userId);
             
             return FSharpResult<string, string>.NewOk(token);
@@ -338,7 +340,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// ログイン失敗記録機能（Phase A3本格実装完了）
+    /// ログイン失敗記録機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<User, string>> RecordFailedLoginAsync(UserId userId)
     {
@@ -347,28 +349,28 @@ public class AuthenticationService : IAuthenticationService
             var userIdValue = userId.Value;
             _logger.LogInformation("Recording failed login for user: {UserId}", userIdValue);
 
-            var applicationUser = await _userManager.FindByIdAsync(userIdValue.ToString());
-            if (applicationUser == null)
+            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+            if (identityUser == null)
             {
                 _logger.LogWarning("Failed login record: User not found {UserId}", userIdValue);
                 return FSharpResult<User, string>.NewError("ユーザーが見つかりません");
             }
 
             // 失敗回数インクリメント（ASP.NET Core Identityが自動処理）
-            var result = await _userManager.AccessFailedAsync(applicationUser);
+            var result = await _userManager.AccessFailedAsync(identityUser);
             
             if (result.Succeeded)
             {
                 _logger.LogInformation("Failed login recorded for user: {UserId}, Failed count: {FailedCount}", 
-                    userIdValue, applicationUser.AccessFailedCount);
+                    userIdValue, identityUser.AccessFailedCount);
                 
                 // ロックアウト判定
-                if (await _userManager.IsLockedOutAsync(applicationUser))
+                if (await _userManager.IsLockedOutAsync(identityUser))
                 {
                     _logger.LogWarning("User {UserId} locked out due to failed attempts", userIdValue);
                 }
                 
-                var domainUser = CreateSimpleDomainUser(applicationUser);
+                var domainUser = CreateSimpleDomainUser(identityUser);
                 return FSharpResult<User, string>.NewOk(domainUser);
             }
             else
@@ -386,7 +388,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// ログイン成功記録機能（Phase A3本格実装完了）
+    /// ログイン成功記録機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<User, string>> RecordSuccessfulLoginAsync(UserId userId)
     {
@@ -395,21 +397,21 @@ public class AuthenticationService : IAuthenticationService
             var userIdValue = userId.Value;
             _logger.LogInformation("Recording successful login for user: {UserId}", userIdValue);
 
-            var applicationUser = await _userManager.FindByIdAsync(userIdValue.ToString());
-            if (applicationUser == null)
+            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+            if (identityUser == null)
             {
                 _logger.LogWarning("Successful login record: User not found {UserId}", userIdValue);
                 return FSharpResult<User, string>.NewError("ユーザーが見つかりません");
             }
 
             // 失敗回数リセット
-            var result = await _userManager.ResetAccessFailedCountAsync(applicationUser);
+            var result = await _userManager.ResetAccessFailedCountAsync(identityUser);
             
             if (result.Succeeded)
             {
                 _logger.LogInformation("Successful login recorded and failed count reset for user: {UserId}", userIdValue);
                 
-                var domainUser = CreateSimpleDomainUser(applicationUser);
+                var domainUser = CreateSimpleDomainUser(identityUser);
                 return FSharpResult<User, string>.NewOk(domainUser);
             }
             else
@@ -427,7 +429,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// ユーザーロック機能（Phase A3本格実装完了）
+    /// ユーザーロック機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<Unit, string>> LockUserAsync(UserId userId, DateTime lockoutEnd)
     {
@@ -436,15 +438,15 @@ public class AuthenticationService : IAuthenticationService
             var userIdValue = userId.Value;
             _logger.LogInformation("Locking user: {UserId} until {LockoutEnd}", userIdValue, lockoutEnd);
 
-            var applicationUser = await _userManager.FindByIdAsync(userIdValue.ToString());
-            if (applicationUser == null)
+            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+            if (identityUser == null)
             {
                 _logger.LogWarning("Lock user: User not found {UserId}", userIdValue);
                 return FSharpResult<Unit, string>.NewError("ユーザーが見つかりません");
             }
 
             // ロックアウト設定
-            var result = await _userManager.SetLockoutEndDateAsync(applicationUser, lockoutEnd);
+            var result = await _userManager.SetLockoutEndDateAsync(identityUser, lockoutEnd);
             
             if (result.Succeeded)
             {
@@ -466,7 +468,7 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// ユーザーロック解除機能（Phase A3本格実装完了）
+    /// ユーザーロック解除機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<Unit, string>> UnlockUserAsync(UserId userId)
     {
@@ -475,16 +477,16 @@ public class AuthenticationService : IAuthenticationService
             var userIdValue = userId.Value;
             _logger.LogInformation("Unlocking user: {UserId}", userIdValue);
 
-            var applicationUser = await _userManager.FindByIdAsync(userIdValue.ToString());
-            if (applicationUser == null)
+            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+            if (identityUser == null)
             {
                 _logger.LogWarning("Unlock user: User not found {UserId}", userIdValue);
                 return FSharpResult<Unit, string>.NewError("ユーザーが見つかりません");
             }
 
             // ロックアウト解除と失敗回数リセット
-            var unlockResult = await _userManager.SetLockoutEndDateAsync(applicationUser, null);
-            var resetResult = await _userManager.ResetAccessFailedCountAsync(applicationUser);
+            var unlockResult = await _userManager.SetLockoutEndDateAsync(identityUser, null);
+            var resetResult = await _userManager.ResetAccessFailedCountAsync(identityUser);
             
             if (unlockResult.Succeeded && resetResult.Succeeded)
             {
@@ -508,21 +510,21 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
-    /// セキュリティスタンプ更新機能（Phase A3本格実装完了）
+    /// セキュリティスタンプ更新機能（Phase A5標準Identity移行対応）
     /// </summary>
     public async Task<FSharpResult<Unit, string>> UpdateSecurityStampAsync(UserId userId)
     {
         try
         {
             var userIdValue = userId.Value;
-            var applicationUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
             
-            if (applicationUser == null)
+            if (identityUser == null)
             {
                 return FSharpResult<Unit, string>.NewError("ユーザーが見つかりません");
             }
 
-            var result = await _userManager.UpdateSecurityStampAsync(applicationUser);
+            var result = await _userManager.UpdateSecurityStampAsync(identityUser);
             
             if (result.Succeeded)
             {
@@ -602,16 +604,19 @@ public class AuthenticationService : IAuthenticationService
         return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
     }
 
-    // ===== 一時的ヘルパーメソッド（Phase A3実装完了のための最小修正） =====
+    // ===== 一時的ヘルパーメソッド（Phase A5標準Identity移行対応） =====
 
     /// <summary>
     /// ApplicationUserから簡易的なF# Userエンティティを作成
     /// </summary>
-    private User CreateSimpleDomainUser(ApplicationUser appUser)
+    private User CreateSimpleDomainUser(ApplicationUser identityUser)
     {
-        var userId = UserId.NewUserId(long.Parse(appUser.Id));
-        var email = Email.create(appUser.Email ?? "").ResultValue;
-        var userName = UserName.create(appUser.Name ?? "").ResultValue;
+        var userId = UserId.NewUserId(long.Parse(identityUser.Id));
+        var email = Email.create(identityUser.Email ?? "").ResultValue;
+        
+        // ApplicationUserのNameプロパティを使用
+        var userName = UserName.create(identityUser.Name ?? "Unknown").ResultValue;
+        
         var role = Role.GeneralUser; // 簡易実装
         var createdBy = UserId.NewUserId(1); // 簡易実装
         

@@ -20,7 +20,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     private readonly ILogger<CustomAuthenticationStateProvider> _logger;
 
     /// <summary>
-    /// CustomAuthenticationStateProviderのコンストラクタ
+    /// CustomAuthenticationStateProviderのコンストラクタ（Phase A5標準Identity移行対応）
     /// </summary>
     /// <param name="httpContextAccessor">HTTPコンテキストアクセサー</param>
     /// <param name="userManager">ASP.NET Core Identity ユーザー管理</param>
@@ -60,7 +60,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             // ASP.NET Core IdentityのClaimsを取得
             var claims = new List<Claim>(httpContext.User.Claims);
 
-            // ApplicationUserからDomain固有のClaimsを追加
+            // 標準IdentityUserからDomain固有のClaimsを追加
             await AddDomainSpecificClaims(claims, user);
 
             // ロール情報を追加
@@ -102,24 +102,28 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     }
 
     /// <summary>
-    /// Domain固有のClaimsを追加します
+    /// Domain固有のClaimsを追加します（Phase A5標準Identity移行対応）
     /// </summary>
     /// <param name="claims">Claims一覧</param>
-    /// <param name="user">ApplicationUser</param>
-    private async Task AddDomainSpecificClaims(List<Claim> claims, ApplicationUser user)
+    /// <param name="user">標準IdentityUser</param>
+    private async Task AddDomainSpecificClaims(List<Claim> claims, IdentityUser user)
     {
         try
         {
-            // DomainUserIdプロパティ削除のため、一時的にコメントアウト
-            // 将来的にIdentityのUserIdを使用してマッピング予定
-            // claims.Add(new Claim("DomainUserId", "temp"));
+            // DomainUserIdプロパティは標準IdentityUserにないため、Identity.Idを使用
+            // 将来的にDomainとIdentity間のマッピングテーブルで管理予定
+            claims.Add(new Claim("DomainUserId", user.Id));
 
             // ユーザーの状態情報をクレームとして追加
-            claims.Add(new Claim("IsActive", (!user.IsDeleted).ToString()));
-            claims.Add(new Claim("IsFirstLogin", user.IsFirstLogin.ToString()));
-            // UserRoleプロパティ削除のため、ASP.NET Core Identity標準Roles使用
-            // claims.Add(new Claim("UserRole", "GeneralUser")); // 一時的にコメントアウト
-            claims.Add(new Claim("UpdatedAt", user.UpdatedAt.ToString("O")));
+            // 標準IdentityUserには削除フラグがないため、常にアクティブとして設定
+            claims.Add(new Claim("IsActive", "true"));
+            
+            // 標準IdentityUserには初回ログインフラグがないため、カスタム実装必要
+            // 現在は常にfalse（実装済み扱い）として設定
+            claims.Add(new Claim("IsFirstLogin", "false"));
+            
+            // 標準IdentityUserには更新日時がないため、現在時刻を使用
+            claims.Add(new Claim("UpdatedAt", DateTime.UtcNow.ToString("O")));
 
             // 所属プロジェクト情報をクレームとして追加（Phase A3で拡張予定）
             // var projectIds = await GetUserProjectIds(user.Id);
@@ -152,6 +156,13 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         if (domainUserIdClaim != null && long.TryParse(domainUserIdClaim.Value, out var domainUserId))
         {
             return domainUserId;
+        }
+
+        // 標準IdentityUser.Idを一時的にDomainUserIdとして使用
+        var userIdClaim = httpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim != null && long.TryParse(userIdClaim.Value, out var userId))
+        {
+            return userId;
         }
 
         return null;

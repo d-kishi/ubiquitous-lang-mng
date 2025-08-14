@@ -100,13 +100,11 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
         // 🔐 ASP.NET Core Identity のテーブル設定
         base.OnModelCreating(modelBuilder);
         
-        // 🚫 不要なIdentityテーブルを除外（initスキーマに合わせる）
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>>();
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserClaim<string>>();
+        // 🚫 不要なIdentityテーブルを除外（LoginとTokenのみ - 使用しない機能）
         modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserLogin<string>>();
         modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserToken<string>>();
 
-        // 🔐 ASP.NET Core Identity テーブルの詳細設定（initスキーマ準拠コメント）
+        // 🔐 ASP.NET Core Identity テーブルの詳細設定（Claims含む標準実装）
         ConfigureIdentityTables(modelBuilder);
 
         // 🔐 ApplicationUser（Identity統合ユーザー）の詳細設定
@@ -125,6 +123,10 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
     /// <summary>
     /// ASP.NET Core Identity テーブルの基本設定とコメント
     /// initスキーマのコメント定義に準拠
+    /// 
+    /// 【F#初学者向け解説】
+    /// ASP.NET Core Identityは.NET標準の認証・認可システムです。
+    /// Claimsテーブルを含めることで、将来的な権限管理の拡張性を確保します。
     /// </summary>
     /// <param name="modelBuilder">モデルビルダー</param>
     private void ConfigureIdentityTables(ModelBuilder modelBuilder)
@@ -140,6 +142,14 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
         // AspNetUserRoles テーブルコメント設定
         modelBuilder.Entity<Microsoft.AspNetCore.Identity.IdentityUserRole<string>>()
                    .ToTable("AspNetUserRoles", t => t.HasComment("ASP.NET Core Identity ユーザー・ロール関連"));
+
+        // AspNetUserClaims テーブルコメント設定
+        modelBuilder.Entity<Microsoft.AspNetCore.Identity.IdentityUserClaim<string>>()
+                   .ToTable("AspNetUserClaims", t => t.HasComment("ASP.NET Core Identity ユーザークレーム管理"));
+
+        // AspNetRoleClaims テーブルコメント設定
+        modelBuilder.Entity<Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>>()
+                   .ToTable("AspNetRoleClaims", t => t.HasComment("ASP.NET Core Identity ロールクレーム管理"));
     }
 
     /// <summary>
