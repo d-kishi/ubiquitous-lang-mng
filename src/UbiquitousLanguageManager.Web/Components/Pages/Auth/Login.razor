@@ -1,0 +1,323 @@
+@page "/login"
+@layout LoginLayout
+@using Microsoft.AspNetCore.Components.Authorization
+@using UbiquitousLanguageManager.Web.Services
+@using UbiquitousLanguageManager.Web.Models
+@using UbiquitousLanguageManager.Web.Authentication
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>ログイン - ユビキタス言語管理システム</PageTitle>
+
+@* 
+【Blazor Server初学者向け解説】
+Blazor Serverでの認証画面実装例です。
+
+主要概念：
+1. @page: ルーティング定義（/loginでアクセス可能）
+2. @inject: 依存性注入（DI）サービスの取得
+3. StateHasChanged(): UI再描画の明示的な指示
+4. EditForm: Blazorの双方向データバインディングフォーム
+5. IJSRuntime: JavaScript相互運用（エラー通知等）
+*@
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="text-center mb-4">
+        <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+        <h2 class="h4 mb-0">🔐 ログイン</h2>
+      </div>
+    </div>
+    <div class="login-body">
+
+      @* Blazor版ログインフォーム *@
+      <EditForm Model="loginModel" OnValidSubmit="HandleLoginAsync" novalidate>
+        <DataAnnotationsValidator />
+
+        @* バリデーションサマリー（Blazor版） *@
+        <ValidationSummary class="text-danger mb-3" />
+
+        @* サーバーサイドエラーメッセージ表示 *@
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+          <div class="alert alert-danger mb-3" role="alert">
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            @errorMessage
+          </div>
+        }
+
+        @* 成功メッセージ表示 *@
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+          <div class="alert alert-success mb-3" role="alert">
+            <i class="fas fa-check-circle me-1"></i>
+            @successMessage
+          </div>
+        }
+
+        <div class="mb-3">
+          <label for="email" class="form-label">
+            📧 メールアドレス
+          </label>
+          <InputText @bind-Value="loginModel.Email" class="form-control" id="email" placeholder="user@example.com"
+            autocomplete="email" disabled="@isLoading" />
+          <ValidationMessage For="() => loginModel.Email" class="text-danger small" />
+        </div>
+
+        <div class="mb-3">
+          <label for="password" class="form-label">
+            🔒 パスワード
+          </label>
+          <InputText @bind-Value="loginModel.Password" type="password" class="form-control" id="password"
+            placeholder="パスワードを入力" autocomplete="current-password" disabled="@isLoading" />
+          <ValidationMessage For="() => loginModel.Password" class="text-danger small" />
+        </div>
+
+        <div class="mb-4">
+          <div class="form-check">
+            <InputCheckbox @bind-Value="loginModel.RememberMe" class="form-check-input" id="rememberMe"
+              disabled="@isLoading" />
+            <label for="rememberMe" class="form-check-label">
+              ログイン状態保持
+            </label>
+          </div>
+        </div>
+
+        <div class="d-grid mb-3">
+          <button type="submit" class="btn btn-primary btn-lg btn-login" disabled="@isLoading">
+            @if (isLoading)
+            {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              <span>ログイン中...</span>
+            }
+            else
+            {
+              <span>🚀 ログイン</span>
+            }
+          </button>
+        </div>
+
+        <div class="text-center">
+          <a href="/forgot-password" class="text-decoration-none">
+            🔄 パスワードリセット
+          </a>
+        </div>
+      </EditForm>
+    </div>
+  </div>
+</div>
+
+@if (isDevelopment)
+{
+  <div class="dev-info mt-3">
+    <div class="card">
+      <div class="card-body text-center">
+        <small class="text-muted">
+          <strong>開発環境テストアカウント:</strong><br>
+          admin@example.com / Password123!
+        </small>
+      </div>
+    </div>
+  </div>
+}
+
+<style>
+  .login-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .login-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+  }
+
+  .login-header {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .login-body {
+    padding: 2rem 0.5rem;
+  }
+
+  .form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #e1e5e9;
+    padding: 0.75rem 1rem;
+    transition: all 0.15s ease-in-out;
+  }
+
+  .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: transform 0.15s ease-in-out;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-login {
+    width: 600px;
+  }
+
+  .dev-info {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  @@media (max-width: 576px) {
+    .login-card {
+      margin: 1rem;
+      max-width: none;
+    }
+
+    .login-header,
+    .login-body {
+      padding: 1.5rem 1rem;
+    }
+  }
+</style>
+
+@code {
+  private LoginViewModel loginModel = new();
+  private string? errorMessage;
+  private string? successMessage;
+  private bool isLoading = false;
+  private bool isDevelopment = false;
+
+  [Parameter, SupplyParameterFromQuery]
+  public string? ReturnUrl { get; set; }
+
+  /// <summary>
+  /// コンポーネント初期化処理
+  ///
+  /// 【Blazor Server初学者向け解説】
+  /// OnInitializedAsync: コンポーネントのライフサイクルメソッド
+  /// - コンポーネントが初期化される際に一度だけ実行
+  /// - 非同期処理が可能（async/await対応）
+  /// - 初期データの取得やセットアップ処理に使用
+  /// </summary>
+  protected override async Task OnInitializedAsync()
+  {
+    // 開発環境判定
+    isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+
+    // 既にログイン済みの場合は自動リダイレクト
+    var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    if (authState.User.Identity?.IsAuthenticated == true)
+    {
+      var redirectUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "/";
+      Navigation.NavigateTo(redirectUrl, forceLoad: true);
+    }
+  }
+
+  /// <summary>
+  /// ログイン処理実行
+  ///
+  /// 【Blazor Server初学者向け解説】
+  /// EditFormのOnValidSubmit: フォーム送信時の処理
+  /// - バリデーション成功時のみ実行される
+  /// - 非同期処理でサーバーサイド認証を実行
+  /// - StateHasChanged()でUI状態を更新
+  /// </summary>
+  private async Task HandleLoginAsync()
+  {
+    try
+    {
+      // ローディング状態開始
+      isLoading = true;
+      errorMessage = null;
+      successMessage = null;
+
+      // StateHasChanged(): UI再描画の明示的な指示
+      // 【重要】Blazor Serverでは、サーバーサイドの状態変更を
+      // クライアントに通知するためにStateHasChanged()を呼び出します
+      StateHasChanged();
+
+      // 認証サービスでログイン実行
+      var loginRequest = new UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginRequestDto
+      {
+        Email = loginModel.Email,
+        Password = loginModel.Password,
+        RememberMe = loginModel.RememberMe
+      };
+
+      var loginResult = await AuthService.LoginAsync(loginRequest);
+
+      // LoginResponseDto の結果処理
+      if (loginResult.IsSuccess)
+      {
+        // 成功時の処理
+        successMessage = "ログインに成功しました。画面を切り替えています...";
+        StateHasChanged();
+
+        // 認証状態プロバイダーに通知
+        if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+        {
+          customProvider.NotifyUserAuthentication(AuthStateProvider.GetAuthenticationStateAsync());
+        }
+
+        // 初回ログイン判定
+        if (loginResult.IsFirstLogin)
+        {
+          // 初回ログイン時はパスワード変更画面へリダイレクト
+          _ = JSRuntime.InvokeVoidAsync("console.log", "初回ログイン検出: パスワード変更画面へリダイレクト");
+          await Task.Delay(1500); // UI表示のための短い待機
+          Navigation.NavigateTo("/Account/ChangePassword", forceLoad: true);
+        }
+        else
+        {
+          // 通常ログイン時のリダイレクト処理
+          var redirectUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "/";
+          await Task.Delay(1500); // UI表示のための短い待機
+          Navigation.NavigateTo(redirectUrl, forceLoad: true);
+        }
+      }
+      else
+      {
+        // エラー時の処理
+        errorMessage = loginResult.ErrorMessage ?? "ログインに失敗しました。";
+
+        // JavaScript相互運用: エラー通知をブラウザに表示
+        await JSRuntime.InvokeVoidAsync("console.error", $"ログインエラー: {errorMessage}");
+
+        StateHasChanged();
+      }
+    }
+    catch (Exception ex)
+    {
+      // 予期しないエラーのハンドリング
+      errorMessage = "ログイン処理中に予期しないエラーが発生しました。しばらく時間をおいてから再度お試しください。";
+
+      // JavaScript相互運用: コンソールエラー出力
+      await JSRuntime.InvokeVoidAsync("console.error", $"ログイン例外: {ex.Message}");
+    }
+    finally
+    {
+      // ローディング状態終了
+      isLoading = false;
+      StateHasChanged();
+    }
+  }
+}

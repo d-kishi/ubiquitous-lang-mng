@@ -9,13 +9,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **セッション開始**: 「セッションを開始します」「セッション開始」 → **`.claude/commands/session-start.md`** 自動実行
 - **セッション終了**: 「セッション終了」「セッションを終了します」 → **`.claude/commands/session-end.md`** 自動実行
 
-**Serena MCP初期化**: セッション開始時は必ず `/mcp__serena__initial_instructions` を最初に実行
+**Serena MCP初期化**: セッション開始時は必ず `mcp__serena__check_onboarding_performed` を実行（ツール呼び出し）
 
 ## プロジェクト概要
 
 **ユビキタス言語管理システム** - DDD用語管理Webアプリケーション
 - **技術基盤**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）
-- **現在フェーズ**: Phase A1-A4完了（認証・ユーザー管理）、Phase B1準備中
+- **現在フェーズ**: Phase A1-A6完了（認証・ユーザー管理）、Phase A7実施予定（要件準拠・アーキテクチャ統一）
+- **技術負債管理**: GitHub Issues #5, #6で管理（ADR_014準拠）
 - **詳細状況**: `/Doc/プロジェクト状況.md`参照
 
 ## アーキテクチャ概要

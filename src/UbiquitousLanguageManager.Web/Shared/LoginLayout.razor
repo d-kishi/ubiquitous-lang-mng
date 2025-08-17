@@ -1,0 +1,76 @@
+@inherits LayoutComponentBase
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" asp-append-version="true" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+</head>
+
+<body>
+    <div class="login-page">
+        <header class="login-header">
+            <div class="container">
+                <h1 class="system-title">
+                    <i class="fas fa-language me-2"></i>
+                    ユビキタス言語管理システム
+                </h1>
+            </div>
+        </header>
+        
+        <main class="login-main">
+            @Body
+        </main>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>
+
+<style>
+    .login-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1rem 0;
+    }
+
+    .system-title {
+        color: white;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .login-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    @@media (max-width: 576px) {
+        .system-title {
+            font-size: 1.25rem;
+        }
+        
+        .login-main {
+            padding: 1rem;
+        }
+    }
+</style>

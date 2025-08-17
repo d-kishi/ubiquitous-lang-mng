@@ -6,10 +6,10 @@
 
 ## コマンド実行内容
 
-### 1. Serena MCP初期指示読み込み（必須・最初に実行）
-- [ ] `/mcp__serena__initial_instructions` 実行
-- [ ] Serenaツール利用準備確認
-- [ ] エラー時は「Serenaの初期指示を読んでください」を手動実行
+### 1. Serena MCP初期化（必須・最初に実行）
+- [ ] `mcp__serena__check_onboarding_performed` ツール実行（MCPツール呼び出し）
+- [ ] Serenaツール利用準備確認（onboarding完了・メモリ一覧確認）
+- [ ] 必要に応じて `mcp__serena__list_memories` でメモリ状況確認
 
 ### 2. 基本状況確認（必須・3分以内）
 - [ ] `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況確認

@@ -110,9 +110,17 @@
       "WebFetch(domain:stackoverflow.com)",
       "mcp__serena__replace_regex",
       "Bash(mcp__serena__check_onboarding_performed:*)",
-      "Bash(/mcp__serena__initial_instructions)"
+      "Bash(/mcp__serena__initial_instructions)",
+      "WebSearch",
+      "mcp__serena__find_referencing_symbols",
+      "Bash(del \"C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\Pages\\Auth\\Login.razor\")",
+      "Bash(where gh)",
+      "Bash(gh issue create:*)"
     ],
     "deny": [],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\c\\Develop"
+    ]
   }
 }

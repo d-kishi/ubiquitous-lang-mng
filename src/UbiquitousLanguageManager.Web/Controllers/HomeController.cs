@@ -50,15 +50,15 @@ public class HomeController : Controller
                 return Redirect("/admin/users");
             }
 
-            // 未認証の場合はMVCホームページを表示
-            _logger.LogInformation("Unauthenticated user, displaying MVC home view");
-            return View();
+            // 未認証ユーザーは強制的にログイン画面へリダイレクト（仕様準拠）
+            _logger.LogInformation("Unauthenticated user, redirecting to login page");
+            return Redirect("/login");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in HomeController.Index: {Message}", ex.Message);
             // エラー時は安全にログイン画面へリダイレクト
-            return Redirect("/Account/Login");
+            return Redirect("/login");
         }
     }
 

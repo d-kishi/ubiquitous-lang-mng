@@ -1,0 +1,76 @@
+@page "/logout"
+@using Microsoft.AspNetCore.Components.Authorization
+@using UbiquitousLanguageManager.Web.Services
+@using UbiquitousLanguageManager.Web.Authentication
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>ログアウト中... - ユビキタス言語管理システム</PageTitle>
+
+@* 
+【Blazor Server初学者向け解説】
+Blazor版ログアウトコンポーネントです。
+
+動作原理：
+1. OnInitializedAsync(): ページ表示と同時にログアウト処理を実行
+2. AuthenticationService.LogoutAsync(): Cookie認証の無効化
+3. CustomAuthenticationStateProvider: 認証状態の更新通知
+4. NavigationManager.NavigateTo(): ホーム画面へのリダイレクト
+*@
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">ログアウト中...</span>
+        </div>
+        <h4 class="text-muted">ログアウト中...</h4>
+        <p class="text-muted">
+            しばらくお待ちください。
+        </p>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// コンポーネント初期化時にログアウト処理を実行
+    /// 
+    /// 【Blazor Server初学者向け解説】
+    /// OnInitializedAsync: ページ読み込み完了と同時に実行
+    /// - サーバーサイドでのCookie認証無効化
+    /// - 認証状態プロバイダーへの状態変更通知
+    /// - クライアントへの自動リダイレクト
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // AuthenticationServiceでログアウト実行
+            // 【重要】Cookie認証の無効化とセッション破棄
+            await AuthService.LogoutAsync();
+
+            // 認証状態プロバイダーに状態変更を通知
+            // 【Blazor Server】SignalR接続でリアルタイムに認証状態を更新
+            if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+            {
+                customProvider.NotifyUserLogout();
+            }
+
+            // 短時間待機してからリダイレクト（UX向上）
+            await Task.Delay(1000);
+
+            // ホーム画面へリダイレクト
+            // forceLoad: true → サーバーサイドでの完全なページ読み込み
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            // ログアウト失敗時でも安全にリダイレクト
+            // セキュリティ重視: エラー詳細は隠蔽
+            Console.WriteLine($"ログアウトエラー: {ex.Message}");
+            
+            await Task.Delay(1000);
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+    }
+}

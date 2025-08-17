@@ -182,13 +182,156 @@ public class AuthenticationService
     }
 
     /// <summary>
-    /// Phase A3で実装予定：パスワード変更（Web層版）
+    /// パスワード変更処理（TECH-004: 初回ログイン時パスワード変更対応）
     /// </summary>
-    public async Task<UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto> ChangePasswordAsync(UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordRequestDto request)
+    /// <param name="userEmail">対象ユーザーのメールアドレス</param>
+    /// <param name="request">パスワード変更要求</param>
+    /// <returns>パスワード変更結果</returns>
+public async Task<UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto> ChangePasswordAsync(string userEmail, UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordRequestDto request)
+{
+    try
     {
-        await Task.CompletedTask;
-        _logger.LogInformation("ChangePasswordAsync called - Phase A3で実装予定");
-        return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error("Phase A3で実装予定");
+        _logger.LogInformation("パスワード変更処理開始: ユーザー={Email}", userEmail);
+
+        // ユーザー検索
+        var user = await _userManager.FindByEmailAsync(userEmail);
+        if (user == null)
+        {
+            _logger.LogWarning("パスワード変更失敗: ユーザーが見つかりません {Email}", userEmail);
+            return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error("ユーザーが見つかりません。");
+        }
+
+        // ApplicationUserにキャスト
+        if (user is not ApplicationUser appUser)
+        {
+            _logger.LogError("パスワード変更失敗: ApplicationUserキャストエラー {Email}", userEmail);
+            return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error("システムエラーが発生しました。");
+        }
+
+        // パスワード変更実行
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        
+        if (result.Succeeded)
+        {
+            // 初回ログインフラグを更新（true → false）
+            if (appUser.IsFirstLogin)
+            {
+                appUser.IsFirstLogin = false;
+                appUser.UpdatedAt = DateTime.UtcNow;
+                appUser.UpdatedBy = user.Email ?? "System";
+                
+                // 初期パスワードをクリア（セキュリティ強化）
+                appUser.InitialPassword = null;
+                
+                var updateResult = await _userManager.UpdateAsync(appUser);
+                if (!updateResult.Succeeded)
+                {
+                    _logger.LogError("パスワード変更後のフラグ更新失敗: {Email}, エラー: {Errors}", 
+                        userEmail, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                    return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error("パスワード変更は成功しましたが、システム更新でエラーが発生しました。");
+                }
+                
+                _logger.LogInformation("初回ログインパスワード変更完了: {Email}", userEmail);
+            }
+            
+            // Blazor認証状態の更新通知
+            _authStateProvider.NotifyUserAuthentication(_authStateProvider.GetAuthenticationStateAsync());
+            
+            _logger.LogInformation("パスワード変更成功: {Email}", userEmail);
+            return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Success("パスワードを変更しました。");
+        }
+        else
+        {
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            _logger.LogWarning("パスワード変更失敗: {Email}, エラー: {Errors}", userEmail, errors);
+            return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error($"パスワード変更に失敗しました: {errors}");
+        }
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "パスワード変更処理中にエラーが発生しました: {Email}", userEmail);
+        return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error("パスワード変更処理中にエラーが発生しました。管理者にお問い合わせください。");
+    }
+}
+
+    /// <summary>
+    /// Blazor用パスワード変更処理（現在のユーザー対象）
+    /// </summary>
+    /// <param name="currentPassword">現在のパスワード</param>
+    /// <param name="newPassword">新しいパスワード</param>
+    /// <returns>Result型でのパスワード変更結果</returns>
+    public async Task<Microsoft.FSharp.Core.FSharpResult<string, string>> ChangePasswordAsync(string currentPassword, string newPassword)
+    {
+        try
+        {
+            // 現在の認証状態から現在のユーザーを取得
+            var authState = await _authStateProvider.GetAuthenticationStateAsync();
+            var userEmail = authState.User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                _logger.LogWarning("パスワード変更失敗: 現在のユーザーが特定できません");
+                return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError("認証情報の取得に失敗しました。再度ログインしてください。");
+            }
+
+            _logger.LogInformation("Blazor用パスワード変更処理開始: ユーザー={Email}", userEmail);
+
+            // ユーザー検索
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+            {
+                _logger.LogWarning("パスワード変更失敗: ユーザーが見つかりません {Email}", userEmail);
+                return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError("ユーザーが見つかりません。");
+            }
+
+            // ApplicationUserにキャスト
+            if (user is not ApplicationUser appUser)
+            {
+                _logger.LogError("パスワード変更失敗: ApplicationUserキャストエラー {Email}", userEmail);
+                return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError("システムエラーが発生しました。");
+            }
+
+            // パスワード変更実行
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            
+            if (result.Succeeded)
+            {
+                // 初回ログインフラグを更新（true → false）
+                if (appUser.IsFirstLogin)
+                {
+                    appUser.IsFirstLogin = false;
+                    appUser.UpdatedAt = DateTime.UtcNow;
+                    appUser.UpdatedBy = userEmail;
+                    
+                    // 初期パスワードをクリア（セキュリティ強化）
+                    appUser.InitialPassword = null;
+                    
+                    var updateResult = await _userManager.UpdateAsync(appUser);
+                    if (!updateResult.Succeeded)
+                    {
+                        _logger.LogError("パスワード変更後のフラグ更新失敗: {Email}, エラー: {Errors}", 
+                            userEmail, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                        return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError("パスワード変更は成功しましたが、システム更新でエラーが発生しました。");
+                    }
+                    
+                    _logger.LogInformation("初回ログインパスワード変更完了: {Email}", userEmail);
+                }
+                
+                _logger.LogInformation("Blazor用パスワード変更成功: {Email}", userEmail);
+                return Microsoft.FSharp.Core.FSharpResult<string, string>.NewOk("パスワードを変更しました。");
+            }
+            else
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogWarning("パスワード変更失敗: {Email}, エラー: {Errors}", userEmail, errors);
+                return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError($"パスワード変更に失敗しました: {errors}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Blazor用パスワード変更処理中にエラーが発生しました");
+            return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError("パスワード変更処理中にエラーが発生しました。管理者にお問い合わせください。");
+        }
     }
 
     // ===== Phase A5標準Identity移行対応ヘルパーメソッド =====
@@ -214,12 +357,20 @@ public class AuthenticationService
     /// <summary>
     /// 標準IdentityUserでの初回ログイン判定（カスタム実装）
     /// </summary>
-    private static bool IsUserFirstLogin(IdentityUser user)
+    /// <summary>
+/// ApplicationUser（カスタムIdentityUser）での初回ログイン判定
+/// </summary>
+private static bool IsUserFirstLogin(IdentityUser user)
+{
+    // ApplicationUserにキャストしてIsFirstLoginフィールドを確認
+    if (user is ApplicationUser appUser)
     {
-        // 標準IdentityUserには初回ログインフラグがないため、常にfalse
-        // 実際の実装ではクレームやカスタムフィールドで管理が必要
-        return false;
+        return appUser.IsFirstLogin;
     }
+    
+    // キャストに失敗した場合はfalse（安全側に倒す）
+    return false;
+}
 
     /// <summary>
     /// 標準IdentityUserでの更新日時取得（カスタム実装）

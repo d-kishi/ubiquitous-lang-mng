@@ -1,0 +1,114 @@
+@page "/access-denied"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>アクセス拒否 - ユビキタス言語管理システム</PageTitle>
+
+@* 
+【Blazor Server初学者向け解説】
+Blazor版アクセス拒否ページです。
+
+動作原理：
+1. @page: ルーティング定義（/access-deniedでアクセス可能）
+2. AuthorizeView: 認証状態に応じた表示制御
+3. Bootstrap: レスポンシブデザイン対応
+4. セキュリティ重視: 詳細なエラー情報は表示しない
+*@
+
+<div class="min-vh-100 d-flex align-items-center bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-body p-5 text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-shield-alt fa-4x text-warning mb-3"></i>
+                            <h1 class="h3 text-gray-900 mb-2">アクセス権限がありません</h1>
+                        </div>
+
+                        <AuthorizeView>
+                            <Authorized>
+                                @* 認証済みユーザー向けメッセージ *@
+                                <div class="alert alert-warning" role="alert">
+                                    <h5 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        権限不足
+                                    </h5>
+                                    <p class="mb-2">
+                                        このページまたは機能にアクセスする権限がありません。
+                                    </p>
+                                    <hr>
+                                    <p class="mb-0">
+                                        必要な権限についてはシステム管理者にお問い合わせください。
+                                    </p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <p class="text-muted mb-3">
+                                        <strong>現在のユーザー:</strong> @context.User.Identity?.Name
+                                    </p>
+                                    
+                                    <div class="d-grid gap-2 d-md-block">
+                                        <a href="/" class="btn btn-primary">
+                                            <i class="fas fa-home me-1"></i>
+                                            ホームに戻る
+                                        </a>
+                                        <a href="/logout" class="btn btn-outline-secondary">
+                                            <i class="fas fa-sign-out-alt me-1"></i>
+                                            別のアカウントでログイン
+                                        </a>
+                                    </div>
+                                </div>
+                            </Authorized>
+                            <NotAuthorized>
+                                @* 未認証ユーザー向けメッセージ *@
+                                <div class="alert alert-info" role="alert">
+                                    <h5 class="alert-heading">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        ログインが必要です
+                                    </h5>
+                                    <p class="mb-2">
+                                        このページにアクセスするにはログインが必要です。
+                                    </p>
+                                    <hr>
+                                    <p class="mb-0">
+                                        アカウントをお持ちでない場合は、システム管理者にお問い合わせください。
+                                    </p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="d-grid gap-2 d-md-block">
+                                        <a href="/login" class="btn btn-primary">
+                                            <i class="fas fa-sign-in-alt me-1"></i>
+                                            ログイン
+                                        </a>
+                                        <a href="/" class="btn btn-outline-secondary">
+                                            <i class="fas fa-home me-1"></i>
+                                            ホームに戻る
+                                        </a>
+                                    </div>
+                                </div>
+                            </NotAuthorized>
+                        </AuthorizeView>
+
+                        @* セキュリティ情報 *@
+                        <div class="mt-5 pt-4 border-top">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                セキュリティポリシーにより、アクセスが制限されています。
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // 【Blazor Server初学者向け解説】
+    // このコンポーネントは静的な表示のみのため、
+    // 特別な@codeロジックは不要です。
+    // 
+    // AuthorizeViewコンポーネントが自動的に
+    // 認証状態を判定し、適切なメッセージを表示します。
+}

@@ -111,9 +111,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     // 仕様書2.1.1準拠: Remember Me機能（7日間有効期限）
     // isPersistent=trueの場合、ExpireTimeSpanが7日間に延長される
     
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.LoginPath = "/login";
+    options.LogoutPath = "/logout";
+    options.AccessDeniedPath = "/access-denied";
     options.SlidingExpiration = true; // アクティブなユーザーは自動延長
     
     // Remember Me用の延長設定
@@ -204,6 +204,17 @@ app.UseRouting();
 
 // 🔐 認証・認可ミドルウェア設定
 app.UseAuthentication();
+
+// 🔒 初回ログインアクセス制限ミドルウェア（TECH-004対応）
+// 【セキュリティ強化】
+// 初回ログイン状態（IsFirstLogin=true）のユーザーを対象に、
+// パスワード変更画面以外へのアクセスを制限し、セキュリティを強化します。
+// 
+// 【ミドルウェア配置理由】
+// UseAuthentication()の後: 認証済みユーザーの情報が取得可能
+// UseAuthorization()の前: 認可処理前にアクセス制限を適用
+app.UseFirstLoginRedirect();
+
 app.UseAuthorization();
 
 // 🎯 Blazor Server設定: ルーティング
