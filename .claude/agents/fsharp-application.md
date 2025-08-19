@@ -93,18 +93,11 @@ type UserApplicationService(userRepository: IUserRepository) =
 ```
 
 ## 調査分析成果物の参照
-**実装開始前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）：
 - **Spec_Analysis_Results.md**: ユースケース仕様・アプリケーションサービス要件
 - **Implementation_Requirements.md**: Application層実装要件の詳細
 - **Dependency_Analysis_Results.md**: Repository・外部サービス依存関係
 - **Tech_Research_Results.md**: F#アプリケーション層実装の技術指針
-
-## 連携Agent
-- **spec-analysis(仕様分析)**: ユースケース・アプリケーション仕様に基づく実装要件確認
-- **fsharp-domain(F#ドメイン)**: ドメインロジックの活用・オーケストレーション
-- **contracts-bridge(F#↔C#境界)**: DTO変換・外部インターフェース設計協調
-- **csharp-infrastructure(C#インフラ)**: Repository実装との連携
-- **integration-test(統合テスト)**: アプリケーションサービステスト設計
 
 ## F#初学者向けコメント方針
 **重要**: プロジェクトオーナーがF#初学者のため、詳細コメント必須

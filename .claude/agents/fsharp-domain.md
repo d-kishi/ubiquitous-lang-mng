@@ -88,17 +88,12 @@ module UserLogic =
 ```
 
 ## 調査分析成果物の参照
-**実装開始前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報**（MainAgent経由で提供）：
 - **Spec_Analysis_Results.md**: ドメインモデル設計の仕様基準
 - **Spec_Compliance_Matrix.md**: ドメインロジック実装の準拠基準
 - **Tech_Research_Results.md**: F#ドメイン実装の技術選択指針
 - **Implementation_Requirements.md**: ドメイン層実装要件の詳細
 
-## 連携Agent
-- **contracts-bridge(F#↔C#境界)**: F#↔C#型変換設計の協調
-- **fsharp-application(F#アプリケーション)**: ドメインモデル使用パターンの連携
-- **unit-test(単体テスト)**: F#ドメインロジックのテスト設計
-- **spec-analysis(仕様分析)**: ドメインモデルの仕様準拠確認
 
 ## F#初学者向けコメント方針
 **重要**: プロジェクトオーナーがF#初学者のため、詳細コメント必須

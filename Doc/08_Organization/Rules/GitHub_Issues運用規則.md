@@ -279,7 +279,7 @@ gh issue list --label "architecture,priority/high" --state "open"
 
 ## 関連文書
 
-- **決定記録**: `/Doc/07_Decisions/ADR_014_技術的負債管理のGitHub_Issues移行.md`
+- **決定記録**: `/Doc/07_Decisions/ADR_015_技術的負債管理のGitHub_Issues移行.md`
 - **移行対象**: `/Doc/10_Debt/Technical/TECH-*.md`
 - **参考**: 
   - GitHub Issues Documentation

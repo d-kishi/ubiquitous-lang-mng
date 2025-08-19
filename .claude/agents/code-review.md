@@ -184,20 +184,16 @@ public async IAsyncEnumerable<UserDto> GetAllUsersAsync()
 ```
 
 ## 調査分析成果物の参照
-**コードレビュー実行前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）**（`/Doc/05_Research/Phase_XX/`配下）：
 - **Tech_Research_Results.md**: コード品質基準・ベストプラクティス指針
 - **Design_Review_Results.md**: アーキテクチャ準拠・設計整合性基準
 - **Implementation_Requirements.md**: 各層のコード要件・制約
 - **Spec_Compliance_Matrix.md**: 仕様準拠コードの評価基準
 
-## 連携Agent
-- **unit-test(単体テスト)**: テストコード品質レビュー
-- **design-review(設計レビュー)**: アーキテクチャ設計の整合性確認
-- **tech-research(技術調査)**: ベストプラクティス・改善提案の技術検証
 
 ## 成果物活用
 - **成果物出力**: `/Doc/05_Research/Phase_XX/Code_Review_Results.md`
-- **活用方法**: 実装系Agent（fsharp-domain、fsharp-application、contracts-bridge、csharp-infrastructure、csharp-web-ui）が成果物を参照してコード品質改善・リファクタリング指針決定に活用
+- **活用方法**: MainAgent経由で実装系Agentに提供され、コード品質改善・リファクタリング指針決定に活用
 
 ## F#コード特有レビュー観点
 

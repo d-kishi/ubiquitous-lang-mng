@@ -115,7 +115,15 @@
       "mcp__serena__find_referencing_symbols",
       "Bash(del \"C:\\Develop\\ubiquitous-lang-mng\\src\\UbiquitousLanguageManager.Web\\Pages\\Auth\\Login.razor\")",
       "Bash(where gh)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(gh issue view:*)",
+      "Bash(for file in integration-test.md spec-analysis.md spec-compliance.md tech-research.md unit-test.md design-review.md fsharp-application.md csharp-web-ui.md dependency-analysis.md csharp-infrastructure.md contracts-bridge.md)",
+      "Bash(do echo \"Processing $file...\")",
+      "Bash(done)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(sed:*)",
+      "mcp__serena__think_about_whether_you_are_done"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

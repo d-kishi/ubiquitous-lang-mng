@@ -133,7 +133,7 @@
 ### 推奨読み込み範囲
 - `/Doc/01_Requirements/要件定義書.md`
 - `/Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md`
-- `/Doc/07_Decisions/ADR_014_技術的負債管理のGitHub_Issues移行.md`
+- `/Doc/07_Decisions/ADR_015_技術的負債管理のGitHub_Issues移行.md`
 - `/Doc/08_Organization/Rules/GitHub_Issues運用規則.md`
 
 ---

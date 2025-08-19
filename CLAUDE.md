@@ -8,6 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **セッション開始**: 「セッションを開始します」「セッション開始」 → **`.claude/commands/session-start.md`** 自動実行
 - **セッション終了**: 「セッション終了」「セッションを終了します」 → **`.claude/commands/session-end.md`** 自動実行
+- **週次振り返り**: 「週次振り返り」「振り返り実施」「今週の振り返り」 → **`.claude/commands/weekly-retrospective.md`** 自動実行
+- **Phase開始準備**: 「Phase開始準備」「新Phase準備」「PhaseXXの実行を開始してください」「PhaseXXを開始してください」 → **`.claude/commands/phase-start.md`** 自動実行
+- **Step開始準備**: 「Step開始」「次Step開始」「StepXX開始」「Step開始準備」「次のStep準備」 → **`.claude/commands/step-start.md`** 自動実行
+- **Phase終了処理**: 「Phase完了」「Phase終了」「フェーズ完了」「PhaseXX完了」「Phase総括実施」 → **`.claude/commands/phase-end.md`** 自動実行
 
 **Serena MCP初期化**: セッション開始時は必ず `mcp__serena__check_onboarding_performed` を実行（ツール呼び出し）
 
@@ -16,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **ユビキタス言語管理システム** - DDD用語管理Webアプリケーション
 - **技術基盤**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）
 - **現在フェーズ**: Phase A1-A6完了（認証・ユーザー管理）、Phase A7実施予定（要件準拠・アーキテクチャ統一）
-- **技術負債管理**: GitHub Issues #5, #6で管理（ADR_014準拠）
+- **技術負債管理**: GitHub Issues #5, #6で管理（ADR_015準拠）
 - **詳細状況**: `/Doc/プロジェクト状況.md`参照
 
 ## アーキテクチャ概要

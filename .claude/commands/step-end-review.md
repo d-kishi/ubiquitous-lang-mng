@@ -12,7 +12,8 @@
 - [ ] コード内の仕様書項番コメント記載確認
 - [ ] 仕様逸脱リスクの最終確認
 
-### 2. TDD実践確認（必須）  
+### 2. TDD実践確認（必須）
+- [ ] **🔧 tdd-practice-check Command実行** → TDD実践の包括的確認
 - [ ] Red-Green-Refactorサイクルの実践記録確認
 - [ ] 各機能でテストが先行作成されたことの確認
 - [ ] Redフェーズでテスト失敗が確認されたことの検証
@@ -31,15 +32,16 @@
 
 ### 5. ユーザー報告・承認取得
 - [ ] Step完了・レビュー結果をユーザーに報告
-- [ ] 次Step組織設計・作業着手の承認依頼
-- [ ] 各段階でのユーザー承認取得完了確認
+- [ ] Step完了承認取得
+- [ ] 次Step実行可否の確認・承認取得
 
 ## 実行後アクション
-✅ 全チェック完了 → 次Step準備に進む  
-⚠️ 未完了項目あり → 該当項目を完了してから次Step進行  
+✅ 全チェック完了 → Step完了・次step-start実行準備  
+⚠️ 未完了項目あり → 該当項目完了後・次Step進行準備  
 ❌ 重要な問題発見 → 問題解決後に再レビュー実施
 
 ## 関連プロセス
-- SubAgent活用: spec-compliance, unit-test, integration-test, code-review
-- 成果物確認: /Doc/05_Research/Phase_XX/ 配下ファイル
-- 記録更新: /Doc/08_Organization/Active/Phase_XX/ 配下ファイル
+- **SubAgent活用**: spec-compliance, unit-test, integration-test, code-review
+- **成果物確認**: /Doc/05_Research/Phase_XX/ 配下ファイル確認
+- **記録更新**: /Doc/08_Organization/Active/Phase_XX/ 配下ファイル更新
+- **次プロセス連携**: Step完了後 → step-start Command実行 → 次Step組織設計・準備

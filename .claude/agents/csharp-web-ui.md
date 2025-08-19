@@ -177,17 +177,11 @@ tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__
 ```
 
 ## 調査分析成果物の参照
-**実装開始前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）：
 - **Spec_Analysis_Results.md**: UI要件・画面仕様の詳細
 - **Spec_Compliance_Matrix.md**: UI設計書準拠の基準
 - **Implementation_Requirements.md**: Web UI層実装要件の詳細
 - **Design_Review_Results.md**: Blazor Server設計・アーキテクチャ整合性
-
-## 連携Agent
-- **csharp-infrastructure(C#インフラ)**: 依存性注入・サービス利用協調
-- **contracts-bridge(F#↔C#境界)**: DTO・ViewModel変換協調
-- **integration-test(統合テスト)**: E2Eテスト・UIテスト設計
-- **spec-analysis(仕様分析)**: UI設計書・仕様書に基づく実装要件確認
 
 ## Blazor Server初学者向けコメント方針
 **重要**: プロジェクトオーナーがBlazor Server初学者のため、詳細コメント必須

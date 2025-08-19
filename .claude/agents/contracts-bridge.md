@@ -124,18 +124,11 @@ public class UserTypeConverter : TypeConverter
 ```
 
 ## 調査分析成果物の参照
-**実装開始前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）：
 - **Implementation_Requirements.md**: 型変換・インターフェース要件
 - **Design_Review_Results.md**: F#↔C#境界設計の整合性基準
 - **Tech_Research_Results.md**: TypeConverter実装の技術指針
 - **Dependency_Analysis_Results.md**: 両言語間の依存関係制約
-
-## 連携Agent
-- **spec-analysis(仕様分析)**: データ構造・インターフェース仕様に基づく変換要件確認
-- **fsharp-domain(F#ドメイン)**: F#型定義の詳細・制約確認
-- **fsharp-application(F#アプリケーション)**: F#サービス層との変換インターフェース
-- **csharp-infrastructure(C#インフラ)**: C#側でのDTO使用パターン確認
-- **csharp-web-ui(C# Web UI)**: C#ビューモデルとの変換要件確認
 
 ## 型変換の重要原則
 

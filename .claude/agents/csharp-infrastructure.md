@@ -132,18 +132,11 @@ public class ApplicationDbContext : DbContext
 ```
 
 ## 調査分析成果物の参照
-**実装開始前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）：
 - **Design_Review_Results.md**: Entity Framework・データベース設計の整合性基準
 - **Dependency_Analysis_Results.md**: Repository・外部サービス依存関係
 - **Tech_Research_Results.md**: Entity Framework・PostgreSQL実装の技術指針
 - **Implementation_Requirements.md**: Infrastructure層実装要件の詳細
-
-## 連携Agent
-- **spec-analysis(仕様分析)**: データベース設計書・仕様書に基づく実装要件確認
-- **contracts-bridge(F#↔C#境界)**: DTO変換・型マッピング協調
-- **fsharp-application(F#アプリケーション)**: リポジトリインターフェース設計協調
-- **csharp-web-ui(C# Web UI)**: 依存性注入設定の統合
-- **integration-test(統合テスト)**: TestWebApplicationFactory統合
 
 ## PostgreSQL最適化テクニック
 

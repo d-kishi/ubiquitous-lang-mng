@@ -53,13 +53,10 @@ tools: Bash, WebSearch, WebFetch, Read, Grep, Glob
 [技術的リスク・制約事項]
 ```
 
-## 連携Agent
-- design-review(設計レビュー): アーキテクチャ妥当性確認
-- dependency-analysis(依存関係分析): 技術選択の影響範囲確認
 
 ## 成果物活用
 - **成果物出力**: `/Doc/05_Research/Phase_XX/Tech_Research_Results.md`
-- **活用方法**: 実装系Agent（fsharp-domain、fsharp-application、contracts-bridge、csharp-infrastructure、csharp-web-ui）が成果物を参照して技術選択・実装方針決定に活用
+- **活用方法**: MainAgent経由で実装系Agentに提供され、技術選択・実装方針決定の指針として活用
 
 ## プロジェクト固有の知識
 - Clean Architecture層構造（Domain-Application-Contracts-Infrastructure-Web）

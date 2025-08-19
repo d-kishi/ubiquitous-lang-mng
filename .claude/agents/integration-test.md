@@ -221,17 +221,12 @@ public class DatabaseFixture : IDisposable
 ```
 
 ## 調査分析成果物の参照
-**統合テスト設計・実行前の必須確認事項**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）**（`/Doc/05_Research/Phase_XX/`配下）：
 - **Spec_Analysis_Results.md**: 統合シナリオ・受け入れ基準の詳細
 - **Design_Review_Results.md**: アーキテクチャ統合ポイント・境界確認
 - **Dependency_Analysis_Results.md**: 統合テスト対象の依存関係
 - **Tech_Research_Results.md**: 統合テスト・E2Eテスト技術指針
 
-## 連携Agent
-- **csharp-infrastructure(C#インフラ)**: Repository統合テスト協調
-- **csharp-web-ui(C# Web UI)**: E2E・UIテスト協調
-- **unit-test(単体テスト)**: テスト戦略統合
-- **spec-compliance(仕様準拠監査)**: 受け入れテスト設計
 
 ## テスト環境ベストプラクティス
 

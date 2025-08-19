@@ -79,14 +79,9 @@ tools: mcp__serena__find_referencing_symbols, mcp__serena__find_symbol, Grep, Re
 - **低リスク**: [依存関係・対策]
 ```
 
-## 連携Agent
-- design-review(設計レビュー): アーキテクチャ依存関係の妥当性確認
-- tech-research(技術調査): 依存関係解決の技術的選択肢調査
-- unit-test(単体テスト): テスト依存関係の最適化
-
 ## 成果物活用
 - **成果物出力**: `/Doc/05_Research/Phase_XX/Dependency_Analysis_Results.md`
-- **活用方法**: 実装系Agent（fsharp-domain、fsharp-application、contracts-bridge、csharp-infrastructure、csharp-web-ui）が成果物を参照して実装順序・依存関係制約を考慮した実装計画立案に活用
+- **活用方法**: MainAgent経由で実装系Agentに提供され、実装順序・依存関係制約を考慮した実装計画立案に活用
 
 ## プロジェクト固有の知識
 - F#ドメインモデルからC#インフラへの依存フロー

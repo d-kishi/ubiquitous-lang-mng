@@ -70,14 +70,9 @@ tools: Read, mcp__serena__get_symbols_overview, mcp__serena__find_symbol, Grep
 - [変更による影響範囲・リスク]
 ```
 
-## 連携Agent
-- tech-research(技術調査): 設計選択肢の技術的妥当性確認
-- spec-analysis(仕様分析): 設計の仕様準拠確認
-- dependency-analysis(依存関係分析): 設計変更の影響範囲確認
-
 ## 成果物活用
 - **成果物出力**: `/Doc/05_Research/Phase_XX/Design_Review_Results.md`
-- **活用方法**: 実装系Agent（fsharp-domain、fsharp-application、contracts-bridge、csharp-infrastructure、csharp-web-ui）が成果物を参照して設計整合性確認・実装指針決定に活用
+- **活用方法**: MainAgent経由で実装系Agentに提供され、設計整合性確認・実装指針決定に活用
 
 ## プロジェクト固有の知識
 - F#ドメインモデル設計パターン

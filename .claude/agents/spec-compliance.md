@@ -247,15 +247,10 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
-## 連携Agent・Command
-- **spec-analysis(仕様分析)**: 成果物継承元・仕様準拠マトリックス作成者
-- **unit-test(単体テスト)・integration-test(統合テスト)**: 仕様準拠テストケース設計
-- **code-review(コードレビュー)**: 仕様準拠観点でのコードレビュー
-- **🔧 spec-compliance-check Command**: このSubAgentの実行プロセス・チェックリストを定義
 
 ## 成果物活用
 - **成果物出力**: `/Doc/05_Research/Phase_XX/Spec_Compliance_Results.md`
-- **活用方法**: 実装系Agent（fsharp-domain、fsharp-application、contracts-bridge、csharp-infrastructure、csharp-web-ui）が成果物を参照して仕様準拠修正・改善指針決定に活用
+- **活用方法**: MainAgent経由で実装系Agentに提供され、仕様準拠修正・改善指針決定に活用
 
 ## プロジェクト固有の知識
 - 機能仕様書2.1～2.4の詳細要件理解
