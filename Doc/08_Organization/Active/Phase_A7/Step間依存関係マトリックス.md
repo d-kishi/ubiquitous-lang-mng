@@ -47,7 +47,7 @@ graph TD
 ---
 
 ### Step2: 緊急対応・基盤整備
-**状態**: 🔄 **実施予定**
+**状態**: ✅ **完了済み**
 
 #### 前提条件
 - ✅ Step1完了: 課題特定・優先度決定済み
@@ -70,11 +70,11 @@ graph TD
    - IProjectService: 同上
    - IDomainService: 同上
 
-#### 完了判定基準
-- [ ] `/Account/ChangePassword` アクセス時404エラー解消
-- [ ] `/change-password` 正常表示・動作
-- [ ] MVC版・Blazor版パスワード変更両方動作
-- [ ] `dotnet build` 成功（0 Warning, 0 Error）
+#### 完了判定基準（2025-08-20完了済み）
+- [x] `/Account/ChangePassword` アクセス時404エラー解消
+- [x] `/change-password` 正常表示・動作
+- [x] MVC版・Blazor版パスワード変更両方動作
+- [x] `dotnet build` 成功（0 Warning, 0 Error）
 
 #### Step3への引き継ぎ事項
 - **重要**: AccountController暫定実装完了（Step3削除予定）

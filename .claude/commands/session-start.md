@@ -9,7 +9,11 @@
 ### 1. Serena MCP初期化（必須・最初に実行）
 - [ ] `mcp__serena__check_onboarding_performed` ツール実行（MCPツール呼び出し）
 - [ ] Serenaツール利用準備確認（onboarding完了・メモリ一覧確認）
-- [ ] 必要に応じて `mcp__serena__list_memories` でメモリ状況確認
+- [ ] `mcp__serena__list_memories` でメモリ状況確認
+- [ ] **重要**: 主要メモリーの読み込み・内容確認（前回セッション成果活用）
+  - `project_overview` メモリー確認（最新のプロジェクト状況・Phase状況把握）
+  - `development_guidelines` メモリー確認（現在の開発方針・制約把握）
+  - `tech_stack_and_conventions` メモリー確認（技術構成・規約把握）
 
 ### 2. 基本状況確認（必須・3分以内）
 - [ ] `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況確認
@@ -37,6 +41,7 @@
 - [ ] 明確なセッション目標設定
 - [ ] TodoWriteツールでのタスク管理初期化
 - [ ] 予想時間配分の設定
+
 
 ## 実行後アクション
 ✅ 全確認完了 → 本作業開始  
