@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <Compile Include="Interfaces.fs" />
+    <Compile Include="Interfaces\IUbiquitousLanguageService.fs" />
+    <Compile Include="Interfaces\IProjectService.fs" />
+    <Compile Include="Interfaces\IDomainService.fs" />
     <Compile Include="ApplicationServices.fs" />
     <Compile Include="UseCases.fs" />
   </ItemGroup>

@@ -36,6 +36,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+// 🔧 MVC設定: AccountController等のMVCコントローラー用
+// 【CTRL-001対応】AccountController実装に必要
+builder.Services.AddControllersWithViews();
+
 // 🔧 HTTP Context Accessor: Blazor ServerでHTTPコンテキストにアクセスするために必要
 builder.Services.AddHttpContextAccessor();
 

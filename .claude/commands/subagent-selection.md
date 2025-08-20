@@ -91,6 +91,23 @@ echo "⚡ 並列実行計画を策定します..."
 - [ ] Agent間の成果物継承関係確認
 - [ ] MainAgentでの統合・品質確認計画
 
+## 🔧 F#コード実装時の専門SubAgent選択ガイドライン
+
+### F#専門性活用の必須ルール
+```markdown
+## F#実装対象別SubAgent選択
+- F# Domain層（エンティティ・値オブジェクト） → **fsharp-domain**
+- F# Application層（サービス・インターフェース） → **fsharp-application**  
+- F#/C#境界（TypeConverter・DTO変換） → **contracts-bridge**
+- C# Infrastructure層のみ → **csharp-infrastructure**
+- C# Web UI層のみ → **csharp-web-ui**
+```
+
+### Application層インターフェース実装時の注意
+**対象**: `IUbiquitousLanguageService.fs`・`IProjectService.fs`・`IDomainService.fs`
+**正しい選択**: **fsharp-application**
+**誤った選択**: csharp-infrastructure（C#専門のためF#慣習を見落とす可能性）
+
 ### 4. 動的調整判断基準設定
 
 **Agent追加・変更の判断基準**:
@@ -107,6 +124,7 @@ echo "🚀 SubAgent並列実行を開始します..."
 - [ ] 選択したSubAgent定義ファイル確認（.claude/agents/配下）
 - [ ] 必要な入力ファイル・前提条件確認
 - [ ] 並列実行環境・Context準備完了
+- [ ] **🔴 並列実行確認**: 同一メッセージ内で複数Task tool呼び出し必須
 - [ ] SubAgent実行・統合プロセス開始
 
 ## Pattern効率性確認
