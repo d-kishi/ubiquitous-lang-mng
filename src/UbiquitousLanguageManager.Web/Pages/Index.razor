@@ -1,0 +1,24 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>ユビキタス言語管理システム</PageTitle>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            // 認証済みユーザーは管理画面へリダイレクト
+            Navigation.NavigateTo("/admin/users");
+        }
+        else
+        {
+            // 未認証ユーザーはログイン画面へリダイレクト
+            Navigation.NavigateTo("/login");
+        }
+    }
+}

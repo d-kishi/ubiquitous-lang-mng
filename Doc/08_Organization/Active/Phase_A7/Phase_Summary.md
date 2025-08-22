@@ -47,14 +47,14 @@
 - **重要発見**: 総合仕様準拠度66%・最重要逸脱3項目・技術負債TECH-003/004/005
 
 #### **Step2（緊急対応・基盤整備）**: 実施予定 - 90-120分
-- **SubAgent活用**: csharp-infrastructure・csharp-web-ui
+- **SubAgent選択**: Step開始処理で決定（Step1分析結果に基づく）
 - **緊急対応**: AccountController実装（[CTRL-001]解消・404エラー解消）
 - **基盤整備**: `/change-password` Blazor版パスワード変更画面実装
 - **Application層基盤**: IUbiquitousLanguageService等主要インターフェース実装
 - **目標**: 基本機能動作確保・Application層設計準拠・認証フロー正常化
 
 #### **Step3（アーキテクチャ完全統一）**: 実施予定 - 120-150分
-- **SubAgent活用**: csharp-web-ui・fsharp-application・code-review
+- **SubAgent選択**: Step開始処理で決定（Step1分析結果に基づく）
 - **MVC完全削除**: HomeController・Views完全削除（[ARCH-001]解消）
 - **Pure Blazor Server統一**: 要件定義準拠アーキテクチャ実現
 - **URL設計統一**: Blazor形式への完全統一（[URL-001]解消）
@@ -62,21 +62,21 @@
 - **目標**: システム設計書100%準拠・アーキテクチャ設計不整合完全解消
 
 #### **Step4（Contracts層・型変換完全実装）**: 実施予定 - 90-120分
-- **SubAgent活用**: contracts-bridge・fsharp-domain
+- **SubAgent選択**: Step開始処理で決定（Step1分析結果に基づく）
 - **TypeConverter完全実装**: F#↔C#型変換未実装部分の完全実装
 - **DTO拡張**: Application層インターフェース対応DTO追加
 - **FirstLoginRedirectMiddleware統合**: 期待パス完全整合
 - **目標**: F#/C#境界完全実装・Clean Architecture層間通信完成
 
 #### **Step5（UI機能完成・用語統一）**: 実施予定 - 120-150分
-- **SubAgent活用**: csharp-web-ui・spec-compliance・code-review
+- **SubAgent選択**: Step開始処理で決定（Step1分析結果に基づく）
 - **UI機能追加**: プロフィール変更画面実装（[UI-001]対応）
 - **UI設計書完全準拠**: 認証関連8画面完全実装・レイアウト統一
 - **用語統一完成**: ADR_003完全準拠・全コード用語見直し（[TERM-001]対応）
 - **目標**: UI設計書100%準拠・要件逸脱完全解消
 
 #### **Step6（統合品質保証・完了確認）**: 実施予定 - 60-90分
-- **SubAgent活用**: spec-compliance・integration-test・code-review
+- **SubAgent選択**: Step開始処理で決定（Step1分析結果に基づく）
 - **統合テスト**: 全認証フロー・プロフィール変更・初回ログイン完全動作確認
 - **仕様準拠確認**: 総合準拠度95%以上達成・全要件逸脱・設計不整合解消確認
 - **品質保証**: Clean Architecture完全準拠・アーキテクチャ品質85点以上達成

@@ -124,7 +124,8 @@
       "Bash(do echo \"=== $file ===\")",
       "Bash(sed:*)",
       "mcp__serena__think_about_whether_you_are_done",
-      "Bash(.claude/commands/session-end.md)"
+      "Bash(.claude/commands/session-end.md)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

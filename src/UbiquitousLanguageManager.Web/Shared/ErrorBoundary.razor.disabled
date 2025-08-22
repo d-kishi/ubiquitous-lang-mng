@@ -1,0 +1,11 @@
+@* 
+このファイルは削除されました
+ASP.NET Core標準のErrorBoundaryコンポーネントとの名前衝突を回避するため削除
+*@
+
+@* 
+元のコンテンツ：
+自作のErrorBoundaryコンポーネント
+DomainExceptionの特別なハンドリングを提供していたが、
+標準のErrorBoundaryで十分な機能を提供できるため削除
+*@

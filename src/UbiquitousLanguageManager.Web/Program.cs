@@ -36,9 +36,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-// 🔧 MVC設定: AccountController等のMVCコントローラー用
-// 【CTRL-001対応】AccountController実装に必要
-builder.Services.AddControllersWithViews();
 
 // 🔧 HTTP Context Accessor: Blazor ServerでHTTPコンテキストにアクセスするために必要
 builder.Services.AddHttpContextAccessor();
@@ -225,19 +222,14 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapBlazorHub(); // 🌐 SignalR Hubマッピング（Blazor Serverの双方向通信）
 
-// 🎯 MVC設定: 認証ページ用ルーティング
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// 🎯 エントリーポイント分離パターン実装
-// 【MVC/Blazor統合設計】
-// ルート（/）は MVC HomeController、管理画面（/admin/*）は Blazor Server に分離
+// 🎯 Pure Blazor Server ルーティング設定
+// 【アーキテクチャ統一設計】
+// 全ページをBlazor Serverで処理する統一アーキテクチャ実装
 // 
-// ルーティング優先順位:
-// 1. 明示的ルート（MVC Controller/Action）
-// 2. 管理画面パス（/admin/* → Blazor Server）
-// 3. フォールバック（未認証 → MVC、認証済み → Blazor Server）
+// ルーティング設定:
+// 1. 管理画面パス（/admin/* → Blazor Server）
+// 2. フォールバック（全ページ → Blazor Server _Host）
 app.MapFallbackToPage("/admin/{**path}", "/_Host");
 app.MapFallbackToPage("/_Host");
 
