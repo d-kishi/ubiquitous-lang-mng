@@ -125,7 +125,8 @@
       "Bash(sed:*)",
       "mcp__serena__think_about_whether_you_are_done",
       "Bash(.claude/commands/session-end.md)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(del \"C:\\Develop\\ubiquitous-lang-mng\\Doc\\05_Research\\Phase_A7\\Step4_TDD_Practice_Report.md\")"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

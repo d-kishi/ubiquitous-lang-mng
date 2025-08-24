@@ -228,10 +228,16 @@ app.MapBlazorHub(); // 🌐 SignalR Hubマッピング（Blazor Serverの双方�
 // 全ページをBlazor Serverで処理する統一アーキテクチャ実装
 // 
 // ルーティング設定:
-// 1. 管理画面パス（/admin/* → Blazor Server）
-// 2. フォールバック（全ページ → Blazor Server _Host）
-app.MapFallbackToPage("/admin/{**path}", "/_Host");
-app.MapFallbackToPage("/_Host");
+// 1. ルートパス → 認証分岐処理
+// 2. 管理画面パス（/admin/* → Blazor Server）  
+// 3. フォールバック（全ページ → Blazor Server _host）
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/home");
+    return Task.CompletedTask;
+});
+app.MapFallbackToPage("/admin/{**path}", "/_host");
+app.MapFallbackToPage("/_host");
 
 // 🏥 ヘルスチェックエンドポイント: 監視・運用のためのエンドポイント
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
