@@ -127,7 +127,14 @@
       "Bash(.claude/commands/session-end.md)",
       "Bash(cat:*)",
       "Bash(del \"C:\\Develop\\ubiquitous-lang-mng\\Doc\\05_Research\\Phase_A7\\Step4_TDD_Practice_Report.md\")",
-      "Bash(gh issue list:*)"
+      "Bash(gh issue list:*)",
+      "Read(/C:\\Doc\\05_Research/**)",
+      "Read(/C:\\Doc/**)",
+      "Read(/C:\\/**)",
+      "Read(/C:\\/**)",
+      "Read(/C:\\Doc/**)",
+      "Read(/C:\\Doc/**)",
+      "Read(/C:\\/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

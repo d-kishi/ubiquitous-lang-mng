@@ -21,6 +21,8 @@ public class ApplicationUser : IdentityUser
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
+
+
     /// <summary>
     /// 初回ログインフラグ
     /// true の場合、ログイン後にパスワード変更を強制する

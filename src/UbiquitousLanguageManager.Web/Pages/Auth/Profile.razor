@@ -1,0 +1,461 @@
+@page "/profile"
+@layout MainLayout
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using UbiquitousLanguageManager.Infrastructure.Data.Entities
+@using UbiquitousLanguageManager.Contracts.DTOs.Authentication
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>プロフィール - ユビキタス言語管理システム</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- ページヘッダー -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-user-circle me-2"></i>
+                        プロフィール
+                    </h1>
+                    <p class="text-muted mb-0">個人情報の確認・変更を行います</p>
+                </div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="/admin/users">ユーザー管理</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">プロフィール</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- メッセージ表示エリア -->
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @successMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="row">
+                <!-- プロフィール更新フォーム -->
+                <div class="col-md-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-edit me-2"></i>
+                                基本情報
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (profileModel != null)
+                            {
+                                <EditForm Model="profileModel" OnValidSubmit="HandleValidSubmit" novalidate>
+                                    <DataAnnotationsValidator />
+                                    <ValidationSummary class="alert alert-danger" />
+
+                                    <!-- 変更不可項目（表示のみ） -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">
+                                                <i class="fas fa-envelope me-1"></i>
+                                                メールアドレス
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control-plaintext" 
+                                                   readonly 
+                                                   value="@profileModel.Email" />
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                メールアドレスは変更できません
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">
+                                                <i class="fas fa-user me-1"></i>
+                                                ユーザー名
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control-plaintext" 
+                                                   readonly 
+                                                   value="@profileModel.UserName" />
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                ユーザー名は変更できません
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 変更可能項目 -->
+                                    <div class="row mb-4">
+                                        <div class="col-12">
+                                            <label for="name" class="form-label">
+                                                <i class="fas fa-user-tag me-1"></i>
+                                                氏名 <span class="text-danger">*</span>
+                                            </label>
+                                            <InputText id="name" 
+                                                      @bind-Value="profileModel.Name" 
+                                                      class="form-control" 
+                                                      placeholder="氏名を入力してください"
+                                                      disabled="@isProcessing" />
+                                            <ValidationMessage For="() => profileModel.Name" class="text-danger small mt-1" />
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                氏名は必須項目です（例：田中 太郎）
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ボタン群 -->
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" 
+                                               class="btn btn-primary" 
+                                               disabled="@isProcessing">
+                                            @if (isProcessing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>更新中...</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-save me-2"></i>
+                                                <span>更新</span>
+                                            }
+                                        </button>
+                                        <button type="button" 
+                                               class="btn btn-outline-secondary" 
+                                               @onclick="CancelChanges"
+                                               disabled="@isProcessing">
+                                            <i class="fas fa-times me-2"></i>
+                                            キャンセル
+                                        </button>
+                                    </div>
+                                </EditForm>
+                            }
+                            else if (isLoading)
+                            {
+                                <!-- ローディング表示 -->
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">プロフィール情報を読み込んでいます...</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- セキュリティ情報表示（右側） -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="fas fa-key me-2"></i>
+                                セキュリティ
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                パスワードを定期的に変更することでセキュリティを向上できます。
+                            </p>
+                            <a href="/change-password" class="btn btn-warning">
+                                <i class="fas fa-lock me-2"></i>
+                                パスワード変更
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // 【Blazor Server初学者向け解説】
+    // フィールド定義：コンポーネントの状態を保持する変数群
+    
+    /// <summary>
+    /// プロフィール更新フォームのデータモデル
+    /// DataAnnotations検証属性が自動的に適用される
+    /// </summary>
+    private ProfileUpdateDto? profileModel = null;
+    
+    /// <summary>
+    /// データ読み込み中フラグ
+    /// 初期読み込み時のローディング表示に使用
+    /// </summary>
+    private bool isLoading = true;
+    
+    /// <summary>
+    /// フォーム処理中フラグ
+    /// UI要素の無効化・ローディング表示に使用
+    /// </summary>
+    private bool isProcessing = false;
+    
+    /// <summary>
+    /// エラーメッセージ
+    /// プロフィール取得・更新失敗時に表示
+    /// </summary>
+    private string? errorMessage = null;
+    
+    /// <summary>
+    /// 成功メッセージ
+    /// プロフィール更新成功時に表示
+    /// </summary>
+    private string? successMessage = null;
+
+    /// <summary>
+    /// Blazor Serverコンポーネントライフサイクル：初期化処理
+    /// 【初学者向け解説】OnInitializedAsync は、コンポーネントが初期化される際に一度だけ実行されます。
+    /// サーバーサイドでの非同期処理（データベースアクセス等）に適しています。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 現在認証されているユーザーの情報を取得
+            // AuthenticationStateProvider を通じて認証状態を取得
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                // UserManager: ASP.NET Core Identityのユーザー管理サービス
+                // 【初学者向け解説】UserManager はIdentityのユーザー操作を提供するサービスです
+                var currentUser = await UserManager.FindByEmailAsync(user.Identity.Name!);
+                
+                if (currentUser != null)
+                {
+                    // ProfileUpdateDto にユーザー情報をマッピング
+                    // 【UI設計書3.2節準拠】氏名は1フィールドで管理
+                    profileModel = new ProfileUpdateDto
+                    {
+                        Email = currentUser.Email ?? string.Empty,
+                        UserName = currentUser.UserName ?? string.Empty,
+                        Name = currentUser.Name ?? string.Empty
+                    };
+                }
+                else
+                {
+                    errorMessage = "ユーザー情報が見つかりません。再度ログインしてください。";
+                }
+            }
+            else
+            {
+                // 認証されていない場合（通常発生しないはずだが、念のため）
+                errorMessage = "認証されていません。ログインしてください。";
+            }
+        }
+        catch (Exception ex)
+        {
+            // エラーハンドリング：予期しない例外をキャッチ
+            errorMessage = "プロフィール情報の取得中にエラーが発生しました。ページを再読み込みしてください。";
+            
+            // ログ出力（実際の実装では ILogger を使用）
+            Console.WriteLine($"Profile初期化エラー: {ex.Message}");
+        }
+        finally
+        {
+            // ローディング完了
+            isLoading = false;
+            
+            // StateHasChanged(): Blazor ServerでのUI再描画指示
+            // 【初学者向け解説】サーバー側の状態変更をクライアントに通知し、UIを更新します
+            StateHasChanged();
+        }
+    }
+
+
+    /// <summary>
+    /// フォーム送信処理（バリデーション成功時）
+    /// 【Blazor Server初学者向け解説】
+    /// EditForm の OnValidSubmit イベントハンドラーです。
+    /// DataAnnotations検証が成功した場合のみ実行されます。
+    /// </summary>
+    /// <param name="context">EditContext（フォームの状態情報）</param>
+    private async Task HandleValidSubmit(EditContext context)
+    {
+        if (profileModel == null) return;
+
+        try
+        {
+            // 処理開始：UIを無効化
+            isProcessing = true;
+            errorMessage = null;
+            successMessage = null;
+            
+            // StateHasChanged(): Blazor ServerでのUI再描画指示
+            // 【初学者向け解説】サーバー側の状態変更をクライアントに通知し、UIを更新します
+            StateHasChanged();
+
+            // 現在のユーザーを取得
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var currentUser = await UserManager.FindByEmailAsync(user.Identity.Name!);
+                
+                if (currentUser != null)
+                {
+                    // ユーザー情報を更新
+                    // 【UI設計書3.2節準拠】氏名フィールドの直接更新
+                    currentUser.Name = profileModel.Name.Trim();
+                    
+                    // UserManager.UpdateAsync: ユーザー情報をデータベースに保存
+                    var result = await UserManager.UpdateAsync(currentUser);
+                    
+                    if (result.Succeeded)
+                    {
+                        // 成功時の処理
+                        successMessage = "プロフィールを正常に更新しました。";
+                        
+                        // JavaScript相互運用で成功トースト通知
+                        await JSRuntime.InvokeVoidAsync("showSuccessToast", successMessage);
+                    }
+                    else
+                    {
+                        // Identity更新失敗時の処理
+                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                        errorMessage = $"プロフィール更新に失敗しました: {errors}";
+                        
+                        // JavaScript相互運用でエラートースト通知
+                        await JSRuntime.InvokeVoidAsync("showErrorToast", errorMessage);
+                    }
+                }
+                else
+                {
+                    errorMessage = "ユーザー情報が見つかりません。再度ログインしてください。";
+                    await JSRuntime.InvokeVoidAsync("showErrorToast", errorMessage);
+                }
+            }
+            else
+            {
+                errorMessage = "認証されていません。ログインしてください。";
+                await JSRuntime.InvokeVoidAsync("showErrorToast", errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            // 予期しない例外の処理
+            errorMessage = "プロフィール更新処理中に予期しないエラーが発生しました。管理者にお問い合わせください。";
+            
+            // ログ出力
+            Console.WriteLine($"Profile更新エラー: {ex.Message}");
+            
+            // JavaScript相互運用でエラートースト通知
+            await JSRuntime.InvokeVoidAsync("showErrorToast", errorMessage);
+        }
+        finally
+        {
+            // 処理終了：UIを有効化
+            isProcessing = false;
+            
+            // StateHasChanged(): 最終的なUI状態の更新
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// キャンセルボタンクリック処理
+    /// 【Blazor Server初学者向け解説】
+    /// ボタンの @onclick イベントハンドラーです。
+    /// フォームの変更を破棄して元の画面に戻ります。
+    /// </summary>
+    private void CancelChanges()
+    {
+        try
+        {
+            // NavigationManager: Blazor Serverでのページ遷移管理
+            // forceLoad: true でサーバーサイドでの完全なページ読み込み
+            Navigation.NavigateTo("/admin/users", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            // ナビゲーション失敗時のフォールバック処理
+            Console.WriteLine($"ナビゲーションエラー: {ex.Message}");
+            errorMessage = "ページ遷移中にエラーが発生しました。";
+            StateHasChanged();
+        }
+    }
+}
+
+@* 
+【Blazor Server初学者向け総合解説】
+このProfile.razorコンポーネントの主要な特徴：
+
+1. ページ設定：
+   - @page "/profile": URLルーティング設定
+   - @layout MainLayout: メインレイアウト使用
+   - @attribute [Authorize]: 認証必須（未認証時は自動リダイレクト）
+
+2. 依存性注入（@inject）：
+   - UserManager<ApplicationUser>: ASP.NET Core Identity ユーザー管理
+   - AuthenticationStateProvider: 認証状態プロバイダー
+   - NavigationManager: ページ遷移管理  
+   - IJSRuntime: JavaScript相互運用
+
+3. UI設計書3.2節完全準拠：
+   - 氏名変更可能（必須項目、1フィールド）
+   - メールアドレス・ユーザー名表示のみ（変更不可）
+   - シンプルな基本情報フォーム
+   - 更新・キャンセルボタン
+
+4. レスポンシブデザイン：
+   - Bootstrap 5クラス使用
+   - col-md-8/col-md-4: 左右分割レイアウト
+   - カード形式による情報整理
+
+5. フォーム検証：
+   - EditForm + DataAnnotationsValidator: 自動検証
+   - ValidationMessage: 氏名フィールドエラー表示
+   - ProfileUpdateDto の検証属性活用（Required, StringLength）
+
+6. ユーザビリティ：
+   - ローディング状態表示
+   - 処理中のボタン無効化・スピナー表示
+   - 成功・失敗メッセージの適切な表示
+   - アイコン使用による視覚的分かりやすさ
+
+7. セキュリティ：
+   - [Authorize]属性による認証必須
+   - UserManager による安全なユーザー情報操作
+   - 入力値のトリミング処理
+
+8. エラーハンドリング：
+   - try-catch による例外処理
+   - ユーザーフレンドリーなエラーメッセージ
+   - JavaScript相互運用でのトースト通知
+
+9. 状態管理：
+   - isLoading: 初期読み込み状態
+   - isProcessing: フォーム処理状態
+   - StateHasChanged(): 手動UI更新指示
+
+10. 既存パターン統一：
+    - ChangePassword.razorとの一貫性維持
+    - MainLayoutとの統合
+    - 既存認証フローとの連携
+
+このコンポーネントは、Phase A7 Step5の要件を満たし、
+UI設計書3.2節に完全準拠したプロフィール変更機能を提供します。
+*@
