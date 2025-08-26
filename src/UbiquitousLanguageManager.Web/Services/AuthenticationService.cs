@@ -120,13 +120,27 @@ public class AuthenticationService
                 return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error("アカウントが一時的に無効になっています。");
             }
 
+            // 【TECH-006修正】Blazor Server環境での認証処理最適化
+            // HTTPコンテキストがBlazor SignalRと競合しないよう、慎重にCookie操作を実行
+            
             // 仕様書2.1.1準拠: Remember Me機能を含むログイン実行
             // lockoutOnFailure=false: ロックアウト機構を無効化
-            var result = await _signInManager.PasswordSignInAsync(
-                user, 
-                request.Password, 
-                isPersistent: request.RememberMe, // 仕様書2.1.1準拠: ログイン状態保持
-                lockoutOnFailure: false); // 仕様書2.1.1準拠: ロックアウト機構は設けない
+            SignInResult result;
+            try 
+            {
+                result = await _signInManager.PasswordSignInAsync(
+                    user, 
+                    request.Password, 
+                    isPersistent: request.RememberMe, // 仕様書2.1.1準拠: ログイン状態保持
+                    lockoutOnFailure: false); // 仕様書2.1.1準拠: ロックアウト機構は設けない
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Headers are read-only"))
+            {
+                // Blazor Server環境でのHeaders競合エラーをキャッチ
+                _logger.LogError(ex, "Blazor Server認証処理でHeaders競合エラーが発生: {Email}", request.Email);
+                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error(
+                    "認証処理中にエラーが発生しました。ページを更新してから再度お試しください。");
+            }
 
             if (result.Succeeded)
             {

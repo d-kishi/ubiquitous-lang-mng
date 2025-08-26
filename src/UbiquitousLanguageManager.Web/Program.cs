@@ -34,7 +34,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 🔧 Blazor Server設定: サーバーサイドレンダリングとSignalR接続
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor(options =>
+{
+    // 【TECH-006修正】Blazor ServerでのSignalR設定最適化
+    // DisconnectedCircuitRetentionPeriod: 切断されたサーキットの保持期間
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
+    
+    // DisconnectedCircuitMaxRetained: 切断されたサーキットの最大保持数
+    options.DisconnectedCircuitMaxRetained = 100;
+    
+    // JSInteropDefaultCallTimeout: JavaScript相互運用のデフォルトタイムアウト
+    options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(1);
+});
 
 
 // 🔧 HTTP Context Accessor: Blazor ServerでHTTPコンテキストにアクセスするために必要
@@ -220,7 +231,12 @@ app.UseAuthorization();
 
 // 🎯 Blazor Server設定: ルーティング
 app.MapRazorPages();
-app.MapBlazorHub(); // 🌐 SignalR Hubマッピング（Blazor Serverの双方向通信）
+app.MapBlazorHub(options =>
+{
+    // 【TECH-006修正】SignalR Hubの設定最適化
+    // Blazor ServerとASP.NET Core Identityの競合を軽減
+    options.CloseOnAuthenticationExpiration = true;
+}); // 🌐 SignalR Hubマッピング（Blazor Serverの双方向通信）
 
 
 // 🎯 Pure Blazor Server ルーティング設定

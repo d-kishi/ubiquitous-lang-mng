@@ -240,22 +240,22 @@ Blazor Serverでの認証画面実装例です。
   /// - バリデーション成功時のみ実行される
   /// - 非同期処理でサーバーサイド認証を実行
   /// - StateHasChanged()でUI状態を更新
+  /// 
+  /// 【TECH-006修正】認証処理順序最適化
+  /// - Cookie認証処理を先に実行してからStateHasChanged()を呼び出し
+  /// - HTTPレスポンス開始前にCookie設定を完了
   /// </summary>
   private async Task HandleLoginAsync()
   {
     try
     {
-      // ローディング状態開始
+      // ローディング状態開始（HTTPレスポンス開始前の状態変更のみ）
       isLoading = true;
       errorMessage = null;
       successMessage = null;
 
-      // StateHasChanged(): UI再描画の明示的な指示
-      // 【重要】Blazor Serverでは、サーバーサイドの状態変更を
-      // クライアントに通知するためにStateHasChanged()を呼び出します
-      StateHasChanged();
-
-      // 認証サービスでログイン実行
+      // 認証サービスでログイン実行（Cookie処理を最初に実行）
+      // 【TECH-006修正】StateHasChanged()前にCookie認証処理を完了
       var loginRequest = new UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginRequestDto
       {
         Email = loginModel.Email,
@@ -266,11 +266,15 @@ Blazor Serverでの認証画面実装例です。
       var loginResult = await AuthService.LoginAsync(loginRequest);
 
       // LoginResponseDto の結果処理
+      // 【TECH-006修正】Cookie認証処理完了後にStateHasChanged()を実行
       if (loginResult.IsSuccess)
       {
         // 成功時の処理
         successMessage = "ログインに成功しました。画面を切り替えています...";
-        StateHasChanged();
+        
+        // 【TECH-006修正】StateHasChanged()を削除
+        // リダイレクト前のUI更新は不要であり、Cookie設定との競合を避ける
+        // StateHasChanged(); ← 削除済み
 
         // 認証状態プロバイダーに通知
         if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
@@ -302,6 +306,7 @@ Blazor Serverでの認証画面実装例です。
         // JavaScript相互運用: エラー通知をブラウザに表示
         await JSRuntime.InvokeVoidAsync("console.error", $"ログインエラー: {errorMessage}");
 
+        // 【TECH-006修正】認証失敗時も適切なタイミングでUI更新
         StateHasChanged();
       }
     }
@@ -312,12 +317,17 @@ Blazor Serverでの認証画面実装例です。
 
       // JavaScript相互運用: コンソールエラー出力
       await JSRuntime.InvokeVoidAsync("console.error", $"ログイン例外: {ex.Message}");
+      
+      // 【TECH-006修正】例外時もStateHasChanged()を適切なタイミングで実行
+      StateHasChanged();
     }
     finally
     {
       // ローディング状態終了
       isLoading = false;
-      StateHasChanged();
+      
+      // 【TECH-006修正】finally句でのStateHasChanged()は冗長なため削除
+      // 各処理パス（成功・失敗・例外）で既に適切にStateHasChanged()を実行済み
     }
   }
 }
