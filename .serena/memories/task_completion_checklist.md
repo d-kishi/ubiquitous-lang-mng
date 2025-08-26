@@ -1,6 +1,6 @@
 # タスク完了チェックリスト
 
-## 📋 Phase A7進捗チェックリスト
+## 📋 Phase A7進捗チェックリスト（完了）
 
 ### ✅ 完了Step（Phase A7）
 - [x] **Step1**: 仕様準拠監査完了（2025-08-19-22）
@@ -26,17 +26,35 @@
   - [x] 500エラー修正（ルーティング競合解決）
   - [x] TDD完全実践・仕様準拠100%・品質スコア95/100達成
 
-### 🔄 実施予定Step（Phase A7）
-- [ ] **Step5**: UI機能完成・用語統一（次回セッション予定）
-  - [ ] プロフィール変更画面実装（UI設計書3.2節準拠）
-  - [ ] ADR_003ユビキタス言語統一完成
-  - [ ] Step4確立基盤（TypeConverter・統合テスト）活用
-  - [ ] SubAgent: csharp-web-ui・fsharp-domain・spec-compliance
+- [x] **Step5**: UI機能完成・用語統一完了（2025-08-25）
+  - [x] プロフィール変更画面実装（UI設計書3.2節準拠）
+  - [x] ADR_003ユビキタス言語統一完成
+  - [x] ApplicationUser設計書準拠修正・ProfileUpdateDto実装
+  - [x] PostgreSQLエラー完全解消・品質向上実現
 
-- [ ] **Step6**: 統合品質保証（Phase A7最終Step）
-  - [ ] Phase A7全成果統合品質確認
-  - [ ] Phase B1移行基盤完全確認
-  - [ ] 最終仕様準拠監査・品質スコア目標95/100達成
+- [x] **Step6**: 統合品質保証完了（2025-08-26）
+  - [x] Phase A7全成果統合品質確認・TECH-003/004/005完全解決
+  - [x] GitHub Issues #5/#6完了・Issue #7新規作成
+  - [x] Phase A7完全完了確認・品質スコア維持
+
+## 📋 Phase A8進捗チェックリスト（開始）
+
+### ✅ 完了Step（Phase A8）
+- [x] **Step1**: 技術調査・解決方針策定完了（2025-08-26）
+  - [x] TECH-006根本原因特定（SignalR vs HTTP Cookie認証非互換）
+  - [x] 3段階修正アプローチ策定完了
+  - [x] GitHub Issue #7作成・管理開始
+
+### 🔄 実施予定Step（Phase A8）
+- [ ] **Step2**: 3段階修正アプローチ実装（次回セッション予定）
+  - [ ] NavigateTo最適化実装（ForceLoad活用）
+  - [ ] HTTPContext管理改善（認証状態同期強化）
+  - [ ] 段階的効果確認・次段階実行判断
+  - [ ] SubAgent: csharp-web-ui・integration-test・spec-compliance
+
+- [ ] **Step3**: 認証統合完成・動作確認
+- [ ] **Step4**: 最終品質保証・統合テスト拡張
+- [ ] **Step5**: Phase A8完了・Phase B1移行準備
 
 ## 🏗️ 技術基盤チェックリスト
 
@@ -56,17 +74,25 @@
 
 ## ⚠️ 技術負債チェックリスト
 
-### ✅ 解消済み技術負債
+### ✅ 解消済み技術負債（GitHub Issues統一管理移行）
 - [x] **TECH-002**: 初期スーパーユーザーパスワード仕様不整合 → 完全解決
 - [x] **TECH-003**: ログイン画面重複・統合 → Pure Blazor Server統一で完全解決
 - [x] **TECH-004**: 初回ログイン時パスワード変更未実装 → /change-password統合で完全解決
+- [x] **TECH-005**: ApplicationUser設計書非準拠 → Phase A7 Step5で完全解決
 - [x] **CTRL-001**: AccountController未実装404エラー → Step2緊急実装で完全解決
 - [x] **ARCH-001**: MVC/Blazor混在アーキテクチャ → Step3 Pure Blazor Server実現で完全解決
+- [x] **GitHub Issues #5/#6**: COMPLIANCE-001・ARCH-001 → Phase A7完了で解決
 
-### 🔄 新規負債監視
-- [x] **Step4実装**: 新規技術負債発生なし確認済み
-- [ ] **Step5実装**: 新規負債発生監視・早期特定・即座対応
-- [ ] **継続監視**: 各Step完了時の技術負債確認・記録・管理継続
+### 🔄 アクティブ技術負債
+- [x] **TECH-006**: Blazor Server認証統合課題（GitHub Issue #7管理中）
+  - [x] 根本原因特定: SignalR WebSocket vs HTTP Cookie認証アーキテクチャ非互換
+  - [x] 3段階修正アプローチ策定完了
+  - [ ] Phase A8 Step2実装予定（NavigateTo最適化から開始）
+
+### 🔄 継続監視・予防
+- [x] **step-end-reviewプロセス**: 各Step完了時の包括的品質確認確立
+- [x] **GitHub Issues統一管理**: 検索性・可視性・履歴保全効果実証
+- [ ] **技術負債記述正確性**: SubAgent誤判定防止のため詳細記述継続
 
 ## 📊 品質指標チェックリスト
 
@@ -100,14 +126,19 @@
 ## 📅 継続タスク・次回優先事項
 
 ### 🔴 次回セッション最優先
-1. **Phase A7 Step5開始**: UI機能完成・用語統一実装
-2. **プロフィール変更画面**: UI設計書3.2節完全準拠実装
-3. **ADR_003適用**: ユビキタス言語用語統一完成
+1. **Phase A8 Step2開始**: 3段階修正アプローチ実装
+2. **NavigateTo最適化**: ForceLoadパラメータ活用・段階的効果確認
+3. **TECH-006解決**: SignalR認証統合問題・GitHub Issue #7解決
 
-### 🟡 Phase A7完了に向けて
-1. **Step6準備**: 統合品質保証・Phase A7最終確認
-2. **Phase B1移行準備**: 移行計画詳細化・基盤確認完了
+### 🟡 Phase A8完了に向けて
+1. **段階的アプローチ実行**: 各段階での効果確認・次段階実行判断
+2. **Pure Blazor Server維持**: 統一アーキテクチャ方針継続
 3. **品質保証継続**: 95/100品質スコア維持・仕様準拠100%継続
+
+### 🔵 Phase B1移行準備
+1. **Phase A8完了確認**: 認証統合問題完全解決確認
+2. **移行基盤確認**: TypeConverter・統合テスト・認証システム完全確認
+3. **Phase B1計画策定**: ユビキタス言語管理機能実装計画詳細化
 
 ### 🔵 継続改善・最適化
 1. **プロセス最適化**: SubAgent実行効率化・Command体系拡張

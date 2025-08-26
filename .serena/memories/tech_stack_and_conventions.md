@@ -1,4 +1,4 @@
-# 技術スタック・規約 - 2025年8月20日更新
+# 技術スタック・規約 - 2025年8月26日更新
 
 ## 技術スタック構成
 
@@ -289,3 +289,21 @@ public async Task ログイン機能_有効な認証情報_成功()
 - **Connection Pooling**: EF Core設定
 - **非同期処理**: 全DB・外部API操作
 - **メモリ効率**: IEnumerable活用・using文使用
+
+## 技術課題・解決方針（2025-08-26更新）
+
+### TECH-006: Blazor Server認証統合課題
+#### 根本原因分析
+- **SignalR WebSocket通信**: Blazor Serverの標準通信プロトコル
+- **HTTP Cookie認証**: ASP.NET Core Identityの標準認証方式
+- **アーキテクチャ非互換**: WebSocketはHTTPヘッダー変更不可・Cookie設定制限あり
+
+#### 3段階修正アプローチ（策定済み）
+1. **NavigateTo最適化**: `ForceLoad = true`でフル画面リロード
+2. **HTTPContext管理改善**: 認証状態とSignalR接続の同期強化
+3. **認証API分離**: 必要に応じてWeb APIエンドポイント分離
+
+#### Pure Blazor Server統一アーキテクチャ維持
+- **基本方針**: Blazor Server統一・他フレームワーク導入回避
+- **認証統合**: ASP.NET Core Identity + SignalRのネイティブ統合維持
+- **段階的解決**: 最小変更から始めて効果確認後に次段階実行

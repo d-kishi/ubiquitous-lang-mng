@@ -134,7 +134,10 @@
       "Read(/C:\\/**)",
       "Read(/C:\\Doc/**)",
       "Read(/C:\\Doc/**)",
-      "Read(/C:\\/**)"
+      "Read(/C:\\/**)",
+      "Read(/C:\\/**)",
+      "Bash(gh issue close:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
