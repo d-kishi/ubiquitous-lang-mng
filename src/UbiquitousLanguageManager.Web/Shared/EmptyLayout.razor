@@ -1,0 +1,113 @@
+@inherits LayoutComponentBase
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- App Styles -->
+    <link href="css/app.css" rel="stylesheet" />
+    <link href="UbiquitousLanguageManager.Web.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    @Body
+
+    <!-- Blazor Error UI -->
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            エラーが発生しました。ページを再読み込みしてください。
+        </environment>
+        <environment include="Development">
+            未処理の例外が発生しました。ブラウザの開発者ツールで詳細を確認してください。
+        </environment>
+        <a href="" class="reload">再読み込み</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <!-- Blazor Server Script -->
+    <script src="_framework/blazor.server.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- TECH-006: Auth API JavaScript -->
+    <script src="js/auth-api.js"></script>
+
+    <style>
+        #blazor-error-ui {
+            background: lightyellow;
+            bottom: 0;
+            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+            display: none;
+            left: 0;
+            padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+
+        /* ログイン画面用の追加スタイル */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .bg-light {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        }
+        
+        .card {
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.95) !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+    </style>
+</body>
+</html>
+
+@*
+【EmptyLayout - ログイン画面専用レイアウト】
+
+このレイアウトの特徴：
+1. 【シンプルデザイン】サイドバーやナビゲーションを含まない
+2. 【TECH-006対応】auth-api.jsを適切に読み込み
+3. 【レスポンシブ】Bootstrap 5を使用した現代的なデザイン
+4. 【ユーザビリティ】視覚的に魅力的なグラデーション背景
+5. 【アクセシビリティ】適切な日本語メッセージとARIAラベル
+*@

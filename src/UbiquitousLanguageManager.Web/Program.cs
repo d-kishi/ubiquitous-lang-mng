@@ -47,6 +47,30 @@ builder.Services.AddServerSideBlazor(options =>
     options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(1);
 });
 
+// 🔧 【TECH-006修正】API Controller設定: Headers read-onlyエラー解決
+// 【HTTPコンテキスト分離戦略】
+// API Controllerは独立したHTTPコンテキストで動作し、
+// Blazor SignalR接続とは分離された認証処理を提供します。
+builder.Services.AddControllers(options =>
+{
+    // CSRF保護: ValidateAntiForgeryToken自動適用
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+})
+.ConfigureApiBehaviorOptions(options =>
+{
+    // モデルバリデーションエラー時の自動レスポンス無効化（カスタムエラーハンドリング優先）
+    options.SuppressModelStateInvalidFilter = true;
+});
+
+// Antiforgery設定: API呼び出しでのCSRF保護
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "__RequestVerificationToken";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 
 // 🔧 HTTP Context Accessor: Blazor ServerでHTTPコンテキストにアクセスするために必要
 builder.Services.AddHttpContextAccessor();
@@ -229,6 +253,19 @@ app.UseFirstLoginRedirect();
 
 app.UseAuthorization();
 
+// 🔧 【TECH-006修正】API Controller ルーティング設定
+// 【HTTPコンテキスト分離戦略】
+// API Controllerエンドポイントを優先的にマッピングし、
+// Blazor Serverのフォールバック処理より先に処理されるようにします。
+app.MapControllers();
+
+// 🔒 CSRF トークン取得エンドポイント
+app.MapGet("/api/auth/csrf-token", (Microsoft.AspNetCore.Antiforgery.IAntiforgery antiforgery, HttpContext context) =>
+{
+    var tokens = antiforgery.GetAndStoreTokens(context);
+    return Results.Ok(new { token = tokens.RequestToken });
+});
+
 // 🎯 Blazor Server設定: ルーティング
 app.MapRazorPages();
 app.MapBlazorHub(options =>
@@ -244,14 +281,9 @@ app.MapBlazorHub(options =>
 // 全ページをBlazor Serverで処理する統一アーキテクチャ実装
 // 
 // ルーティング設定:
-// 1. ルートパス → 認証分岐処理
+// 1. ルートパス → Blazor Server Pages/Index.razorで認証分岐処理
 // 2. 管理画面パス（/admin/* → Blazor Server）  
 // 3. フォールバック（全ページ → Blazor Server _host）
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/home");
-    return Task.CompletedTask;
-});
 app.MapFallbackToPage("/admin/{**path}", "/_host");
 app.MapFallbackToPage("/_host");
 

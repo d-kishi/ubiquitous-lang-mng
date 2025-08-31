@@ -24,9 +24,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **詳細**: `/Doc/07_Decisions/ADR_016_プロセス遵守違反防止策.md`
 
-## 📋 次回セッション（Phase A7 Step5）必須読み込みファイル
+## 📋 次回セッション（ログイン検証）必須読み込みファイル
 
-**次回実行予定**: Phase A7 Step5（UI機能完成・用語統一）
+**次回実行予定**: 初期ユーザーログイン検証（admin@ubiquitous-lang.com / su）
 
 ### 🔴 セッション開始時必読（絶対必須）
 ```
@@ -118,7 +118,7 @@ dotnet build                                           # 全体ビルド
 dotnet build src/UbiquitousLanguageManager.Web        # Web層のみ
 
 # 実行
-dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動（http://localhost:5000）
+dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動（https://localhost:5001）
 
 # Docker環境
 docker-compose up -d                                   # PostgreSQL/PgAdmin/Smtp4dev起動
@@ -147,7 +147,7 @@ psql -h localhost -U ubiquitous_lang_user -d ubiquitous_lang_db
 ```
 
 ### 開発ツールURL
-- **アプリ**: http://localhost:5000
+- **アプリ**: https://localhost:5001
 - **PgAdmin**: http://localhost:8080 (admin@ubiquitous-lang.com / admin123)
 - **Smtp4dev**: http://localhost:5080
 

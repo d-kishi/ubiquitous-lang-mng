@@ -1,0 +1,512 @@
+@page "/login"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@using UbiquitousLanguageManager.Contracts.DTOs.Authentication
+@layout EmptyLayout
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>ログイン - ユビキタス言語管理システム</PageTitle>
+
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="row w-100">
+        <div class="col-lg-4 col-md-6 col-sm-8 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <!-- ログインヘッダー -->
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">ログイン</h2>
+                        <p class="text-muted">ユビキタス言語管理システムへようこそ</p>
+                    </div>
+
+                    <!-- エラーメッセージ表示 -->
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>@errorMessage</div>
+                        </div>
+                    }
+
+                    <!-- 成功メッセージ表示 -->
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success d-flex align-items-center" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <div>@successMessage</div>
+                        </div>
+                    }
+
+                    <!-- ログインフォーム -->
+                    <EditForm Model="@loginRequest" OnValidSubmit="@HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <!-- メールアドレス入力 -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>
+                                メールアドレス
+                            </label>
+                            <InputText id="email" 
+                                      @bind-Value="loginRequest.Email" 
+                                      class="form-control form-control-lg" 
+                                      placeholder="example@company.com"
+                                      disabled="@isSubmitting" />
+                            <ValidationMessage For="@(() => loginRequest.Email)" class="text-danger small" />
+                        </div>
+
+                        <!-- パスワード入力 -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-1"></i>
+                                パスワード
+                            </label>
+                            <InputText id="password" 
+                                      @bind-Value="loginRequest.Password" 
+                                      type="password" 
+                                      class="form-control form-control-lg"
+                                      placeholder="パスワードを入力してください"
+                                      disabled="@isSubmitting" />
+                            <ValidationMessage For="@(() => loginRequest.Password)" class="text-danger small" />
+                        </div>
+
+                        <!-- Remember Me チェックボックス -->
+                        <div class="mb-3 form-check">
+                            <InputCheckbox id="rememberMe" 
+                                          @bind-Value="loginRequest.RememberMe" 
+                                          class="form-check-input"
+                                          disabled="@isSubmitting" />
+                            <label for="rememberMe" class="form-check-label">
+                                ログイン状態を保持する（7日間）
+                            </label>
+                        </div>
+
+                        <!-- ログインボタン -->
+                        <div class="d-grid">
+                            <button type="submit" 
+                                   class="btn btn-primary btn-lg" 
+                                   disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <text>ログイン中...</text>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    <text>ログイン</text>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+
+                    <!-- パスワードリセットリンク -->
+                    <div class="text-center mt-4">
+                        <a href="/password-reset" class="text-decoration-none text-muted">
+                            <i class="fas fa-key me-1"></i>
+                            パスワードをお忘れの方はこちら
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- システム情報 -->
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    © 2024 ユビキタス言語管理システム - Blazor Server with Clean Architecture
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // 【Blazor Server初学者向け解説】
+    // フィールド定義: コンポーネントの状態管理用変数
+    // private: コンポーネント内部でのみ使用
+    // @code ブロック: C#コードを記述する領域
+
+    /// <summary>
+    /// ログイン要求データモデル
+    /// 【データバインディング】
+    /// EditFormのModelプロパティとして設定し、InputTextコンポーネントと双方向バインディング
+    /// </summary>
+    private LoginRequestDto loginRequest = new();
+
+    /// <summary>
+    /// エラーメッセージ表示用
+    /// </summary>
+    private string errorMessage = string.Empty;
+
+    /// <summary>
+    /// 成功メッセージ表示用
+    /// </summary>
+    private string successMessage = string.Empty;
+
+    /// <summary>
+    /// 送信処理中フラグ
+    /// 【UI/UXデザイン】
+    /// 二重送信防止とローディング表示のための状態管理
+    /// </summary>
+    private bool isSubmitting = false;
+
+    /// <summary>
+    /// 初回ログイン状態フラグ
+    /// 【TECH-006】初回ログイン判定用 - パスワード変更フロー制御に使用
+    /// </summary>
+#pragma warning disable CS0414 // フィールドは割り当てられていますが、値は使用されていません - 初回ログイン判定用に保持
+    private bool isFirstLogin = false;
+#pragma warning restore CS0414
+
+    /// <summary>
+    /// パスワード変更表示フラグ
+    /// </summary>
+    private bool showPasswordChange = false;
+
+    /// <summary>
+    /// パスワード変更要求データモデル
+    /// </summary>
+    private ChangePasswordRequestDto changePasswordRequest = new();
+
+    /// <summary>
+    /// コンポーネント初期化処理
+    /// 【Blazor Server ライフサイクル】
+    /// OnInitializedAsync: コンポーネント初期化時に一度だけ実行される非同期メソッド
+    /// 認証状態確認・初期設定・データ取得などに使用
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 現在の認証状態を確認
+            // 【認証システム統合】
+            // AuthenticationStateProvider: Blazor Server全体の認証状態を管理するサービス
+            // すでにログイン済みの場合は、適切なページにリダイレクト
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            
+            if (authenticationState.User.Identity?.IsAuthenticated == true)
+            {
+                // 既にログイン済みの場合はホームページにリダイレクト
+                Navigation.NavigateTo("/", replace: true);
+                return;
+            }
+
+            // URLパラメータからエラーメッセージを取得（リダイレクト元からの情報）
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+            var queryString = uri.Query;
+            
+            if (!string.IsNullOrEmpty(queryString))
+            {
+                var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(queryString);
+                
+                if (queryParams.TryGetValue("error", out var errorParam))
+                {
+                    errorMessage = Uri.UnescapeDataString(errorParam.ToString());
+                }
+
+                if (queryParams.TryGetValue("success", out var successParam))
+                {
+                    successMessage = Uri.UnescapeDataString(successParam.ToString());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // 初期化エラーをログに記録（実際の実装ではILoggerを使用）
+            Console.WriteLine($"Login component initialization error: {ex.Message}");
+            errorMessage = "画面の初期化中にエラーが発生しました。";
+        }
+    }
+
+    /// <summary>
+    /// TECH-006: JavaScript API呼び出しによるログイン処理
+    /// 【HTTPコンテキスト分離戦略】
+    /// 従来のSignInManager直接呼び出しからJavaScript API経由に変更し、
+    /// Headers read-onlyエラーを根本的に解決します。
+    /// </summary>
+    private async Task HandleValidSubmit()
+    {
+        // フォーム検証通過後の処理開始
+        isSubmitting = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            // 【TECH-006 核心実装】JavaScript API呼び出しによる認証
+            // authApi.login(): auth-api.jsで定義されたJavaScript関数
+            // 新しいHTTPコンテキストでAuthApiControllerを呼び出し、Headers read-only問題を回避
+            var loginResult = await JSRuntime.InvokeAsync<object>("authApi.login", 
+                loginRequest.Email, 
+                loginRequest.Password, 
+                loginRequest.RememberMe);
+
+            // JavaScript側からのレスポンスをダイナミック型で受取り、プロパティ確認
+            var resultJson = System.Text.Json.JsonSerializer.Serialize(loginResult);
+            var parsedResult = System.Text.Json.JsonSerializer.Deserialize<LoginApiResponse>(resultJson);
+
+            if (parsedResult?.Success == true)
+            {
+                // ログイン成功時の処理
+                successMessage = parsedResult.Message ?? "ログインしました。";
+                
+                // 【csharp-infrastructure対応】初回ログインチェック強化
+                // AuthenticationServiceのIsFirstLoginフラグを確実に検知
+                if (!string.IsNullOrEmpty(parsedResult.RedirectUrl) && 
+                    parsedResult.RedirectUrl.Contains("/change-password"))
+                {
+                    // 初回ログインの場合：パスワード変更フォーム表示
+                    isFirstLogin = true;
+                    showPasswordChange = true;
+                    successMessage = "初期パスワードでのログインが確認されました。セキュリティのため、新しいパスワードに変更してください。";
+                    
+                    // 初回ログイン専用のメッセージをログに記録
+                    Console.WriteLine($"初回ログイン検知: Email={loginRequest.Email}, RedirectUrl={parsedResult.RedirectUrl}");
+                }
+                else
+                {
+                    // 通常ログインの場合：ホーム画面へリダイレクト
+                    // StateHasChanged()でUI更新後、少し待ってからリダイレクト
+                    StateHasChanged();
+                    await Task.Delay(1500); // 成功メッセージを表示してからリダイレクト
+                    
+                    Navigation.NavigateTo(parsedResult.RedirectUrl ?? "/", forceLoad: true);
+                }
+            }
+            else
+            {
+                // 【csharp-infrastructure対応】ログイン失敗時の詳細エラー表示
+                // 初期パスワード認証エラーの明確化
+                string baseMessage = parsedResult?.Message ?? "ログインに失敗しました。";
+                
+                // 初期パスワード関連のエラーメッセージ強化
+                if (baseMessage.Contains("初期パスワード") || baseMessage.Contains("パスワードが正しくありません"))
+                {
+                    errorMessage = $"{baseMessage} 初期パスワード 'su' または設定済みパスワードを入力してください。";
+                }
+                else
+                {
+                    errorMessage = $"{baseMessage} メールアドレスとパスワードを確認してください。";
+                }
+            }
+        }
+        catch (JSException jsEx)
+        {
+            // 【JavaScript API エラーハンドリング強化】
+            Console.WriteLine($"JavaScript API call failed: {jsEx.Message}");
+            Console.WriteLine($"JavaScript Stack Trace: {jsEx.StackTrace}");
+            
+            // ネットワークエラー・サーバーエラーの詳細分析
+            if (jsEx.Message.Contains("fetch") || jsEx.Message.Contains("network"))
+            {
+                errorMessage = "ネットワーク接続エラーです。インターネット接続を確認してやり直してください。";
+            }
+            else if (jsEx.Message.Contains("500") || jsEx.Message.Contains("Internal Server Error"))
+            {
+                errorMessage = "サーバーエラーが発生しました。管理者にお問い合わせください。";
+            }
+            else
+            {
+                errorMessage = "認証処理中にエラーが発生しました。ページを再読み込みしてやり直してください。";
+            }
+        }
+        catch (Exception ex)
+        {
+            // 予期しないエラーの処理
+            Console.WriteLine($"Login process failed: {ex.Message}");
+            errorMessage = "システムエラーが発生しました。管理者にお問い合わせください。";
+        }
+        finally
+        {
+            // 送信状態を解除
+            isSubmitting = false;
+            
+            // 【Blazor Server重要概念】StateHasChanged()
+            // サーバーサイドの状態変更をクライアント（ブラウザ）に通知
+            // これにより、UI要素（ボタンの有効/無効、エラーメッセージなど）が再描画される
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// TECH-006: JavaScript API呼び出しによるパスワード変更処理
+    /// 初回ログイン後のパスワード変更専用処理
+    /// </summary>
+    private async Task HandlePasswordChange()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            // パスワード変更API呼び出し
+            var changeResult = await JSRuntime.InvokeAsync<object>("authApi.changePassword", 
+                changePasswordRequest.CurrentPassword,
+                changePasswordRequest.NewPassword,
+                changePasswordRequest.ConfirmPassword);
+
+            var resultJson = System.Text.Json.JsonSerializer.Serialize(changeResult);
+            var parsedResult = System.Text.Json.JsonSerializer.Deserialize<LoginApiResponse>(resultJson);
+
+            if (parsedResult?.Success == true)
+            {
+                // 【初回パスワード変更成功】
+                successMessage = parsedResult.Message ?? "初期パスワードから新しいパスワードに変更しました。";
+                
+                // 初回ログインフォームを非表示にして通常ログイン表示に戻す
+                showPasswordChange = false;
+                isFirstLogin = false;
+                
+                // パスワード変更成功メッセージを表示してからホーム画面にリダイレクト
+                StateHasChanged();
+                await Task.Delay(2500);  // 成功感を演出するため少し長めに表示
+                
+                Navigation.NavigateTo(parsedResult.RedirectUrl ?? "/", forceLoad: true);
+            }
+            else
+            {
+                // パスワード変更失敗
+                errorMessage = parsedResult?.Message ?? "パスワード変更に失敗しました。";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Password change failed: {ex.Message}");
+            errorMessage = "パスワード変更中にエラーが発生しました。";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// JavaScript APIレスポンス用データクラス
+    /// 【JSON デシリアライゼーション】
+    /// JavaScript側から返されるオブジェクトをC#オブジェクトに変換するための型定義
+    /// </summary>
+    private class LoginApiResponse
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public string? RedirectUrl { get; set; }
+        public int Status { get; set; }
+    }
+}
+
+@* パスワード変更フォーム（初回ログイン時表示） *@
+@if (showPasswordChange)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i>
+                        初回ログイン - パスワード変更
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <strong>初期パスワード変更が必要です</strong><br>
+                        セキュリティ強化のため、初期パスワード 'su' から新しいパスワードに変更してください。
+                    </div>
+
+                    <EditForm Model="@changePasswordRequest" OnValidSubmit="@HandlePasswordChange">
+                        <DataAnnotationsValidator />
+                        
+                        <!-- 現在のパスワード -->
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">現在のパスワード</label>
+                            <InputText id="currentPassword" 
+                                      @bind-Value="changePasswordRequest.CurrentPassword" 
+                                      type="password" 
+                                      class="form-control"
+                                      disabled="@isSubmitting" />
+                            <ValidationMessage For="@(() => changePasswordRequest.CurrentPassword)" class="text-danger small" />
+                        </div>
+
+                        <!-- 新しいパスワード -->
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">新しいパスワード</label>
+                            <InputText id="newPassword" 
+                                      @bind-Value="changePasswordRequest.NewPassword" 
+                                      type="password" 
+                                      class="form-control"
+                                      disabled="@isSubmitting" />
+                            <ValidationMessage For="@(() => changePasswordRequest.NewPassword)" class="text-danger small" />
+                            <div class="form-text">
+                                <small>8文字以上、大文字・小文字・数字をそれぞれ1文字以上含めてください</small>
+                            </div>
+                        </div>
+
+                        <!-- パスワード確認 -->
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">パスワード確認</label>
+                            <InputText id="confirmPassword" 
+                                      @bind-Value="changePasswordRequest.ConfirmPassword" 
+                                      type="password" 
+                                      class="form-control"
+                                      disabled="@isSubmitting" />
+                            <ValidationMessage For="@(() => changePasswordRequest.ConfirmPassword)" class="text-danger small" />
+                        </div>
+
+                        <!-- 送信ボタン -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <text>変更中...</text>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-save me-2"></i>
+                                    <text>パスワードを変更</text>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@*
+【TECH-006実装完了 - Headers read-onlyエラー根本解決】
+
+本コンポーネントの主要改善点：
+
+1. 【HTTPコンテキスト分離戦略】
+   - SignInManager直接呼び出し → JavaScript API経由に変更
+   - 新しいHTTPコンテキストで認証処理実行
+   - Headers read-onlyエラーを根本解決
+
+2. 【JavaScript統合パターン】
+   - IJSRuntime.InvokeAsync(): Blazor ServerからJavaScript関数呼び出し
+   - authApi.login(): auth-api.jsで定義された認証API呼び出し関数
+   - CSRFトークン自動取得・設定
+
+3. 【認証フロー保持】
+   - 既存UI/UXデザイン継続
+   - フォーム検証・エラーハンドリング維持
+   - 初回ログイン → パスワード変更フロー保持
+
+4. 【Blazor Server最適化】
+   - StateHasChanged(): UI再描画の明示的制御
+   - 非同期処理: await/async パターンの適切な使用
+   - コンポーネントライフサイクル: OnInitializedAsync活用
+
+5. 【セキュリティ強化】
+   - 二重送信防止: isSubmittingフラグ
+   - 入力検証: DataAnnotationsValidator統合
+   - エラーハンドリング: 例外処理の多層化
+
+本実装により、TECH-006の完全解決を達成しています。
+*@

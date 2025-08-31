@@ -35,12 +35,12 @@ INSERT INTO AspNetUsers (
     'admin@ubiquitous-lang.com', 
     'ADMIN@UBIQUITOUS-LANG.COM', 
     true, 
-    'AQAAAAEAACcQAAAAEKqzl5MhLfHyeYYwPSZjxcCHgKfKSJsH+7QNKZfCQEJGGU8j9hLJNzwMFhPmKZjCqQ==', -- password: Admin123!
+    NULL, -- 初期パスワード平文管理仕様準拠（機能仕様書2.2.1）
     RANDOM()::TEXT, 
     RANDOM()::TEXT, 
     'システム管理者', 
     true, 
-    'Admin123!', 
+    'su', -- 機能仕様書2.0.1準拠：固定初期パスワード
     'admin-001', 
     NOW()
 );
@@ -68,12 +68,12 @@ INSERT INTO AspNetUsers (
     'project.manager@ubiquitous-lang.com', 
     'PROJECT.MANAGER@UBIQUITOUS-LANG.COM', 
     true, 
-    'AQAAAAEAACcQAAAAEKqzl5MhLfHyeYYwPSZjxcCHgKfKSJsH+7QNKZfCQEJGGU8j9hLJNzwMFhPmKZjCqQ==', -- password: Admin123!
+    NULL, -- 初期パスワード平文管理仕様準拠（機能仕様書2.2.1）
     RANDOM()::TEXT, 
     RANDOM()::TEXT, 
     'プロジェクト管理者', 
     true, 
-    'Admin123!', 
+    'su', -- 機能仕様書2.0.1準拠：固定初期パスワード
     'admin-001', 
     NOW()
 );
@@ -101,12 +101,12 @@ INSERT INTO AspNetUsers (
     'domain.approver@ubiquitous-lang.com', 
     'DOMAIN.APPROVER@UBIQUITOUS-LANG.COM', 
     true, 
-    'AQAAAAEAACcQAAAAEKqzl5MhLfHyeYYwPSZjxcCHgKfKSJsH+7QNKZfCQEJGGU8j9hLJNzwMFhPmKZjCqQ==', -- password: Admin123!
+    NULL, -- 初期パスワード平文管理仕様準拠（機能仕様書2.2.1）
     RANDOM()::TEXT, 
     RANDOM()::TEXT, 
     'ドメイン承認者', 
     true, 
-    'Admin123!', 
+    'su', -- 機能仕様書2.0.1準拠：固定初期パスワード
     'admin-001', 
     NOW()
 );
@@ -134,12 +134,12 @@ INSERT INTO AspNetUsers (
     'general.user@ubiquitous-lang.com', 
     'GENERAL.USER@UBIQUITOUS-LANG.COM', 
     true, 
-    'AQAAAAEAACcQAAAAEKqzl5MhLfHyeYYwPSZjxcCHgKfKSJsH+7QNKZfCQEJGGU8j9hLJNzwMFhPmKZjCqQ==', -- password: Admin123!
+    NULL, -- 初期パスワード平文管理仕様準拠（機能仕様書2.2.1）
     RANDOM()::TEXT, 
     RANDOM()::TEXT, 
     '一般ユーザー', 
     true, 
-    'Admin123!', 
+    'su', -- 機能仕様書2.0.1準拠：固定初期パスワード
     'admin-001', 
     NOW()
 );
@@ -353,7 +353,7 @@ BEGIN
     RAISE NOTICE '作成ドメイン数: 3';
     RAISE NOTICE '作成ドラフトユビキタス言語数: 5';
     RAISE NOTICE '作成正式ユビキタス言語数: 2';
-    RAISE NOTICE 'デフォルトパスワード: Admin123!';
+    RAISE NOTICE 'デフォルトパスワード: su（機能仕様書2.0.1準拠）';
     RAISE NOTICE '認証システム: ASP.NET Core Identity';
     RAISE NOTICE '用語統一: ADR_003準拠（UbiquitousLang表記）';
     RAISE NOTICE '初期パスワード管理: US-005準拠（InitialPassword保存）';

@@ -99,67 +99,77 @@ public class InitialDataService
     /// 初期スーパーユーザーの作成処理
     /// 機能仕様書の仕様に従い、設定ファイルから情報を読み込んで作成
     /// 
+    /// 【重要な仕様変更】機能仕様書2.0.1・2.2.1準拠
+    /// - 初期パスワードは"su"固定値（設定ファイルから読み込み）
+    /// - PasswordHashはNULL（平文パスワード管理仕様）
+    /// - InitialPasswordカラムに平文パスワードを保存
+    /// - 初回ログイン後にInitialPasswordを削除する仕様
+    /// 
     /// 【F#初学者向け解説】
-    /// ASP.NET Core Identity の UserManager を使用することで、
-    /// パスワードハッシュ化、検証、セキュリティスタンプ生成等が自動的に行われます。
+    /// ASP.NET Core Identity の UserManager を使用しますが、
+    /// 今回は初期パスワード平文管理仕様のため、パスワードハッシュ化は行いません。
     /// </summary>
-    private async Task CreateInitialSuperUserAsync()
+private async Task CreateInitialSuperUserAsync()
+{
+    // 🔧 設定値のデバッグログ
+    _logger.LogInformation("設定値確認: Email={Email}, Name={Name}, Password設定有無={HasPassword}", 
+        _settings?.Email ?? "null", 
+        _settings?.Name ?? "null", 
+        !string.IsNullOrWhiteSpace(_settings?.Password));
+
+    // 🔧 設定値の検証
+    if (_settings == null || string.IsNullOrWhiteSpace(_settings.Email))
     {
-        // 🔧 設定値のデバッグログ
-        _logger.LogInformation("設定値確認: Email={Email}, Name={Name}, Password設定有無={HasPassword}", 
-            _settings?.Email ?? "null", 
-            _settings?.Name ?? "null", 
-            !string.IsNullOrWhiteSpace(_settings?.Password));
-
-        // 🔧 設定値の検証
-        if (_settings == null || string.IsNullOrWhiteSpace(_settings.Email))
-        {
-            throw new InvalidOperationException("初期スーパーユーザーのメールアドレスが設定されていません");
-        }
-
-        if (string.IsNullOrWhiteSpace(_settings.Name))
-        {
-            throw new InvalidOperationException("初期スーパーユーザーの名前が設定されていません");
-        }
-
-        if (string.IsNullOrWhiteSpace(_settings.Password))
-        {
-            throw new InvalidOperationException("初期スーパーユーザーのパスワードが設定されていません");
-        }
-
-        // 👤 ApplicationUser（カスタムプロパティ対応）の作成
-        var superUser = new ApplicationUser
-        {
-            UserName = _settings.Email,  // Identity ではメールアドレスをユーザー名として使用
-            Email = _settings.Email,
-            EmailConfirmed = true,  // 初期スーパーユーザーは確認済み
-            LockoutEnabled = false,  // スーパーユーザーはロックアウトしない
-            Name = _settings.Name,  // カスタムプロパティ：ユーザー氏名
-            IsFirstLogin = _settings.IsFirstLogin,  // カスタムプロパティ：初回ログインフラグ
-            UpdatedAt = DateTime.UtcNow,  // カスタムプロパティ：更新日時
-            UpdatedBy = "System",  // カスタムプロパティ：更新者（システム初期化）
-            IsDeleted = false  // カスタムプロパティ：削除フラグ
-        };
-
-        // 💾 UserManager を使用したユーザー作成
-        // パスワードハッシュ化は自動的に行われる
-        var result = await _userManager.CreateAsync(superUser, _settings.Password);
-
-        if (result.Succeeded)
-        {
-            // 🎭 SuperUser ロールの割り当て
-            await _userManager.AddToRoleAsync(superUser, "SuperUser");
-
-            _logger.LogInformation("👤 初期スーパーユーザーを作成しました: {Email}", _settings.Email);
-            _logger.LogInformation("🔑 初期パスワード: {Password}", _settings.Password);
-            _logger.LogWarning("⚠️ セキュリティ注意: 初回ログイン後、必ずパスワードを変更してください");
-        }
-        else
-        {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new InvalidOperationException($"ユーザー作成に失敗しました: {errors}");
-        }
+        throw new InvalidOperationException("初期スーパーユーザーのメールアドレスが設定されていません");
     }
+
+    if (string.IsNullOrWhiteSpace(_settings.Name))
+    {
+        throw new InvalidOperationException("初期スーパーユーザーの名前が設定されていません");
+    }
+
+    if (string.IsNullOrWhiteSpace(_settings.Password))
+    {
+        throw new InvalidOperationException("初期スーパーユーザーのパスワードが設定されていません");
+    }
+
+    // 👤 ApplicationUser（初期パスワード平文管理仕様対応）の作成
+    var superUser = new ApplicationUser
+    {
+        UserName = _settings.Email,  // Identity ではメールアドレスをユーザー名として使用
+        Email = _settings.Email,
+        EmailConfirmed = true,  // 初期スーパーユーザーは確認済み
+        LockoutEnabled = false,  // スーパーユーザーはロックアウトしない
+        Name = _settings.Name,  // カスタムプロパティ：ユーザー氏名
+        IsFirstLogin = _settings.IsFirstLogin,  // カスタムプロパティ：初回ログインフラグ
+        InitialPassword = _settings.Password,  // 【重要】機能仕様書2.2.1準拠：平文初期パスワード
+        UpdatedAt = DateTime.UtcNow,  // カスタムプロパティ：更新日時
+        UpdatedBy = "System",  // カスタムプロパティ：更新者（システム初期化）
+        IsDeleted = false  // カスタムプロパティ：削除フラグ
+    };
+
+    // 💾 UserManager を使用したユーザー作成（PasswordHashなし）
+    // 【重要な仕様変更】機能仕様書2.2.1準拠：初期パスワード平文管理
+    // UserManager.CreateAsync(user, password) → CreateAsync(user) に変更
+    // PasswordHashはNULLのまま、InitialPasswordで平文管理
+    var result = await _userManager.CreateAsync(superUser);
+
+    if (result.Succeeded)
+    {
+        // 🎭 SuperUser ロールの割り当て
+        await _userManager.AddToRoleAsync(superUser, "SuperUser");
+
+        _logger.LogInformation("👤 初期スーパーユーザーを作成しました: {Email}", _settings.Email);
+        _logger.LogInformation("🔑 初期パスワード: {Password} （InitialPasswordカラムに平文保存）", _settings.Password);
+        _logger.LogWarning("⚠️ セキュリティ注意: 初回ログイン後、必ずパスワードを変更し、InitialPasswordを削除してください");
+        _logger.LogInformation("📋 仕様準拠: 機能仕様書2.0.1（初期パスワード'su'）・2.2.1（平文管理）準拠");
+    }
+    else
+    {
+        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+        throw new InvalidOperationException($"ユーザー作成に失敗しました: {errors}");
+    }
+}
 }
 
 /// <summary>

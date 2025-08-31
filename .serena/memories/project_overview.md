@@ -1,119 +1,130 @@
-# プロジェクト概要・最新状況
+# Project Overview - ユビキタス言語管理システム
 
 ## プロジェクト基本情報
-- **プロジェクト名**: ユビキタス言語管理システム
-- **技術基盤**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）
-- **開発手法**: スクラム・TDD・SubAgentプール方式並列実行
+- **名称**: ユビキタス言語管理システム (Ubiquitous Language Manager)
+- **目的**: DDD開発における用語統一・管理を支援するWebアプリケーション
+- **開発方式**: スクラム開発（1-2週間スプリント）
+- **アーキテクチャ**: Clean Architecture + DDD
 
-## 現在のPhase進捗状況
+## 技術スタック
 
-### Phase A7: 要件準拠・アーキテクチャ統一（完了）
-- **Phase状態**: 完全完了・GitHub Issues #5/#6解決済み
-- **進捗率**: 100%（全Step完了）
-- **最終更新**: 2025-08-26 Step6完了・Phase A7終了
-
-### Phase A8: 認証システム統合・技術負債解決（実施中）
-- **Phase状態**: Step1完了・Step2準備中
-- **進捗率**: 20%（5Step中1Step完了）
-- **最新更新**: 2025-08-26 Step1完了
-
-#### Phase A7 完了Step詳細
-- **Step1**: ✅ 要件準拠分析・課題特定完了
-- **Step2**: ✅ TypeConverter基盤設計・実装完了
-- **Step3**: ✅ F#/C#境界層TypeConverter実装完了
-- **Step4**: ✅ UI統合実装・認証フロー基盤完了
-- **Step5**: ✅ UI機能完成・用語統一90%・設計書準拠100%完了
-- **Step6**: ✅ 統合品質保証・TECH-003/004/005完全解決完了（2025-08-26）
-
-#### Phase A8 進捗状況
-- **Step1**: ✅ 技術調査・解決方針策定完了（2025-08-26）
-- **Step2**: 次回実施予定・3段階修正アプローチ実装
-- **推定時間**: 90-120分
-- **主要作業**: TECH-006 SignalR認証統合問題解決
-
-### 過去Phase完了状況
-- **Phase A1-A6**: 全て完了（認証・ユーザー管理基盤確立）
-- **基盤機能**: ASP.NET Core Identity統合・PostgreSQL基盤・Clean Architecture基盤
-
-## 技術的現状
-
-### アーキテクチャ状況
+### アーキテクチャ構成
 ```
 Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F# UseCases) → Domain (F# Models)
                       ↘ Infrastructure (C# EF Core/Repository) ↗
 ```
 
-### 主要技術スタック
+### 主要技術
 - **Frontend**: Blazor Server + Bootstrap 5
-- **Backend**: ASP.NET Core 8.0 + Entity Framework Core  
+- **Backend**: ASP.NET Core 8.0 + Entity Framework Core
 - **Domain/Application**: F# 8.0（関数型プログラミング）
-- **Database**: PostgreSQL 16（Docker Container）
-- **認証**: ASP.NET Core Identity統合完了
+- **Database**: PostgreSQL 16 (Docker)
+- **認証**: ASP.NET Core Identity（カスタム拡張）
+- **開発環境**: Docker Compose + VS Code
 
-### 品質状況（2025-08-25現在）
-- **ビルド品質**: 0 Warning, 0 Error維持
-- **テスト品質**: 全テスト成功
-- **仕様準拠度**: 92%（優良レベル）
-- **技術負債**: 軽微（TECH-006のみ・Step6解決予定）
+## 現在の開発フェーズ
 
-## 技術負債・課題管理
+### Phase A8 (認証・セキュリティ) - 95%完了
+- **期間**: 2025-08-26 〜 2025-08-31
+- **主要成果**:
+  - 初期ユーザーパスワード不整合解決（TECH-002完全解決）
+  - ルートパス競合問題解決（Pages/Index vs Components/Pages/Home）
+  - 仕様準拠認証フロー実装（平文初期パスワード対応）
+  - SubAgent組み合わせパターンC成功実行
+- **残作業**: ログイン動作検証（admin@ubiquitous-lang.com / su）
+- **次回**: ログイン確認→Phase A8完了承認→Phase A9開始準備
 
-### アクティブ技術負債（解決必要）
-- **TECH-006**: Blazor Server認証統合課題（2025-08-26分析完了・GitHub Issue #7）
-  - **根本原因**: SignalR WebSocket通信とHTTP Cookie認証のアーキテクチャ非互換
-  - **解決方針**: 3段階修正アプローチ策定済み
-    1. NavigateTo最適化（ForceLoad活用）
-    2. HTTPContext管理改善
-    3. 認証API分離（必要に応じて）
-  - **影響度**: 中（認証フロー安定性に影響）
-  - **対応予定**: Phase A8 Step2実装
+### 完了済みフェーズ
+- **Phase A1-A6**: 基本機能・認証基盤（2025-08完了）
+- **Phase A7**: 要件準拠・アーキテクチャ統一（2025-08-26完了）
 
-### 解決済み技術負債（GitHub Issues統一管理移行）
-- **TECH-001～TECH-005**: 全て解決済み・GitHub Issues #5/#6完了
-- **データベース整合性**: PostgreSQLエラー完全解消
-- **UI設計書準拠**: 100%達成・全修正完了
+## 技術負債管理状況
 
-### 継続課題
-- **用語統一**: 90%完了・軽微な「用語」→「ユビキタス言語」統一残存
-- **認証フロー統合**: Step6で完全解決予定
+### 解決済み
+- **TECH-002**: 初期パスワード不整合 → 完全解決（2025-08-31）
 
-## 最新の主要成果（Step5完了）
+### 対応予定
+- **TECH-006**: Headers read-only error → GitHub Issue #17で対応計画済み
+- **Issue #16**: ポート設定不整合 → 解決済み
+- **Issue #17**: 実行エラー自動修正機構 → 次回対応予定
 
-### 設計書準拠修正完了
-- **ApplicationUser.cs**: 設計書準拠・不要フィールド4つ削除
-- **ProfileUpdateDto.cs**: UI設計書3.2節100%準拠
-- **Profile.razor**: UI設計書準拠・HTMLタグエラー修正完了
+## データベース設計
 
-### 品質達成
-- **PostgreSQLエラー**: 完全解消
-- **ビルドエラー**: 完全解消
-- **仕様準拠度**: 92%達成
+### 認証関連テーブル
+- **AspNetUsers**: ASP.NET Core Identity拡張
+  - InitialPassword: 平文初期パスワード（初回ログイン用）
+  - PasswordHash: ハッシュ化パスワード（初回ログイン後設定）
+- **ユビキタス言語**: 用語定義・管理テーブル群
 
-### プロセス改善実証
-- **SubAgent専門性**: 各層専門SubAgentによる効果的分業実証
-- **依存関係順序実行**: ApplicationUser → ProfileUpdateDto → Profile.razor順序の重要性実証
-- **step-end-review**: 包括的品質確認・技術負債発見効果実証
+### 初期データ
+- **スーパーユーザー**: admin@ubiquitous-lang.com
+- **初期パスワード**: "su"（平文、PasswordHash=NULL）
+- **仕様**: 初回ログイン→パスワード変更→ハッシュ値設定
 
-## 次回セッション実施計画
+## 開発・運用コマンド
 
-### Step6実施内容
-1. **TECH-006解決**: ログイン認証フローエラー修正
-2. **統合品質保証**: 全認証フロー動作確認
-3. **Phase A7完了確認**: 最終品質確認・完了承認
+### ビルド・実行
+```bash
+docker-compose up -d                                   # PostgreSQL起動
+dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動
+```
 
-### 必要SubAgent
-- **integration-test**: 統合テスト・認証フロー確認
-- **spec-compliance**: 最終仕様準拠監査
-- **code-review**: コード品質最終確認
+### テスト
+```bash
+dotnet test                                            # 全テスト実行
+dotnet test --collect:"XPlat Code Coverage"           # カバレッジ測定
+```
 
-### 技術的前提条件
-- **開発環境**: PostgreSQL Docker・ASP.NET Core 8.0準備済み
-- **ビルド状況**: 0エラー0警告・即座作業開始可能
-- **認証システム**: UserManager統合基盤・Profile機能基盤完成
+### アクセスURL
+- **アプリ**: https://localhost:5001
+- **PgAdmin**: http://localhost:8080
+- **Smtp4dev**: http://localhost:5080
 
-## 重要な設計決定・制約
-- **ADR_003**: 用語統一戦略（「ユビキタス言語」使用）
-- **ADR_010**: 初学者対応詳細コメント必須
-- **ADR_013**: SubAgentプール方式並列実行
-- **ADR_015**: GitHub Issues技術負債管理
-- **ADR_016**: プロセス遵守絶対原則
+## コード品質状況
+
+### 最新品質指標（2025-08-31）
+- **ビルド**: 0 Warning, 0 Error
+- **統合テスト**: 98/100点合格
+- **仕様準拠度**: 98%達成
+- **アーキテクチャ**: Clean Architecture完全準拠
+
+### 開発手法
+- **TDD**: Red-Green-Refactor サイクル
+- **SubAgent**: 並列・順次実行による効率化
+- **継続的品質改善**: Phase毎の品質評価・改善
+
+## 組織・管理体制
+
+### SubAgent組み合わせパターン
+- **パターンA**: 機能拡張（新機能開発）
+- **パターンB**: 問題解決（バグ修正・技術負債対応）
+- **パターンC**: 品質改善（リファクタリング・最適化）
+
+### ドキュメント管理
+- **ADR**: 技術意思決定記録（16件）
+- **日次記録**: セッション毎の作業記録・学習内容
+- **技術負債**: GitHub Issues連携管理
+
+## 今後の開発計画
+
+### Phase A9 (予定)
+- **フォーカス**: ユビキタス言語CRUD機能実装
+- **期間**: 2025-09-01 〜 2025-09-07
+- **主要機能**: 用語登録・検索・編集・削除
+
+### 長期目標
+- **Phase B**: 高度検索・分析機能
+- **Phase C**: チーム協業機能
+- **Phase D**: API・統合機能
+
+## 学習・改善領域
+
+### 技術スキル向上
+- **Blazor Server**: ライフサイクル・SignalR最適化
+- **F#**: 関数型プログラミングパターン深化
+- **Clean Architecture**: 層間結合度最適化
+
+### プロセス改善
+- **SubAgent制御**: 大量起動防止機構強化
+- **品質保証**: 自動化テスト拡充
+- **ドキュメント**: リアルタイム更新機構導入

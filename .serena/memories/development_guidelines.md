@@ -1,4 +1,4 @@
-# 開発ガイドライン - 2025年8月26日更新
+# 開発ガイドライン - 2025年8月29日更新
 
 ## プロセス遵守絶対原則（ADR_016）
 ### 違反は一切許容されない重要遵守事項
@@ -141,6 +141,9 @@ public class EntityTypeConverter
 
 ### 運用環境
 - **開発環境**: Docker Compose（PostgreSQL + PgAdmin + Smtp4dev）
+- **HTTPS統一**: 開発環境でHTTPS統一（2025-08-29対応完了）
+  - VS Code: `https://localhost:5001`
+  - CLI実行: `dotnet run` → `https://localhost:5001`（launchSettings.json設定）
 - **本番品質**: パフォーマンス・セキュリティ・可用性確保
 
 ## 技術負債管理（ADR_015）
