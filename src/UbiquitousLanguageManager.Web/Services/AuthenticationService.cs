@@ -125,21 +125,52 @@ public class AuthenticationService
             
             // 仕様書2.1.1準拠: Remember Me機能を含むログイン実行
             // lockoutOnFailure=false: ロックアウト機構を無効化
+            
+            // ApplicationUserにキャスト（初期パスワード認証対応）
+            var appUser = user as ApplicationUser;
             SignInResult result;
-            try 
+            
+            // 【Blazor Server初学者向け解説】
+            // 初回ログイン判定ロジック: IsFirstLoginフラグとInitialPasswordの存在で分岐
+            // - 初回ログイン: InitialPassword（平文）で直接比較認証
+            // - 通常ログイン: PasswordHash（ハッシュ値）でASP.NET Core Identity標準認証
+            if (appUser != null && appUser.IsFirstLogin && !string.IsNullOrEmpty(appUser.InitialPassword))
             {
-                result = await _signInManager.PasswordSignInAsync(
-                    user, 
-                    request.Password, 
-                    isPersistent: request.RememberMe, // 仕様書2.1.1準拠: ログイン状態保持
-                    lockoutOnFailure: false); // 仕様書2.1.1準拠: ロックアウト機構は設けない
+                // 🔑 初回ログイン：InitialPassword（平文）で比較認証
+                // 仕様書2.1.2準拠: 初回ログイン時はパスワード変更必須
+                if (request.Password == appUser.InitialPassword)
+                {
+                    // 手動でサインイン実行（初回ログイン専用）
+                    // ASP.NET Core Identityの標準認証をスキップし、直接サインイン
+                    await _signInManager.SignInAsync(user, isPersistent: request.RememberMe);
+                    result = SignInResult.Success;
+                    _logger.LogInformation("初回ログイン成功: InitialPassword認証 - Email: {Email}", request.Email);
+                }
+                else
+                {
+                    result = SignInResult.Failed;
+                    _logger.LogWarning("初回ログイン失敗: InitialPassword不一致 - Email: {Email}", request.Email);
+                }
             }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Headers are read-only"))
+            else
             {
-                // Blazor Server環境でのHeaders競合エラーをキャッチ
-                _logger.LogError(ex, "Blazor Server認証処理でHeaders競合エラーが発生: {Email}", request.Email);
-                return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error(
-                    "認証処理中にエラーが発生しました。ページを更新してから再度お試しください。");
+                // 🔐 通常ログイン：PasswordHashで認証（既存処理）
+                // ASP.NET Core Identity標準のハッシュベース認証を実行
+                try 
+                {
+                    result = await _signInManager.PasswordSignInAsync(
+                        user, 
+                        request.Password, 
+                        isPersistent: request.RememberMe, // 仕様書2.1.1準拠: ログイン状態保持
+                        lockoutOnFailure: false); // 仕様書2.1.1準拠: ロックアウト機構は設けない
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Headers are read-only"))
+                {
+                    // Blazor Server環境でのHeaders競合エラーをキャッチ
+                    _logger.LogError(ex, "Blazor Server認証処理でHeaders競合エラーが発生: {Email}", request.Email);
+                    return UbiquitousLanguageManager.Contracts.DTOs.Authentication.LoginResponseDto.Error(
+                        "認証処理中にエラーが発生しました。ページを更新してから再度お試しください。");
+                }
             }
 
             if (result.Succeeded)

@@ -132,25 +132,25 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
             return;
             
             // Arrange - FormalUbiquitousLanguage準備
-            // var formal = CreateTestFormalUbiquitousLanguage();
+            var formal = CreateTestFormalUbiquitousLanguage();
 
             // Act - F# → C# DTO変換実行
             var dto = TypeConverters.ToDto(formal);
 
             // Assert - 変換結果検証
             Assert.NotNull(dto);
-            Assert.Equal(formal.Id.Value, dto.Id, "ID変換が正しくありません");
-            Assert.Equal(formal.DomainId.Value, dto.DomainId, "DomainID変換が正しくありません");
-            Assert.Equal(formal.JapaneseName.Value, dto.JapaneseName, "日本語名変換が正しくありません");
-            Assert.Equal(formal.EnglishName.Value, dto.EnglishName, "英語名変換が正しくありません");
-            Assert.Equal(formal.Description.Value, dto.Description, "説明変換が正しくありません");
-            Assert.Equal(formal.UpdatedAt, dto.UpdatedAt, "更新日時変換が正しくありません");
-            Assert.Equal(formal.UpdatedBy.Value, dto.UpdatedBy, "更新者ID変換が正しくありません");
+            Assert.Equal(formal.Id.Value, dto.Id); // ID変換が正しくありません
+            Assert.Equal(formal.DomainId.Value, dto.DomainId); // DomainID変換が正しくありません
+            Assert.Equal(formal.JapaneseName.Value, dto.JapaneseName); // 日本語名変換が正しくありません
+            Assert.Equal(formal.EnglishName.Value, dto.EnglishName); // 英語名変換が正しくありません
+            Assert.Equal(formal.Description.Value, dto.Description); // 説明変換が正しくありません
+            Assert.Equal(formal.UpdatedAt, dto.UpdatedAt); // 更新日時変換が正しくありません
+            Assert.Equal(formal.UpdatedBy.Value, dto.UpdatedBy); // 更新者ID変換が正しくありません
             
             // FormalUbiquitousLanguage特有の検証
-            Assert.Equal("Approved", dto.Status, "正式版なのでStatusはApprovedであるべきです");
-            Assert.Equal(formal.ApprovedAt, dto.ApprovedAt, "承認日時変換が正しくありません");
-            Assert.Equal(formal.ApprovedBy.Value, dto.ApprovedBy, "承認者ID変換が正しくありません");
+            Assert.Equal("Approved", dto.Status); // 正式版なのでStatusはApprovedであるべきです
+            Assert.Equal(formal.ApprovedAt, dto.ApprovedAt); // 承認日時変換が正しくありません
+            Assert.Equal(formal.ApprovedBy.Value, dto.ApprovedBy); // 承認者ID変換が正しくありません
         }
 
         #endregion
@@ -168,11 +168,11 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
 
             // Assert - 変換結果検証
             Assert.NotNull(dto);
-            Assert.Equal(project.Id.Value, dto.Id, "ID変換が正しくありません");
-            Assert.Equal(project.Name.Value, dto.Name, "プロジェクト名変換が正しくありません");
-            Assert.Equal(project.Description.Value, dto.Description, "プロジェクト説明変換が正しくありません");
-            Assert.Equal(project.UpdatedAt, dto.UpdatedAt, "更新日時変換が正しくありません");
-            Assert.Equal(project.UpdatedBy.Value, dto.UpdatedBy, "更新者ID変換が正しくありません");
+            Assert.Equal(project.Id.Value, dto.Id); // ID変換が正しくありません
+            Assert.Equal(project.Name.Value, dto.Name); // プロジェクト名変換が正しくありません
+            Assert.Equal(project.Description.Value, dto.Description); // プロジェクト説明変換が正しくありません
+            Assert.Equal(project.UpdatedAt, dto.UpdatedAt); // 更新日時変換が正しくありません
+            Assert.Equal(project.UpdatedBy.Value, dto.UpdatedBy); // 更新者ID変換が正しくありません
         }
 
         #endregion
@@ -190,11 +190,11 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
 
             // Assert - 変換結果検証
             Assert.NotNull(dto);
-            Assert.Equal(domain.Id.Value, dto.Id, "ID変換が正しくありません");
-            Assert.Equal(domain.ProjectId.Value, dto.ProjectId, "プロジェクトID変換が正しくありません");
-            Assert.Equal(domain.Name.Value, dto.Name, "ドメイン名変換が正しくありません");
-            Assert.Equal(domain.Description.Value, dto.Description, "ドメイン説明変換が正しくありません");
-            Assert.Equal(domain.IsActive, dto.IsActive, "アクティブ状態変換が正しくありません");
+            Assert.Equal(domain.Id.Value, dto.Id); // ID変換が正しくありません
+            Assert.Equal(domain.ProjectId.Value, dto.ProjectId); // プロジェクトID変換が正しくありません
+            Assert.Equal(domain.Name.Value, dto.Name); // ドメイン名変換が正しくありません
+            Assert.Equal(domain.Description.Value, dto.Description); // ドメイン説明変換が正しくありません
+            Assert.Equal(domain.IsActive, dto.IsActive); // アクティブ状態変換が正しくありません
             Assert.Equal(domain.UpdatedAt, dto.UpdatedAt, "更新日時変換が正しくありません");
             Assert.Equal(domain.UpdatedBy.Value, dto.UpdatedBy, "更新者ID変換が正しくありません");
         }
@@ -358,23 +358,23 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
         {
             // Arrange - F#エンティティ作成
             var draft = CreateTestDraftUbiquitousLanguage();
-            // Skip formal test for now: var formal = CreateTestFormalUbiquitousLanguage();
+            var formal = CreateTestFormalUbiquitousLanguage();
             var project = CreateTestProject();
             var domain = CreateTestDomain();
 
             // Act - プロパティアクセステスト
             // F#判別共用体の.Valueプロパティアクセス確認
-            Assert.True(draft.Id.Value > 0, "UbiquitousLanguageId.Value アクセス確認");
-            Assert.True(draft.DomainId.Value > 0, "DomainId.Value アクセス確認");
-            Assert.IsFalse(string.IsNullOrEmpty(draft.JapaneseName.Value), "JapaneseName.Value アクセス確認");
-            Assert.IsFalse(string.IsNullOrEmpty(draft.EnglishName.Value), "EnglishName.Value アクセス確認");
-            Assert.IsFalse(string.IsNullOrEmpty(draft.Description.Value), "Description.Value アクセス確認");
-            Assert.True(draft.UpdatedBy.Value > 0, "UserId.Value アクセス確認");
+            Assert.True(draft.Id.Value > 0); // UbiquitousLanguageId.Value アクセス確認
+            Assert.True(draft.DomainId.Value > 0); // DomainId.Value アクセス確認
+            Assert.False(string.IsNullOrEmpty(draft.JapaneseName.Value)); // JapaneseName.Value アクセス確認
+            Assert.False(string.IsNullOrEmpty(draft.EnglishName.Value)); // EnglishName.Value アクセス確認
+            Assert.False(string.IsNullOrEmpty(draft.Description.Value)); // Description.Value アクセス確認
+            Assert.True(draft.UpdatedBy.Value > 0); // UserId.Value アクセス確認
 
             // F#エンティティの基本構造確認
-            Assert.True(project.Id.Value >= 0, "ProjectId.Value アクセス確認");
-            Assert.True(domain.Id.Value >= 0, "DomainId.Value アクセス確認");
-            Assert.True(formal.ApprovedBy.Value > 0, "承認者UserId.Value アクセス確認");
+            Assert.True(project.Id.Value >= 0); // ProjectId.Value アクセス確認
+            Assert.True(domain.Id.Value >= 0); // DomainId.Value アクセス確認
+            Assert.True(formal.ApprovedBy.Value > 0); // 承認者UserId.Value アクセス確認
 
             // Assert - 型変換整合性確認
             Assert.IsType<long>(draft.Id.Value); // UbiquitousLanguageId.Valueはlong型であるべき

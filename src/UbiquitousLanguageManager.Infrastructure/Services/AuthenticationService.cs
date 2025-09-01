@@ -63,61 +63,88 @@ public class AuthenticationService : IAuthenticationService
     /// ロックアウト機能、失敗回数記録も含む包括的なログイン処理。
     /// </summary>
     public async Task<FSharpResult<User, string>> LoginAsync(Email email, string password)
+{
+    try
     {
-        try
+        var emailValue = email.Value;
+        _logger.LogInformation("Login attempt for user: {Email}", emailValue);
+
+        // ASP.NET Core Identity ユーザー検索
+        var identityUser = await _userManager.FindByEmailAsync(emailValue);
+        if (identityUser == null)
         {
-            var emailValue = email.Value;
-            _logger.LogInformation("Login attempt for user: {Email}", emailValue);
+            _logger.LogWarning("Login failed: User not found for email {Email}", emailValue);
+            return FSharpResult<User, string>.NewError("ユーザーが見つかりません");
+        }
 
-            // ASP.NET Core Identity ユーザー検索
-            var identityUser = await _userManager.FindByEmailAsync(emailValue);
-            if (identityUser == null)
+        // ロックアウト状態確認
+        if (await _userManager.IsLockedOutAsync(identityUser))
+        {
+            _logger.LogWarning("Login failed: User {Email} is locked out until {LockoutEnd}", 
+                emailValue, identityUser.LockoutEnd);
+            return FSharpResult<User, string>.NewError("アカウントがロックアウトされています");
+        }
+
+        // 【重要な仕様対応】機能仕様書2.2.1準拠：初期パスワード平文認証
+        // PasswordHashがNULLの場合はInitialPasswordで平文認証を実行
+        bool authenticationSuccessful = false;
+        
+        if (string.IsNullOrEmpty(identityUser.PasswordHash) && !string.IsNullOrEmpty(identityUser.InitialPassword))
+        {
+            // 初期パスワード平文認証（機能仕様書2.2.1準拠）
+            _logger.LogInformation("Using InitialPassword authentication for user: {Email}", emailValue);
+            authenticationSuccessful = identityUser.InitialPassword == password;
+            
+            if (authenticationSuccessful)
             {
-                _logger.LogWarning("Login failed: User not found for email {Email}", emailValue);
-                return FSharpResult<User, string>.NewError("ユーザーが見つかりません");
+                // 手動でサインイン（InitialPassword認証成功時）
+                await _signInManager.SignInAsync(identityUser, isPersistent: false);
+                _logger.LogInformation("InitialPassword authentication successful for user: {Email}", emailValue);
             }
-
-            // ロックアウト状態確認
-            if (await _userManager.IsLockedOutAsync(identityUser))
+            else
             {
-                _logger.LogWarning("Login failed: User {Email} is locked out until {LockoutEnd}", 
-                    emailValue, identityUser.LockoutEnd);
-                return FSharpResult<User, string>.NewError("アカウントがロックアウトされています");
+                _logger.LogWarning("InitialPassword authentication failed for user: {Email}", emailValue);
             }
-
-            // パスワード検証とサインイン（機能仕様書2.1.1準拠: ロックアウト機構なし）
+        }
+        else
+        {
+            // 標準のPasswordHash認証
             var signInResult = await _signInManager.PasswordSignInAsync(
                 identityUser, password, isPersistent: false, lockoutOnFailure: false);
-
-            if (signInResult.Succeeded)
-            {
-                _logger.LogInformation("Login successful for user: {Email}", emailValue);
-                
-                // F# Domain User型に変換（標準Identity対応）
-                var domainUser = CreateSimpleDomainUser(identityUser);
-                
-                // 通知サービスに成功通知（簡易実装）
-                _logger.LogInformation("Login success notification for user: {Email}", emailValue);
-                
-                return FSharpResult<User, string>.NewOk(domainUser);
-            }
-            else if (signInResult.IsLockedOut)
+            
+            authenticationSuccessful = signInResult.Succeeded;
+            
+            if (signInResult.IsLockedOut)
             {
                 _logger.LogWarning("Login failed: User {Email} locked out after failed attempt", emailValue);
                 return FSharpResult<User, string>.NewError("アカウントがロックアウトされました");
             }
-            else
-            {
-                _logger.LogWarning("Login failed: Invalid password for user {Email}", emailValue);
-                return FSharpResult<User, string>.NewError("メールアドレスまたはパスワードが正しくありません");
-            }
         }
-        catch (Exception ex)
+
+        if (authenticationSuccessful)
         {
-            _logger.LogError(ex, "Login error for email: {Email}", email.Value);
-            return FSharpResult<User, string>.NewError("ログイン処理中にエラーが発生しました");
+            _logger.LogInformation("Login successful for user: {Email}", emailValue);
+            
+            // F# Domain User型に変換（標準Identity対応）
+            var domainUser = CreateSimpleDomainUser(identityUser);
+            
+            // 通知サービスに成功通知（簡易実装）
+            _logger.LogInformation("Login success notification for user: {Email}", emailValue);
+            
+            return FSharpResult<User, string>.NewOk(domainUser);
+        }
+        else
+        {
+            _logger.LogWarning("Login failed: Invalid password for user {Email}", emailValue);
+            return FSharpResult<User, string>.NewError("メールアドレスまたはパスワードが正しくありません");
         }
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Login error for email: {Email}", email.Value);
+        return FSharpResult<User, string>.NewError("ログイン処理中にエラーが発生しました");
+    }
+}
 
     /// <summary>
     /// ユーザー作成機能（Phase A5標準Identity移行対応）
@@ -202,48 +229,79 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     public async Task<FSharpResult<PasswordHash, string>> ChangePasswordAsync(
         UserId userId, string oldPassword, Password newPassword)
+{
+    try
     {
-        try
+        var userIdValue = userId.Value;
+        var newPasswordValue = newPassword.Value;
+        
+        _logger.LogInformation("Changing password for user: {UserId}", userIdValue);
+
+        var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
+        if (identityUser == null)
         {
-            var userIdValue = userId.Value;
-            var newPasswordValue = newPassword.Value;
-            
-            _logger.LogInformation("Changing password for user: {UserId}", userIdValue);
-
-            var identityUser = await _userManager.FindByIdAsync(userIdValue.ToString());
-            if (identityUser == null)
-            {
-                _logger.LogWarning("Password change failed: User not found {UserId}", userIdValue);
-                return FSharpResult<PasswordHash, string>.NewError("ユーザーが見つかりません");
-            }
-
-            var changeResult = await _userManager.ChangePasswordAsync(
-                identityUser, oldPassword, newPasswordValue);
-            
-            if (changeResult.Succeeded)
-            {
-                _logger.LogInformation("Password changed successfully for user: {UserId}", userIdValue);
-                
-                // セキュリティスタンプ更新（既存セッション無効化）
-                await _userManager.UpdateSecurityStampAsync(identityUser);
-                
-                // パスワードハッシュを返却（実際の値は外部に公開しない）
-                var passwordHash = CreatePasswordHash("[PROTECTED]");
-                return FSharpResult<PasswordHash, string>.NewOk(passwordHash);
-            }
-            else
-            {
-                var errors = string.Join(", ", changeResult.Errors.Select(e => e.Description));
-                _logger.LogError("Password change failed for user {UserId}: {Errors}", userIdValue, errors);
-                return FSharpResult<PasswordHash, string>.NewError($"パスワード変更に失敗しました: {errors}");
-            }
+            _logger.LogWarning("Password change failed: User not found {UserId}", userIdValue);
+            return FSharpResult<PasswordHash, string>.NewError("ユーザーが見つかりません");
         }
-        catch (Exception ex)
+
+        IdentityResult changeResult;
+
+        // 【重要な仕様対応】機能仕様書2.2.1準拠：初期パスワード処理
+        if (string.IsNullOrEmpty(identityUser.PasswordHash) && !string.IsNullOrEmpty(identityUser.InitialPassword))
         {
-            _logger.LogError(ex, "Password change error for user: {UserId}", userId.Value);
-            return FSharpResult<PasswordHash, string>.NewError("パスワード変更処理中にエラーが発生しました");
+            // 初期パスワードからの変更（oldPasswordは平文InitialPasswordと照合）
+            if (identityUser.InitialPassword != oldPassword)
+            {
+                _logger.LogWarning("Password change failed: Invalid old InitialPassword for user {UserId}", userIdValue);
+                return FSharpResult<PasswordHash, string>.NewError("現在のパスワードが正しくありません");
+            }
+
+            // 初期パスワードをクリアして新しいPasswordHashを設定
+            identityUser.InitialPassword = null;  // セキュリティ：初期パスワード削除
+            identityUser.IsFirstLogin = false;    // 初回ログインフラグをリセット
+            identityUser.UpdatedAt = DateTime.UtcNow;
+            identityUser.UpdatedBy = userIdValue.ToString();
+
+            // 新しいパスワードハッシュを設定
+            identityUser.PasswordHash = _userManager.PasswordHasher.HashPassword(identityUser, newPasswordValue);
+            
+            // ユーザー更新
+            var updateResult = await _userManager.UpdateAsync(identityUser);
+            changeResult = updateResult;
+
+            _logger.LogInformation("InitialPassword cleared and PasswordHash set for user: {UserId}", userIdValue);
+        }
+        else
+        {
+            // 標準のパスワード変更
+            changeResult = await _userManager.ChangePasswordAsync(
+                identityUser, oldPassword, newPasswordValue);
+        }
+        
+        if (changeResult.Succeeded)
+        {
+            _logger.LogInformation("Password changed successfully for user: {UserId}", userIdValue);
+            
+            // セキュリティスタンプ更新（既存セッション無効化）
+            await _userManager.UpdateSecurityStampAsync(identityUser);
+            
+            // パスワードハッシュを返却（実際の値は外部に公開しない）
+            var passwordHash = CreatePasswordHash("[PROTECTED]");
+            return FSharpResult<PasswordHash, string>.NewOk(passwordHash);
+        }
+        else
+        {
+            var errors = string.Join(", ", changeResult.Errors.Select(e => e.Description));
+            _logger.LogError("Password change failed for user {UserId}: {Errors}", userIdValue, errors);
+            return FSharpResult<PasswordHash, string>.NewError($"パスワード変更に失敗しました: {errors}");
         }
     }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Password change error for user: {UserId}", userId.Value);
+        return FSharpResult<PasswordHash, string>.NewError("パスワード変更処理中にエラーが発生しました");
+    }
+}
 
     /// <summary>
     /// パスワードハッシュ生成機能（Phase A5標準Identity移行対応）

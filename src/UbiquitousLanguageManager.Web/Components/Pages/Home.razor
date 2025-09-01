@@ -1,0 +1,115 @@
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>ユビキタス言語一覧 - ユビキタス言語管理システム</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- ページヘッダー -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-6 fw-bold text-primary">
+                        <i class="fas fa-language me-2"></i>
+                        ユビキタス言語一覧
+                    </h1>
+                    <p class="lead text-muted">承認済みのユビキタス言語を管理・閲覧できます</p>
+                </div>
+            </div>
+
+            <!-- 実装予定のお知らせ -->
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    実装予定機能
+                </h5>
+                <p class="mb-2">この画面では以下の機能を提供予定です（Phase B以降で実装）：</p>
+                <ul class="mb-3">
+                    <li>承認済みユビキタス言語の一覧表示</li>
+                    <li>プロジェクト・ドメイン別フィルタリング</li>
+                    <li>用語名での検索機能</li>
+                    <li>ソート機能（用語名、更新日時など）</li>
+                    <li>用語の詳細情報表示</li>
+                </ul>
+                <p class="mb-0">
+                    <strong>仕様参照:</strong> 機能仕様書 4.1 ユビキタス言語一覧機能（ホーム画面）
+                </p>
+            </div>
+
+            <!-- プレースホルダー -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        ユビキタス言語一覧
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-language fa-4x mb-3 text-primary opacity-50"></i>
+                        <h6>Phase B で実装予定</h6>
+                        <p>現在は認証システムの統合テストが完了した状態です</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// 【仕様書準拠】ユビキタス言語一覧画面（ホーム画面）
+    /// 機能仕様書 4.1 ユビキタス言語一覧機能（ホーム画面）に準拠した実装
+    /// 
+    /// 【Phase B以降で実装予定】
+    /// - 承認済みユビキタス言語の一覧表示
+    /// - プロジェクト・ドメイン別フィルタリング
+    /// - 検索・ソート・表示機能
+    /// - 権限に応じた表示制御（スーパーユーザー：全プロジェクト、その他：所属プロジェクトのみ）
+    /// </summary>
+    
+    /// <summary>
+    /// コンポーネント初期化処理
+    /// 【現在はプレースホルダー実装】
+    /// Phase Bでは、正式ユビキタス言語のデータ取得処理を実装予定
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 現在は認証確認のみ
+            // Phase B以降で以下を実装予定:
+            // - ユーザーの所属プロジェクト取得
+            // - プロジェクト・ドメイン一覧取得
+            // - 正式ユビキタス言語一覧取得
+            // - 権限に応じた表示制御
+            
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Phase Bで適切なエラーログ実装
+            Console.WriteLine($"Ubiquitous Language List initialization error: {ex.Message}");
+        }
+    }
+}
+
+
+@*
+【Home.razor - 仕様書準拠ユビキタス言語一覧画面】
+
+仕様書準拠：
+- 機能仕様書 4.1 ユビキタス言語一覧機能（ホーム画面）に準拠
+- ログイン成功後の初期画面として機能
+- [Authorize]属性による認証必須ページ
+
+Phase B以降実装予定：
+- 承認済みユビキタス言語の一覧表示
+- プロジェクト・ドメイン別フィルタリング
+- 検索・ソート・表示機能のみ（編集・削除は不可）
+- 権限に応じた表示制御
+
+TECH-006統合効果：
+- ログイン成功後のリダイレクト先として機能（"/" URL）
+- 認証済みユーザーのホーム画面
+- JavaScript APIによる認証フローの完了点
+*@

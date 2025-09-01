@@ -16,7 +16,7 @@
       },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5001"
+        "ASPNETCORE_URLS": "https://localhost:5001"
       },
       "console": "externalTerminal"
     },
@@ -33,7 +33,7 @@
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5001"
+        "ASPNETCORE_URLS": "https://localhost:5001"
       },
       "console": "internalConsole"
     },

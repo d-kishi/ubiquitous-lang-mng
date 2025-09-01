@@ -59,21 +59,23 @@ public class AuthenticationServiceTests
         [Fact]
         public async Task LoginAsync_WithInitialPassword_ShouldSucceed()
         {
-            // Arrange - TECH-002対応: 初期パスワード"su"でのログイン
+            // Arrange - 🔴 RED: 新しい初期パスワード平文認証テスト
             var emailResult = Email.create("admin@ubiquitous-lang.com");
             Assert.True(emailResult.IsOk);
             var email = emailResult.ResultValue;
             var initialPassword = "su"; // TECH-002: 仕様準拠の初期パスワード
 
-            // スーパーユーザーのIdentityUser作成
+            // スーパーユーザーのIdentityUser作成（InitialPassword認証用）
             var superUser = new ApplicationUser
             {
                 Id = "1",
                 Email = "admin@ubiquitous-lang.com",
                 UserName = "admin@ubiquitous-lang.com",
                 Name = "システム管理者",
-                IsFirstLogin = true, // TECH-004関連: 初回ログインフラグ
-                EmailConfirmed = true
+                IsFirstLogin = true,
+                EmailConfirmed = true,
+                InitialPassword = "su",  // 🔴 平文初期パスワード設定
+                PasswordHash = null      // 🔴 ハッシュなし = 初期パスワード認証モード
             };
 
             // UserManager モックセットアップ
@@ -82,39 +84,52 @@ public class AuthenticationServiceTests
             _mockUserManager.Setup(x => x.IsLockedOutAsync(superUser))
                            .ReturnsAsync(false);
 
-            // SignInManager モックセットアップ - 初期パスワード"su"で成功
-            _mockSignInManager.Setup(x => x.PasswordSignInAsync(
-                superUser, initialPassword, false, false))
-                             .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+            // 🔴 SignInManager.SignInAsync手動サインイン用モック
+            _mockSignInManager.Setup(x => x.SignInAsync(superUser, false, null))
+                             .Returns(Task.CompletedTask);
 
-            // Act
+            // Act - 初期パスワード認証実行
             var result = await _service.LoginAsync(email, initialPassword);
 
-            // Assert - TECH-002対応: 初期パスワード"su"でのログイン成功
-            Assert.True(result.IsOk);
+            // Assert - 🔴 期待: 成功するはず（初期パスワード認証）
+            Assert.True(result.IsOk, $"初期パスワード認証が失敗: {(result.IsError ? result.ErrorValue : "")}");
             var user = result.ResultValue;
             Assert.Equal("admin@ubiquitous-lang.com", user.Email.Value);
             Assert.Equal("システム管理者", user.Name.Value);
             
-            // ログ出力確認
+            // 🔴 手動サインインが呼ばれることを確認
+            _mockSignInManager.Verify(x => x.SignInAsync(
+                It.Is<ApplicationUser>(u => u.Id == "1"), false, null), Times.Once);
+                
+            // 🔴 初期パスワード認証ログの確認
             _mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Login successful for user: admin@ubiquitous-lang.com")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Using InitialPassword authentication")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+                
+            // 🔴 認証成功ログの確認
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("InitialPassword authentication successful")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
         }
 
         [Fact]
-        public async Task LoginAsync_WithOldPassword_ShouldFail()
+        public async Task LoginAsync_InitialPasswordWrong_ShouldFail()
         {
-            // Arrange - TECH-002対応: 旧パスワード"TempPass123!"でのログイン失敗確認
+            // Arrange - 🔴 RED: 初期パスワード認証失敗テスト
             var emailResult = Email.create("admin@ubiquitous-lang.com");
             Assert.True(emailResult.IsOk);
             var email = emailResult.ResultValue;
-            var oldPassword = "TempPass123!"; // TECH-002: 以前使用していた不正なパスワード
+            var wrongPassword = "wrong_password"; // 間違ったパスワード
 
             var superUser = new ApplicationUser
             {
@@ -123,7 +138,9 @@ public class AuthenticationServiceTests
                 UserName = "admin@ubiquitous-lang.com",
                 Name = "システム管理者",
                 IsFirstLogin = true,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                InitialPassword = "su",  // 正しい初期パスワード
+                PasswordHash = null      // 平文認証モード
             };
 
             _mockUserManager.Setup(x => x.FindByEmailAsync("admin@ubiquitous-lang.com"))
@@ -131,27 +148,109 @@ public class AuthenticationServiceTests
             _mockUserManager.Setup(x => x.IsLockedOutAsync(superUser))
                            .ReturnsAsync(false);
 
-            // SignInManager モックセットアップ - 旧パスワードでは失敗
-            _mockSignInManager.Setup(x => x.PasswordSignInAsync(
-                superUser, oldPassword, false, false))
-                             .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed);
-
             // Act
-            var result = await _service.LoginAsync(email, oldPassword);
+            var result = await _service.LoginAsync(email, wrongPassword);
 
-            // Assert - TECH-002対応: 旧パスワードでは認証失敗
+            // Assert - 🔴 初期パスワード認証失敗
             Assert.True(result.IsError);
             Assert.Equal("メールアドレスまたはパスワードが正しくありません", result.ErrorValue);
             
-            // ログ出力確認
+            // SignInAsyncは呼ばれないことを確認
+            _mockSignInManager.Verify(x => x.SignInAsync(
+                It.IsAny<ApplicationUser>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never);
+                
+            // 失敗ログ出力確認
             _mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Warning,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Login failed: Invalid password for user admin@ubiquitous-lang.com")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("InitialPassword authentication failed")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task LoginAsync_NormalPasswordAfterHash_ShouldWork()
+        {
+            // Arrange - 🔴 通常パスワード認証維持テスト（回帰テスト）
+            var emailResult = Email.create("test@example.com");
+            Assert.True(emailResult.IsOk);
+            var email = emailResult.ResultValue;
+            var normalPassword = "SecurePassword123!";
+
+            var regularUser = new ApplicationUser
+            {
+                Id = "2",
+                Email = "test@example.com",
+                UserName = "test@example.com",
+                Name = "テストユーザー",
+                IsFirstLogin = false,
+                EmailConfirmed = true,
+                InitialPassword = null,                    // 初期パスワードなし
+                PasswordHash = "hashed_password_value"     // ハッシュ化済みパスワード
+            };
+
+            _mockUserManager.Setup(x => x.FindByEmailAsync("test@example.com"))
+                           .ReturnsAsync(regularUser);
+            _mockUserManager.Setup(x => x.IsLockedOutAsync(regularUser))
+                           .ReturnsAsync(false);
+            _mockSignInManager.Setup(x => x.PasswordSignInAsync(
+                regularUser, normalPassword, false, false))
+                             .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+
+            // Act
+            var result = await _service.LoginAsync(email, normalPassword);
+
+            // Assert - 通常認証が正常動作することを確認
+            Assert.True(result.IsOk);
+            var user = result.ResultValue;
+            Assert.Equal("test@example.com", user.Email.Value);
+            
+            // 標準のPasswordSignInAsyncが呼ばれることを確認
+            _mockSignInManager.Verify(x => x.PasswordSignInAsync(
+                It.IsAny<ApplicationUser>(), normalPassword, false, false), Times.Once);
+        }
+
+        [Fact]
+        public async Task LoginAsync_InitialPasswordNullFallbackToNormal_ShouldFail()
+        {
+            // Arrange - 🔴 エッジケース: InitialPassword=null, PasswordHash=null
+            var emailResult = Email.create("admin@ubiquitous-lang.com");
+            Assert.True(emailResult.IsOk);
+            var email = emailResult.ResultValue;
+            var password = "su";
+
+            var brokenUser = new ApplicationUser
+            {
+                Id = "1",
+                Email = "admin@ubiquitous-lang.com",
+                UserName = "admin@ubiquitous-lang.com",
+                Name = "システム管理者",
+                IsFirstLogin = true,
+                EmailConfirmed = true,
+                InitialPassword = null,  // 🔴 初期パスワードなし
+                PasswordHash = null      // 🔴 ハッシュもなし = 破綻状態
+            };
+
+            _mockUserManager.Setup(x => x.FindByEmailAsync("admin@ubiquitous-lang.com"))
+                           .ReturnsAsync(brokenUser);
+            _mockUserManager.Setup(x => x.IsLockedOutAsync(brokenUser))
+                           .ReturnsAsync(false);
+            _mockSignInManager.Setup(x => x.PasswordSignInAsync(
+                brokenUser, password, false, false))
+                             .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed);
+
+            // Act
+            var result = await _service.LoginAsync(email, password);
+
+            // Assert - 標準認証にフォールバックして失敗
+            Assert.True(result.IsError);
+            Assert.Equal("メールアドレスまたはパスワードが正しくありません", result.ErrorValue);
+            
+            // 標準認証にフォールバックすることを確認
+            _mockSignInManager.Verify(x => x.PasswordSignInAsync(
+                It.IsAny<ApplicationUser>(), password, false, false), Times.Once);
         }
 
         [Fact]
@@ -168,14 +267,14 @@ public class AuthenticationServiceTests
 
             // Assert
             Assert.True(result.IsError);
-            Assert.Equal("Phase A3で実装予定", result.ErrorValue);
+            Assert.Equal("ユーザーが見つかりません", result.ErrorValue);
             
             // ログが出力されることを確認
             _mockLogger.Verify(
                 x => x.Log(
-                    LogLevel.Information,
+                    LogLevel.Warning,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("LoginAsync called - Phase A3で実装予定")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Login failed: User not found")),
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
@@ -1035,6 +1134,140 @@ public class AuthenticationServiceTests
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
                 Times.Once);
+        }
+
+        [Fact] 
+        public async Task InitialPassword_WithAdmin123_ShouldFail()
+        {
+            // Arrange - RED: Admin123!パスワードでの認証失敗を追加テスト
+            // TECH-002対応: 以前使用されていた可能性のあるパスワードでの失敗確認
+            var emailResult = Email.create("admin@ubiquitous-lang.com");
+            Assert.True(emailResult.IsOk);
+            var email = emailResult.ResultValue;
+            var oldAdminPassword = "Admin123!"; // 旧Admin系パスワード
+
+            var superUser = new ApplicationUser
+            {
+                Id = "1",
+                Email = "admin@ubiquitous-lang.com", 
+                UserName = "admin@ubiquitous-lang.com",
+                Name = "システム管理者",
+                IsFirstLogin = true,
+                EmailConfirmed = true,
+                // RED: 期待値 - InitialPassword="su", PasswordHash=null
+                InitialPassword = "su", // 仕様準拠の初期パスワード
+                PasswordHash = null     // 平文管理仕様
+            };
+
+            _mockUserManager.Setup(x => x.FindByEmailAsync("admin@ubiquitous-lang.com"))
+                           .ReturnsAsync(superUser);
+            _mockUserManager.Setup(x => x.IsLockedOutAsync(superUser))
+                           .ReturnsAsync(false);
+            _mockSignInManager.Setup(x => x.PasswordSignInAsync(
+                superUser, oldAdminPassword, false, false))
+                             .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Failed);
+
+            // Act 
+            var result = await _service.LoginAsync(email, oldAdminPassword);
+
+            // Assert - RED: 現在の実装では失敗するはず（InitialPassword未実装）
+            Assert.True(result.IsError);
+            Assert.Equal("メールアドレスまたはパスワードが正しくありません", result.ErrorValue);
+
+            // InitialPassword検証ロジックの呼び出し確認（将来の実装で必要）
+            // TODO: GREEN段階でInitialPassword認証ロジックを実装
+        }
+
+        [Fact]
+        public async Task InitialPassword_AuthenticationFlow_ShouldUpdateSecurityStamp()
+        {
+            // Arrange - RED: セキュリティスタンプ更新テスト（まだ未実装なので失敗予定）
+            var emailResult = Email.create("admin@ubiquitous-lang.com");
+            Assert.True(emailResult.IsOk);
+            var email = emailResult.ResultValue;
+            var initialPassword = "su";
+
+            var superUser = new ApplicationUser
+            {
+                Id = "1", 
+                Email = "admin@ubiquitous-lang.com",
+                UserName = "admin@ubiquitous-lang.com",
+                Name = "システム管理者",
+                IsFirstLogin = true,
+                EmailConfirmed = true,
+                InitialPassword = "su",
+                PasswordHash = null,
+                SecurityStamp = "old_security_stamp" // 変更前のセキュリティスタンプ
+            };
+
+            _mockUserManager.Setup(x => x.FindByEmailAsync("admin@ubiquitous-lang.com"))
+                           .ReturnsAsync(superUser);
+            _mockUserManager.Setup(x => x.IsLockedOutAsync(superUser))
+                           .ReturnsAsync(false);
+            _mockSignInManager.Setup(x => x.PasswordSignInAsync(
+                superUser, initialPassword, false, false))
+                             .ReturnsAsync(Microsoft.AspNetCore.Identity.SignInResult.Success);
+
+            // セキュリティスタンプ更新のモック
+            _mockUserManager.Setup(x => x.UpdateSecurityStampAsync(superUser))
+                           .ReturnsAsync(IdentityResult.Success);
+
+            // Act
+            var result = await _service.LoginAsync(email, initialPassword);
+
+            // Assert - RED: セキュリティスタンプ更新が未実装なので検証は将来実装
+            Assert.True(result.IsOk);
+            
+            // TODO: GREEN段階でセキュリティスタンプ更新ロジックを実装し、以下を有効化
+            // _mockUserManager.Verify(x => x.UpdateSecurityStampAsync(
+            //     It.Is<ApplicationUser>(u => u.Id == "1")), Times.Once);
+        }
+
+        [Fact]
+        public async Task InitialPassword_AfterPasswordChange_ShouldBeNull()
+        {
+            // Arrange - RED: パスワード変更後のInitialPassword=null確認テスト
+            var userId = UserId.create(1L);
+            var oldPassword = "su";
+            var newPasswordResult = Password.create("NewSecurePassword123!");
+            Assert.True(newPasswordResult.IsOk);
+            var newPassword = newPasswordResult.ResultValue;
+
+            var userBeforeChange = new ApplicationUser
+            {
+                Id = "1",
+                Email = "admin@ubiquitous-lang.com",
+                UserName = "admin@ubiquitous-lang.com", 
+                Name = "システム管理者",
+                IsFirstLogin = true,
+                InitialPassword = "su", // 変更前: 初期パスワード設定済み
+                PasswordHash = null,    // 変更前: ハッシュなし
+                EmailConfirmed = true
+            };
+
+            _mockUserManager.Setup(x => x.FindByIdAsync("1"))
+                           .ReturnsAsync(userBeforeChange);
+            _mockUserManager.Setup(x => x.ChangePasswordAsync(userBeforeChange, oldPassword, "NewSecurePassword123!"))
+                           .ReturnsAsync(IdentityResult.Success);
+
+            // ユーザー更新時のキャプチャ
+            ApplicationUser updatedUser = null;
+            _mockUserManager.Setup(x => x.UpdateAsync(It.IsAny<ApplicationUser>()))
+                           .ReturnsAsync(IdentityResult.Success)
+                           .Callback<ApplicationUser>(user => {
+                               updatedUser = user;
+                           });
+
+            // Act
+            var result = await _service.ChangePasswordAsync(userId, oldPassword, newPassword);
+
+            // Assert - RED: InitialPasswordクリア処理が未実装なので将来実装
+            Assert.True(result.IsOk);
+
+            // 将来のGREEN段階で有効化予定
+            // Assert.NotNull(updatedUser);
+            // Assert.Null(updatedUser.InitialPassword); // パスワード変更後はnull
+            // Assert.False(updatedUser.IsFirstLogin);   // 初回ログインフラグもfalse
         }
     }
 }

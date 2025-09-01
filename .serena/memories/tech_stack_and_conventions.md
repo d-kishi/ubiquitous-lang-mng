@@ -1,4 +1,4 @@
-# 技術スタック・規約 - 2025年8月26日更新
+# 技術スタック・規約 - 2025年8月29日更新
 
 ## 技術スタック構成
 
@@ -29,6 +29,10 @@
 - **Docker Compose**: PostgreSQL + PgAdmin + Smtp4dev
 - **PgAdmin**: データベース管理UI
 - **Smtp4dev**: 開発用メールサーバー
+- **HTTPS統一**: 開発環境統一（2025-08-29対応完了・Issue #16解決）
+  - **VS Code**: `https://localhost:5001`
+  - **CLI実行**: `dotnet run` → `https://localhost:5001`（launchSettings.json設定）
+  - **効果**: ユーザーデバッグ実行とClaude動作確認の完全統一
 
 ## プロジェクト構成
 

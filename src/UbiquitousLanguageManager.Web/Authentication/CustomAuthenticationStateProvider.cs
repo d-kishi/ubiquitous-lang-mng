@@ -117,11 +117,11 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             // ユーザーの状態情報をクレームとして追加
             // 標準IdentityUserには削除フラグがないため、常にアクティブとして設定
             claims.Add(new Claim("IsActive", "true"));
-            
+
             // 標準IdentityUserには初回ログインフラグがないため、カスタム実装必要
             // 現在は常にfalse（実装済み扱い）として設定
             claims.Add(new Claim("IsFirstLogin", "false"));
-            
+
             // 標準IdentityUserには更新日時がないため、現在時刻を使用
             claims.Add(new Claim("UpdatedAt", DateTime.UtcNow.ToString("O")));
 
