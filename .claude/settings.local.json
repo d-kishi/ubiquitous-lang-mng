@@ -33,7 +33,8 @@
       "Bash(docker exec:*)",
       "mcp__serena__list_memories",
       "Read(\\/**)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],
