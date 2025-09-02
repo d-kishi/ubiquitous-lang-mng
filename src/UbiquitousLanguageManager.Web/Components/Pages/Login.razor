@@ -150,15 +150,7 @@
   private bool isFirstLogin = false;
 #pragma warning restore CS0414
 
-  /// <summary>
-  /// パスワード変更表示フラグ
-  /// </summary>
-  private bool showPasswordChange = false;
 
-  /// <summary>
-  /// パスワード変更要求データモデル
-  /// </summary>
-  private ChangePasswordRequestDto changePasswordRequest = new();
 
   /// <summary>
   /// コンポーネント初期化処理
@@ -239,18 +231,25 @@
         // ログイン成功時の処理
         successMessage = parsedResult.Message ?? "ログインしました。";
 
-        // 【csharp-infrastructure対応】初回ログインチェック強化
-        // AuthenticationServiceのIsFirstLoginフラグを確実に検知
+        // 【Phase A8 Step3対応】初回ログイン時のChangePassword.razorページ遷移
+        // パスワード変更機能の統合により、モーダル表示から画面遷移に変更
         if (!string.IsNullOrEmpty(parsedResult.RedirectUrl) &&
         parsedResult.RedirectUrl.Contains("/change-password"))
         {
-          // 初回ログインの場合：パスワード変更フォーム表示
+          // 初回ログインの場合：パスワード変更画面へ遷移
           isFirstLogin = true;
-          showPasswordChange = true;
-          successMessage = "初期パスワードでのログインが確認されました。セキュリティのため、新しいパスワードに変更してください。";
+          successMessage = "初期パスワードでのログインが確認されました。パスワード変更画面へ移動します...";
+
+          // UI更新後、少し待ってから画面遷移
+          StateHasChanged();
+          await Task.Delay(1000); // 成功メッセージ表示
+
+          // ChangePassword.razorページへ遷移
+          Navigation.NavigateTo("/change-password", forceLoad: true);
 
           // 初回ログイン専用のメッセージをログに記録
-          Console.WriteLine($"初回ログイン検知: Email={loginRequest.Email}, RedirectUrl={parsedResult.RedirectUrl}");
+          Console.WriteLine($"初回ログイン検知: Email={loginRequest.Email} -> ChangePassword.razorへ遷移");
+          return; // 以降の処理をスキップ
         }
         else
         {
@@ -318,55 +317,19 @@
   }
 
   /// <summary>
-  /// TECH-006: JavaScript API呼び出しによるパスワード変更処理
-  /// 初回ログイン後のパスワード変更専用処理
+  /// [Phase A8 Step3対応] パスワード変更処理（削除済み）
+  /// パスワード変更機能はChangePassword.razorページに統合されました。
+  /// このメソッドは将来のメンテナンスで完全に削除される予定です。
   /// </summary>
+  [Obsolete("パスワード変更機能はChangePassword.razorページに統合されました。代わりにChangePassword.razorを使用してください。")]
   private async Task HandlePasswordChange()
   {
-    isSubmitting = true;
-    errorMessage = string.Empty;
-    successMessage = string.Empty;
-
-    try
-    {
-      // パスワード変更API呼び出し
-      // 【JSON変換最適化】JsonPropertyName属性により、camelCaseレスポンスを直接C#オブジェクトに変換
-      var parsedResult = await JSRuntime.InvokeAsync<LoginApiResponse>("authApi.changePassword",
-      changePasswordRequest.CurrentPassword,
-      changePasswordRequest.NewPassword,
-      changePasswordRequest.ConfirmPassword);
-
-      if (parsedResult?.Success == true)
-      {
-        // 【初回パスワード変更成功】
-        successMessage = parsedResult.Message ?? "初期パスワードから新しいパスワードに変更しました。";
-
-        // 初回ログインフォームを非表示にして通常ログイン表示に戻す
-        showPasswordChange = false;
-        isFirstLogin = false;
-
-        // パスワード変更成功メッセージを表示してからホーム画面にリダイレクト
-        StateHasChanged();
-        await Task.Delay(2500); // 成功感を演出するため少し長めに表示
-
-        Navigation.NavigateTo(parsedResult.RedirectUrl ?? "/", forceLoad: true);
-      }
-      else
-      {
-        // パスワード変更失敗
-        errorMessage = parsedResult?.Message ?? "パスワード変更に失敗しました。";
-      }
-    }
-    catch (Exception ex)
-    {
-      Console.WriteLine($"Password change failed: {ex.Message}");
-      errorMessage = "パスワード変更中にエラーが発生しました。";
-    }
-    finally
-    {
-      isSubmitting = false;
-      StateHasChanged();
-    }
+    // Phase A8 Step3: この機能はChangePassword.razorページに統合されました
+    Console.WriteLine("[廃止予定] HandlePasswordChangeメソッドは使用されません。ChangePassword.razorページをご利用ください。");
+    
+    // 安全のため、ChangePassword.razorページにリダイレクト
+    Navigation.NavigateTo("/change-password", forceLoad: true);
+    await Task.CompletedTask;
   }
 
   /// <summary>
@@ -407,106 +370,48 @@
   }
 }
 
-@* パスワード変更フォーム（初回ログイン時表示） *@
-@if (showPasswordChange)
-{
-  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-warning text-dark">
-          <h5 class="modal-title">
-            <i class="fas fa-key me-2"></i>
-            初回ログイン - パスワード変更
-          </h5>
-        </div>
-        <div class="modal-body">
-          <div class="alert alert-warning">
-            <i class="fas fa-shield-alt me-2"></i>
-            <strong>初期パスワード変更が必要です</strong><br>
-            セキュリティ強化のため、初期パスワード 'su' から新しいパスワードに変更してください。
-          </div>
+@*
+【Phase A8 Step3対応 - パスワード変更機能統合完了】
 
-          <EditForm Model="@changePasswordRequest" OnValidSubmit="@HandlePasswordChange">
-            <DataAnnotationsValidator />
+削除完了: パスワード変更モーダルダイアログ（約80行）
+統合先: /change-password ページ（ChangePassword.razor）
 
-            <!-- 現在のパスワード -->
-            <div class="mb-3">
-              <label for="currentPassword" class="form-label">現在のパスワード</label>
-              <InputText id="currentPassword" @bind-Value="changePasswordRequest.CurrentPassword" type="password"
-                class="form-control" disabled="@isSubmitting" />
-              <ValidationMessage For="@(() => changePasswordRequest.CurrentPassword)" class="text-danger small" />
-            </div>
+初回ログイン時の動作：
+1. Login.razor: 初回ログイン検知
+2. 成功メッセージ表示後、ChangePassword.razorページに自動遷移
+3. ChangePassword.razor: 専用UI・UXでパスワード変更実行
 
-            <!-- 新しいパスワード -->
-            <div class="mb-3">
-              <label for="newPassword" class="form-label">新しいパスワード</label>
-              <InputText id="newPassword" @bind-Value="changePasswordRequest.NewPassword" type="password"
-                class="form-control" disabled="@isSubmitting" />
-              <ValidationMessage For="@(() => changePasswordRequest.NewPassword)" class="text-danger small" />
-              <div class="form-text">
-                <small>8文字以上、大文字・小文字・数字をそれぞれ1文字以上含めてください</small>
-              </div>
-            </div>
-
-            <!-- パスワード確認 -->
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label">パスワード確認</label>
-              <InputText id="confirmPassword" @bind-Value="changePasswordRequest.ConfirmPassword" type="password"
-                class="form-control" disabled="@isSubmitting" />
-              <ValidationMessage For="@(() => changePasswordRequest.ConfirmPassword)" class="text-danger small" />
-            </div>
-
-            <!-- 送信ボタン -->
-            <div class="d-grid">
-              <button type="submit" class="btn btn-warning" disabled="@isSubmitting">
-                @if (isSubmitting)
-                {
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                  <text>変更中...</text>
-                }
-                else
-                {
-                  <i class="fas fa-save me-2"></i>
-                  <text>パスワードを変更</text>
-                }
-              </button>
-            </div>
-          </EditForm>
-        </div>
-      </div>
-    </div>
-  </div>
-}
+効果：
+- コード削減：約80行の重複実装削除
+- 責務分離：ログイン機能とパスワード変更機能の完全分離
+- UI/UX統一：すべてのパスワード変更がChangePassword.razorで実行
+- 保守性向上：パスワード変更ロジックの一元化
+*@
 
 @*
-【TECH-006実装完了 - Headers read-onlyエラー根本解決】
+【Phase A8 Step3 実装完了 - パスワード変更機能統合】
 
-本コンポーネントの主要改善点：
+== TECH-006解決実装 ==
+1. 【HTTPコンテキスト分離戦略】SignInManager直接呼び出し → JavaScript API経由
+2. 【JavaScript統合パターン】IJSRuntime.InvokeAsync() + authApi.login()
+3. 【Headers read-onlyエラー根本解決】新しいHTTPコンテキストで認証処理実行
 
-1. 【HTTPコンテキスト分離戦略】
-   - SignInManager直接呼び出し → JavaScript API経由に変更
-   - 新しいHTTPコンテキストで認証処理実行
-   - Headers read-onlyエラーを根本解決
+== Step3パスワード変更機能統合 ==
+1. 【重複実装削除】Login.razor内モーダルダイアログ（約80行）完全削除
+2. 【画面遷移統合】初回ログイン時 → ChangePassword.razorページ自動遷移
+3. 【責務分離実現】ログイン機能とパスワード変更機能の完全分離
+4. 【保守性向上】パスワード変更ロジック一元化・テスト効率化
 
-2. 【JavaScript統合パターン】
-   - IJSRuntime.InvokeAsync(): Blazor ServerからJavaScript関数呼び出し
-   - authApi.login(): auth-api.jsで定義された認証API呼び出し関数
-   - CSRFトークン自動取得・設定
+== 統合後の認証フロー ==
+【初回ログイン】Login.razor → ChangePassword.razor → Home
+【通常ログイン】Login.razor → Home
+【パスワード変更】Profile.razor → ChangePassword.razor または直接 /change-password
 
-3. 【認証フロー保持】
-   - 既存UI/UXデザイン継続
-   - フォーム検証・エラーハンドリング維持
-   - 初回ログイン → パスワード変更フロー保持
+== 技術的効果 ==
+- ✅ コード削減：約80-100行（showPasswordChange関連全体）
+- ✅ UI/UX統一：すべてのパスワード変更が統一画面で実行
+- ✅ セキュリティ強化：パスワード変更ロジック一元管理
+- ✅ Blazor Server最適化：単一責任原則遵守・コンポーネント最適化
 
-4. 【Blazor Server最適化】
-   - StateHasChanged(): UI再描画の明示的制御
-   - 非同期処理: await/async パターンの適切な使用
-   - コンポーネントライフサイクル: OnInitializedAsync活用
-
-5. 【セキュリティ強化】
-   - 二重送信防止: isSubmittingフラグ
-   - 入力検証: DataAnnotationsValidator統合
-   - エラーハンドリング: 例外処理の多層化
-
-本実装により、TECH-006の完全解決を達成しています。
+本実装により、Phase A8 Step3の完全達成を実現しています。
 *@

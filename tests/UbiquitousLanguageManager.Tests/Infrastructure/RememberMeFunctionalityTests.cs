@@ -25,8 +25,8 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 public class RememberMeFunctionalityTests
 {
     private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _logger;
-    private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
-    private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
+    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
+    private readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly AuthenticationService _authenticationService;
@@ -69,7 +69,7 @@ public class RememberMeFunctionalityTests
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
         var password = "Password123!";
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -101,7 +101,7 @@ public class RememberMeFunctionalityTests
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
         var password = "Password123!";
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -132,7 +132,7 @@ public class RememberMeFunctionalityTests
     {
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -251,7 +251,7 @@ public class RememberMeFunctionalityTests
     {
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value, EmailConfirmed = true };
+        var identityUser = new ApplicationUser { Email = email.Value, EmailConfirmed = true };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -276,28 +276,28 @@ public class RememberMeFunctionalityTests
     #region Helper Methods
 
     /// <summary>
-    /// UserManager<IdentityUser> のモックを作成
+    /// UserManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<UserManager<IdentityUser>> CreateUserManagerMock()
+    private static Mock<UserManager<ApplicationUser>> CreateUserManagerMock()
     {
-        var store = new Mock<IUserStore<IdentityUser>>();
-        var mgr = new Mock<UserManager<IdentityUser>>(
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        var mgr = new Mock<UserManager<ApplicationUser>>(
             store.Object, null, null, null, null, null, null, null, null);
-        mgr.Object.UserValidators.Add(new UserValidator<IdentityUser>());
-        mgr.Object.PasswordValidators.Add(new PasswordValidator<IdentityUser>());
+        mgr.Object.UserValidators.Add(new UserValidator<ApplicationUser>());
+        mgr.Object.PasswordValidators.Add(new PasswordValidator<ApplicationUser>());
         return mgr;
     }
 
     /// <summary>
-    /// SignInManager<IdentityUser> のモックを作成
+    /// SignInManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<SignInManager<IdentityUser>> CreateSignInManagerMock()
+    private static Mock<SignInManager<ApplicationUser>> CreateSignInManagerMock()
     {
         var userManager = CreateUserManagerMock();
         var contextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<ApplicationUser>>();
 
-        return new Mock<SignInManager<IdentityUser>>(
+        return new Mock<SignInManager<ApplicationUser>>(
             userManager.Object,
             contextAccessor.Object,
             claimsFactory.Object,

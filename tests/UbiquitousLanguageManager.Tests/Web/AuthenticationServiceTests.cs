@@ -71,9 +71,9 @@ public class AuthenticationServiceTests
             null,
             null);
         
-        _mockLogger = new Mock<ILogger<AuthenticationService>>();
+        _mockLogger = new Mock<ILogger<UbiquitousLanguageManager.Web.Services.AuthenticationService>>();
 
-        _authService = new AuthenticationService(
+        _authService = new UbiquitousLanguageManager.Web.Services.AuthenticationService(
             _mockAuthStateProvider.Object,
             _mockSignInManager.Object,
             _mockUserManager.Object,
@@ -302,34 +302,6 @@ public class AuthenticationServiceTests
                 Times.Once);
         }
 
-        [Fact]
-        public async Task ChangePasswordAsync_ShouldReturnPhaseA3Error_AndLogMessage()
-        {
-            // Arrange
-            var changePasswordRequest = new ChangePasswordRequestDto
-            {
-                CurrentPassword = "oldPassword",
-                NewPassword = "NewPassword123!",
-                ConfirmPassword = "NewPassword123!"
-            };
-
-            // Act
-            var result = await _authService.ChangePasswordAsync(changePasswordRequest);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Equal("Phase A3で実装予定", result.ErrorMessage);
-            
-            // ログが出力されることを確認
-            _mockLogger.Verify(
-                x => x.Log(
-                    LogLevel.Information,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("ChangePasswordAsync called - Phase A3で実装予定")),
-                    It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-                Times.Once);
-        }
     }
 
     /// <summary>

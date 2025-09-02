@@ -8,6 +8,7 @@ using Xunit;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
 using UbiquitousLanguageManager.Infrastructure.Services;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
 namespace UbiquitousLanguageManager.Tests.Infrastructure;
 
@@ -23,49 +24,49 @@ namespace UbiquitousLanguageManager.Tests.Infrastructure;
 /// </summary>
 public class IdentityLockoutTests
 {
-    private readonly Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>> _logger;
-    private readonly Mock<UserManager<IdentityUser>> _userManagerMock;
-    private readonly Mock<SignInManager<IdentityUser>> _signInManagerMock;
+    private readonly Mock<Microsoft.Extensions.Logging.ILogger<UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService>> _logger;
+    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
+    private readonly Mock<SignInManager<ApplicationUser>> _signInManagerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly AuthenticationService _authenticationService;
+    private readonly UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService _authenticationService;
 
     /// <summary>
     /// テスト初期化
     /// </summary>
     public IdentityLockoutTests()
     {
-        _logger = new Mock<Microsoft.Extensions.Logging.ILogger<AuthenticationService>>();
+        _logger = new Mock<Microsoft.Extensions.Logging.ILogger<UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService>>();
         
         // UserManager モック作成
-        var mockUserStore = new Mock<IUserStore<IdentityUser>>();
-        _userManagerMock = new Mock<UserManager<IdentityUser>>(
+        var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+        _userManagerMock = new Mock<UserManager<ApplicationUser>>(
             mockUserStore.Object, 
             null,
-            new Mock<IPasswordHasher<IdentityUser>>().Object,
-            new IUserValidator<IdentityUser>[0],
-            new IPasswordValidator<IdentityUser>[0],
+            new Mock<IPasswordHasher<ApplicationUser>>().Object,
+            new IUserValidator<ApplicationUser>[0],
+            new IPasswordValidator<ApplicationUser>[0],
             new Mock<ILookupNormalizer>().Object,
             new Mock<IdentityErrorDescriber>().Object,
             null,
-            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<IdentityUser>>>().Object);
+            new Mock<Microsoft.Extensions.Logging.ILogger<UserManager<ApplicationUser>>>().Object);
         
         // SignInManager モック作成
         var mockContextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<IdentityUser>>();
-        _signInManagerMock = new Mock<SignInManager<IdentityUser>>(
+        var mockUserPrincipalFactory = new Mock<IUserClaimsPrincipalFactory<ApplicationUser>>();
+        _signInManagerMock = new Mock<SignInManager<ApplicationUser>>(
             _userManagerMock.Object, 
             mockContextAccessor.Object, 
             mockUserPrincipalFactory.Object, 
             null,
-            new Mock<Microsoft.Extensions.Logging.ILogger<SignInManager<IdentityUser>>>().Object,
+            new Mock<Microsoft.Extensions.Logging.ILogger<SignInManager<ApplicationUser>>>().Object,
             null,
             null);
         
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        _authenticationService = new AuthenticationService(
+        _authenticationService = new UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService(
             _logger.Object,
             _userManagerMock.Object,
             _signInManagerMock.Object,
@@ -110,7 +111,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -140,7 +141,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -172,7 +173,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
         var lockoutEnd = DateTimeOffset.UtcNow.AddMinutes(15);
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
@@ -207,7 +208,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -222,7 +223,7 @@ public class IdentityLockoutTests
         Assert.Contains("アカウントがロックされています", result.ErrorValue);
 
         // 🔐 SignInAsyncが呼ばれないことを検証
-        _signInManagerMock.Verify(x => x.SignInAsync(It.IsAny<IdentityUser>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never);
+        _signInManagerMock.Verify(x => x.SignInAsync(It.IsAny<ApplicationUser>(), It.IsAny<bool>(), It.IsAny<string>()), Times.Never);
 
         // 📊 警告ログが出力されることを検証
         VerifyLogCalled(LogLevel.Warning, "Auto login attempted for locked user");
@@ -240,7 +241,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -266,7 +267,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("normal@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -291,7 +292,7 @@ public class IdentityLockoutTests
         var email = Email.create("nonexistent@example.com").ResultValue;
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
-            .ReturnsAsync((IdentityUser)null);
+            .ReturnsAsync((ApplicationUser)null);
 
         // Act
         var result = await _authenticationService.IsAccountLockedAsync(email);
@@ -327,7 +328,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
         var lockoutEnd = DateTimeOffset.UtcNow.AddMinutes(15);
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
@@ -356,7 +357,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("test@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -386,7 +387,7 @@ public class IdentityLockoutTests
     {
         // Arrange
         var email = Email.create("locked@example.com").ResultValue;
-        var identityUser = new IdentityUser { Email = email.Value };
+        var identityUser = new ApplicationUser { Email = email.Value };
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
             .ReturnsAsync(identityUser);
@@ -410,28 +411,28 @@ public class IdentityLockoutTests
     #region Helper Methods
 
     /// <summary>
-    /// UserManager<IdentityUser> のモックを作成
+    /// UserManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<UserManager<IdentityUser>> CreateUserManagerMock()
+    private static Mock<UserManager<ApplicationUser>> CreateUserManagerMock()
     {
-        var store = new Mock<IUserStore<IdentityUser>>();
-        var mgr = new Mock<UserManager<IdentityUser>>(
+        var store = new Mock<IUserStore<ApplicationUser>>();
+        var mgr = new Mock<UserManager<ApplicationUser>>(
             store.Object, null, null, null, null, null, null, null, null);
-        mgr.Object.UserValidators.Add(new UserValidator<IdentityUser>());
-        mgr.Object.PasswordValidators.Add(new PasswordValidator<IdentityUser>());
+        mgr.Object.UserValidators.Add(new UserValidator<ApplicationUser>());
+        mgr.Object.PasswordValidators.Add(new PasswordValidator<ApplicationUser>());
         return mgr;
     }
 
     /// <summary>
-    /// SignInManager<IdentityUser> のモックを作成
+    /// SignInManager<ApplicationUser> のモックを作成
     /// </summary>
-    private static Mock<SignInManager<IdentityUser>> CreateSignInManagerMock()
+    private static Mock<SignInManager<ApplicationUser>> CreateSignInManagerMock()
     {
         var userManager = CreateUserManagerMock();
         var contextAccessor = new Mock<Microsoft.AspNetCore.Http.IHttpContextAccessor>();
-        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<IdentityUser>>();
+        var claimsFactory = new Mock<Microsoft.AspNetCore.Identity.IUserClaimsPrincipalFactory<ApplicationUser>>();
 
-        return new Mock<SignInManager<IdentityUser>>(
+        return new Mock<SignInManager<ApplicationUser>>(
             userManager.Object,
             contextAccessor.Object,
             claimsFactory.Object,

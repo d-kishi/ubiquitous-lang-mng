@@ -195,8 +195,8 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
             Assert.Equal(domain.Name.Value, dto.Name); // ドメイン名変換が正しくありません
             Assert.Equal(domain.Description.Value, dto.Description); // ドメイン説明変換が正しくありません
             Assert.Equal(domain.IsActive, dto.IsActive); // アクティブ状態変換が正しくありません
-            Assert.Equal(domain.UpdatedAt, dto.UpdatedAt, "更新日時変換が正しくありません");
-            Assert.Equal(domain.UpdatedBy.Value, dto.UpdatedBy, "更新者ID変換が正しくありません");
+            Assert.Equal(domain.UpdatedAt, dto.UpdatedAt);
+            Assert.Equal(domain.UpdatedBy.Value, dto.UpdatedBy);
         }
 
         #endregion
@@ -223,12 +223,12 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
             Assert.True(result.IsOk, $"変換が失敗しました: {(result.IsError ? result.ErrorValue : "不明なエラー")}");
             
             var draft = result.ResultValue;
-            Assert.NotNull(draft, "DraftUbiquitousLanguageがnullです");
-            Assert.Equal(dto.DomainId, draft.DomainId.Value, "DomainID変換が正しくありません");
-            Assert.Equal(dto.JapaneseName, draft.JapaneseName.Value, "日本語名変換が正しくありません");
-            Assert.Equal(dto.EnglishName, draft.EnglishName.Value, "英語名変換が正しくありません");
-            Assert.Equal(dto.Description, draft.Description.Value, "説明変換が正しくありません");
-            Assert.Equal(dto.CreatedBy, draft.UpdatedBy.Value, "作成者ID変換が正しくありません");
+            Assert.NotNull(draft);
+            Assert.Equal(dto.DomainId, draft.DomainId.Value);
+            Assert.Equal(dto.JapaneseName, draft.JapaneseName.Value);
+            Assert.Equal(dto.EnglishName, draft.EnglishName.Value);
+            Assert.Equal(dto.Description, draft.Description.Value);
+            Assert.Equal(dto.CreatedBy, draft.UpdatedBy.Value);
         }
 
         [Fact]
@@ -299,7 +299,7 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
             Assert.True(result.IsOk, $"変換が失敗しました: {(result.IsError ? result.ErrorValue : "不明なエラー")}");
             
             var user = result.ResultValue;
-            Assert.NotNull(user, "Userがnullです");
+            Assert.NotNull(user);
             Assert.Equal(dto.Email, user.Email.Value);
             Assert.Equal(dto.Name, user.Name.Value);
             Assert.Equal(dto.CreatedBy, user.UpdatedBy.Value);

@@ -682,6 +682,137 @@ public class AuthenticationService : IAuthenticationService
     }
 
     /// <summary>
+    /// ログイン試行記録機能（Phase A8統合テスト対応）
+    /// </summary>
+    public async Task<FSharpResult<Unit, string>> RecordLoginAttemptAsync(Email email, bool isSuccessful)
+    {
+        try
+        {
+            var emailValue = email.Value;
+            _logger.LogInformation("Recording login attempt for user: {Email}, Success: {IsSuccessful}", 
+                emailValue, isSuccessful);
+
+            var identityUser = await _userManager.FindByEmailAsync(emailValue);
+            if (identityUser == null)
+            {
+                _logger.LogWarning("Login attempt record: User not found {Email}", emailValue);
+                return FSharpResult<Unit, string>.NewError("ユーザーが見つかりません");
+            }
+
+            IdentityResult result;
+            
+            if (isSuccessful)
+            {
+                // 成功時：失敗回数をリセット
+                result = await _userManager.ResetAccessFailedCountAsync(identityUser);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Login attempt recorded successfully for user: {Email}", emailValue);
+                }
+            }
+            else
+            {
+                // 失敗時：失敗回数をインクリメント
+                result = await _userManager.AccessFailedAsync(identityUser);
+                if (result.Succeeded)
+                {
+                    _logger.LogWarning("Login attempt recorded as failure for user: {Email}", emailValue);
+                    
+                    // ロックアウト確認
+                    if (await _userManager.IsLockedOutAsync(identityUser))
+                    {
+                        _logger.LogWarning("User account locked due to failed login attempts for user: {Email}", emailValue);
+                    }
+                }
+            }
+
+            if (result.Succeeded)
+            {
+                return FSharpResult<Unit, string>.NewOk(null!);
+            }
+            else
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to record login attempt for user {Email}: {Errors}", emailValue, errors);
+                return FSharpResult<Unit, string>.NewError("ログイン試行記録中にエラーが発生しました");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during login attempt recording for user: {Email}", email.Value);
+            return FSharpResult<Unit, string>.NewError("ログイン試行記録処理中にエラーが発生しました");
+        }
+    }
+
+    /// <summary>
+    /// アカウントロック状態確認機能（Phase A8統合テスト対応）
+    /// </summary>
+    public async Task<FSharpResult<bool, string>> IsAccountLockedAsync(Email email)
+    {
+        try
+        {
+            var emailValue = email.Value;
+            _logger.LogInformation("Checking account lock status for user: {Email}", emailValue);
+
+            var identityUser = await _userManager.FindByEmailAsync(emailValue);
+            if (identityUser == null)
+            {
+                _logger.LogInformation("Account lock check: User not found {Email}, returning false", emailValue);
+                return FSharpResult<bool, string>.NewOk(false);
+            }
+
+            var isLocked = await _userManager.IsLockedOutAsync(identityUser);
+            _logger.LogInformation("Account lock status for user {Email}: {IsLocked}", emailValue, isLocked);
+            
+            return FSharpResult<bool, string>.NewOk(isLocked);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking account lock status for user: {Email}", email.Value);
+            return FSharpResult<bool, string>.NewError("アカウントロック状態確認中にエラーが発生しました");
+        }
+    }
+
+    /// <summary>
+    /// パスワードリセット後自動ログイン機能（Phase A8統合テスト対応）
+    /// </summary>
+    public async Task<FSharpResult<User, string>> AutoLoginAfterPasswordResetAsync(Email email)
+    {
+        try
+        {
+            var emailValue = email.Value;
+            _logger.LogInformation("Auto login after password reset for user: {Email}", emailValue);
+
+            var identityUser = await _userManager.FindByEmailAsync(emailValue);
+            if (identityUser == null)
+            {
+                _logger.LogWarning("Auto login: User not found {Email}", emailValue);
+                return FSharpResult<User, string>.NewError("ユーザーが見つかりません");
+            }
+
+            // ロックアウト状態確認
+            if (await _userManager.IsLockedOutAsync(identityUser))
+            {
+                _logger.LogWarning("Auto login attempted for locked user: {Email}", emailValue);
+                return FSharpResult<User, string>.NewError("アカウントがロックされています");
+            }
+
+            // 自動サインイン実行
+            await _signInManager.SignInAsync(identityUser, isPersistent: false);
+            
+            _logger.LogInformation("Auto login successful for user: {Email}", emailValue);
+            
+            var domainUser = CreateSimpleDomainUser(identityUser);
+            return FSharpResult<User, string>.NewOk(domainUser);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Auto login error for user: {Email}", email.Value);
+            return FSharpResult<User, string>.NewError("自動ログイン処理中にエラーが発生しました");
+        }
+    }
+
+    /// <summary>
     /// 文字列からPasswordHashを作成
     /// </summary>
     private PasswordHash CreatePasswordHash(string hashValue)

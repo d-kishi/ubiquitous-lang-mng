@@ -180,7 +180,7 @@ public class AuditLoggingTests
         var email = Email.create("nonexistent@example.com").ResultValue;
 
         _userManagerMock.Setup(x => x.FindByEmailAsync(email.Value))
-            .ReturnsAsync((IdentityUser)null);
+            .ReturnsAsync((ApplicationUser)null);
 
         // Act
         var result = await _authenticationService.AutoLoginAfterPasswordResetAsync(email);
