@@ -34,7 +34,10 @@
       "mcp__serena__list_memories",
       "Read(\\/**)",
       "Bash(powershell:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Read(\\/**)",
+      "Read(\\/**)",
+      "Bash(gh issue create:*)"
     ],
     "deny": [],
     "ask": [],
