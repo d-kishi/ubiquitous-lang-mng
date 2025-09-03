@@ -37,7 +37,9 @@
       "Bash(grep:*)",
       "Read(\\/**)",
       "Read(\\/**)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(gemini:*)",
+      "Bash(gh label:*)"
     ],
     "deny": [],
     "ask": [],
