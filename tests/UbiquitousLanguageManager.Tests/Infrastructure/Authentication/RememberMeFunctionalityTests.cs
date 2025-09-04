@@ -53,12 +53,12 @@ public class RememberMeFunctionalityTests
         var isPersistent = true;
 
         _userManager.FindByEmailAsync(user.Email).Returns(user);
-        _signInManager.PasswordSignInAsync(user.Email, "TestPassword123!", isPersistent, false)
+        _signInManager.PasswordSignInAsync(user.Email, "su", isPersistent, false)
             .Returns(SignInResult.Success);
 
         // Act & Assert
         // この時点では実装がないため、テストが失敗することを確認
-        var result = await _signInManager.PasswordSignInAsync(user.Email, "TestPassword123!", isPersistent, false);
+        var result = await _signInManager.PasswordSignInAsync(user.Email, "su", isPersistent, false);
         
         // テスト失敗を確認（実装前のため）
         result.Should().Be(SignInResult.Failed, "実装前のためテストは失敗するはず");
@@ -83,7 +83,7 @@ public class RememberMeFunctionalityTests
 
         // Act & Assert
         // この時点では実装がないため、テストが失敗することを確認
-        var result = await _signInManager.PasswordSignInAsync(user.Email, "TestPassword123!", isPersistent, false);
+        var result = await _signInManager.PasswordSignInAsync(user.Email, "su", isPersistent, false);
         
         // テスト失敗を確認（実装前のため）
         result.Should().Be(SignInResult.Failed, "実装前のためテストは失敗するはず");

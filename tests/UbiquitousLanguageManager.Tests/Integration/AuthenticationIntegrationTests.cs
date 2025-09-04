@@ -112,13 +112,13 @@ public class AuthenticationIntegrationTests_Optimized : IClassFixture<TestWebApp
             IsFirstLogin = true
         };
         
-        await userManager.CreateAsync(testUser, "TempPass123!");
+        await userManager.CreateAsync(testUser, "su");
 
         // Act - ログイン実行
         var loginRequest = new
         {
             Email = "firstlogin@test.com",
-            Password = "TempPass123!",
+            Password = "su",
             RememberMe = false
         };
 

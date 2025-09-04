@@ -55,7 +55,7 @@ public class FirstLoginRedirectMiddlewareTests : IClassFixture<TestWebApplicatio
             IsFirstLogin = true,
         };
         
-        var createResult = await userManager.CreateAsync(firstLoginUser, "TempPass123!");
+        var createResult = await userManager.CreateAsync(firstLoginUser, "su");
         Assert.True(createResult.Succeeded);
 
         // 認証状態のシミュレート（テスト環境での認証Cookie設定）
@@ -97,7 +97,7 @@ public class FirstLoginRedirectMiddlewareTests : IClassFixture<TestWebApplicatio
             IsFirstLogin = true,
         };
         
-        await userManager.CreateAsync(firstLoginUser, "TempPass123!");
+        await userManager.CreateAsync(firstLoginUser, "su");
         await SimulateAuthenticatedUser(firstLoginUser);
 
         // Act

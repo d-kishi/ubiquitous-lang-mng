@@ -9,8 +9,8 @@ using UbiquitousLanguageManager.Tests.Stubs;
 namespace UbiquitousLanguageManager.Tests.Stubs
 {
     /// <summary>
-    /// Phase A3 Step5: テストインフラ修正のための一時的なスタブ
-    /// Phase A4で正式なテストを再構築する際に削除予定
+    /// テストインフラスタブライブラリ
+    /// テスト実行に必要な一時的なスタブを提供
     /// </summary>
     public static class TemporaryStubs
     {
@@ -47,14 +47,14 @@ public static class NotificationServiceExtensions
     public static Task<FSharpResult<Microsoft.FSharp.Core.Unit, string>> SendPasswordResetEmailAsync(
         this INotificationService service, Email email, string userName, string resetUrl)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
+        // テスト用スタブ実装
         return Task.FromResult(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
     }
 
     public static Task<FSharpResult<Microsoft.FSharp.Core.Unit, string>> SendPasswordResetConfirmationAsync(
         this INotificationService service, Email email)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
+        // テスト用スタブ実装
         return Task.FromResult(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewOk(null!));
     }
 }
@@ -67,42 +67,42 @@ public static class AuthenticationServiceExtensions
     public static Task<FSharpResult<string, string>> RequestPasswordResetAsync(
         this AuthenticationService service, Email email)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
-        return Task.FromResult(FSharpResult<string, string>.NewError("Phase A3で削除"));
+        // テスト用スタブ実装
+        return Task.FromResult(FSharpResult<string, string>.NewError("機能不可"));
     }
 
     public static Task<FSharpResult<UbiquitousLanguageManager.Domain.User, string>> ResetPasswordAsync(
         this AuthenticationService service, Email email, string token, Password newPassword)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
-        return Task.FromResult(FSharpResult<UbiquitousLanguageManager.Domain.User, string>.NewError("Phase A3で削除"));
+        // テスト用スタブ実装
+        return Task.FromResult(FSharpResult<UbiquitousLanguageManager.Domain.User, string>.NewError("機能不可"));
     }
 
     public static Task<FSharpResult<UbiquitousLanguageManager.Domain.User, string>> AutoLoginAfterPasswordResetAsync(
         this AuthenticationService service, Email email)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
-        return Task.FromResult(FSharpResult<UbiquitousLanguageManager.Domain.User, string>.NewError("Phase A3で削除"));
+        // テスト用スタブ実装
+        return Task.FromResult(FSharpResult<UbiquitousLanguageManager.Domain.User, string>.NewError("機能不可"));
     }
 
     public static Task<FSharpResult<Microsoft.FSharp.Core.Unit, string>> RecordLoginAttemptAsync(
         this AuthenticationService service, Email email, bool isSuccess)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
-        return Task.FromResult(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewError("Phase A3で削除"));
+        // テスト用スタブ実装
+        return Task.FromResult(FSharpResult<Microsoft.FSharp.Core.Unit, string>.NewError("機能不可"));
     }
 
     public static Task<FSharpResult<bool, string>> ValidatePasswordResetTokenAsync(
         this AuthenticationService service, Email email, string token)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
-        return Task.FromResult(FSharpResult<bool, string>.NewError("Phase A3で削除"));
+        // テスト用スタブ実装
+        return Task.FromResult(FSharpResult<bool, string>.NewError("機能不可"));
     }
 
     public static Task<FSharpResult<bool, string>> IsAccountLockedAsync(
         this AuthenticationService service, Email email)
     {
-        // Phase A3で削除されたメソッドの代替スタブ
+        // テスト用スタブ実装
         return Task.FromResult(FSharpResult<bool, string>.NewOk(false));
     }
 }

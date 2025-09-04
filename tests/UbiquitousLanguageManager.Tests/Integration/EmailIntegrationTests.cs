@@ -11,7 +11,7 @@ namespace UbiquitousLanguageManager.Tests.Integration
 {
     /// <summary>
     /// メール送信基盤の統合テスト
-    /// Phase A3 Step2: 統合動作確認
+    /// 実装完了済み機能の統合動作確認
     /// </summary>
     public class EmailIntegrationTests : IDisposable
     {

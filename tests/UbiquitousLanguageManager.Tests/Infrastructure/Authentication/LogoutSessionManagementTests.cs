@@ -117,7 +117,7 @@ public class LogoutSessionManagementTests
 
         // Act & Assert
         // この時点では実装がないため、テストが失敗することを確認
-        await _signInManager.PasswordSignInAsync(user.Email, "TestPassword123!", false, false);
+        await _signInManager.PasswordSignInAsync(user.Email, "su", false, false);
         
         // セッションID再生成の確認（実装時に詳細確認ロジック追加）
         session.Received().Remove("SessionId");

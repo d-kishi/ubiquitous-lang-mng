@@ -97,12 +97,12 @@ public class Step4AuthenticationTests
         };
 
         _userManager.FindByEmailAsync(user.Email).Returns(user);
-        _userManager.CheckPasswordAsync(user, "TestPassword123!").Returns(true);
+        _userManager.CheckPasswordAsync(user, "su").Returns(true);
 
         // Act & Assert
         // 1. Remember Meでログイン
         var loginResult = await _signInManager.PasswordSignInAsync(
-            user.Email, "TestPassword123!", isPersistent: true, lockoutOnFailure: false);
+            user.Email, "su", isPersistent: true, lockoutOnFailure: false);
         
         // テスト失敗を確認（実装前のため）
         loginResult.Should().Be(SignInResult.Success, "Remember Meログインが成功するはず");

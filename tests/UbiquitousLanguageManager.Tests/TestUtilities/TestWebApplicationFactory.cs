@@ -157,7 +157,7 @@ public class TestInitialDataService : UbiquitousLanguageManager.Infrastructure.S
         {
             Email = "test@example.com",
             Name = "Test User",
-            Password = "TestPassword123!",
+            Password = "su",
             IsFirstLogin = false
         }))
     {

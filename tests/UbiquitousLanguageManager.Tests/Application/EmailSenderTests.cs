@@ -9,7 +9,7 @@ namespace UbiquitousLanguageManager.Tests.Application
 {
     /// <summary>
     /// IEmailSender インターフェースの使用シナリオテスト
-    /// Phase A3 Step2: メール送信基盤のRed Phaseテスト
+    /// メール送信基盤の動作検証とエラーハンドリングテスト
     /// </summary>
     public class EmailSenderTests
     {

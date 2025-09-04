@@ -76,7 +76,7 @@ public class AuthenticationServiceTests
     public async Task HashPasswordAsync_ValidPassword_ShouldReturnHashedPassword()
     {
         // Arrange
-        var passwordResult = Password.create("TestPassword123!");
+        var passwordResult = Password.create("su");
         Assert.True(passwordResult.IsOk);
         var password = passwordResult.ResultValue;
 

@@ -18,7 +18,7 @@ namespace UbiquitousLanguageManager.Tests.Integration;
 /// 自動ログイン統合テストクラス
 /// 
 /// 【F#初学者向け解説】
-/// Phase A3 Step4で実装した自動ログイン機能の統合テスト。
+/// 自動ログイン機能の統合テスト。実装完了済み機能の検証。
 /// パスワードリセット完了から自動ログイン、Remember Me、ロックアウト確認まで
 /// 複数コンポーネント間の連携を検証。
 /// 
@@ -53,7 +53,7 @@ public class AutoLoginIntegrationTests
         _notificationServiceMock = new Mock<INotificationService>();
         _userRepositoryMock = new Mock<IUserRepository>();
 
-        // Phase A3本格実装完了に対応
+        // 自動ログイン機能完全実装に対応
         _authenticationService = new AuthenticationService(
             _loggerMock.Object,
             _userManagerMock.Object,

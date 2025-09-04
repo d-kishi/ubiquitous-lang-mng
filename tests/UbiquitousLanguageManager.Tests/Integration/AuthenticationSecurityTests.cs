@@ -51,7 +51,7 @@ public class AuthenticationSecurityTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act - パスワードハッシュ生成
-        var hashedPassword = passwordHasher.HashPassword(testUser, "SecureTestPassword123!");
+        var hashedPassword = passwordHasher.HashPassword(testUser, "su");
         
         // Assert - ハッシュ形式確認
         Assert.NotNull(hashedPassword);
@@ -59,7 +59,7 @@ public class AuthenticationSecurityTests : IClassFixture<TestWebApplicationFacto
         
         // パスワード検証確認
         var verificationResult = passwordHasher.VerifyHashedPassword(
-            testUser, hashedPassword, "SecureTestPassword123!");
+            testUser, hashedPassword, "su");
         Assert.Equal(PasswordVerificationResult.Success, verificationResult);
         
         // 間違ったパスワードでの検証失敗確認
@@ -180,7 +180,7 @@ public class AuthenticationSecurityTests : IClassFixture<TestWebApplicationFacto
         var validFormData = new List<KeyValuePair<string, string>>
         {
             new("Email", "test@example.com"),
-            new("Password", "TestPassword123!"),
+            new("Password", "su"),
             new("__RequestVerificationToken", validToken)
         };
 
@@ -194,7 +194,7 @@ public class AuthenticationSecurityTests : IClassFixture<TestWebApplicationFacto
         var invalidFormData = new List<KeyValuePair<string, string>>
         {
             new("Email", "test@example.com"),
-            new("Password", "TestPassword123!"),
+            new("Password", "su"),
             new("__RequestVerificationToken", "INVALID_TOKEN_VALUE")
         };
 

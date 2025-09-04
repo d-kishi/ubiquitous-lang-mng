@@ -52,7 +52,7 @@ public class NotificationServiceTests
         {
             // Arrange
             var user = CreateTestUser("newuser@example.com", "新規ユーザー", Role.GeneralUser);
-            var temporaryPassword = "TempPass123!";
+            var temporaryPassword = "su";
 
             // Act
             var result = await _service.NotifyUserCreatedAsync(user, temporaryPassword);
@@ -123,7 +123,7 @@ public class NotificationServiceTests
             foreach (var (role, expectedRoleString) in testCases)
             {
                 var user = CreateTestUser($"test{expectedRoleString}@example.com", $"テスト{expectedRoleString}", role);
-                var result = await _service.NotifyUserCreatedAsync(user, "TempPass123!");
+                var result = await _service.NotifyUserCreatedAsync(user, "su");
                 
                 Assert.True(result.IsOk);
                 
