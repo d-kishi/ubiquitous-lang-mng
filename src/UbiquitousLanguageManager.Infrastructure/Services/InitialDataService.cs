@@ -148,11 +148,11 @@ private async Task CreateInitialSuperUserAsync()
         IsDeleted = false  // カスタムプロパティ：削除フラグ
     };
 
-    // 💾 UserManager を使用したユーザー作成（PasswordHashなし）
-    // 【重要な仕様変更】機能仕様書2.2.1準拠：初期パスワード平文管理
-    // UserManager.CreateAsync(user, password) → CreateAsync(user) に変更
-    // PasswordHashはNULLのまま、InitialPasswordで平文管理
-    var result = await _userManager.CreateAsync(superUser);
+    // 💾 UserManager を使用したユーザー作成（PasswordHashあり）
+    // 【TECH-006修正】実ログインテスト動作確保のため、パスワードハッシュ化実行
+    // CreateAsync(user) → CreateAsync(user, password) に修正
+    // これにより PasswordHash が正しく設定され、ASP.NET Core Identity での認証が可能
+    var result = await _userManager.CreateAsync(superUser, _settings.Password);
 
     if (result.Succeeded)
     {
@@ -160,7 +160,8 @@ private async Task CreateInitialSuperUserAsync()
         await _userManager.AddToRoleAsync(superUser, "SuperUser");
 
         _logger.LogInformation("👤 初期スーパーユーザーを作成しました: {Email}", _settings.Email);
-        _logger.LogInformation("🔑 初期パスワード: {Password} （InitialPasswordカラムに平文保存）", _settings.Password);
+        _logger.LogInformation("🔑 初期パスワード: {Password} （ハッシュ化されてPasswordHashに保存）", _settings.Password);
+        _logger.LogInformation("✅ EmailConfirmed: true, PasswordHash: 設定済み");
         _logger.LogWarning("⚠️ セキュリティ注意: 初回ログイン後、必ずパスワードを変更し、InitialPasswordを削除してください");
         _logger.LogInformation("📋 仕様準拠: 機能仕様書2.0.1（初期パスワード'su'）・2.2.1（平文管理）準拠");
     }

@@ -131,7 +131,8 @@ public class InitialPasswordAuthenticationTests : IClassFixture<CustomWebApplica
 
     /// <summary>
     /// 統合テスト3: データベース統合確認テスト
-    /// 実際のデータベースでのユーザー情報とロール情報の確認
+    /// UserManager/RoleManager経由でのユーザー情報とロール情報の確認
+    /// 【修正】テスト1と同じパターンで確実なInitialDataService実行
     /// </summary>
     [Fact]
     public async Task DatabaseIntegration_UserAndRoles_CreatedCorrectly()
@@ -139,36 +140,44 @@ public class InitialPasswordAuthenticationTests : IClassFixture<CustomWebApplica
         // タイムアウトチェック
         CheckTimeoutAndMemory("DatabaseIntegration_UserAndRoles_CreatedCorrectly");
         
-        // Arrange & Act - 初期データ作成
-        await EnsureInitialUserExists();
-        
-        // Assert - データベース直接確認
+        // Arrange - テスト1と同じパターンで直接InitialDataServiceを実行
         using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<UbiquitousLanguageDbContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var serviceProvider = scope.ServiceProvider;
         
-        // ユーザー確認
-        var users = await dbContext.Users.ToListAsync();
-        Assert.NotEmpty(users);
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<InitialDataService>>();
+        var settings = serviceProvider.GetRequiredService<IOptions<InitialSuperUserSettings>>();
         
-        var adminUser = users.FirstOrDefault(u => u.Email == "admin@ubiquitous-lang.com");
+        // Act - InitialDataServiceでユーザー作成実行（テスト1と同様）
+        var initialDataService = new InitialDataService(userManager, roleManager, logger, settings);
+        await initialDataService.SeedInitialDataAsync();
+        
+        // Assert - 同一スコープ内でのデータ確認
+        // ユーザー確認 - UserManager経由
+        var adminUser = await userManager.FindByEmailAsync("admin@ubiquitous-lang.com");
         Assert.NotNull(adminUser);
+        Assert.Equal("admin@ubiquitous-lang.com", adminUser!.Email);
+        Assert.Equal("システム管理者", adminUser.Name);
+        Assert.Equal("su", adminUser.InitialPassword);
+        Assert.True(adminUser.IsFirstLogin);
+        Assert.Null(adminUser.PasswordHash);
         
-        // ロール確認
-        var roles = await dbContext.Roles.ToListAsync();
-        Assert.True(roles.Count >= 4); // 最低4つのロールが存在
-        
+        // ロール確認 - RoleManager経由
         var expectedRoles = new[] { "SuperUser", "ProjectManager", "DomainApprover", "GeneralUser" };
         foreach (var expectedRole in expectedRoles)
         {
-            var role = roles.FirstOrDefault(r => r.Name == expectedRole);
-            Assert.NotNull(role);
+            var roleExists = await roleManager.RoleExistsAsync(expectedRole);
+            Assert.True(roleExists, $"ロール {expectedRole} が作成されていません");
         }
         
-        // ユーザーロール関連確認
-        var userRoles = await dbContext.UserRoles.ToListAsync();
+        // ユーザーロール関連確認 - UserManager経由
+        var isInSuperUserRole = await userManager.IsInRoleAsync(adminUser, "SuperUser");
+        Assert.True(isInSuperUserRole);
+        
+        var userRoles = await userManager.GetRolesAsync(adminUser);
         Assert.NotEmpty(userRoles);
+        Assert.Contains("SuperUser", userRoles);
         
         Console.WriteLine($"✅ [{DateTime.UtcNow:HH:mm:ss}] データベース統合確認テスト完了");
     }
@@ -237,9 +246,12 @@ public class InitialPasswordAuthenticationTests : IClassFixture<CustomWebApplica
 
 /// <summary>
 /// カスタムWebApplicationFactory - 統合テスト用の設定
+/// 【修正】共有InMemoryDatabaseによるデータ永続化確保
 /// </summary>
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private static readonly string TestDatabaseName = "TestDb_InitialPassword_Shared";
+    
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -251,10 +263,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            // インメモリデータベースの設定
+            // 共有InMemoryDatabaseの設定（データ永続化確保）
             services.AddDbContext<UbiquitousLanguageDbContext>(options =>
             {
-                options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
+                options.UseInMemoryDatabase(TestDatabaseName); // 固定名で共有
                 options.EnableSensitiveDataLogging();
             });
             
