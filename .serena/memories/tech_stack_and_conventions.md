@@ -1,194 +1,96 @@
-# 技術スタック・規約 - 2025-09-04更新
+# 技術スタック・実装規約
 
-## 技術スタック（本番対応済み）
+## 技術基盤構成
+### Clean Architecture実装
+```
+Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F# UseCases) → Domain (F# Models)
+                      ↘ Infrastructure (C# EF Core/Repository) ↗
+```
 
-### フロントエンド技術
-- **Blazor Server**: ASP.NET Core 8.0サーバーサイドレンダリング
-- **Bootstrap 5**: レスポンシブデザイン用UIフレームワーク
-- **SignalR**: リアルタイム通信（WebSocketフォールバック）
-- **認証**: ASP.NET Core Identity統合完了
-
-### バックエンド技術
-- **ASP.NET Core 8.0**: Webフレームワーク + APIエンドポイント
-- **Entity Framework Core**: PostgreSQL ORM統合
-- **ASP.NET Core Identity**: 認証・認可システム
-- **HTTP文脈分離**: AuthApiControllerパターンによるAPI分離
-
-### Domain/Application層（F#統合完了）
-- **F# 8.0**: ドメインロジック関数型プログラミング
-- **TypeConverter統合**: 580行C#/F#境界管理
-- **Clean Architecture**: Domain/Application層F#実装準備完了
-- **ビジネスルール**: パターンマッチング + Option型 + Result型
-
-### データベース技術
-- **PostgreSQL 16**: 本番データベース（Dockerコンテナ化）
-- **Entity Framework Core**: Code-Firstマイグレーションアプローチ
-- **Docker Compose**: 開発環境自動化
-- **pgAdmin 4**: データベース管理インターフェース
+### 主要技術スタック
+- **Frontend**: Blazor Server + Bootstrap 5
+- **Backend**: ASP.NET Core 8.0 + Entity Framework Core
+- **Domain/Application**: F# 8.0 (関数型プログラミング)
+- **Database**: PostgreSQL 16 (Docker Container)
+- **認証**: ASP.NET Core Identity（24時間トークン・セキュリティ強化）
+- **Email**: MailKit/MimeKit + Smtp4dev統合
 
 ### 開発環境
-- **Dockerコンテナ**: PostgreSQL + pgAdmin + Smtp4dev
-- **VS Code**: 主要開発環境
-- **Git**: 従来的コミット規約によるバージョン管理
-- **GitHub Issues**: 技術負債 + 機能追跡
+- **アプリ**: https://localhost:5001
+- **PgAdmin**: http://localhost:8080
+- **Smtp4dev**: http://localhost:5080
 
-## コード規約・基準
+## 実装パターン・規約
+### F#/C# 相互運用パターン
+- **Contracts層**: TypeConverterパターンでF#ドメインモデル↔C# DTO変換
+- **境界明確化**: Domain層（F#）とInfrastructure層（C#）の分離
+- **Result型活用**: F# Resultパターンでエラーハンドリング統一
 
-### C#規約
-- **ファイル構成**: 機能ベースフォルダ構造
-- **命名**: クラス・メソッドPascalCase、変数camelCase
-- **コメント**: F#初学者向け詳細説明（ADR_010）
-- **認証**: UserManagerパターン必須（直接DbContext禁止）
+### 認証システム実装パターン（Phase A8完成）
+- **ASP.NET Core Identity統合**: Blazor Server Cookie認証
+- **パスワード機能**: 変更・リセット完全動作・機能仕様書2.1.3準拠
+- **セキュリティ**: 24時間トークン・暗号化・HTTPS強制
 
-### F#規約（Domain層）
-- **モジュール構成**: ドメイン駆動設計モジュール構造
-- **型定義**: ドメインモデリング用判別共用体
-- **関数合成**: データ変換用パイプライン演算子|>
-- **エラーハンドリング**: 明示的エラーハンドリング用Result<'T, 'Error>型
-
-### TypeConverterパターン（重要統合）
-```csharp
-// C# Contracts層 - F#/C#境界管理
-public class EntityTypeConverter 
+### 設定管理パターン
+```json
+// appsettings.json
 {
-    public static CSharpDto FromFSharpType(FSharpDomainType fsType) { /* ... */ }
-    public static FSharpDomainType ToFSharpType(CSharpDto dto) { /* ... */ }
+  "App": {
+    "BaseUrl": "https://localhost:5001"
+  }
 }
 ```
+- **Configuration注入**: `_configuration["App:BaseUrl"]`パターン活用
+- **ハードコード排除**: URL・パス等の外部設定化必須
 
-### データベース規約
-- **Entity Framework**: 明示的設定によるCode-First
-- **マイグレーション**: タイムスタンプ付き説明的命名
-- **シード**: 一貫した初期データ用InitialDataService
-- **接続**: 標準認証情報によるDocker PostgreSQL
+### URL・ルーティングパターン
+- **一貫性**: `/forgot-password` ↔ `/reset-password`対応関係明確化
+- **仕様準拠**: 機能仕様書との完全一致確保
 
-## テスト基準（100%成功達成）
+## テスト・品質保証
+### テスト基盤（Phase A8完成状態）
+- **テスト数**: 106テスト・100%成功継続
+- **カバレッジ**: 95%達成・TestWebApplicationFactoryパターン
+- **品質基準**: 0警告0エラー・品質スコア98/100点
 
-### 統合テスト
-- **TestWebApplicationFactory**: Webアプリテスト標準パターン
-- **データベース**: クリーンアップ付き独立テストデータベース
-- **認証**: 信頼できるテスト用UserManager同一スコープパターン
-- **カバレッジ**: 106/106テスト成功維持
-
-### 単体テスト基準
-- **Arrange-Act-Assert**: 明確テスト構造
-- **説明的名前**: メソッド名でテスト意図明示
-- **F#テスト**: プロパティベーステスト考慮関数型アプローチ
-- **モック戦略**: 最小モック・統合テスト優先
-
-### テスト構成
-```
-test/
-├── UnitTests/           # ドメインロジック単体テスト
-├── IntegrationTests/    # Web API + データベース統合
-└── FunctionalTests/     # エンドツーエンドシナリオ
+### 品質確認コマンド
+```bash
+dotnet build                    # 0警告0エラー確認
+dotnet test                     # 106/106テスト成功確認
+docker-compose up -d            # 環境起動
 ```
 
-## Clean Architecture実装
+## Email・SMTP統合（Phase A8完成）
+### パスワードリセットフロー
+1. `/forgot-password` → メール送信
+2. Smtp4dev → メール受信・リンク確認
+3. `/reset-password` → パスワード変更
+4. `/login` → 新パスワードログイン
 
-### 層責任
-- **Domain（F#）**: ビジネスルール・エンティティ・ドメインサービス
-- **Application（F#）**: ユースケース・アプリケーションサービス
-- **Contracts（C#）**: DTO・TypeConverter・インターフェース定義
-- **Infrastructure（C#）**: データベース・外部サービス・リポジトリ
-- **Web（C#）**: コントローラー・Blazorコンポーネント・UIロジック
-
-### 依存方向（厳密実施）
-```
-Web → Contracts → Application → Domain
-   ↘ Infrastructure ↗
-```
-
-### TypeConverter統合ポイント
-- **Web → Contracts**: UIバインディング用DTO変換
-- **Contracts → Application**: F#型変換
-- **Application → Domain**: 純粋F#ドメイン操作
-- **Infrastructure → Contracts**: データベースエンティティ変換
-
-## セキュリティ基準（本番対応）
-
-### 認証実装
-- **ASP.NET Core Identity**: UserManagerによる完全統合
-- **パスワード管理**: ハッシュ化保存・平文禁止
-- **初期ユーザー**: admin@ubiquitous-lang.com「su」パスワード
-- **セッション管理**: セキュアクッキーによるASP.NET Coreセッション
-
-### HTTPS強制
-- **開発**: https://localhost:5001必須
-- **本番**: HTTPS リダイレクト有効
-- **証明書**: ローカルHTTPS用開発証明書
-
-## パフォーマンス基準
-
-### データベースパフォーマンス
-- **接続プール**: Entity Frameworkデフォルトプール
-- **クエリ最適化**: LINQ to Entitiesベストプラクティス
-- **インデックス**: キークエリ用戦略的データベースインデックス
-- **マイグレーション**: ノンブロッキングマイグレーション戦略
-
-### アプリケーションパフォーマンス
-- **Blazor Server**: サーバーサイドレンダリング最適化
-- **SignalR**: 効率的リアルタイム通信
-- **キャッシュ**: 頻繁アクセスデータ用インメモリキャッシュ
-- **Async/Await**: 一貫した非同期プログラミング
-
-## 開発ワークフロー基準
-
-### Gitワークフロー
-- **ブランチ戦略**: mainからのフィーチャーブランチ
-- **コミットメッセージ**: 従来的コミット仕様
-- **コードレビュー**: mainブランチプルリクエスト必須
-- **継続的統合**: コミット時自動テスト
-
-### 品質ゲート
-- **ビルド**: 0警告・0エラー必須
-- **テスト**: 100%成功率必要
-- **カバレッジ**: 95%以上テストカバレッジ維持
-- **仕様準拠**: 95点以上目標
-
-## Docker環境基準
-
-### コンテナ設定
-```yaml
-# PostgreSQL設定
-POSTGRES_DB: ubiquitous_lang_db
-POSTGRES_USER: ubiquitous_lang_user  
-POSTGRES_PASSWORD: ubiquitous_lang_password
-Port: 5432
-
-# pgAdmin設定
-PGADMIN_DEFAULT_EMAIL: admin@ubiquitous-lang.com
-PGADMIN_DEFAULT_PASSWORD: admin123
-Port: 8080
-
-# Smtp4dev設定
-Port: 5080 (Web UI), 2525 (SMTP)
+### SMTP設定パターン
+```csharp
+// SmtpEmailSender.cs実装パターン
+var baseUrl = _configuration["App:BaseUrl"] ?? "https://localhost:5001";
+var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}&email={Uri.EscapeDataString(email)}";
 ```
 
-### ボリューム管理
-- **データベース永続化**: PostgreSQLデータボリューム
-- **開発**: ファイル監視によるホットリロード
-- **クリーンアップ**: 新規開始用コンテナクリーンアップスクリプト
+## SubAgent活用パターン
+### 専門Agent活用基準
+- **csharp-infrastructure**: C# Infrastructure層・Repository・設定変更
+- **fsharp-domain**: F# Domain層・ビジネスロジック・ドメインモデル
+- **spec-compliance**: 仕様準拠確認・品質監査・準拠度評価
 
-## エラーハンドリング基準
+### 並列 vs 単一実行判断
+- **単一Agent推奨**: 関連性高い・短時間・設定変更等
+- **並列実行推奨**: 独立性高い・技術調査・多角的分析
 
-### アプリケーションエラー
-- **グローバル例外ハンドラー**: 一貫したエラーレスポンス形式
-- **ログ**: Serilog統合による構造化ログ
-- **ユーザーメッセージ**: 日本語ユーザーフレンドリーエラーメッセージ
-- **開発者情報**: 開発モード詳細エラー情報
+## 次回Phase A9準備事項
+### GitHub Issue #21対応技術準備
+- **F# Domain層**: 認証ドメインモデル設計準備
+- **リファクタリング**: 段階的実装・既存機能保護パターン
+- **品質継承**: Phase A8の98/100点品質基盤活用
 
-### F#エラーハンドリング
-```fsharp
-// 明示的エラーハンドリング用Result型
-type ValidationResult<'T> = 
-    | Success of 'T
-    | ValidationError of string list
-    | BusinessError of string
-```
-
-### データベースエラーハンドリング
-- **接続復旧**: 一時的障害用再試行ポリシー
-- **トランザクション管理**: 明示的トランザクション境界
-- **制約違反**: ビジネスルール用意味的エラーメッセージ
-- **マイグレーション障害**: ロールバック戦略・検証
+### 技術負債完全解消状態（継承）
+- **TECH-002**: 初期パスワード不整合 → 完全解決
+- **TECH-006**: Headers read-only → HTTP文脈分離解決
+- **新規技術負債**: ゼロ維持継続

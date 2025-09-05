@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -18,14 +19,16 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
         private readonly SmtpSettings _settings;
         private readonly ILogger<SmtpEmailSender> _logger;
         private readonly ISmtpClient _smtpClient;
+        private readonly IConfiguration _configuration;
 
         /// <summary>
         /// コンストラクタ（本番用）
         /// </summary>
         public SmtpEmailSender(
             IOptions<SmtpSettings> options,
-            ILogger<SmtpEmailSender> logger)
-            : this(options, logger, new SmtpClientWrapper())
+            ILogger<SmtpEmailSender> logger,
+            IConfiguration configuration)
+            : this(options, logger, configuration, new SmtpClientWrapper())
         {
         }
 
@@ -35,10 +38,12 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
         public SmtpEmailSender(
             IOptions<SmtpSettings> options,
             ILogger<SmtpEmailSender> logger,
+            IConfiguration configuration,
             ISmtpClient smtpClient)
         {
             _settings = options.Value;
             _logger = logger;
+            _configuration = configuration;
             _smtpClient = smtpClient;
         }
 
@@ -109,8 +114,9 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
                 }
 
                 // 📧 リセットURLの生成
-                // TODO: 実際のURLはアプリケーション設定から取得する必要があります
-                var resetUrl = $"https://localhost/reset-password?token={Uri.EscapeDataString(resetToken)}&email={Uri.EscapeDataString(email)}";
+                // Phase A8 Step6 Stage1: URL設定外部化対応
+                var baseUrl = _configuration["App:BaseUrl"] ?? "https://localhost:5001";
+                var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}&email={Uri.EscapeDataString(email)}";
 
                 // 📝 メール本文の作成
                 var subject = "パスワードリセットのお知らせ";
