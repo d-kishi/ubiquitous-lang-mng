@@ -13,6 +13,7 @@
     <Compile Include="Interfaces\IUbiquitousLanguageService.fs" />
     <Compile Include="Interfaces\IProjectService.fs" />
     <Compile Include="Interfaces\IDomainService.fs" />
+    <Compile Include="AuthenticationServices.fs" />
     <Compile Include="ApplicationServices.fs" />
     <Compile Include="UseCases.fs" />
   </ItemGroup>

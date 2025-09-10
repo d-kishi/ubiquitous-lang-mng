@@ -1,5 +1,7 @@
 namespace UbiquitousLanguageManager.Domain
 
+open System
+
 // 🎯 Value Objects: ドメイン駆動設計の基本構成要素
 // 値によって同一性が決まるオブジェクト（IDを持たない）
 
@@ -382,3 +384,17 @@ type ProjectPermission = {
     
     member this.hasPermission permission =
         Set.contains permission this.Permissions
+
+// 🔐 Phase A9: 認証エラー判別共用体
+// Railway-oriented Programming対応・F#↔C#境界TypeConverter拡張
+// 【F#初学者向け解説】
+// 判別共用体により、認証エラーの種類を型安全に表現します。
+// パターンマッチングによる網羅的なエラーハンドリングが可能になります。
+type AuthenticationError =
+    | InvalidCredentials                    // 認証情報が正しくない
+    | UserNotFound of Email                 // ユーザーが見つからない
+    | ValidationError of string             // バリデーションエラー（型変換エラー等）
+    | AccountLocked of Email * DateTime     // アカウントロックアウト
+    | SystemError of exn                    // システムエラー（例外情報付き）
+    | PasswordExpired of Email              // パスワード期限切れ
+    | TwoFactorRequired of Email            // 二要素認証が必要

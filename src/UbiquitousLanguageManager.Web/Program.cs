@@ -62,6 +62,26 @@ public partial class Program
             options.SuppressModelStateInvalidFilter = true;
         });
 
+        // 🎯 JSON設定全体共通化（技術負債予防・DRY原則準拠）
+        // 【JavaScript ↔ C# 統合標準化】
+        // PropertyNameCaseInsensitive: JavaScript {success: true} ↔ C# {Success: true} 統一
+        // PropertyNamingPolicy.CamelCase: JSON出力時のcamelCase統一
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.PropertyNameCaseInsensitive = true;
+            options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        });
+
+        // 🎯 Blazor Server用共通JSONサービス（技術負債予防・DRY原則準拠）
+        // 【Blazor Component内JsonSerializer一括管理】
+        // ConfigureHttpJsonOptionsはWeb API専用のため、Blazor Component内での
+        // 直接JsonSerializer使用には適用されない。共通サービスで統一設定を提供。
+        // 
+        // 【Blazor Server初学者向け解説】
+        // このサービスにより、全Blazor Componentで統一されたJSON処理設定が適用され、
+        // 設定の重複・不整合を防止し、保守性を向上させます。
+        builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.IJsonSerializerService, UbiquitousLanguageManager.Web.Services.JsonSerializerService>();
+
         // Antiforgery設定: API呼び出しでのCSRF保護
         builder.Services.AddAntiforgery(options =>
         {
@@ -166,7 +186,8 @@ public partial class Program
 
         // 🎯 Clean Architecture: 依存関係注入設定
         // Repository実装の登録
-        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepository>();
+        // Phase A9: UserRepositoryAdapterに更新（ASP.NET Core Identity統合）
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepositoryAdapter>();
         // 将来の拡張用（現在は実装なし）
         // builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
         // builder.Services.AddScoped<IDomainRepository, DomainRepository>();
@@ -188,6 +209,12 @@ public partial class Program
 
         // Application Service実装の登録
         builder.Services.AddScoped<UbiquitousLanguageManager.Application.UserApplicationService>();
+        
+        // 🚀 Phase A9: F# 認証Application層サービスの登録
+        // 【F#初学者向け解説】
+        // Step 1-1で実装されたF#のAuthenticationApplicationServiceを登録します。
+        // これにより、Railway-oriented Programmingによる型安全な認証処理が利用可能になります。
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.AuthenticationApplicationService>();
         // 将来の拡張用（現在は実装なし）
         // builder.Services.AddScoped<UbiquitousLanguageApplicationService>();
 

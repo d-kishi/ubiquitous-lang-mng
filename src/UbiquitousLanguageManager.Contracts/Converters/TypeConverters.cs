@@ -578,4 +578,65 @@ public static class TypeConverters
     // 📝 注意: UserProfileは値オブジェクトではなくstring optionを使用しているため、
     // DisplayName、Department、PhoneNumber、Notes用の値オブジェクトは定義されていません。
     // 必要に応じて値オブジェクトとして定義することも可能です。
+
+    // =================================================================
+    // 🔐 Phase A9: 認証専用TypeConverter統合メソッド
+    // =================================================================
+
+    /// <summary>
+    /// Phase A9: F# Result&lt;User, AuthenticationError&gt; を AuthenticationResultDto に変換
+    /// 認証専用TypeConverterとの統合により、既存基盤で認証結果を処理
+    /// AuthenticationConverter.ToDtoの統合版
+    /// </summary>
+    /// <param name="authResult">F#の認証結果</param>
+    /// <returns>C#のAuthenticationResultDto</returns>
+    public static AuthenticationResultDto ToDto(FSharpResult<User, AuthenticationError> authResult)
+    {
+        return AuthenticationConverter.ToDto(authResult);
+    }
+
+    /// <summary>
+    /// Phase A9: F# AuthenticationError を AuthenticationErrorDto に変換
+    /// 認証エラーの型安全な変換（既存基盤統合）
+    /// AuthenticationConverter.ToDtoの統合版
+    /// </summary>
+    /// <param name="authError">F#の認証エラー</param>
+    /// <returns>C#のAuthenticationErrorDto</returns>
+    public static AuthenticationErrorDto ToDto(AuthenticationError authError)
+    {
+        return AuthenticationConverter.ToDto(authError);
+    }
+
+    /// <summary>
+    /// Phase A9: LoginRequestDto を F# 認証パラメータに変換
+    /// Web層からApplication層への型安全な変換（既存基盤統合）
+    /// </summary>
+    /// <param name="loginDto">ログインリクエストDTO</param>
+    /// <returns>F#のResult型（Email*string or エラー）</returns>
+    public static FSharpResult<Tuple<Email, string>, string> FromDto(LoginRequestDto loginDto)
+    {
+        return AuthenticationConverter.ToFSharpLoginParams(loginDto);
+    }
+
+    /// <summary>
+    /// Phase A9: AuthenticationResultDto を F# Result型に変換
+    /// C#からF#への逆変換（双方向変換完全対応）
+    /// </summary>
+    /// <param name="resultDto">C#の認証結果DTO</param>
+    /// <returns>F#のResult型</returns>
+    public static FSharpResult<User, AuthenticationError> ToFSharpResult(AuthenticationResultDto resultDto)
+    {
+        return AuthenticationConverter.ToFSharpResult(resultDto);
+    }
+
+    // =================================================================
+    // 🔄 Phase A9: Infrastructure統合用変換メソッド
+    // =================================================================
+
+    // =================================================================
+    // 📝 注意: Infrastructure層統合用変換メソッド
+    // =================================================================
+    // 【Clean Architecture遵守】
+    // Contracts層からInfrastructure層への直接参照は依存方向違反のため削除
+    // UserRepositoryAdapterで必要な変換は、Infrastructure層内で実装
 }

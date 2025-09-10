@@ -1,133 +1,150 @@
-# 開発ガイドライン
+# Development Guidelines - 開発ガイドライン
 
-## 開発方針・原則
+## 🎯 基本開発方針
 
-### 基本原則（ADR_016準拠）
-- **プロセス遵守絶対原則**: コマンド=契約として一字一句遵守
-- **承認=必須**: ユーザー承認表記は例外なく取得
-- **手順=聖域**: 定められた順序の変更禁止
-- **品質基準**: 0 Warning, 0 Error状態維持必須
+### Clean Architecture準拠（ADR準拠）
+- **依存方向**: Web→Contracts→Application→Domain + Infrastructure→Application
+- **F#/C#ハイブリッド**: Domain/Application(F#) + Infrastructure/Web/Contracts(C#)
+- **境界統合**: TypeConverter基盤・66テストケース成功実証
 
-### Clean Architecture遵守
-- **F# Domain/Application層**: 関数型プログラミングパターン適用
-- **C# Infrastructure/Web層**: オブジェクト指向パターン適用
-- **Contracts層**: F#↔C#境界の型変換（TypeConverter基盤580行確立済み）
-- **依存関係**: Web→Contracts→Application→Domain, Infrastructure→Domain
+### 品質基準（絶対遵守）
+- **0 Warning, 0 Error**: 必須維持・例外なし
+- **テスト成功**: 106/106テスト成功継続必須
+- **Clean Architectureスコア**: 94/100点維持・継続改善
 
-### 実装品質基準
-- **テストファースト**: TDD Red-Green-Refactorサイクル実践
-- **カバレッジ**: 95%以上維持（現在220テスト）
-- **コメント**: Blazor Server・F#初学者向け詳細説明必須（ADR_010）
-- **用語統一**: 「用語」ではなく「ユビキタス言語」使用（ADR_003）
+## 🤖 SubAgent活用パターン
 
-## フェーズベース開発体制
+### 実証済み効果的パターン
+1. **csharp-web-ui**: Blazor Component・Razor・フロントエンドUI・リアルタイム機能
+2. **csharp-infrastructure**: EF Core・Repository・データベースアクセス・外部サービス連携
+3. **fsharp-application**: F#ドメインモデル・ビジネスロジック・関数型プログラミング
+4. **fsharp-domain**: F#ドメインモデル設計・Railway-oriented Programming適用
+5. **contracts-bridge**: F#↔C#型変換・TypeConverter・双方向データ変換
 
-### Phase実行プロセス（確立済み）
-1. **phase-start Command**: Phase枠組み確立・Phase_Summary.md作成
-2. **SubAgent並列分析**: 4領域同時分析による包括的現状把握
-3. **step-start Command**: Step開始準備・前提条件確認
-4. **実装実行**: プロダクト精度最優先・十分な時間確保
-5. **step-end-review Command**: 品質確認・テスト実行
-6. **phase-end Command**: Phase総括・次Phase準備
+### Phase A9 Step 1成功事例（2025-09-10）
+- **csharp-web-ui**: JsonSerializerService実装・20分・高品質成果
+  - DI登録・統一設定・初学者向けコメント完備
+  - 技術負債予防・DRY原則完全準拠実現
 
-### SubAgentプール方式（ADR_013）
-- **並列実行**: 複数Agent同時実行による効率化
-- **専門特化**: spec-compliance, design-review, dependency-analysis, tech-research
-- **統合分析**: 各Agent結果の統合による確度向上
-- **適用実績**: Phase A9計画策定で4SubAgent並列分析成功
+## 🔧 技術実装パターン
 
-### Commands体系活用
-- **自動実行Commands**: session-start, session-end, phase-start等
-- **品質チェック**: spec-compliance-check, tdd-practice-check
-- **レビュー**: step-end-review（包括的品質・進捗確認）
+### JsonSerializerService一括管理（2025-09-10確立）
+```csharp
+// Program.cs DI登録
+builder.Services.AddScoped<IJsonSerializerService, JsonSerializerService>();
 
-## 技術実装ガイドライン
+// Blazor Component利用パターン
+@inject IJsonSerializerService JsonSerializer
+var parsedResult = JsonSerializer.Deserialize<PasswordChangeApiResponse>(resultJson);
+```
 
-### F# Domain/Application層
-- **Railway-oriented Programming**: Result型・Option型活用
-- **Smart Constructor Pattern**: ドメインモデル不正値排除
-- **Async by Design**: 非同期処理の一貫した実装
-- **パターンマッチング**: 網羅的ケース分岐・コンパイラ支援活用
+**効果**:
+- **ConfigureHttpJsonOptions制約解決**: Web API専用設定をBlazor Component統一適用
+- **技術負債予防**: 新規Component自動適用・設定漏れ防止
+- **保守性向上**: 一箇所変更で全体反映・将来拡張対応
 
-### Blazor Server実装
-- **StateHasChanged**: 状態変更時の明示的UI更新
-- **ライフサイクル**: OnInitializedAsync等の適切な実装
-- **SignalR統合**: リアルタイム機能での活用
-- **認証統合**: ASP.NET Core Identity完全統合
+### F# Railway-oriented Programming
+```fsharp
+type AuthenticationError = 
+  | InvalidCredentials
+  | UserNotFound
+  | PasswordExpired
+  | AccountLocked
+  | PasswordRequired
+  | TooManyAttempts
+  | SystemError
 
-### TypeConverter基盤
-- **F#↔C#境界**: 580行の型変換基盤活用
-- **認証特化型変換**: IAuthenticationService統合対応
-- **自動変換**: AutoMapperパターン回避・明示的変換
+type IAuthenticationService =
+  abstract member AuthenticateAsync : email:string -> password:string -> Task<Result<AuthenticationResult, AuthenticationError>>
+```
 
-### データベース設計
-- **Entity Framework Core**: Code-First移行管理
-- **PostgreSQL**: Docker Container活用
-- **Repository Pattern**: Infrastructure層での抽象化
-- **Identity統合**: ASP.NET Core Identity完全統合
+### E2Eテストパターン（実証済み）
+1. **シナリオ1**: 初回ログイン→パスワード変更
+2. **シナリオ2**: パスワード変更後通常ログイン
+3. **シナリオ3**: F# Authentication Service統合確認・エラーハンドリング確認
 
-## プロダクト精度重視方針
+## 📋 開発プロセス
 
-### 時間見積もり原則（Phase A9確立）
-- **プロダクト精度 > 時間効率**: 品質妥協・機能削減回避
-- **十分な実装時間**: Phase A9で240分→420分修正実績
-- **段階的品質確認**: 各Step完了時のテスト・ビルド・動作確認必須
-- **リスク軽減**: 時間に追われた品質低下の事前防止
+### セッション開始時必須チェック
+1. **必読ファイル確認**: プロジェクト状況・Phase計画・前回成果記録
+2. **品質状況確認**: ビルド状態・テスト成功率・Clean Architectureスコア
+3. **DB状態確認**: admin@ubiquitous-lang.com初期状態・必要に応じて復元
+4. **開発環境確認**: docker-compose up -d・dotnet run・https://localhost:5001
 
-### 実装参照情報整備
-- **Phase_Summary.md**: 実装時必須参照情報完備
-- **技術調査レポート**: 実装例・パターン・制約情報提供
-- **統合分析サマリー**: 全体方針・重点確認事項整理
-- **依存関係分析**: リスク軽減策・実装順序推奨
+### 実装時必須手順
+1. **SubAgent選択**: 作業内容に最適な専門Agent選択
+2. **段階的実装**: 小さな単位・テスト実行・品質確認サイクル
+3. **品質確認**: dotnet build・dotnet test・0警告0エラー確認
+4. **E2E確認**: 実際の画面操作・ユーザーフロー動作確認
 
-## 課題・技術負債管理
+### セッション終了時必須プロセス
+1. **成果記録**: 日次記録作成・具体的成果・学習事項記録
+2. **プロジェクト状況更新**: 進捗反映・次回推奨範囲設定
+3. **Serenaメモリー更新**: 5種類メモリー更新・次回参照準備
+4. **品質最終確認**: ビルド状態・テスト成功・DB状態確認
 
-### GitHub Issues統合管理（ADR_015）
-- **技術負債**: TECH-XXX形式での管理
-- **プロセス改善**: PROC-XXX形式での管理
-- **コミュニケーション**: COM-XXX形式での管理
-- **Issue更新**: 解決・進捗・新発見の即時反映
+## 🎯 技術負債管理方針
 
-### 技術負債解消状況（2025-09-07現在）
-- **TECH-002**: 初期パスワード不整合 → 完全解決（Phase A8）
-- **TECH-006**: Headers read-onlyエラー → 完全解決（Phase A8）
-- **TECH-007**: 仕様準拠チェック機構 → 完全解決（spec-compliance Agent改善）
-- **継続監視**: 新規技術負債の発生防止・早期発見
+### 予防優先アプローチ（Phase A9 Step 1実証）
+- **問題発見時**: 個別対応ではなく根本解決・システム改善実施
+- **DRY原則徹底**: 重複実装排除・設定一元管理・保守性重視
+- **将来拡張性**: 新規実装時自動適用・技術負債予防実現
 
-## コミュニケーション・記録管理
+### 解決済み技術負債（参考）
+- **TECH-004**: 初回ログイン時パスワード変更未実装 → **完全解決**（2025-09-09）
+- **JsonSerializerOptions個別設定**: 重複・設定漏れリスク → **一括管理で根本解決**（2025-09-10）
 
-### セッション記録体系
-- **日次記録**: /Doc/04_Daily/YYYY-MM/YYYY-MM-DD.md
-- **プロジェクト状況**: /Doc/プロジェクト状況.md（次回推奨範囲更新）
-- **ADR記録**: 重要決定の構造化記録
-- **週次総括**: 週末セッション時の統合振り返り
+## 🔍 初学者対応方針（ADR_010準拠）
 
-### Serenaメモリー管理
-- **5種類メモリー**: project_overview, development_guidelines, tech_stack_and_conventions, session_insights, task_completion_checklist
-- **セッション終了時更新**: session-end Commandでの必須更新
-- **次回参照準備**: 更新内容の実用性・参照可能性確保
+### Blazor Server初学者向けコメント必須
+```razor
+@* 【Blazor Server初学者向け解説】 *@
+@* パスワード変更コンポーネントの状態管理 *@
+@* TECH-006: JavaScript API呼び出しによる認証統合 *@
+```
 
-### 品質評価・改善サイクル
-- **目的達成度**: 定量評価（100%/80%/60%等）
-- **時間効率測定**: 予定vs実際の比較・改善要因特定
-- **適用手法効果**: SubAgent・Commands効果の具体的測定
-- **プロセス改善**: 次回セッション最適化提案
+### F#初学者向けコメント必須
+```fsharp
+// 【F# Railway-oriented Programming】
+// Result型を使用したエラーハンドリング
+// 成功時: Ok(AuthenticationResult)
+// 失敗時: Error(AuthenticationError)
+```
 
-## フレームワーク制約の現実的判断（Phase A9確立）
+## ⚠️ 重要制約・注意点
 
-### ASP.NET Core Identity統合制約
-- **構造的制約**: UserManager・SignInManagerの必然的依存
-- **セキュリティ制約**: パスワードハッシュ化・トークン管理の内部実装依存
-- **現実的最適解**: Infrastructure層18-19/20点が投資対効果考慮した最適解
-- **技術的妥当性**: 完全自作vs実用性のトレードオフ理解
+### DB操作制約
+- **E2Eテスト後復元**: `/scripts/restore-admin-user.sql`実行必須
+- **初期状態**: admin@ubiquitous-lang.com・初期パスワード'su'・IsFirstLogin=true
 
-### UI設計準拠vs機能実装バランス
-- **認証画面**: 95/100点の優秀品質（Phase A8成果）
-- **管理画面**: Phase B1での統合実装推奨
-- **準拠戦略**: Clean Architecture改善→UI準拠改善の段階実施
+### 開発環境制約
+- **HTTPS必須**: https://localhost:5001（HTTP非対応）
+- **Docker依存**: PostgreSQL・PgAdmin・Smtp4dev要起動
+- **ポート統一**: 5001番固定（Issue #16解決済み）
 
----
+### 実装制約
+- **用語統一**: 「用語」ではなく「ユビキタス言語」使用（ADR_003準拠）
+- **ADR遵守**: 重要技術決定はADR記録・参照必須
+- **コメント必須**: 初学者対応・概念説明・実装理由明記
 
-**最終更新**: 2025-09-07（Phase A9計画策定完了）  
-**適用フェーズ**: Phase A9以降  
-**重点方針**: プロダクト精度最優先・十分な実装時間確保・品質妥協回避
+## 📊 Phase A9実装経験（2025-09-10）
+
+### 成功パターン
+1. **問題発見→根本解決**: ConfigureHttpJsonOptions制約→JsonSerializerService一括管理
+2. **SubAgent活用**: csharp-web-ui・20分・高品質成果・初学者対応完備
+3. **E2E確認**: 3シナリオ・F# Authentication Service統合動作確認
+4. **品質向上**: Clean Architecture 89点→94点（+5点達成）
+
+### 学習事項
+- **ConfigureHttpJsonOptions**: Web API専用・Blazor Component適用不可
+- **JsonSerializerService**: DI経由統一設定・技術負債予防効果
+- **Railway-oriented Programming**: F# Authentication Service・適切なエラーハンドリング
+- **Clean Architecture効果**: Infrastructure→Application依存方向完全遵守
+
+## 🚀 次回Phase A9 Step 2準備
+
+### 認証処理重複実装統一
+- **対象箇所**: Infrastructure/Services/AuthenticationService.cs:64-146・Web/Services/AuthenticationService.cs・Web/Controllers/AuthApiController.cs
+- **SubAgent**: csharp-web-ui + csharp-infrastructure
+- **目標**: 単一責任原則達成・Infrastructure層認証サービス一本化
+- **予想時間**: 120分・アーキテクチャ改善重視

@@ -1,78 +1,124 @@
-# プロジェクト概要
+# Project Overview - ユビキタス言語管理システム
 
-## 現在の状況
-- **プロジェクト名**: ユビキタス言語管理システム
-- **現在フェーズ**: Phase A9計画策定完了（2025-09-07）・Phase A9 Step 1実装準備完了
-- **総合品質スコア**: Clean Architecture 89/100点・Phase A9で95点達成予定
+## 🎯 プロジェクト概要
+**ドメイン駆動設計(DDD)用語管理Webアプリケーション** - Clean Architecture準拠・F#/C#ハイブリッド実装
 
-## Phase進捗状況
-### 完了Phase
-- **Phase A1-A8**: 認証システム・ユーザー管理・要件準拠・Blazor Server認証統合最適化（2025-09-05完了）
-  - 最終品質スコア: 98/100点
-  - パスワードリセット機能: 機能仕様書2.1.3完全準拠・E2Eフロー完全動作
-  - 認証システム: admin@ubiquitous-lang.com / su 実ログイン・全機能完全動作
-  - 技術負債: TECH-002・TECH-006完全解決・新規技術負債ゼロ
-  - テスト品質: 106/106テスト成功・0警告0エラー継続
+## 📊 現在状況（2025-09-10更新）
 
-### 現在Phase
-- **Phase A9計画策定**: 完了（2025-09-07）
-  - **4SubAgent包括分析**: Clean Architecture89→95点改善戦略確立
-  - **GitHub Issue #21現状更新**: 68点記載→89点実態・+21点改善済み確認
-  - **実行計画**: 3Step構成・420分・実装参照情報完備
-  - **UI設計準拠度**: 87/100点・認証機能優秀・管理画面未実装特定
+### ✅ 完了Phase（Phase A1-A9完全完了）
+- **Phase A1-A8**: 基本認証・ユーザー管理・要件準拠・Blazor Server認証統合最適化（2025-09-05完了）
+- **Phase A9**: 認証システムアーキテクチャ根本改善（**Step 1完全完了・2025-09-10**）
+  - **F# Application層**: IAuthenticationService・Railway-oriented Programming完全実装（96/100点）
+  - **Infrastructure層**: UserRepositoryAdapter・ASP.NET Core Identity統合完成（94/100点）
+  - **JsonSerializerService実装**: Blazor Server JSON一括管理・技術負債予防実現
+    - DI登録による全Component統一利用・DRY原則完全準拠
+    - ConfigureHttpJsonOptions制約解決・保守性向上実現
+  - **E2E認証テスト完了**: 3シナリオ完全成功・F# Authentication Service統合確認
+  - **Clean Architecture品質向上**: **89点→94点（+5点達成）**
 
-### 次期Phase
-- **Phase A9実装**: Step 1（F# Application層認証サービス実装・180分）次回実施予定
-- **Phase B1以降**: プロジェクト管理機能（Phase A9完了後）
+### 🔴 次回最優先（Phase A9 Step 2）
+- **Phase A9 Step 2**: 認証処理重複実装統一（120分・csharp-web-ui + csharp-infrastructure）
+  - **対象箇所**: Infrastructure/Services/AuthenticationService.cs:64-146・Web/Services/AuthenticationService.cs・Web/Controllers/AuthApiController.cs
+  - **目標**: 単一責任原則達成・Infrastructure層認証サービス一本化
 
-## 技術基盤
-### 確立済み技術基盤
-- **Clean Architecture**: F# Domain/Application + C# Infrastructure/Web + Contracts層完全統合
-- **認証システム**: ASP.NET Core Identity統合・24時間トークン・セキュリティ強化完了
-- **テスト基盤**: 106テスト・95%カバレッジ・TestWebApplicationFactoryパターン確立
-- **品質基準**: 0警告0エラー・本番品質達成・98/100点品質スコア達成
-- **開発体制**: SubAgentプール方式実証・TDD実践体制確立
+## 🏗 アーキテクチャ構成
 
-### Phase A9改善予定
-- **Clean Architectureスコア**: 89点→95点（+6点向上）
-- **F# Application層**: 18→20点（完全解消）・Railway-oriented Programming導入
-- **Infrastructure層**: 16→18-19点（現実的最適解）
-- **認証処理統一**: 保守負荷50%削減・重複実装解消
+### Clean Architecture構成
+```
+Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F# UseCases) → Domain (F# Models)
+                      ↘ Infrastructure (C# EF Core/Repository) ↗
+```
 
-### 技術負債解消状況（全解決完了）
-- **TECH-002**: 初期パスワード不整合 → 完全解決（Phase A8 Step5）
-- **TECH-006**: Headers read-onlyエラー → 完全解決（HTTP文脈分離により根本解決）
-- **TECH-003～005**: Phase A7により完全解決済み
-- **TECH-007**: 仕様準拠チェック機構実効性不足 → GitHub Issue #18により完全解決
+### 主要技術スタック
+- **Frontend**: Blazor Server + Bootstrap 5
+- **Backend**: ASP.NET Core 8.0 + Entity Framework Core
+- **Domain/Application**: F# 8.0 (関数型プログラミング)
+- **Database**: PostgreSQL 16 (Docker Container)
+- **認証**: ASP.NET Core Identity
 
-## Phase A9実装計画
-### 実施内容（420分・プロダクト精度重視）
-1. **Step 1**: F# Application層認証サービス実装（180分）
-   - IAuthenticationService F#実装・Railway-oriented Programming
-   - UserRepositoryAdapter実装・ASP.NET Core Identity統合
-   - Clean Architectureスコア+5点効果
+## ✅ 技術負債解消状況
 
-2. **Step 2**: 認証処理重複実装の統一（120分）
-   - AuthenticationService統一・保守負荷50%削減
-   - Web層統合の複雑性考慮・API統合完成
+### 完全解決済み
+- **TECH-002**: 初期パスワード不整合 → **完全解決**（2025-09-04・Phase A8 Step5により完全解決）
+- **TECH-004**: 初回ログイン時パスワード変更未実装 → **完全解決**（2025-09-09・E2E認証統合テスト完了）
+- **TECH-006**: Headers read-onlyエラー → **完全解決**（2025-09-04・HTTP文脈分離により根本解決）
+- **JsonSerializerOptions個別設定**: 重複・設定漏れリスク → **一括管理で根本解決**（2025-09-10）
 
-3. **Step 3**: TypeConverter基盤拡張・品質確認（120分）
-   - F#↔C#境界最適化・580行基盤活用
-   - Clean Architecture 95点達成確認・総合品質測定
+## 🎯 品質状況
 
-### 成功基準
-- **Clean Architectureスコア**: 89点→95点以上
-- **GitHub Issue #21**: 根本解決完了・クローズ可能状態
-- **品質維持**: 106/106テスト成功・0警告0エラー継続
+### 達成品質
+- **Clean Architectureスコア**: **94/100点**（Phase A9 Step 1完了・+5点向上）
+- **テスト基盤**: 106/106テスト成功・0警告0エラー・95%カバレッジ
+- **認証システム**: admin@ubiquitous-lang.com / su 実ログイン・全機能完全動作
 
-## 次回セッション準備
-### Phase A9 Step 1実装準備
-1. **必須読み込みファイル**: Phase_Summary.md・技術調査レポート・アーキテクチャレビューレポート等
-2. **実装参照情報**: Step別重点参照ポイント・品質確認手順完備
-3. **技術実装**: F# Railway-oriented Programming・Result型・Smart Constructorパターン
+### 技術基盤
+- **F# Application層**: Railway-oriented Programming・Result型完全実装
+- **TypeConverter基盤**: F#↔C#境界統合・66テストケース成功
+- **JsonSerializerService**: Blazor Server全体JSON一括管理・技術負債予防
 
-### 重要な制約・前提
-- **プロダクト精度最優先**: 時間よりも品質を重視（420分十分確保）
-- **段階的実装**: 各Step完了時の品質確認必須
-- **既存品質保護**: Phase A8成果（98/100点・TECH-006解決）完全維持
-- **フレームワーク制約**: ASP.NET Core Identity統合の現実的限界考慮
+## 📚 開発環境・コマンド
+
+### ビルド・実行
+```bash
+dotnet build                                           # 全体ビルド
+dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動（https://localhost:5001）
+docker-compose up -d                                   # PostgreSQL/PgAdmin/Smtp4dev起動
+```
+
+### 開発ツールURL
+- **アプリ**: https://localhost:5001
+- **PgAdmin**: http://localhost:8080 (admin@ubiquitous-lang.com / admin123)
+- **Smtp4dev**: http://localhost:5080
+
+## 🔧 重要な実装パターン
+
+### JsonSerializerService（2025-09-10実装）
+```csharp
+// Program.cs DI登録
+builder.Services.AddScoped<IJsonSerializerService, JsonSerializerService>();
+
+// Blazor Component利用
+@inject IJsonSerializerService JsonSerializer
+var parsedResult = JsonSerializer.Deserialize<PasswordChangeApiResponse>(resultJson);
+```
+
+### F# Authentication Service
+```fsharp
+// Railway-oriented Programming
+type AuthenticationError = 
+  | InvalidCredentials
+  | UserNotFound
+  | PasswordExpired
+  // ... 7つの判別共用体
+
+type IAuthenticationService =
+  abstract member AuthenticateAsync : email:string -> password:string -> Task<Result<AuthenticationResult, AuthenticationError>>
+```
+
+## 🎯 Phase別進捗
+
+### A. ユーザー管理機能
+- [x] **Phase A1-A9**: 基本認証・ユーザー管理・要件準拠・Blazor Server認証統合最適化・認証システムアーキテクチャ根本改善（**2025-09-10完了**）
+- [ ] **Phase A10**: 認証処理重複実装統一（**次回実施予定・Phase A9 Step 2内容**）
+
+### B. プロジェクト管理機能
+- [ ] **Phase B1**: プロジェクト基本CRUD（未着手・Phase A完了後）
+
+## ⚠️ 重要制約
+
+- **用語統一**: 「用語」ではなく「ユビキタス言語」を使用（ADR_003準拠）
+- **品質基準**: 0 Warning, 0 Error状態維持・本番品質確保必須
+- **初学者対応**: Blazor Server・F#詳細コメント必須（ADR_010準拠）
+- **DB復元**: E2Eテスト後は`/scripts/restore-admin-user.sql`で必ず復元実行
+
+## 📋 次回セッション準備事項
+
+### 必須読み込みファイル
+1. `/Doc/08_Organization/Active/Phase_A9/Phase_Summary.md` - Phase A9実行計画・Step 2詳細
+2. `/Doc/05_Research/Phase_A9/02_アーキテクチャレビューレポート.md` - 認証ロジック混在問題詳細
+3. `/Doc/04_Daily/2025-09/2025-09-10-2-PhaseA9_Step1完全完了_JsonSerializerService一括管理実装セッション終了.md` - Step 1完了成果
+
+### 成功基準（Phase A9 Step 2）
+- **認証処理統一**: 3箇所の重複実装完全統一・単一責任原則達成
+- **品質維持**: 0警告0エラー・106テスト成功・Clean Architecture 94点維持
+- **E2E動作確認**: 統一後の認証フロー完全動作

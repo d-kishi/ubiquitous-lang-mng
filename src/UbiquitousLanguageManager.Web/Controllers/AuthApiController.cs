@@ -5,6 +5,7 @@ using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 using UbiquitousLanguageManager.Web.Services;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace UbiquitousLanguageManager.Web.Controllers;
 
@@ -28,6 +29,7 @@ public class AuthApiController : ControllerBase
     private readonly AuthenticationService _authenticationService;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ILogger<AuthApiController> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     /// <summary>
     /// コンストラクタ - 認証サービスとSignInManager注入
@@ -35,14 +37,17 @@ public class AuthApiController : ControllerBase
     /// <param name="authenticationService">既存のWeb層認証サービス</param>
     /// <param name="signInManager">ASP.NET Core Identity SignInManager</param>
     /// <param name="logger">ロガー</param>
+    /// <param name="serviceScopeFactory">TECH-005 DbContext競合回避用サービススコープファクトリ</param>
     public AuthApiController(
         AuthenticationService authenticationService,
         SignInManager<ApplicationUser> signInManager,
-        ILogger<AuthApiController> logger)
+        ILogger<AuthApiController> logger,
+        IServiceScopeFactory serviceScopeFactory)
     {
         _authenticationService = authenticationService;
         _signInManager = signInManager;
         _logger = logger;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     /// <summary>
@@ -193,7 +198,7 @@ public class AuthApiController : ControllerBase
     /// <param name="request">パスワード変更要求DTO</param>
     /// <returns>認証API統一レスポンス形式</returns>
     [HttpPost("change-password")]
-    [Authorize]
+    [Authorize] // Role制限なし - すべての認証済みユーザーが初回パスワード変更可能（仕様要件準拠）
     // [ValidateAntiForgeryToken] // 一時的に無効化 - JavaScript API動作確認のため
     public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordRequestDto request)
     {
@@ -237,13 +242,10 @@ public class AuthApiController : ControllerBase
             {
                 _logger.LogInformation("認証API: パスワード変更成功 - Email: {Email}", userEmail);
 
+                // TECH-005 DbContext競合回避: 独立したスコープでセキュリティスタンプ更新
                 // パスワード変更成功後、セキュリティスタンプ更新によりCookie再生成
                 // これにより、他のデバイス・セッションからのアクセスを無効化
-                var user = await _signInManager.UserManager.FindByEmailAsync(userEmail!);
-                if (user != null)
-                {
-                    await _signInManager.RefreshSignInAsync(user);
-                }
+                await RefreshUserSecurityStampAsync(userEmail!);
 
                 // 【csharp-infrastructure対応】初期パスワード変更成功メッセージ強化
                 string successMessage = changePasswordResult.Message ?? "初期パスワードから新しいパスワードに変更しました。";
@@ -331,6 +333,48 @@ public class AuthApiController : ControllerBase
                 Success = false,
                 Message = "ログアウト処理中にエラーが発生しました。"
             });
+        }
+    }
+
+    /// <summary>
+    /// セキュリティスタンプ更新処理 - DbContext競合回避版
+    /// 
+    /// TECH-005 DbContext競合エラー解決:
+    /// 独立したDbContextスコープでRefreshSignInAsync実行し、
+    /// 既存の認証処理DbContextとの同時実行例外を回避
+    /// 
+    /// 【初学者向け解説】
+    /// - ServiceScopeFactory: 新しい依存性注入スコープ作成
+    /// - 独立DbContext: 他の処理と分離されたデータベースコンテキスト
+    /// - using文: スコープの自動解放でメモリリーク防止
+    /// </summary>
+    /// <param name="userEmail">セキュリティスタンプ更新対象のユーザーメールアドレス</param>
+    /// <returns>非同期処理タスク</returns>
+    private async Task RefreshUserSecurityStampAsync(string userEmail)
+    {
+        try
+        {
+            // 独立したサービススコープ作成 - 既存DbContextと分離
+            using var scope = _serviceScopeFactory.CreateScope();
+            var scopedSignInManager = scope.ServiceProvider
+                .GetRequiredService<SignInManager<ApplicationUser>>();
+            
+            // 新しいDbContextスコープでユーザー検索・セキュリティスタンプ更新
+            var user = await scopedSignInManager.UserManager.FindByEmailAsync(userEmail);
+            if (user != null)
+            {
+                await scopedSignInManager.RefreshSignInAsync(user);
+                _logger.LogDebug("セキュリティスタンプ更新完了 - Email: {Email}", userEmail);
+            }
+            else
+            {
+                _logger.LogWarning("セキュリティスタンプ更新対象ユーザー未発見 - Email: {Email}", userEmail);
+            }
+        }
+        catch (Exception ex)
+        {
+            // セキュリティスタンプ更新失敗はログのみ - パスワード変更自体は成功
+            _logger.LogError(ex, "セキュリティスタンプ更新中にエラーが発生 - Email: {Email}", userEmail);
         }
     }
 }

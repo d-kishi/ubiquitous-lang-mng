@@ -253,8 +253,35 @@ public async Task<UbiquitousLanguageManager.Contracts.DTOs.Authentication.Change
             return UbiquitousLanguageManager.Contracts.DTOs.Authentication.ChangePasswordResponseDto.Error("システムエラーが発生しました。");
         }
 
-        // パスワード変更実行
-        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        // 【TECH-004修正】初回ログイン時パスワード変更の認証ロジック修正
+        // 初回ログイン：PasswordHash=null の場合はAddPasswordAsync使用
+        // 通常ログイン：既存のChangePasswordAsync継続使用
+        IdentityResult result;
+        
+        if (appUser.IsFirstLogin && string.IsNullOrEmpty(user.PasswordHash))
+        {
+            // 🔑 初回ログイン専用ロジック：InitialPasswordと照合してパスワード新規設定
+            _logger.LogInformation("初回ログインパスワード変更処理: {Email} (PasswordHash=null)", userEmail);
+            
+            if (request.CurrentPassword == appUser.InitialPassword)
+            {
+                // InitialPassword照合成功 → 新規パスワード設定
+                result = await _userManager.AddPasswordAsync(user, request.NewPassword);
+                _logger.LogInformation("初回ログイン認証成功: InitialPassword照合OK - {Email}", userEmail);
+            }
+            else
+            {
+                // InitialPassword照合失敗
+                result = IdentityResult.Failed(new IdentityError { Description = "初期パスワードが正しくありません。" });
+                _logger.LogWarning("初回ログイン認証失敗: InitialPassword不一致 - {Email}", userEmail);
+            }
+        }
+        else
+        {
+            // 🔐 通常ログイン：既存のPasswordHashベース認証
+            _logger.LogInformation("通常パスワード変更処理: {Email} (PasswordHash存在)", userEmail);
+            result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        }
         
         if (result.Succeeded)
         {
@@ -336,8 +363,35 @@ public async Task<UbiquitousLanguageManager.Contracts.DTOs.Authentication.Change
                 return Microsoft.FSharp.Core.FSharpResult<string, string>.NewError("システムエラーが発生しました。");
             }
 
-            // パスワード変更実行
-            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            // 【TECH-004修正】初回ログイン時パスワード変更の認証ロジック修正（Blazor版）
+            // 初回ログイン：PasswordHash=null の場合はAddPasswordAsync使用
+            // 通常ログイン：既存のChangePasswordAsync継続使用
+            IdentityResult result;
+            
+            if (appUser.IsFirstLogin && string.IsNullOrEmpty(user.PasswordHash))
+            {
+                // 🔑 初回ログイン専用ロジック：InitialPasswordと照合してパスワード新規設定
+                _logger.LogInformation("初回ログインパスワード変更処理（Blazor版）: {Email} (PasswordHash=null)", userEmail);
+                
+                if (currentPassword == appUser.InitialPassword)
+                {
+                    // InitialPassword照合成功 → 新規パスワード設定
+                    result = await _userManager.AddPasswordAsync(user, newPassword);
+                    _logger.LogInformation("初回ログイン認証成功（Blazor版）: InitialPassword照合OK - {Email}", userEmail);
+                }
+                else
+                {
+                    // InitialPassword照合失敗
+                    result = IdentityResult.Failed(new IdentityError { Description = "初期パスワードが正しくありません。" });
+                    _logger.LogWarning("初回ログイン認証失敗（Blazor版）: InitialPassword不一致 - {Email}", userEmail);
+                }
+            }
+            else
+            {
+                // 🔐 通常ログイン：既存のPasswordHashベース認証
+                _logger.LogInformation("通常パスワード変更処理（Blazor版）: {Email} (PasswordHash存在)", userEmail);
+                result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            }
             
             if (result.Succeeded)
             {
