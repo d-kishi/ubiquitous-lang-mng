@@ -1,123 +1,133 @@
-# 技術スタック・規約（2025-09-16更新）
+# 技術スタック・規約 - 最新状況（2025-09-16更新）
 
-## 🔧 確立済み技術基盤
+## 🏗️ アーキテクチャ構成
 
-### **フロントエンド（Blazor Server）**
-- **Pure Blazor Server**: 統一アーキテクチャ確立
-- **JavaScript interop**: auth-api.js適正化済み・責任分離実装
-- **API統合**: 個別API関数（login・changePassword・logout）
-- **SignalR制約対応**: Cookie削除・認証処理のAPI経由実装
-
-### **バックエンド（ASP.NET Core 8.0）**
-- **Clean Architecture**: 97点達成・健全アーキテクチャ基盤確立
-- **F# Domain/Application層**: 85%活用・Railway-oriented Programming
-- **C# Infrastructure/Web層**: ASP.NET Core Identity統合
-- **TypeConverter基盤**: 1,539行・F#↔C#境界最適化完成
-
-### **データベース**
-- **PostgreSQL 16**: Docker Container運用
-- **Entity Framework Core**: Infrastructure層統合
-- **初期データ**: admin@ubiquitous-lang.com / su 確立
-
-## 📋 実装規約・パターン
-
-### **F# Domain層規約（2025-09-16確立）**
-
-#### **AuthenticationError型拡張**
-```fsharp
-type AuthenticationError =
-    | InvalidCredentials                           // 認証情報が正しくない
-    | UserNotFound of Email                        // ユーザーが見つからない
-    | ValidationError of string                    // バリデーションエラー
-    | AccountLocked of Email * DateTime            // アカウントロックアウト
-    | SystemError of exn                           // システムエラー
-    | PasswordExpired of Email                     // パスワード期限切れ
-    | TwoFactorRequired of Email                   // 二要素認証が必要
-    // 🔐 Phase A9: パスワードリセット関連エラー（4種類）
-    | PasswordResetTokenExpired of Email
-    | PasswordResetTokenInvalid of Email
-    | PasswordResetNotRequested of Email
-    | PasswordResetAlreadyUsed of Email
-    // 🔒 Phase A9: トークン関連エラー（4種類）
-    | TokenGenerationFailed of string
-    | TokenValidationFailed of string
-    | TokenExpired of string
-    | TokenRevoked of string
-    // 👮 Phase A9: 管理者操作関連エラー（3種類）
-    | InsufficientPermissions of string
-    | OperationNotAllowed of string
-    | ConcurrentOperationDetected of string
-    // 🔮 Phase A9: 将来拡張用エラー（4種類）
-    | TwoFactorAuthFailed of Email
-    | ExternalAuthenticationFailed of string
-    | AuditLogError of string
-    | AccountDeactivated
+### Clean Architecture完成形（97/100点達成）
+```
+Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F# UseCases) → Domain (F# Models)
+                      ↘ Infrastructure (C# EF Core/Repository) ↗
 ```
 
-#### **Railway-oriented Programming規約**
-- **継続適用**: Result型・Option型活用
-- **型安全性**: エラーハンドリングの明確化・予測可能性向上
-- **ビジネスロジック集約**: 85%以上F#層実装
+### 層別技術選択
+- **Domain層**: F# 8.0・純粋関数・ビジネスロジック・型安全性85%活用
+- **Application層**: F# 8.0・ユースケース・Railway-oriented Programming・Result型
+- **Contracts層**: C# 12.0・DTO・TypeConverter基盤（1,539行完成）
+- **Infrastructure層**: C# 12.0・ASP.NET Core Identity・Entity Framework Core 8.0
+- **Web層**: C# 12.0・Blazor Server・Bootstrap 5・SignalR
 
-### **TypeConverter基盤規約（1,539行）**
+## 🔧 主要技術スタック
 
-#### **基盤構成**
-- **TypeConverters.cs**: 726行（基盤統合メソッド）
-- **AuthenticationConverter.cs**: 689行（認証特化拡張）
-- **AuthenticationMapper.cs**: 124行（レガシー互換）
+### フロントエンド
+- **Blazor Server**: サーバーサイドレンダリング・リアルタイム更新
+- **Bootstrap 5**: レスポンシブデザイン・コンポーネントライブラリ
+- **SignalR**: リアルタイム通信・セッション管理
 
-#### **認証特化変換**
-```csharp
-// ✅ 推奨: 21種類AuthenticationError完全対応
-public static AuthenticationErrorDto ToDto(AuthenticationError error)
-{
-    // F# 判別共用体の安全なパターンマッチング
-    if (error.IsInvalidCredentials)
-        return AuthenticationErrorDto.InvalidCredentials();
-    // ... 21種類の完全対応
-}
+### バックエンド・データベース
+- **ASP.NET Core 8.0**: Web API・依存注入・ミドルウェアパイプライン
+- **Entity Framework Core 8.0**: ORM・Code First・Migration管理
+- **PostgreSQL 16**: RDBMS・Docker Container稼働
+- **ASP.NET Core Identity**: 認証・認可・ユーザー管理統合
 
-// ✅ 推奨: 双方向変換・null安全性
-public static FSharpResult<User, AuthenticationError> FromDto(UserDto dto)
-{
-    // C# → F# 安全な型変換
-}
-```
+### 開発・テスト環境
+- **Docker Compose**: PostgreSQL・PgAdmin・Smtp4dev統合環境
+- **xUnit**: 単体テスト・統合テスト・テストカバレッジ95%
+- **WebApplicationFactory**: 統合テストパターン・E2E確認
 
-### **Clean Architecture規約（97点）**
-- **依存方向**: Web→Application→Domain（厳格遵守）
-- **インターフェース**: 全層間でインターフェース経由
-- **循環依存**: 完全禁止・Infrastructure層基盤サービス化
-- **薄いラッパー設計**: Web層責務特化・Infrastructure層委譲
+## 💎 確立済み実装パターン
 
-## 🎯 品質基準・メトリクス
+### F# Domain層パターン
+- **Railway-oriented Programming**: Result型・エラーハンドリング・関数合成
+- **判別共用体**: AuthenticationError 7種類・型安全エラー分類
+- **レコード型**: イミュータブル・型安全・値オブジェクト
+- **Option型**: null安全・存在確認・関数型プログラミング
 
-### **必達品質基準**
-- **Clean Architecture**: 97点以上（Phase A9確立済み）
-- **ビルド品質**: 0警告0エラー継続
-- **テスト品質**: 全テスト成功維持
-- **動作品質**: E2E認証フロー完全動作
+### TypeConverter基盤（1,539行完成）
+- **F#↔C#境界最適化**: 双方向データ変換・パフォーマンス最適化
+- **認証特化拡張**: AuthenticationConverter 689行・認証ドメイン完全対応
+- **DRY原則準拠**: 共通変換ロジック・保守性向上
+- **単一責任原則**: 各Converter特化・拡張容易性
 
-### **コード品質指標**
-- **責任分離**: 単一責任原則適用率95%以上
-- **F# Domain層活用**: 85%以上（Phase A9確立済み）
-- **可読性**: 複雑度削減・コメント適切配置
-- **保守性**: 変更影響範囲限定・修正容易性確保
-- **テスタビリティ**: モック注入可能・単体テスト容易
+### Blazor Server実装パターン
+- **JsonSerializerService**: DI統一管理・技術負債予防・ConfigureHttpJsonOptions制約解決
+- **ComponentBase継承**: ライフサイクル管理・StateHasChanged適切利用
+- **Parameter Binding**: 型安全・双方向バインディング・バリデーション統合
 
-## 🔄 技術的発見・パターン（2025-09-16）
+### 認証システム統一パターン（保守負荷50%削減）
+- **Infrastructure層一本化**: ASP.NET Core Identity統合・重複実装解消
+- **F# Authentication Service**: Application層・型安全・エラーハンドリング統合
+- **E2E認証フロー**: admin@ubiquitous-lang.com・完全動作確認済み
 
-### **F# Domain層拡張パターン**
-- **判別共用体拡張**: 7種類→21種類・業務要件に応じた体系的拡張
-- **Railway-oriented Programming**: 型安全・エラーハンドリング明確化
-- **F#↔C#統合**: TypeConverter基盤による効率的境界処理
+## 📋 開発規約・制約
 
-### **Clean Architecture実践パターン**
-- **97点達成手法**: 依存関係適正化・循環依存解消・インターフェース依存統一
-- **薄いラッパー設計**: Web層責務特化・Infrastructure層基盤委譲
-- **健全アーキテクチャ**: 各層責務明確・単一責任原則適用
+### 必須品質基準
+- **0警告0エラー**: 継続維持必須・例外なし
+- **テスト成功**: 106/106テスト・95%カバレッジ・継続維持
+- **Clean Architecture点数**: 97/100点維持・依存方向遵守
 
-### **技術負債解消パターン**
-- **設計債務**: 複雑性削減→理解しやすさ向上
-- **保守債務**: 責任分離→長期保守負荷軽減（50%削減達成）
-- **アーキテクチャ債務**: Clean Architecture準拠による健全性確保
+### コード品質規約
+- **F# Domain/Application**: 純粋関数・イミューダブル・副作用分離
+- **C# Infrastructure/Web**: SOLID原則・DI活用・非同期パターン
+- **TypeConverter**: 単一責任・型安全・パフォーマンス最適化
+
+### データベース規約
+- **Migration管理**: Code First・段階的変更・後方互換性
+- **命名規約**: スネークケース・複数形テーブル・単数形カラム
+- **インデックス戦略**: パフォーマンス最適化・クエリ分析基準
+
+## 🚀 パフォーマンス最適化
+
+### Blazor Server最適化
+- **SignalR接続管理**: 適切なライフサイクル・リソース管理
+- **StateHasChanged最適化**: 必要最小限実行・レンダリング効率化
+- **Component分割**: 責任分離・再利用性・保守性向上
+
+### データアクセス最適化
+- **Repositoryパターン**: 抽象化・テスト容易性・DI統合
+- **非同期処理**: async/await・スレッドプール効率活用
+- **クエリ最適化**: EF Core適切利用・N+1問題回避
+
+### F#パフォーマンス
+- **型安全コンパイル時最適化**: 実行時エラー削減・パフォーマンス向上
+- **イミューダブル最適化**: 構造共有・メモリ効率・並行性
+- **関数合成**: 処理効率・コード簡潔性・保守性
+
+## 🔄 技術負債管理
+
+### 解決済み技術負債
+- **TECH-002**: 初期パスワード不整合・完全解決（2025-09-04）
+- **TECH-004**: 初回ログイン時パスワード変更・完全解決（2025-09-09）
+- **TECH-006**: Headers read-onlyエラー・完全解決（2025-09-04）
+- **JsonSerializerOptions個別設定**: 一括管理実装・技術負債予防（2025-09-10）
+
+### 技術負債予防パターン
+- **JsonSerializerService**: DI一括管理・設定統一・保守性向上
+- **TypeConverter基盤**: F#↔C#境界最適化・拡張容易性
+- **Clean Architecture**: 依存方向遵守・層責務明確化・保守性
+
+## 📊 品質メトリクス・監視
+
+### 自動化品質チェック
+- **dotnet build**: 0警告0エラー継続確認
+- **dotnet test**: 106テスト成功・95%カバレッジ継続
+- **Clean Architecture**: 依存関係チェック・97点品質維持
+
+### 継続的品質改善
+- **週次総括**: 技術品質振り返り・改善点特定
+- **SubAgent専門活用**: 各層最適化・品質向上効果測定
+- **レトロスペクティブ**: フィードバック収集・次期改善サイクル
+
+## 🔗 外部連携・統合
+
+### 開発ツール連携
+- **GitHub Issues**: 課題管理・進捗追跡・品質管理
+- **Docker環境**: 統合開発環境・本番環境整合性
+- **PgAdmin**: データベース管理・クエリ分析・パフォーマンス確認
+
+### 監視・ログ管理（Issue #24検討中）
+- **ILogger統合設計**: 統一ログ管理・問題分析・運用監視
+- **エラーハンドリング**: F# Result型・C# Exception・統合エラー管理
+- **パフォーマンス監視**: レスポンス時間・リソース使用量・品質維持
+
+**最終更新**: 2025-09-16
+**状態**: Clean Architecture 97点確立・技術基盤完成・継続改善準備完了
+**重点**: 確立基盤継続活用・技術負債予防・品質メトリクス継続監視
