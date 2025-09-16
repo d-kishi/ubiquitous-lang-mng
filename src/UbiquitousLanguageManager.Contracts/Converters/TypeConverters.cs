@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.FSharp.Core;
 using Microsoft.FSharp.Collections;
 using UbiquitousLanguageManager.Contracts.DTOs;
+using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
 using UbiquitousLanguageManager.Domain;
 using DomainEntity = UbiquitousLanguageManager.Domain.Domain;
 
@@ -627,6 +628,89 @@ public static class TypeConverters
     public static FSharpResult<User, AuthenticationError> ToFSharpResult(AuthenticationResultDto resultDto)
     {
         return AuthenticationConverter.ToFSharpResult(resultDto);
+    }
+
+    // =================================================================
+    // 🔄 Phase A9: パスワードリセット関連TypeConverter統合
+    // =================================================================
+
+    /// <summary>
+    /// Phase A9: PasswordResetRequestDto を F# パラメータに変換
+    /// TypeConverter統合によりパスワードリセット要求を型安全に変換
+    /// AuthenticationConverter.ToFSharpPasswordResetParamsの統合版
+    /// </summary>
+    /// <param name="resetDto">パスワードリセット要求DTO</param>
+    /// <returns>F#のResult型（Email or エラー）</returns>
+    public static FSharpResult<Email, string> FromDto(PasswordResetRequestDto resetDto)
+    {
+        return AuthenticationConverter.ToFSharpPasswordResetParams(resetDto);
+    }
+
+    /// <summary>
+    /// Phase A9: PasswordResetTokenDto を F# パラメータに変換
+    /// TypeConverter統合によりパスワードリセット実行を型安全に変換
+    /// AuthenticationConverter.ToFSharpPasswordResetExecuteParamsの統合版
+    /// </summary>
+    /// <param name="tokenDto">パスワードリセットトークンDTO</param>
+    /// <returns>F#のResult型（Email*Token*Password or エラー）</returns>
+    public static FSharpResult<Tuple<Email, string, string>, string> FromDto(PasswordResetTokenDto tokenDto)
+    {
+        return AuthenticationConverter.ToFSharpPasswordResetExecuteParams(tokenDto);
+    }
+
+    /// <summary>
+    /// Phase A9: F# パスワードリセット結果 を PasswordResetResultDto に変換
+    /// TypeConverter統合によりパスワードリセット結果を型安全に変換
+    /// AuthenticationConverter.ToPasswordResetResultDtoの統合版
+    /// </summary>
+    /// <param name="result">F#のパスワードリセット結果</param>
+    /// <param name="userEmail">対象ユーザーのメールアドレス</param>
+    /// <returns>C#のPasswordResetResultDto</returns>
+    public static PasswordResetResultDto ToDto<T>(FSharpResult<T, AuthenticationError> result, string userEmail)
+    {
+        return AuthenticationConverter.ToPasswordResetResultDto(result, userEmail);
+    }
+
+    // =================================================================
+    // 🔄 Phase A9: 拡張認証エラー・結果変換（将来のF#拡張対応）
+    // =================================================================
+
+    /// <summary>
+    /// Phase A9: 拡張AuthenticationErrorDto を F# AuthenticationError に変換
+    /// 新規追加エラー型対応・将来のF#拡張に備えた型安全変換
+    /// </summary>
+    /// <param name="errorDto">拡張版AuthenticationErrorDto</param>
+    /// <returns>F#のAuthenticationError判別共用体</returns>
+    public static AuthenticationError ToFSharpAuthenticationError(AuthenticationErrorDto errorDto)
+    {
+        return AuthenticationConverter.ToFSharpAuthenticationErrorExtended(errorDto);
+    }
+
+    /// <summary>
+    /// Phase A9: F# Result型の高度な変換
+    /// Railway-oriented Programming結果の包括的変換
+    /// 複数の結果型に対応した汎用変換メソッド
+    /// </summary>
+    /// <typeparam name="TSuccess">F#の成功型</typeparam>
+    /// <param name="result">F#のResult&lt;TSuccess, AuthenticationError&gt;</param>
+    /// <param name="successConverter">成功時の変換関数</param>
+    /// <returns>C#のAuthenticationResultDto</returns>
+    public static AuthenticationResultDto ToDto<TSuccess>(
+        FSharpResult<TSuccess, AuthenticationError> result,
+        Func<TSuccess, UserDto> successConverter)
+    {
+        if (result.IsOk)
+        {
+            var successValue = result.ResultValue;
+            var userDto = successConverter(successValue);
+            return AuthenticationResultDto.Success(userDto);
+        }
+        else
+        {
+            var error = result.ErrorValue;
+            var errorDto = ToDto(error);
+            return AuthenticationResultDto.Failure(errorDto);
+        }
     }
 
     // =================================================================

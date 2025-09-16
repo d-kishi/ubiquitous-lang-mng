@@ -391,10 +391,29 @@ type ProjectPermission = {
 // 判別共用体により、認証エラーの種類を型安全に表現します。
 // パターンマッチングによる網羅的なエラーハンドリングが可能になります。
 type AuthenticationError =
-    | InvalidCredentials                    // 認証情報が正しくない
-    | UserNotFound of Email                 // ユーザーが見つからない
-    | ValidationError of string             // バリデーションエラー（型変換エラー等）
-    | AccountLocked of Email * DateTime     // アカウントロックアウト
-    | SystemError of exn                    // システムエラー（例外情報付き）
-    | PasswordExpired of Email              // パスワード期限切れ
-    | TwoFactorRequired of Email            // 二要素認証が必要
+    | InvalidCredentials                           // 認証情報が正しくない
+    | UserNotFound of Email                        // ユーザーが見つからない
+    | ValidationError of string                    // バリデーションエラー（型変換エラー等）
+    | AccountLocked of Email * DateTime            // アカウントロックアウト
+    | SystemError of exn                           // システムエラー（例外情報付き）
+    | PasswordExpired of Email                     // パスワード期限切れ
+    | TwoFactorRequired of Email                   // 二要素認証が必要
+    // 🔐 Phase A9: パスワードリセット関連エラー（4種類）
+    | PasswordResetTokenExpired of Email           // パスワードリセットトークン期限切れ
+    | PasswordResetTokenInvalid of Email           // 無効なパスワードリセットトークン
+    | PasswordResetNotRequested of Email           // パスワードリセット未要求
+    | PasswordResetAlreadyUsed of Email            // パスワードリセットトークン使用済み
+    // 🔒 Phase A9: トークン関連エラー（4種類）
+    | TokenGenerationFailed of string              // トークン生成失敗
+    | TokenValidationFailed of string              // トークン検証失敗
+    | TokenExpired of string                       // トークン期限切れ
+    | TokenRevoked of string                       // トークン無効化
+    // 👮 Phase A9: 管理者操作関連エラー（3種類）
+    | InsufficientPermissions of string            // 権限不足（ロール・権限情報）
+    | OperationNotAllowed of string                // 操作不許可
+    | ConcurrentOperationDetected of string        // 並行操作検出
+    // 🔮 Phase A9: 将来拡張用エラー（4種類）
+    | TwoFactorAuthFailed of Email                 // 二要素認証失敗
+    | ExternalAuthenticationFailed of string       // 外部認証失敗
+    | AuditLogError of string                      // 監査ログエラー
+    | AccountDeactivated                           // アカウント無効化

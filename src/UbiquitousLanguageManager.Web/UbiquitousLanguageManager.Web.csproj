@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\UbiquitousLanguageManager.Application\UbiquitousLanguageManager.Application.fsproj" />
     <ProjectReference Include="..\UbiquitousLanguageManager.Contracts\UbiquitousLanguageManager.Contracts.csproj" />
     <ProjectReference Include="..\UbiquitousLanguageManager.Infrastructure\UbiquitousLanguageManager.Infrastructure.csproj" />
   </ItemGroup>

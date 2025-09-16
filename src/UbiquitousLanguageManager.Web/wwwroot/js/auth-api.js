@@ -34,12 +34,12 @@ async function getCsrfToken() {
 }
 
 /**
- * 認証APIへのPOSTリクエストを実行する
+ * 認証APIへのHTTPリクエストを実行する（簡素化）
  * @param {string} url APIエンドポイントURL
  * @param {Object} data リクエストデータ
- * @returns {Promise<Object>} APIレスポンス
+ * @returns {Promise<Object>} HTTPレスポンス情報とAPIデータ
  */
-async function authApiPost(url, data) {
+async function authApiRequest(url, data) {
   try {
     // CSRFトークンを取得
     const csrfToken = await getCsrfToken();
@@ -54,41 +54,17 @@ async function authApiPost(url, data) {
       credentials: 'same-origin'  // Cookie送信を有効化
     });
 
+    // APIは常にJSONを返す前提（AuthApiResponse型）
     const result = await response.json();
 
-    // 【デバッグ】C#側からのレスポンス内容確認（一時的）
-    console.log('Auth API Response:', result);
-    console.log('HTTP Status:', response.status);
-    console.log('Response OK:', response.ok);
-
-    // 【修正】C#側のレスポンスを正確に処理
-    // result.successを優先し、明示的なboolean比較を実行
     return {
-      success: result.success === true,  // 明示的なboolean比較
-      message: result.message || '処理が完了しました。',
-      redirectUrl: result.redirectUrl || null,
-      status: response.status
+      ok: response.ok,
+      status: response.status,
+      data: result
     };
   } catch (error) {
-    console.error('Auth API エラー:', error);
-
-    // 【エラーハンドリング強化】詳細なエラー分析とユーザーフレンドリーなメッセージ
-    let errorMessage = 'ネットワークエラーが発生しました。';
-
-    if (error.message.includes('fetch')) {
-      errorMessage = 'サーバーとの通信に失敗しました。インターネット接続を確認してください。';
-    } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-      errorMessage = 'ネットワークエラーです。しばらく待ってからやり直してください。';
-    } else if (error.name === 'AbortError') {
-      errorMessage = 'リクエストがタイムアウトしました。再度お試しください。';
-    }
-
-    return {
-      success: false,
-      message: errorMessage,
-      redirectUrl: null,
-      status: 0
-    };
+    console.error('Auth API通信エラー:', error);
+    throw new Error(`認証API通信に失敗しました: ${error.message}`);
   }
 }
 
@@ -102,31 +78,66 @@ async function authApiPost(url, data) {
 window.authApi = {
   /**
    * ログイン実行
+   * 成功時は自動的にリダイレクトを実行
    */
   async login(email, password, rememberMe = false) {
-    return await authApiPost('/api/auth/login', {
-      email: email,
-      password: password,
-      rememberMe: rememberMe
-    });
+    try {
+      const response = await authApiRequest('/api/auth/login', {
+        email: email,
+        password: password,
+        rememberMe: rememberMe
+      });
+
+      if (response.data.success && response.data.redirectUrl) {
+        // ログイン成功時は自動リダイレクト
+        console.log('ログイン成功 - リダイレクト中:', response.data.redirectUrl);
+        window.location.href = response.data.redirectUrl;
+      }
+
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'ログイン処理でエラーが発生しました。'
+      };
+    }
   },
 
   /**
    * パスワード変更実行
    */
   async changePassword(currentPassword, newPassword, confirmPassword) {
-    return await authApiPost('/api/auth/change-password', {
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-      confirmPassword: confirmPassword
-    });
+    try {
+      const response = await authApiRequest('/api/auth/change-password', {
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword
+      });
+
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'パスワード変更処理でエラーが発生しました。'
+      };
+    }
   },
 
   /**
    * ログアウト実行
+   * Blazor側でリダイレクト制御するため、レスポンスのみ返す
    */
   async logout() {
-    return await authApiPost('/api/auth/logout', {});
+    try {
+      const response = await authApiRequest('/api/auth/logout', {});
+      console.log('ログアウト処理完了:', response.data);
+      return response.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'ログアウト処理でエラーが発生しました。'
+      };
+    }
   },
 
   /**

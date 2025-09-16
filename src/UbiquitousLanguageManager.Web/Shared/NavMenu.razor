@@ -2,8 +2,9 @@
 @using UbiquitousLanguageManager.Web.Components.Authorization
 @using UbiquitousLanguageManager.Web.Components.Security
 @inject AuthenticationStateProvider AuthStateProvider
-@inject UbiquitousLanguageManager.Web.Services.AuthenticationService AuthService
+@inject UbiquitousLanguageManager.Web.Services.BlazorAuthenticationService AuthService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -153,23 +154,30 @@
     }
     
     /// <summary>
-    /// 仕様書10.3.1準拠: ログアウト処理（セッション無効化・Cookie削除・状態クリーンアップ）
+    /// 仕様書10.3.1準拠: ログアウト処理（API経由・SignalR制約回避）
+    ///
+    /// 【Blazor Server制約対応】
+    /// Blazor ComponentではSignalR制約によりCookie削除不可のため、
+    /// JavaScript interop経由でAPI（/api/auth/logout）を呼び出します。
+    /// この方式により HTTPコンテキストでの認証Cookie削除が可能になります。
     /// </summary>
     private async Task Logout()
     {
         try
         {
-            // 仕様書10.3.1準拠: セッション無効化・Cookie削除・状態クリーンアップ
-            await AuthService.LogoutAsync();
-            
-            // ログイン画面へリダイレクト
-            Navigation.NavigateTo("/login", replace: true);
+            // API経由でログアウト（SignalR制約回避・動作確認済み）
+            // authApi.logout()は既存のauth-api.jsを使用し、戻り値を取得
+            var result = await JS.InvokeAsync<object>("authApi.logout");
+
+            // ログアウト成功後はログイン画面へ遷移
+            Console.WriteLine("ログアウト処理完了 - ログイン画面へリダイレクト中...");
+            Navigation.NavigateTo("/login", forceLoad: true);
         }
         catch (Exception ex)
         {
-            // ログアウト失敗時もログイン画面へリダイレクト（セキュリティ優先）
+            // JavaScript実行失敗時もログイン画面へリダイレクト（セキュリティ優先）
             Console.WriteLine($"ログアウト処理中にエラーが発生しました: {ex.Message}");
-            Navigation.NavigateTo("/login", replace: true);
+            Navigation.NavigateTo("/login", forceLoad: true);
         }
     }
 }

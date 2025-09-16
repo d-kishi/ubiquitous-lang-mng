@@ -144,6 +144,19 @@ type IAuthenticationService =
     // 👤 現在ユーザー取得: セッション・認証状態からの現在ユーザー情報取得
     abstract member GetCurrentUserAsync: unit -> Task<Result<User option, string>>
 
+    // 🔓 統一ログアウト: パラメータなしログアウト処理
+    abstract member LogoutAsync: unit -> Task<unit>
+
+    // 🔐 Phase A9: パスワードリセット機能拡張
+    // パスワードリセットトークン生成: 時間制限付きトークンの生成
+    abstract member GeneratePasswordResetTokenAsync: userId: UserId * validFor: System.TimeSpan -> Task<Result<string, string>>
+
+    // パスワードリセットトークン検証: トークンの有効性確認とユーザー取得
+    abstract member ValidatePasswordResetTokenAsync: email: Email * token: string -> Task<Result<User, string>>
+
+    // パスワードリセットトークン無効化: 使用済みトークンの無効化
+    abstract member InvalidatePasswordResetTokenAsync: email: Email * token: string -> Task<unit>
+
 // 📧 Phase A2: 通知サービスインターフェース（ユーザー管理通知対応）
 // 【F#初学者向け解説】
 // ユーザー管理機能の拡張に伴い、様々な通知が必要になります。

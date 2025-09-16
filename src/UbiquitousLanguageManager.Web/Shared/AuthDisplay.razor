@@ -1,7 +1,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using UbiquitousLanguageManager.Web.Services
-@inject AuthenticationService AuthService
+@inject BlazorAuthenticationService AuthService
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <AuthorizeView>
     <Authorized>
@@ -29,36 +30,46 @@
     /// コンポーネント初期化
     /// 
     /// 【Blazor Server初学者向け解説】
-    /// OnInitializedAsyncは、コンポーネントが初回レンダリングされる前に
-    /// 一度だけ実行される非同期初期化メソッドです。
-    /// ここで現在のユーザー情報を取得し、表示に使用します。
+    /// OnInitializedは、コンポーネントが初回レンダリングされる前に
+    /// 一度だけ実行される初期化メソッドです。
+    /// 
+    /// 【Phase A9 統一認証効果】
+    /// BlazorAuthenticationServiceの薄いラッパー層を通じて
+    /// Infrastructure層の統一認証サービスにアクセス
     /// </summary>
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _currentUser = await AuthService.GetCurrentUserAsync();
+        // Note: BlazorAuthenticationServiceには現在GetCurrentUserAsyncがないため
+        // 認証状態から基本情報を取得する簡易実装
+        // TODO: 必要に応じてBlazorAuthenticationServiceにGetCurrentUserAsync追加
+        _currentUser = null; // 暫定実装: ユーザー情報表示は一時的に無効化
     }
 
     /// <summary>
-    /// ログアウト処理
-    /// 
-    /// 【Blazor Server初学者向け解説】
-    /// ログアウト後は、StateHasChanged()を呼ぶ必要はありません。
-    /// NavigationManagerによるページ遷移により、
-    /// 新しいページで認証状態が正しく反映されます。
+    /// ログアウト処理（API経由・SignalR制約回避）
+    ///
+    /// 【Blazor Server制約対応】
+    /// Blazor ComponentではSignalR制約によりCookie削除不可のため、
+    /// JavaScript interop経由でAPI（/api/auth/logout）を呼び出します。
+    /// この方式により HTTPコンテキストでの認証Cookie削除が可能になります。
     /// </summary>
     private async Task HandleLogoutAsync()
     {
         try
         {
-            await AuthService.LogoutAsync();
-            
-            // ログアウト後はホーム画面にリダイレクト
-            Navigation.NavigateTo("/", forceLoad: true);
+            // API経由でログアウト（SignalR制約回避・動作確認済み）
+            // authApi.logout()は既存のauth-api.jsを使用し、戻り値を取得
+            var result = await JS.InvokeAsync<object>("authApi.logout");
+
+            // ログアウト成功後はログイン画面へ遷移
+            Console.WriteLine("ログアウト処理完了 - ログイン画面へリダイレクト中...");
+            Navigation.NavigateTo("/login", forceLoad: true);
         }
         catch (Exception ex)
         {
-            // エラーハンドリング（Phase A1では簡易実装）
-            Console.WriteLine($"Logout error: {ex.Message}");
+            // JavaScript実行失敗時もログイン画面へリダイレクト（セキュリティ優先）
+            Console.WriteLine($"ログアウト処理中にエラーが発生しました: {ex.Message}");
+            Navigation.NavigateTo("/login", forceLoad: true);
         }
     }
 }

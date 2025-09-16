@@ -55,14 +55,21 @@ public class AuthenticationResultDto
     public bool RequiresPasswordChange { get; set; }
 
     /// <summary>
+    /// 認証結果の詳細ステータス
+    /// F#のAuthenticationResult拡張型に対応
+    /// </summary>
+    public string? DetailedStatus { get; set; }
+
+    /// <summary>
     /// 成功結果を作成するファクトリーメソッド
     /// F# Success caseに対応
     /// </summary>
     /// <param name="user">認証されたユーザー情報</param>
     /// <param name="token">認証トークン（オプション）</param>
     /// <param name="tokenExpires">トークン有効期限（オプション）</param>
+    /// <param name="detailedStatus">詳細ステータス（オプション）</param>
     /// <returns>成功を表すAuthenticationResultDto</returns>
-    public static AuthenticationResultDto Success(UserDto user, string? token = null, DateTime? tokenExpires = null)
+    public static AuthenticationResultDto Success(UserDto user, string? token = null, DateTime? tokenExpires = null, string? detailedStatus = null)
     {
         return new AuthenticationResultDto
         {
@@ -72,7 +79,102 @@ public class AuthenticationResultDto
             Token = token,
             TokenExpires = tokenExpires,
             RequiresTwoFactor = false,
-            RequiresPasswordChange = user.IsFirstLogin
+            RequiresPasswordChange = user.IsFirstLogin,
+            DetailedStatus = detailedStatus ?? "Success"
+        };
+    }
+
+    // =================================================================
+    // Phase A9: 拡張認証結果ファクトリーメソッド（将来のF#拡張対応）
+    // =================================================================
+
+    /// <summary>
+    /// パスワード変更要求結果を作成するファクトリーメソッド
+    /// F# PasswordChangeRequired caseに対応
+    /// </summary>
+    /// <param name="user">認証されたユーザー情報</param>
+    /// <param name="reason">パスワード変更が必要な理由</param>
+    /// <returns>パスワード変更要求を表すAuthenticationResultDto</returns>
+    public static AuthenticationResultDto PasswordChangeRequired(UserDto user, string? reason = null)
+    {
+        return new AuthenticationResultDto
+        {
+            IsSuccess = true,
+            User = user,
+            Error = null,
+            Token = null,
+            TokenExpires = null,
+            RequiresTwoFactor = false,
+            RequiresPasswordChange = true,
+            DetailedStatus = $"PasswordChangeRequired: {reason ?? "初回ログインまたはパスワード期限切れ"}"
+        };
+    }
+
+    /// <summary>
+    /// 二要素認証要求結果を作成するファクトリーメソッド
+    /// F# TwoFactorRequired caseに対応
+    /// </summary>
+    /// <param name="user">認証されたユーザー情報（部分的）</param>
+    /// <returns>二要素認証要求を表すAuthenticationResultDto</returns>
+    public static AuthenticationResultDto TwoFactorRequired(UserDto user)
+    {
+        return new AuthenticationResultDto
+        {
+            IsSuccess = false,  // 二要素認証完了まで認証未完了扱い
+            User = user,
+            Error = AuthenticationErrorDto.TwoFactorRequired(user.Email),
+            Token = null,
+            TokenExpires = null,
+            RequiresTwoFactor = true,
+            RequiresPasswordChange = false,
+            DetailedStatus = "TwoFactorRequired"
+        };
+    }
+
+    /// <summary>
+    /// セキュリティ警告付き成功結果を作成するファクトリーメソッド
+    /// F# SecurityWarning caseに対応
+    /// </summary>
+    /// <param name="user">認証されたユーザー情報</param>
+    /// <param name="warningMessage">警告メッセージ</param>
+    /// <param name="token">認証トークン（オプション）</param>
+    /// <param name="tokenExpires">トークン有効期限（オプション）</param>
+    /// <returns>セキュリティ警告付き成功を表すAuthenticationResultDto</returns>
+    public static AuthenticationResultDto SecurityWarning(UserDto user, string warningMessage, string? token = null, DateTime? tokenExpires = null)
+    {
+        return new AuthenticationResultDto
+        {
+            IsSuccess = true,
+            User = user,
+            Error = null,
+            Token = token,
+            TokenExpires = tokenExpires,
+            RequiresTwoFactor = false,
+            RequiresPasswordChange = false,
+            DetailedStatus = $"SecurityWarning: {warningMessage}"
+        };
+    }
+
+    /// <summary>
+    /// 一時的ロックアウト結果を作成するファクトリーメソッド
+    /// F# TemporaryLockout caseに対応
+    /// </summary>
+    /// <param name="email">ロックされたユーザーのメールアドレス</param>
+    /// <param name="lockoutEnd">ロックアウト終了時刻</param>
+    /// <param name="remainingAttempts">残り試行回数</param>
+    /// <returns>一時的ロックアウトを表すAuthenticationResultDto</returns>
+    public static AuthenticationResultDto TemporaryLockout(string email, DateTime lockoutEnd, int remainingAttempts = 0)
+    {
+        return new AuthenticationResultDto
+        {
+            IsSuccess = false,
+            User = null,
+            Error = AuthenticationErrorDto.AccountLocked(email, lockoutEnd),
+            Token = null,
+            TokenExpires = null,
+            RequiresTwoFactor = false,
+            RequiresPasswordChange = false,
+            DetailedStatus = $"TemporaryLockout: 残り試行回数 {remainingAttempts}"
         };
     }
 

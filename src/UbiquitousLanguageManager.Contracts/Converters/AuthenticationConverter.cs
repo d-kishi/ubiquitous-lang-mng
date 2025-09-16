@@ -1,6 +1,7 @@
 using System;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Contracts.DTOs;
+using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
 using UbiquitousLanguageManager.Domain;
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
@@ -175,11 +176,233 @@ public static class AuthenticationConverter
                     new InvalidOperationException($"TwoFactorRequiredケースの処理に失敗: {ex.Message}", ex));
             }
         }
+        // 🔐 Phase A9: パスワードリセット関連エラーの完全対応
+        else if (error.IsPasswordResetTokenExpired)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var email = dynamicError.Item.Value as string;
+                return AuthenticationErrorDto.PasswordResetTokenExpired(email ?? "unknown@example.com");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"PasswordResetTokenExpiredケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsPasswordResetTokenInvalid)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var email = dynamicError.Item.Value as string;
+                return AuthenticationErrorDto.PasswordResetTokenInvalid(email ?? "unknown@example.com");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"PasswordResetTokenInvalidケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsPasswordResetNotRequested)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var email = dynamicError.Item.Value as string;
+                return AuthenticationErrorDto.PasswordResetNotRequested(email ?? "unknown@example.com");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"PasswordResetNotRequestedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsPasswordResetAlreadyUsed)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var email = dynamicError.Item.Value as string;
+                return AuthenticationErrorDto.PasswordResetAlreadyUsed(email ?? "unknown@example.com");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"PasswordResetAlreadyUsedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        // 🔒 Phase A9: トークン関連エラーの完全対応
+        else if (error.IsTokenGenerationFailed)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.TokenGenerationFailed(message ?? "トークン生成に失敗しました");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"TokenGenerationFailedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsTokenValidationFailed)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.TokenValidationFailed(message ?? "トークン検証に失敗しました");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"TokenValidationFailedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsTokenExpired)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.TokenExpired(message ?? "トークンの有効期限が切れています");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"TokenExpiredケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsTokenRevoked)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.TokenRevoked(message ?? "トークンは取り消されています");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"TokenRevokedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        // 👮 Phase A9: 管理者操作関連エラーの完全対応
+        else if (error.IsInsufficientPermissions)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                // F#のタプル (Role * Permission) の処理
+                var tuple = dynamicError.Item;
+                var role = tuple.Item1.ToString();  // Role型の文字列化
+                var permission = tuple.Item2.ToString();  // Permission型の文字列化
+                return AuthenticationErrorDto.InsufficientPermissions(role, permission);
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"InsufficientPermissionsケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsOperationNotAllowed)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.OperationNotAllowed(message ?? "この操作は許可されていません");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"OperationNotAllowedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsConcurrentOperationDetected)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.ConcurrentOperationDetected(message ?? "並行操作が検出されました");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"ConcurrentOperationDetectedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        // 🔮 Phase A9: 将来拡張用エラーの完全対応
+        else if (error.IsTwoFactorRequired)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var email = dynamicError.Item.Value as string;
+                return AuthenticationErrorDto.TwoFactorAuthRequired(email ?? "unknown@example.com");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"TwoFactorAuthRequiredケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsTwoFactorAuthFailed)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var email = dynamicError.Item.Value as string;
+                return AuthenticationErrorDto.TwoFactorAuthFailed(email ?? "unknown@example.com");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"TwoFactorAuthFailedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsExternalAuthenticationFailed)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.ExternalAuthenticationFailed(message ?? "外部認証に失敗しました");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"ExternalAuthenticationFailedケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsAuditLogError)
+        {
+            try
+            {
+                dynamic dynamicError = error;
+                var message = dynamicError.Item as string;
+                return AuthenticationErrorDto.AuditLogError(message ?? "監査ログの記録に失敗しました");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticationErrorDto.SystemError(
+                    new InvalidOperationException($"AuditLogErrorケースの処理に失敗: {ex.Message}", ex));
+            }
+        }
+        else if (error.IsAccountDeactivated)
+        {
+            // AccountDeactivated ケースの追加
+            return AuthenticationErrorDto.AccountDeactivated();
+        }
         else
         {
             // 予期しないケース（将来の拡張対応）
             return AuthenticationErrorDto.SystemError(
-                new ArgumentOutOfRangeException(nameof(error), 
+                new ArgumentOutOfRangeException(nameof(error),
                     $"未知のAuthenticationErrorタイプです。F#コンパイラバージョンの違いやケース追加の可能性があります。"));
         }
     }
@@ -298,6 +521,142 @@ public static class AuthenticationConverter
         // 成功: F#のタプルとして返す
         var loginParams = new Tuple<Email, string>(emailResult.ResultValue, loginDto.Password);
         return FSharpResult<Tuple<Email, string>, string>.NewOk(loginParams);
+    }
+
+    // =================================================================
+    // 🔄 Phase A9: パスワードリセット関連変換（拡張機能）
+    // =================================================================
+
+    /// <summary>
+    /// C# PasswordResetRequestDto を F# パスワードリセット要求パラメータに変換
+    /// Web層からApplication層への安全なデータ変換
+    /// </summary>
+    /// <param name="resetDto">C#のパスワードリセット要求DTO</param>
+    /// <returns>F#のResult型（成功時はEmail、失敗時はvalidationエラー）</returns>
+    public static FSharpResult<Email, string> ToFSharpPasswordResetParams(PasswordResetRequestDto resetDto)
+    {
+        if (resetDto == null)
+            return FSharpResult<Email, string>.NewError("パスワードリセット要求がnullです");
+
+        if (string.IsNullOrWhiteSpace(resetDto.Email))
+            return FSharpResult<Email, string>.NewError("メールアドレスが入力されていません");
+
+        // F#のEmail値オブジェクトによる検証
+        var emailResult = Email.create(resetDto.Email);
+        if (emailResult.IsError)
+            return FSharpResult<Email, string>.NewError(emailResult.ErrorValue);
+
+        return FSharpResult<Email, string>.NewOk(emailResult.ResultValue);
+    }
+
+    /// <summary>
+    /// C# PasswordResetTokenDto を F# パスワードリセット実行パラメータに変換
+    /// パスワードリセット実行時のデータ変換
+    /// </summary>
+    /// <param name="tokenDto">C#のパスワードリセットトークンDTO</param>
+    /// <returns>F#のResult型（成功時はEmail*string*string、失敗時はvalidationエラー）</returns>
+    public static FSharpResult<Tuple<Email, string, string>, string> ToFSharpPasswordResetExecuteParams(PasswordResetTokenDto tokenDto)
+    {
+        if (tokenDto == null)
+            return FSharpResult<Tuple<Email, string, string>, string>.NewError("パスワードリセットトークンがnullです");
+
+        if (string.IsNullOrWhiteSpace(tokenDto.Email))
+            return FSharpResult<Tuple<Email, string, string>, string>.NewError("メールアドレスが入力されていません");
+
+        if (string.IsNullOrWhiteSpace(tokenDto.Token))
+            return FSharpResult<Tuple<Email, string, string>, string>.NewError("リセットトークンが入力されていません");
+
+        if (string.IsNullOrWhiteSpace(tokenDto.NewPassword))
+            return FSharpResult<Tuple<Email, string, string>, string>.NewError("新しいパスワードが入力されていません");
+
+        // F#のEmail値オブジェクトによる検証
+        var emailResult = Email.create(tokenDto.Email);
+        if (emailResult.IsError)
+            return FSharpResult<Tuple<Email, string, string>, string>.NewError(emailResult.ErrorValue);
+
+        // F#のPassword値オブジェクトによる検証
+        var passwordResult = Password.create(tokenDto.NewPassword);
+        if (passwordResult.IsError)
+            return FSharpResult<Tuple<Email, string, string>, string>.NewError(passwordResult.ErrorValue);
+
+        // 成功: F#のタプルとして返す (Email, Token, NewPassword)
+        var resetParams = new Tuple<Email, string, string>(emailResult.ResultValue, tokenDto.Token, tokenDto.NewPassword);
+        return FSharpResult<Tuple<Email, string, string>, string>.NewOk(resetParams);
+    }
+
+    /// <summary>
+    /// F# パスワードリセット結果 を C# PasswordResetResultDto に変換
+    /// Application層からWeb層への結果変換
+    /// </summary>
+    /// <param name="result">F#のパスワードリセット結果</param>
+    /// <param name="userEmail">対象ユーザーのメールアドレス</param>
+    /// <returns>C#のPasswordResetResultDto</returns>
+    public static PasswordResetResultDto ToPasswordResetResultDto<T>(FSharpResult<T, AuthenticationError> result, string userEmail)
+    {
+        if (result.IsOk)
+        {
+            return PasswordResetResultDto.Success(userEmail, "パスワードが正常にリセットされました。新しいパスワードでログインしてください。");
+        }
+        else
+        {
+            var error = result.ErrorValue;
+            var errorDto = ToDto(error);
+            return PasswordResetResultDto.Failure(errorDto);
+        }
+    }
+
+    // =================================================================
+    // 🔄 Phase A9: 拡張認証エラー変換（将来のF#拡張対応）
+    // =================================================================
+
+    /// <summary>
+    /// 拡張AuthenticationErrorDto を F# AuthenticationError判別共用体 に変換
+    /// 新規追加されたエラー型に対応（将来のF#拡張準備）
+    /// </summary>
+    /// <param name="errorDto">C#のAuthenticationErrorDto（拡張版）</param>
+    /// <returns>F#のAuthenticationError判別共用体</returns>
+    /// <exception cref="ArgumentNullException">errorDtoがnullの場合</exception>
+    /// <exception cref="ArgumentOutOfRangeException">未知のエラータイプの場合</exception>
+    public static AuthenticationError ToFSharpAuthenticationErrorExtended(AuthenticationErrorDto errorDto)
+    {
+        if (errorDto == null)
+            throw new ArgumentNullException(nameof(errorDto), "AuthenticationErrorDtoがnullです");
+
+        // 拡張エラータイプの変換（既存変換も含む）
+        return errorDto.Type switch
+        {
+            // 既存エラー（基本型）
+            "InvalidCredentials" => AuthenticationError.InvalidCredentials,
+            "UserNotFound" => errorDto.Email != null
+                ? AuthenticationError.NewUserNotFound(Email.create(errorDto.Email).ResultValue)
+                : throw new InvalidOperationException("UserNotFoundエラーにEmailが設定されていません"),
+            "ValidationError" => AuthenticationError.NewValidationError(errorDto.Message),
+            "AccountLocked" => (errorDto.Email != null && errorDto.LockoutEnd.HasValue)
+                ? AuthenticationError.NewAccountLocked(
+                    Email.create(errorDto.Email).ResultValue,
+                    errorDto.LockoutEnd.Value)
+                : throw new InvalidOperationException("AccountLockedエラーにEmail/LockoutEndが設定されていません"),
+            "SystemError" => AuthenticationError.NewSystemError(new Exception(errorDto.Message)),
+            "PasswordExpired" => errorDto.Email != null
+                ? AuthenticationError.NewPasswordExpired(Email.create(errorDto.Email).ResultValue)
+                : throw new InvalidOperationException("PasswordExpiredエラーにEmailが設定されていません"),
+            "TwoFactorRequired" => errorDto.Email != null
+                ? AuthenticationError.NewTwoFactorRequired(Email.create(errorDto.Email).ResultValue)
+                : throw new InvalidOperationException("TwoFactorRequiredエラーにEmailが設定されていません"),
+
+            // 拡張エラー（将来F#側実装予定）
+            // 現在はSystemErrorとして変換し、詳細情報を保持
+            "PasswordResetTokenExpired" or "PasswordResetTokenInvalid" or
+            "PasswordResetNotRequested" or "PasswordResetAlreadyUsed" or
+            "TokenGenerationFailed" or "TokenValidationFailed" or
+            "TokenExpired" or "TokenRevoked" or
+            "InsufficientPermissions" or "OperationNotAllowed" or
+            "ConcurrentOperationDetected" =>
+                AuthenticationError.NewSystemError(new InvalidOperationException($"拡張エラータイプ: {errorDto.Type} - {errorDto.Message}")),
+
+            _ => throw new ArgumentOutOfRangeException(nameof(errorDto),
+                $"未知のAuthenticationErrorタイプです: {errorDto.Type}")
+        };
     }
 }
 

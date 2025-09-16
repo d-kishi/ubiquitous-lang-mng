@@ -151,6 +151,23 @@ type User = {
                     UpdatedBy = updatedBy }
         else
             Error "非アクティブなユーザーのパスワードは変更できません"
+
+    // 🔐 Phase A9: パスワードリセット機能（管理者・リセットトークン用）
+    // 【F#初学者向け解説】
+    // パスワードリセット時は通常のパスワード変更とは異なり、現在のパスワード確認が不要です。
+    // セキュリティスタンプ更新により、既存のセッションを無効化し、セキュリティを確保します。
+    member this.resetPassword (newPasswordHash: PasswordHash) updatedBy =
+        if this.IsActive then
+            Ok { this with
+                    PasswordHash = Some newPasswordHash
+                    SecurityStamp = Some (SecurityStamp.createNew()) // 全セッション無効化
+                    IsFirstLogin = false  // リセット後は初回ログインフラグをオフ
+                    AccessFailedCount = 0  // 失敗カウントリセット
+                    LockoutEnd = None      // ロックアウト状態リセット
+                    UpdatedAt = DateTime.UtcNow
+                    UpdatedBy = updatedBy }
+        else
+            Error "非アクティブなユーザーのパスワードはリセットできません"
     
     // 👤 プロフィール更新: ユーザープロフィール情報の更新
     // 【F#初学者向け解説】
@@ -293,17 +310,34 @@ type User = {
         elif this.IsActive then
             Error "既に有効化されているユーザーです"
         else
-            Ok { this with 
+            Ok { this with
                     IsActive = true
                     AccessFailedCount = 0      // 有効化時は失敗カウントリセット
                     LockoutEnd = None          // ロックアウト状態もリセット
                     SecurityStamp = Some (SecurityStamp.createNew())
                     UpdatedAt = DateTime.UtcNow
                     UpdatedBy = updatedBy }
+
+    // 🔓 Phase A9: アカウントロック解除機能
+    // 【F#初学者向け解説】
+    // 管理者によるアカウントロック解除機能です。権限チェックは上位レイヤーで実行し、
+    // ドメインレイヤーではビジネスルールに専念します。
+    member this.unlockAccount () =
+        { this with
+            AccessFailedCount = 0
+            LockoutEnd = None
+            UpdatedAt = DateTime.UtcNow
+            UpdatedBy = this.Id }  // 自動解除の場合、自分自身を更新者とする
     
     // 🔍 権限チェックヘルパーメソッド: 特定権限の保有確認
     member this.hasPermission (permission: Permission) : bool =
         PermissionMappings.hasPermission this.Role permission
+
+    // 🔄 Phase A9: Application層互換性プロパティ
+    // 【F#初学者向け解説】
+    // Application層では`FailedAccessAttempts`として参照されるため、
+    // 互換性のためのcomputed propertyを提供します。
+    member this.FailedAccessAttempts = this.AccessFailedCount
     
     // 🔍 プロジェクトスコープ権限チェック: プロジェクト内での権限確認
     member this.hasProjectPermission (projectId: ProjectId) (permission: Permission) : bool =

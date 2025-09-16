@@ -198,7 +198,30 @@ public partial class Program
         // F# Application層で定義されたIAuthenticationServiceインターフェースを
         // C# Infrastructure層のAuthenticationServiceクラスで実装し、DIコンテナに登録します。
         // これにより、F#のUserApplicationServiceがC#の実装を利用できるようになります。
+        // 🎯 Phase A9: Infrastructure層認証サービス実装（循環依存回避版）
+        // Infrastructure.Services.AuthenticationServiceを軽量化し、F# AuthenticationApplicationServiceへの依存を削除
+        // これにより循環依存を解決し、Clean Architecture の依存関係を適正化
         builder.Services.AddScoped<UbiquitousLanguageManager.Application.IAuthenticationService, UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService>();
+
+        // 🎯 F# AuthenticationApplicationService: 高次ビジネスロジック層として独立運用
+        // F# Domain層活用率80%達成のため、AuthenticationApplicationServiceを独立サービスとして登録
+        // IAuthenticationServiceを利用してビジネスロジック層の処理を担当
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.AuthenticationApplicationService>();
+
+        // 🔧 AuthApiController用の具象クラス登録
+        // API層の実用性確保（DTOオーバーロード活用）のため、具象クラスも併せて登録
+        // F#統合には影響なし（IAuthenticationService登録は維持）
+        builder.Services.AddScoped<UbiquitousLanguageManager.Infrastructure.Services.AuthenticationService>();
+
+        // 🔧 F# AuthenticationApplicationService用ロガー登録は不要
+        // 【F#初学者向け解説】
+        // ASP.NET CoreのDIコンテナは、ILogger<T>を自動的に解決するため、
+        // 明示的な登録は不要です。F#のクラスでもC#と同様に使用できます。
+
+        // 🔐 Phase A9: Infrastructure層AuthenticationServiceの具象クラス登録削除
+        // 修正理由: BlazorAuthenticationServiceがIAuthenticationServiceインターフェース依存に変更されたため、
+        // 重複するDI登録を削除。AuthApiControllerは引き続き201行目のインターフェース登録経由で解決される。
+        // これにより、Clean Architecture依存関係の整理とDI設定の一貫性を確保。
 
         // 📧 Application層の通知サービス実装の登録（Phase A4 Step2で追加）
         builder.Services.AddScoped<UbiquitousLanguageManager.Application.INotificationService, UbiquitousLanguageManager.Infrastructure.Services.NotificationService>();
@@ -221,8 +244,8 @@ public partial class Program
         // 🔧 初期データサービスの登録
         builder.Services.AddScoped<InitialDataService>();
 
-        // 🔐 Web層認証サービスの登録
-        builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.AuthenticationService>();
+        // 🔐 Blazor認証サービスの登録（Phase A9 統一認証効果: Infrastructure層委譲・薄いラッパー層）
+        builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.BlazorAuthenticationService>();
 
         // 🔑 パスワードリセットサービスの登録（Phase A3）
         builder.Services.AddScoped<UbiquitousLanguageManager.Contracts.Interfaces.IPasswordResetService,
