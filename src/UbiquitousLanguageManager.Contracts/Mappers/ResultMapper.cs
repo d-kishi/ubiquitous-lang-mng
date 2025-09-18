@@ -1,5 +1,8 @@
+using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Microsoft.FSharp.Control;
 using UbiquitousLanguageManager.Contracts.Exceptions;
@@ -12,6 +15,17 @@ namespace UbiquitousLanguageManager.Contracts.Mappers
     /// </summary>
     public static class ResultMapper
     {
+        private static ILogger? _logger;
+
+        /// <summary>
+        /// ロガーを設定します（依存性注入で設定）
+        /// ResultMapper でのログ出力を有効化
+        /// </summary>
+        /// <param name="logger">ILoggerインスタンス</param>
+        public static void SetLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
         /// <summary>
         /// F# Result&lt;T, string&gt; を C# 値に変換
         /// エラーの場合はDomainExceptionをスロー
@@ -22,13 +36,39 @@ namespace UbiquitousLanguageManager.Contracts.Mappers
         /// <exception cref="DomainException">F# Result がエラーの場合</exception>
         public static T MapResult<T>(FSharpResult<T, string> result)
         {
-            if (result.IsOk)
+            var stopwatch = Stopwatch.StartNew();
+
+            try
             {
-                return result.ResultValue;
+                _logger?.LogDebug("F# Result→C#値変換開始 ResultType: {ResultType}", typeof(T).Name);
+
+                if (result.IsOk)
+                {
+                    _logger?.LogDebug("F# Result→C#値変換成功 ResultType: {ResultType}, ConversionTime: {ConversionTime}ms",
+                        typeof(T).Name, stopwatch.ElapsedMilliseconds);
+                    return result.ResultValue;
+                }
+                else
+                {
+                    _logger?.LogWarning("F# Result→C#例外変換 ErrorMessage: {ErrorMessage}, ConversionTime: {ConversionTime}ms",
+                        result.ErrorValue, stopwatch.ElapsedMilliseconds);
+                    throw new DomainException(result.ErrorValue);
+                }
             }
-            else
+            catch (DomainException)
             {
-                throw new DomainException(result.ErrorValue);
+                // DomainExceptionはそのまま再スロー（ログは上で出力済み）
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "F# Result→C#値変換で予期しないエラーが発生 ResultType: {ResultType}, ConversionTime: {ConversionTime}ms",
+                    typeof(T).Name, stopwatch.ElapsedMilliseconds);
+                throw;
+            }
+            finally
+            {
+                stopwatch.Stop();
             }
         }
 

@@ -10,6 +10,10 @@
 
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UbiquitousLanguageManager.Application\UbiquitousLanguageManager.Application.fsproj" />
     <ProjectReference Include="..\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />
   </ItemGroup>

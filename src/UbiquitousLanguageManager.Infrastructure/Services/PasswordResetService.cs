@@ -48,6 +48,7 @@ namespace UbiquitousLanguageManager.Infrastructure.Services
         /// </remarks>
         public async Task<ResultDto> RequestPasswordResetAsync(string email)
         {
+            var startTime = DateTime.UtcNow;
             try
             {
                 // 📧 入力検証: メールアドレスの妥当性確認
@@ -57,7 +58,7 @@ namespace UbiquitousLanguageManager.Infrastructure.Services
                     return ResultDto.Failure("メールアドレスを入力してください");
                 }
 
-                _logger.LogInformation("Password reset requested for email: {Email}", email);
+                _logger.LogInformation("Starting password reset request for email: {Email}", email);
 
                 // 🔍 ユーザー検索: メールアドレスの存在確認
                 var user = await _userManager.FindByEmailAsync(email);
@@ -73,19 +74,26 @@ namespace UbiquitousLanguageManager.Infrastructure.Services
                 _logger.LogDebug("Password reset token generated for user: {UserId}", user.Id);
 
                 // 📤 メール送信: リセットリンク付きメール送信
+                _logger.LogDebug("Sending password reset email to: {Email}", email);
                 var emailSent = await _emailSender.SendPasswordResetEmailAsync(email, resetToken);
                 if (!emailSent)
                 {
-                    _logger.LogError("Failed to send password reset email to: {Email}", email);
+                    var duration = DateTime.UtcNow - startTime;
+                    _logger.LogError("Failed to send password reset email to: {Email} after {Duration}ms",
+                        email, duration.TotalMilliseconds);
                     return ResultDto.Failure("メール送信に失敗しました。しばらく待ってから再試行してください");
                 }
 
-                _logger.LogInformation("Password reset email sent successfully to: {Email}", email);
+                var successDuration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("Password reset email sent successfully to: {Email} in {Duration}ms",
+                    email, successDuration.TotalMilliseconds);
                 return ResultDto.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during password reset request for: {Email}", email);
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogError(ex, "Unexpected error during password reset request for: {Email} after {Duration}ms",
+                    email, duration.TotalMilliseconds);
                 return ResultDto.Failure("パスワードリセット申請中にエラーが発生しました");
             }
         }

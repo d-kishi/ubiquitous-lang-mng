@@ -69,6 +69,7 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     public async Task<FSharpResult<User, string>> LoginAsync(Email email, string password)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
             var emailValue = email.Value;

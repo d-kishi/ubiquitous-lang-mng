@@ -20,7 +20,7 @@ public class AutoRecoveryMiddleware
     {
         _next = next;
         _logger = logger;
-        _errorMatcher = new ErrorPatternMatcher();
+        _errorMatcher = new ErrorPatternMatcher(logger);
     }
 
     /// <summary>
@@ -258,9 +258,11 @@ public class AutoRecoveryMiddleware
 internal class ErrorPatternMatcher
 {
     private readonly ErrorPatterns _patterns;
+    private readonly ILogger<AutoRecoveryMiddleware> _logger;
 
-    public ErrorPatternMatcher()
+    public ErrorPatternMatcher(ILogger<AutoRecoveryMiddleware> logger)
     {
+        _logger = logger;
         _patterns = LoadErrorPatterns();
     }
 
@@ -295,7 +297,7 @@ internal class ErrorPatternMatcher
                 catch (ArgumentException ex)
                 {
                     // 正規表現の問題は無視してログ記録
-                    Console.WriteLine($"正規表現エラー: {regexPattern} - {ex.Message}");
+                    _logger.LogWarning(ex, "正規表現エラー: {RegexPattern} - {Message}", regexPattern, ex.Message);
                 }
             }
         }
@@ -319,7 +321,7 @@ internal class ErrorPatternMatcher
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"エラーパターン読み込み失敗: {ex.Message}");
+            _logger.LogError(ex, "エラーパターン読み込み失敗: {Message}", ex.Message);
         }
 
         // フォールバック: デフォルトパターン

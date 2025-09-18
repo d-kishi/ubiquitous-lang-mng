@@ -41,8 +41,9 @@ public class GlobalExceptionMiddleware
         }
         catch (Exception ex)
         {
-            // 例外をログに記録
-            _logger.LogError(ex, "アプリケーションエラーが発生しました");
+            // 例外をログに記録（構造化ログで詳細情報を記録）
+            _logger.LogError(ex, "アプリケーション未処理例外が発生 Path: {Path}, Method: {Method}, StatusCode: {StatusCode}, Error: {ErrorMessage}",
+                context.Request.Path, context.Request.Method, GetStatusCodeFromException(ex), ex.Message);
 
             // 適切なHTTPレスポンスを返す
             await HandleExceptionAsync(context, ex);
@@ -155,6 +156,17 @@ public class GlobalExceptionMiddleware
 
         // その他のデータベース更新エラー
         return (HttpStatusCode.InternalServerError, "データベースの更新に失敗しました");
+    }
+
+    /// <summary>
+    /// 例外からHTTPステータスコードを取得（ログ用）
+    /// </summary>
+    /// <param name="exception">発生した例外</param>
+    /// <returns>HTTPステータスコード</returns>
+    private static int GetStatusCodeFromException(Exception exception)
+    {
+        var (statusCode, _) = GetErrorResponse(exception);
+        return (int)statusCode;
     }
 }
 

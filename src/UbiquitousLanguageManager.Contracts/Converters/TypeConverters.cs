@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Microsoft.FSharp.Collections;
 using UbiquitousLanguageManager.Contracts.DTOs;
@@ -17,6 +19,17 @@ namespace UbiquitousLanguageManager.Contracts.Converters;
 /// </summary>
 public static class TypeConverters
 {
+    private static ILogger? _logger;
+
+    /// <summary>
+    /// ロガーを設定します（依存性注入で設定）
+    /// TypeConverters でのログ出力を有効化
+    /// </summary>
+    /// <param name="logger">ILoggerインスタンス</param>
+    public static void SetLogger(ILogger logger)
+    {
+        _logger = logger;
+    }
     // =================================================================
     // 🔄 F# → C# 変換メソッド（ドメインエンティティ → DTO）
     // =================================================================
@@ -31,10 +44,20 @@ public static class TypeConverters
     /// <exception cref="ArgumentNullException">userがnullの場合</exception>
     public static UserDto ToDto(User user)
     {
-        if (user == null)
-            throw new ArgumentNullException(nameof(user), "Userエンティティがnullです");
-            
-        return new UserDto
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            if (user == null)
+            {
+                _logger?.LogError("F# User→C# UserDTO変換失敗: Userエンティティがnull");
+                throw new ArgumentNullException(nameof(user), "Userエンティティがnullです");
+            }
+
+            _logger?.LogDebug("F# User→C# UserDTO変換開始 UserId: {UserId}, Email: {Email}",
+                user.Id.Value, user.Email.Value);
+
+            var result = new UserDto
         {
             Id = user.Id.Value,                                 // F#のUserId判別共用体から値を取得
             Email = user.Email.Value,                            // F#のEmail値オブジェクトから値を取得
@@ -57,7 +80,23 @@ public static class TypeConverters
             CreatedBy = user.CreatedBy.Value,                    // 作成者ID
             UpdatedAt = user.UpdatedAt,                          // 更新日時
             UpdatedBy = user.UpdatedBy.Value                     // 更新者ID
-        };
+            };
+
+            _logger?.LogInformation("F# User→C# UserDTO変換成功 UserId: {UserId}, ConversionTime: {ConversionTime}ms",
+                user.Id.Value, stopwatch.ElapsedMilliseconds);
+
+            return result;
+        }
+        catch (Exception ex) when (!(ex is ArgumentNullException))
+        {
+            _logger?.LogError(ex, "F# User→C# UserDTO変換で予期しないエラーが発生 UserId: {UserId}, ConversionTime: {ConversionTime}ms",
+                user?.Id?.Value ?? -1, stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        finally
+        {
+            stopwatch.Stop();
+        }
     }
 
     /// <summary>

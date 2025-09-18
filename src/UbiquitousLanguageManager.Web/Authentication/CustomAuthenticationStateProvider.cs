@@ -53,7 +53,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             var user = await _userManager.GetUserAsync(httpContext.User);
             if (user == null)
             {
-                _logger.LogWarning("認証済みユーザーが見つかりません: {UserName}", httpContext.User.Identity.Name);
+                _logger.LogWarning("認証済みユーザーが見つかりません UserName: {UserName}, Path: {Path}",
+                    MaskEmail(httpContext.User.Identity.Name), httpContext.Request.Path);
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
@@ -73,11 +74,17 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             var identity = new ClaimsIdentity(claims, "Identity.Application");
             var principal = new ClaimsPrincipal(identity);
 
+            // 認証状態取得成功をログ記録
+            _logger.LogDebug("認証状態取得成功 UserName: {UserName}, ClaimsCount: {ClaimsCount}, Roles: {Roles}",
+                MaskEmail(user.UserName), claims.Count, string.Join(", ", roles));
+
             return new AuthenticationState(principal);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "認証状態の取得中にエラーが発生しました");
+            var userName = _httpContextAccessor.HttpContext?.User?.Identity?.Name;
+            _logger.LogError(ex, "認証状態取得エラー UserName: {UserName}, Error: {ErrorMessage}",
+                MaskEmail(userName), ex.Message);
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
     }
@@ -88,6 +95,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     /// <param name="task">新しい認証状態のタスク</param>
     public void NotifyUserAuthentication(Task<AuthenticationState> task)
     {
+        _logger.LogInformation("認証状態変更通知を送信 Timestamp: {Timestamp}", DateTime.UtcNow);
         NotifyAuthenticationStateChanged(task);
     }
 
@@ -96,6 +104,10 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     /// </summary>
     public virtual void NotifyUserLogout()
     {
+        var userName = _httpContextAccessor.HttpContext?.User?.Identity?.Name;
+        _logger.LogInformation("ログアウト通知を送信 UserName: {UserName}, Timestamp: {Timestamp}",
+            MaskEmail(userName), DateTime.UtcNow);
+
         var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
         var authState = Task.FromResult(new AuthenticationState(anonymousUser));
         NotifyAuthenticationStateChanged(authState);
@@ -136,7 +148,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Domain固有のClaims追加中にエラーが発生しました: UserId={UserId}", user.Id);
+            _logger.LogError(ex, "Domain固有Claims追加エラー UserId: {UserId}, UserName: {UserName}, Error: {ErrorMessage}",
+                user.Id, MaskEmail(user.UserName), ex.Message);
         }
     }
 
@@ -198,5 +211,28 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
         var isFirstLoginClaim = httpContext.User.FindFirst("IsFirstLogin");
         return isFirstLoginClaim != null && bool.TryParse(isFirstLoginClaim.Value, out var isFirstLogin) && isFirstLogin;
+    }
+
+    /// <summary>
+    /// メールアドレスマスキング（ログ出力時の個人情報保護）
+    /// 【セキュリティ配慮】個人情報保護のため、メールアドレスをマスキングしてログ出力
+    /// 例: admin@example.com → ad***@example.com
+    /// </summary>
+    /// <param name="email">マスキング対象のメールアドレス</param>
+    /// <returns>マスキング済みメールアドレス</returns>
+    private string MaskEmail(string? email)
+    {
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+        {
+            return "***@unknown";
+        }
+
+        var parts = email.Split('@');
+        if (parts[0].Length <= 2)
+        {
+            return $"***@{parts[1]}";
+        }
+
+        return $"{parts[0][..2]}***@{parts[1]}";
     }
 }

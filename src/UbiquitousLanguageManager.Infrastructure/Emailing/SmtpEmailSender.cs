@@ -57,11 +57,16 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
             bool isBodyHtml = true,
             CancellationToken cancellationToken = default)
         {
+            var startTime = DateTime.UtcNow;
             try
             {
-                _logger.LogInformation("Sending email to {To} with subject: {Subject}", to, subject);
+                _logger.LogInformation("Starting email send to {To} with subject: {Subject}, HTML: {IsHtml}",
+                    to, subject, isBodyHtml);
+                _logger.LogDebug("SMTP settings: Host={Host}, Port={Port}, SSL={EnableSsl}",
+                    _settings.Host, _settings.Port, _settings.EnableSsl);
 
                 // MimeMessageの作成
+                _logger.LogDebug("Creating MimeMessage for {To}", to);
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress(_settings.SenderName, _settings.SenderEmail));
                 message.To.Add(new MailboxAddress(string.Empty, to));
@@ -78,16 +83,26 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
                 }
 
                 // SMTP送信
+                _logger.LogDebug("Connecting to SMTP server {Host}:{Port}", _settings.Host, _settings.Port);
                 await _smtpClient.ConnectAsync(_settings.Host, _settings.Port, _settings.EnableSsl, cancellationToken);
+
+                _logger.LogDebug("Authenticating with SMTP server as {Username}", _settings.Username);
                 await _smtpClient.AuthenticateAsync(_settings.Username, _settings.Password, cancellationToken);
+
+                _logger.LogDebug("Sending message to {To}", to);
                 await _smtpClient.SendAsync(message, cancellationToken);
+
+                _logger.LogDebug("Disconnecting from SMTP server");
                 await _smtpClient.DisconnectAsync(true, cancellationToken);
 
-                _logger.LogInformation("Email sent successfully to {To}", to);
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("Email sent successfully to {To} in {Duration}ms", to, duration.TotalMilliseconds);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send email to {To}", to);
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogError(ex, "Failed to send email to {To} after {Duration}ms - Host: {Host}, Port: {Port}",
+                    to, duration.TotalMilliseconds, _settings.Host, _settings.Port);
                 throw;
             }
         }
@@ -104,8 +119,11 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
         /// </remarks>
         public async Task<bool> SendPasswordResetEmailAsync(string email, string resetToken)
         {
+            var startTime = DateTime.UtcNow;
             try
             {
+                _logger.LogInformation("Starting password reset email send to {Email}", email);
+
                 // 🔧 入力検証
                 if (string.IsNullOrWhiteSpace(email))
                 {
@@ -113,10 +131,18 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
                     return false;
                 }
 
+                if (string.IsNullOrWhiteSpace(resetToken))
+                {
+                    _logger.LogWarning("Invalid reset token provided for password reset email to {Email}", email);
+                    return false;
+                }
+
                 // 📧 リセットURLの生成
                 // Phase A8 Step6 Stage1: URL設定外部化対応
                 var baseUrl = _configuration["App:BaseUrl"] ?? "https://localhost:5001";
                 var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}&email={Uri.EscapeDataString(email)}";
+
+                _logger.LogDebug("Generated password reset URL for {Email} with base URL: {BaseUrl}", email, baseUrl);
 
                 // 📝 メール本文の作成
                 var subject = "パスワードリセットのお知らせ";
@@ -134,15 +160,21 @@ namespace UbiquitousLanguageManager.Infrastructure.Emailing
 </body>
 </html>";
 
+                _logger.LogDebug("Prepared password reset email with subject: {Subject}", subject);
+
                 // 📧 メール送信
                 await SendEmailAsync(email, subject, body, true);
-                
-                _logger.LogInformation("Password reset email sent successfully to {Email}", email);
+
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("Password reset email sent successfully to {Email} in {Duration}ms",
+                    email, duration.TotalMilliseconds);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send password reset email to {Email}", email);
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogError(ex, "Failed to send password reset email to {Email} after {Duration}ms",
+                    email, duration.TotalMilliseconds);
                 return false;
             }
         }

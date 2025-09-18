@@ -102,14 +102,16 @@ public class AuthApiController : ControllerBase
         {
             var tokens = antiforgery.GetAndStoreTokens(HttpContext);
             
-            _logger.LogDebug("CSRF token generated successfully");
-            
+            _logger.LogDebug("CSRFトークン生成成功 Path: {Path}, Timestamp: {Timestamp}",
+                HttpContext.Request.Path, DateTime.UtcNow);
+
             return Ok(new { token = tokens.RequestToken });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "CSRFトークン生成中にエラーが発生");
-            
+            _logger.LogError(ex, "CSRFトークン生成エラー Path: {Path}, Error: {ErrorMessage}",
+                HttpContext.Request.Path, ex.Message);
+
             return StatusCode(500, new { error = "CSRFトークンの生成に失敗しました" });
         }
     }
@@ -136,7 +138,8 @@ public class AuthApiController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("認証API: ログイン試行開始（Infrastructure層直接委譲） - Email: {Email}", request.Email);
+            _logger.LogInformation("認証API: ログイン試行開始 Email: {Email}, RememberMe: {RememberMe}",
+                MaskEmail(request.Email), request.RememberMe);
 
             // リクエストバリデーション
             if (!ModelState.IsValid)
@@ -146,7 +149,8 @@ public class AuthApiController : ControllerBase
                     .Select(x => x.ErrorMessage)
                     .ToList();
                 
-                _logger.LogWarning("認証API: バリデーションエラー - {Errors}", string.Join(", ", errors));
+                _logger.LogWarning("認証API: ログインバリデーションエラー Email: {Email}, Errors: {Errors}",
+                    MaskEmail(request.Email), string.Join(", ", errors));
                 return BadRequest(new AuthApiResponse
                 {
                     Success = false,
@@ -160,8 +164,8 @@ public class AuthApiController : ControllerBase
 
             if (loginResult.IsSuccess)
             {
-                _logger.LogInformation("認証API: ログイン成功（Infrastructure層委譲） - Email: {Email}, IsFirstLogin: {IsFirstLogin}", 
-                    request.Email, loginResult.IsFirstLogin);
+                _logger.LogInformation("認証API: ログイン成功 Email: {Email}, IsFirstLogin: {IsFirstLogin}, RememberMe: {RememberMe}",
+                    MaskEmail(request.Email), loginResult.IsFirstLogin, request.RememberMe);
 
                 // 初期パスワード認証結果に基づくレスポンス統一
                 string redirectUrl;
@@ -173,7 +177,8 @@ public class AuthApiController : ControllerBase
                     redirectUrl = "/change-password";
                     message = "初期パスワードでログインしました。セキュリティのためパスワード変更が必要です。";
                     
-                    _logger.LogInformation("初期パスワードログイン検知: Email={Email} -> パスワード変更画面にリダイレクト", request.Email);
+                    _logger.LogInformation("初期パスワードログイン検知 Email: {Email}, RedirectTo: {RedirectUrl}",
+                        MaskEmail(request.Email), redirectUrl);
                 }
                 else
                 {
@@ -181,7 +186,8 @@ public class AuthApiController : ControllerBase
                     redirectUrl = "/";
                     message = "ログインしました。";
                     
-                    _logger.LogInformation("通常ログイン成功: Email={Email} -> ホーム画面にリダイレクト", request.Email);
+                    _logger.LogInformation("通常ログイン成功 Email: {Email}, RedirectTo: {RedirectUrl}",
+                        MaskEmail(request.Email), redirectUrl);
                 }
 
                 return Ok(new AuthApiResponse
@@ -193,8 +199,8 @@ public class AuthApiController : ControllerBase
             }
             else
             {
-                _logger.LogWarning("認証API: ログイン失敗（Infrastructure層委譲） - Email: {Email}, Error: {Error}", 
-                    request.Email, loginResult.ErrorMessage);
+                _logger.LogWarning("認証API: ログイン失敗 Email: {Email}, Error: {Error}",
+                    MaskEmail(request.Email), loginResult.ErrorMessage);
 
                 // Infrastructure層エラーメッセージの明確化
                 string errorMessage = loginResult.ErrorMessage ?? "ログインに失敗しました。";
@@ -215,7 +221,8 @@ public class AuthApiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "認証API: ログイン処理中にエラーが発生（Infrastructure層委譲） - Email: {Email}", request.Email);
+            _logger.LogError(ex, "認証API: ログイン処理エラー Email: {Email}, Error: {ErrorMessage}",
+                MaskEmail(request.Email), ex.Message);
             
             return StatusCode(500, new AuthApiResponse
             {
@@ -252,7 +259,7 @@ public class AuthApiController : ControllerBase
             var userEmail = User.Identity?.Name;
             if (string.IsNullOrEmpty(userEmail))
             {
-                _logger.LogWarning("認証API: パスワード変更 - 認証情報が取得できません");
+                _logger.LogWarning("認証API: パスワード変更 - 認証情報取得失敗 Timestamp: {Timestamp}", DateTime.UtcNow);
                 return Unauthorized(new AuthApiResponse
                 {
                     Success = false,
@@ -260,7 +267,7 @@ public class AuthApiController : ControllerBase
                 });
             }
 
-            _logger.LogInformation("認証API: パスワード変更試行開始（Infrastructure層直接委譲） - Email: {Email}", userEmail);
+            _logger.LogInformation("認証API: パスワード変更試行開始 Email: {Email}", MaskEmail(userEmail));
 
             // リクエストバリデーション
             if (!ModelState.IsValid)
@@ -270,7 +277,8 @@ public class AuthApiController : ControllerBase
                     .Select(x => x.ErrorMessage)
                     .ToList();
                 
-                _logger.LogWarning("認証API: パスワード変更バリデーションエラー - {Errors}", string.Join(", ", errors));
+                _logger.LogWarning("認証API: パスワード変更バリデーションエラー Email: {Email}, Errors: {Errors}",
+                    MaskEmail(userEmail), string.Join(", ", errors));
                 return BadRequest(new AuthApiResponse
                 {
                     Success = false,
@@ -284,7 +292,8 @@ public class AuthApiController : ControllerBase
 
             if (changePasswordResult.IsSuccess)
             {
-                _logger.LogInformation("認証API: パスワード変更成功（Infrastructure層直接委譲） - Email: {Email}", userEmail);
+                _logger.LogInformation("認証API: パスワード変更成功 Email: {Email}, RedirectTo: {RedirectUrl}",
+                    MaskEmail(userEmail), "/");
 
                 // Infrastructure層統一サービス完了後の成功メッセージ強化
                 string successMessage = changePasswordResult.Message ?? "初期パスワードから新しいパスワードに変更しました。";
@@ -298,8 +307,8 @@ public class AuthApiController : ControllerBase
             }
             else
             {
-                _logger.LogWarning("認証API: パスワード変更失敗（Infrastructure層委譲） - Email: {Email}, Error: {Error}", 
-                    userEmail, changePasswordResult.Message);
+                _logger.LogWarning("認証API: パスワード変更失敗 Email: {Email}, Error: {Error}",
+                    MaskEmail(userEmail), changePasswordResult.Message);
 
                 // Infrastructure層エラーメッセージの明確化
                 string errorMessage = changePasswordResult.Message ?? "パスワード変更に失敗しました。";
@@ -319,7 +328,9 @@ public class AuthApiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "認証API: パスワード変更処理中にエラーが発生（Infrastructure層委譲）");
+            var userEmail = User.Identity?.Name;
+            _logger.LogError(ex, "認証API: パスワード変更処理エラー Email: {Email}, Error: {ErrorMessage}",
+                MaskEmail(userEmail), ex.Message);
             
             return StatusCode(500, new AuthApiResponse
             {
@@ -352,13 +363,14 @@ public class AuthApiController : ControllerBase
         try
         {
             var userEmail = User.Identity?.Name;
-            _logger.LogInformation("認証API: ログアウト処理開始（Infrastructure層直接委譲） - Email: {Email}", userEmail);
+            _logger.LogInformation("認証API: ログアウト処理開始 Email: {Email}", MaskEmail(userEmail));
 
             // 🔄 Infrastructure層認証サービス直接委譲
             // 統一認証基盤サービスでセッション無効化・Cookie削除を実行
             await _authenticationService.LogoutAsync();
 
-            _logger.LogInformation("認証API: ログアウト処理完了（Infrastructure層直接委譲） - Email: {Email}", userEmail);
+            _logger.LogInformation("認証API: ログアウト処理完了 Email: {Email}, RedirectTo: {RedirectUrl}",
+                MaskEmail(userEmail), "/login");
 
             return Ok(new AuthApiResponse
             {
@@ -369,7 +381,9 @@ public class AuthApiController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "認証API: ログアウト処理中にエラーが発生（Web層委譲）");
+            var userEmail = User.Identity?.Name;
+            _logger.LogError(ex, "認証API: ログアウト処理エラー Email: {Email}, Error: {ErrorMessage}",
+                MaskEmail(userEmail), ex.Message);
             
             return StatusCode(500, new AuthApiResponse
             {
@@ -377,5 +391,28 @@ public class AuthApiController : ControllerBase
                 Message = "ログアウト処理中にエラーが発生しました。"
             });
         }
+    }
+
+    /// <summary>
+    /// メールアドレスマスキング（ログ出力時の個人情報保護）
+    /// 【セキュリティ配慮】個人情報保護のため、メールアドレスをマスキングしてログ出力
+    /// 例: admin@example.com → ad***@example.com
+    /// </summary>
+    /// <param name="email">マスキング対象のメールアドレス</param>
+    /// <returns>マスキング済みメールアドレス</returns>
+    private string MaskEmail(string? email)
+    {
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+        {
+            return "***@unknown";
+        }
+
+        var parts = email.Split('@');
+        if (parts[0].Length <= 2)
+        {
+            return $"***@{parts[1]}";
+        }
+
+        return $"{parts[0][..2]}***@{parts[1]}";
     }
 }

@@ -3,6 +3,7 @@
 @using System.Security.Claims
 @inherits ComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<PermissionGuard> Logger
 
 @* 権限ガードコンポーネント *@
 @* Blazor Server初学者向け: 細かい権限制御とセキュリティ境界を提供し、 *@
@@ -212,7 +213,7 @@
         var userName = user.Identity?.Name ?? "Unknown";
         var status = isAuthorized ? "GRANTED" : "DENIED";
         
-        Console.WriteLine($"[SECURITY] Access {status} for user '{userName}' to protected resource");
+        Logger.LogInformation("[SECURITY] Access {Status} for user '{UserName}' to protected resource", status, userName);
         
         // 実装予定：
         // - データベースへのアクセスログ記録

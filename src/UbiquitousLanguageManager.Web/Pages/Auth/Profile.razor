@@ -10,6 +10,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ILogger<Profile> Logger
 
 <PageTitle>プロフィール - ユビキタス言語管理システム</PageTitle>
 
@@ -270,8 +271,9 @@
             // エラーハンドリング：予期しない例外をキャッチ
             errorMessage = "プロフィール情報の取得中にエラーが発生しました。ページを再読み込みしてください。";
             
-            // ログ出力（実際の実装では ILogger を使用）
-            Console.WriteLine($"Profile初期化エラー: {ex.Message}");
+            // ログ出力
+            Logger.LogError(ex, "プロフィール画面初期化エラー Path: {Path}, Error: {ErrorMessage}",
+                Navigation.Uri, ex.Message);
         }
         finally
         {
@@ -327,8 +329,11 @@
                     if (result.Succeeded)
                     {
                         // 成功時の処理
+                        Logger.LogInformation("プロフィール更新成功 Email: {Email}, Name: {Name}",
+                            MaskEmail(currentUser.Email), profileModel.Name);
+
                         successMessage = "プロフィールを正常に更新しました。";
-                        
+
                         // JavaScript相互運用で成功トースト通知
                         await JSRuntime.InvokeVoidAsync("showSuccessToast", successMessage);
                     }
@@ -336,8 +341,11 @@
                     {
                         // Identity更新失敗時の処理
                         var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                        Logger.LogWarning("プロフィール更新失敗 Email: {Email}, Errors: {Errors}",
+                            MaskEmail(currentUser.Email), errors);
+
                         errorMessage = $"プロフィール更新に失敗しました: {errors}";
-                        
+
                         // JavaScript相互運用でエラートースト通知
                         await JSRuntime.InvokeVoidAsync("showErrorToast", errorMessage);
                     }
@@ -360,7 +368,10 @@
             errorMessage = "プロフィール更新処理中に予期しないエラーが発生しました。管理者にお問い合わせください。";
             
             // ログ出力
-            Console.WriteLine($"Profile更新エラー: {ex.Message}");
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.Identity?.Name ?? "Unknown";
+            Logger.LogError(ex, "プロフィール更新処理で予期しないエラー UserId: {UserId}, Error: {ErrorMessage}",
+                MaskEmail(userId), ex.Message);
             
             // JavaScript相互運用でエラートースト通知
             await JSRuntime.InvokeVoidAsync("showErrorToast", errorMessage);
@@ -392,10 +403,34 @@
         catch (Exception ex)
         {
             // ナビゲーション失敗時のフォールバック処理
-            Console.WriteLine($"ナビゲーションエラー: {ex.Message}");
+            Logger.LogError(ex, "プロフィールキャンセルナビゲーションエラー Target: {Target}, Error: {ErrorMessage}",
+                "/admin/users", ex.Message);
             errorMessage = "ページ遷移中にエラーが発生しました。";
             StateHasChanged();
         }
+    }
+
+    /// <summary>
+    /// メールアドレスマスキング（ログ出力時の個人情報保護）
+    /// 【セキュリティ配慮】個人情報保護のため、メールアドレスをマスキングしてログ出力
+    /// 例: admin@example.com → ad***@example.com
+    /// </summary>
+    /// <param name="email">マスキング対象のメールアドレス</param>
+    /// <returns>マスキング済みメールアドレス</returns>
+    private string MaskEmail(string? email)
+    {
+        if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+        {
+            return "***@unknown";
+        }
+
+        var parts = email.Split('@');
+        if (parts[0].Length <= 2)
+        {
+            return $"***@{parts[1]}";
+        }
+
+        return $"{parts[0][..2]}***@{parts[1]}";
     }
 }
 

@@ -32,6 +32,25 @@ public partial class Program
 
         var builder = WebApplication.CreateBuilder(args);
 
+        // 🎯 ログ設定強化（ADR_017準拠）
+        // 【ログ管理実装戦略】
+        // Microsoft.Extensions.Logging基盤活用・環境別最適化・構造化ログ準備
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
+        // 開発環境でのログ詳細化・本番環境での適切なレベル管理
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Logging.AddDebug();
+            // Entity Framework Core詳細ログを開発環境でのみ有効化
+            builder.Logging.SetMinimumLevel(LogLevel.Debug);
+        }
+        else
+        {
+            // 本番環境ではInformation以上のみ出力（パフォーマンス最適化）
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
+        }
+
         // 🔧 Blazor Server設定: サーバーサイドレンダリングとSignalR接続
         builder.Services.AddRazorPages();
         builder.Services.AddServerSideBlazor(options =>
@@ -384,11 +403,12 @@ public partial class Program
                 var initialDataService = services.GetRequiredService<InitialDataService>();
                 await initialDataService.SeedInitialDataAsync();
 
-                app.Logger.LogInformation("✅ 初期データ投入が完了しました");
+                app.Logger.LogInformation("✅ 初期データ投入が完了しました StartupTime: {StartupTime}", DateTime.UtcNow);
             }
             catch (Exception ex)
             {
-                app.Logger.LogError(ex, "❌ 初期データ投入中にエラーが発生しました: {Message}", ex.Message);
+                app.Logger.LogCritical(ex, "❌ 初期データ投入中にエラーが発生しました StartupFailure: {Message} Time: {Time}",
+                    ex.Message, DateTime.UtcNow);
                 throw; // 🚨 初期化失敗時はアプリケーション起動を停止
             }
         }

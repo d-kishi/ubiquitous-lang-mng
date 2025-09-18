@@ -51,28 +51,37 @@ public class InitialDataService
     /// </summary>
     public virtual async Task SeedInitialDataAsync()
     {
+        var startTime = DateTime.UtcNow;
         try
         {
+            _logger.LogInformation("Starting initial data seeding process");
+
             // 🎭 ロールの作成
             await CreateRolesAsync();
 
             // 🔍 既存のスーパーユーザーの存在確認
+            _logger.LogDebug("Checking for existing super user: {Email}", _settings.Email);
             var existingSuperUser = await _userManager.FindByEmailAsync(_settings.Email);
 
             if (existingSuperUser != null)
             {
                 _logger.LogInformation("✅ 初期スーパーユーザーは既に存在します: {Email}", _settings.Email);
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("Initial data seeding completed (existing user) in {Duration}ms", duration.TotalMilliseconds);
                 return;
             }
 
             // 👤 初期スーパーユーザーの作成
             await CreateInitialSuperUserAsync();
 
-            _logger.LogInformation("✅ 初期データ投入が正常に完了しました");
+            var totalDuration = DateTime.UtcNow - startTime;
+            _logger.LogInformation("✅ 初期データ投入が正常に完了しました in {Duration}ms", totalDuration.TotalMilliseconds);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ 初期データ投入中にエラーが発生しました: {Message}", ex.Message);
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "❌ 初期データ投入中にエラーが発生しました after {Duration}ms: {Message}",
+                duration.TotalMilliseconds, ex.Message);
             throw;
         }
     }
@@ -83,16 +92,37 @@ public class InitialDataService
     /// </summary>
     private async Task CreateRolesAsync()
     {
+        var startTime = DateTime.UtcNow;
         var roles = new[] { "SuperUser", "ProjectManager", "DomainApprover", "GeneralUser" };
 
+        _logger.LogDebug("Starting role creation process for {RoleCount} roles", roles.Length);
+
+        var createdRoles = 0;
         foreach (var roleName in roles)
         {
             if (!await _roleManager.RoleExistsAsync(roleName))
             {
-                await _roleManager.CreateAsync(new IdentityRole(roleName));
-                _logger.LogInformation("🎭 ロールを作成しました: {RoleName}", roleName);
+                var result = await _roleManager.CreateAsync(new IdentityRole(roleName));
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("🎭 ロールを作成しました: {RoleName}", roleName);
+                    createdRoles++;
+                }
+                else
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    _logger.LogError("Failed to create role {RoleName}: {Errors}", roleName, errors);
+                }
+            }
+            else
+            {
+                _logger.LogDebug("Role {RoleName} already exists", roleName);
             }
         }
+
+        var duration = DateTime.UtcNow - startTime;
+        _logger.LogInformation("Role creation completed: {CreatedCount}/{TotalCount} roles created in {Duration}ms",
+            createdRoles, roles.Length, duration.TotalMilliseconds);
     }
 
     /// <summary>

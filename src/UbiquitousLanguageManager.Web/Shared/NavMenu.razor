@@ -5,6 +5,7 @@
 @inject UbiquitousLanguageManager.Web.Services.BlazorAuthenticationService AuthService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject ILogger<NavMenu> Logger
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -170,13 +171,13 @@
             var result = await JS.InvokeAsync<object>("authApi.logout");
 
             // ログアウト成功後はログイン画面へ遷移
-            Console.WriteLine("ログアウト処理完了 - ログイン画面へリダイレクト中...");
+            Logger.LogInformation("ログアウト処理完了 - ログイン画面へリダイレクト中");
             Navigation.NavigateTo("/login", forceLoad: true);
         }
         catch (Exception ex)
         {
             // JavaScript実行失敗時もログイン画面へリダイレクト（セキュリティ優先）
-            Console.WriteLine($"ログアウト処理中にエラーが発生しました: {ex.Message}");
+            Logger.LogWarning(ex, "ログアウト処理中にエラーが発生しました: {Message}", ex.Message);
             Navigation.NavigateTo("/login", forceLoad: true);
         }
     }

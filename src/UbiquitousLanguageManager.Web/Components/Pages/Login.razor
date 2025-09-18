@@ -8,6 +8,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<Login> Logger
 
 <PageTitle>ログイン - ユビキタス言語管理システム</PageTitle>
 
@@ -196,8 +197,9 @@
     }
     catch (Exception ex)
     {
-      // 初期化エラーをログに記録（実際の実装ではILoggerを使用）
-      Console.WriteLine($"Login component initialization error: {ex.Message}");
+      // 初期化エラーをログに記録
+      Logger.LogError(ex, "ログイン画面初期化エラー Path: {Path}, Error: {ErrorMessage}",
+        Navigation.Uri, ex.Message);
       errorMessage = "画面の初期化中にエラーが発生しました。";
     }
   }
@@ -229,6 +231,8 @@
       if (parsedResult?.Success == true)
       {
         // ログイン成功時の処理
+        Logger.LogInformation("ユーザーログイン成功 Email: {Email}, RememberMe: {RememberMe}",
+          MaskEmail(loginRequest.Email), loginRequest.RememberMe);
         successMessage = parsedResult.Message ?? "ログインしました。";
 
         // 【Phase A8 Step3対応】初回ログイン時のChangePassword.razorページ遷移
@@ -248,7 +252,8 @@
           Navigation.NavigateTo("/change-password", forceLoad: true);
 
           // 初回ログイン専用のメッセージをログに記録
-          Console.WriteLine($"初回ログイン検知: Email={loginRequest.Email} -> ChangePassword.razorへ遷移");
+          Logger.LogInformation("初回ログイン検知 Email: {Email} RedirectTo: {RedirectUrl}",
+            MaskEmail(loginRequest.Email), "/change-password");
           return; // 以降の処理をスキップ
         }
         else
@@ -265,6 +270,8 @@
       {
         // 【csharp-infrastructure対応】ログイン失敗時の詳細エラー表示
         // 初期パスワード認証エラーの明確化
+        Logger.LogWarning("ユーザーログイン失敗 Email: {Email}, Error: {ErrorMessage}",
+          MaskEmail(loginRequest.Email), parsedResult?.Message ?? "Unknown error");
         string baseMessage = parsedResult?.Message ?? "ログインに失敗しました。";
 
         // 初期パスワード関連のエラーメッセージ強化
@@ -281,8 +288,8 @@
     catch (JSException jsEx)
     {
       // 【JavaScript API エラーハンドリング強化】
-      Console.WriteLine($"JavaScript API call failed: {jsEx.Message}");
-      Console.WriteLine($"JavaScript Stack Trace: {jsEx.StackTrace}");
+      Logger.LogError(jsEx, "JavaScript認証API呼び出しエラー Email: {Email}, Message: {Message}",
+        MaskEmail(loginRequest.Email), jsEx.Message);
 
       // ネットワークエラー・サーバーエラーの詳細分析
       if (jsEx.Message.Contains("fetch") || jsEx.Message.Contains("network"))
@@ -301,7 +308,8 @@
     catch (Exception ex)
     {
       // 予期しないエラーの処理
-      Console.WriteLine($"Login process failed: {ex.Message}");
+      Logger.LogError(ex, "ログイン処理で予期しないエラー Email: {Email}, Error: {ErrorMessage}",
+        MaskEmail(loginRequest.Email), ex.Message);
       errorMessage = "システムエラーが発生しました。管理者にお問い合わせください。";
     }
     finally
@@ -325,11 +333,35 @@
   private async Task HandlePasswordChange()
   {
     // Phase A8 Step3: この機能はChangePassword.razorページに統合されました
-    Console.WriteLine("[廃止予定] HandlePasswordChangeメソッドは使用されません。ChangePassword.razorページをご利用ください。");
+    Logger.LogWarning("廃止予定メソッド呼び出し Method: {Method} RedirectTo: {RedirectUrl}",
+      nameof(HandlePasswordChange), "/change-password");
     
     // 安全のため、ChangePassword.razorページにリダイレクト
     Navigation.NavigateTo("/change-password", forceLoad: true);
     await Task.CompletedTask;
+  }
+
+  /// <summary>
+  /// メールアドレスマスキング（ログ出力時の個人情報保護）
+  /// 【セキュリティ配慮】個人情報保護のため、メールアドレスをマスキングしてログ出力
+  /// 例: admin@example.com → ad***@example.com
+  /// </summary>
+  /// <param name="email">マスキング対象のメールアドレス</param>
+  /// <returns>マスキング済みメールアドレス</returns>
+  private string MaskEmail(string? email)
+  {
+    if (string.IsNullOrEmpty(email) || !email.Contains("@"))
+    {
+      return "***@unknown";
+    }
+
+    var parts = email.Split('@');
+    if (parts[0].Length <= 2)
+    {
+      return $"***@{parts[1]}";
+    }
+
+    return $"{parts[0][..2]}***@{parts[1]}";
   }
 
   /// <summary>

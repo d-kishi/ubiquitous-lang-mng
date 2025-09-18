@@ -37,17 +37,28 @@ public class UserRepository : IUserRepository
     /// </summary>
     public async Task<FSharpResult<FSharpOption<User>, string>> GetByEmailAsync(Email email)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
+            _logger.LogDebug("Starting GetByEmailAsync for email: {Email}", email.Value);
+
             // 簡易実装：実際のDB検索は省略
             await Task.Delay(1); // async警告解消用
             var userName = UserName.create("Sample User");
             var user = User.create(email, userName.ResultValue, Role.GeneralUser, UserId.NewUserId(1L));
             var option = FSharpOption<User>.Some(user);
+
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogInformation("GetByEmailAsync completed successfully for email: {Email} in {Duration}ms",
+                email.Value, duration.TotalMilliseconds);
+
             return FSharpResult<FSharpOption<User>, string>.NewOk(option);
         }
         catch (Exception ex)
         {
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "GetByEmailAsync failed for email: {Email} after {Duration}ms",
+                email.Value, duration.TotalMilliseconds);
             return FSharpResult<FSharpOption<User>, string>.NewError(ex.Message);
         }
     }
@@ -57,14 +68,25 @@ public class UserRepository : IUserRepository
     /// </summary>
     public async Task<FSharpResult<FSharpOption<User>, string>> GetByIdAsync(UserId id)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
+            _logger.LogDebug("Starting GetByIdAsync for userId: {UserId}", id.Item);
+
             await Task.Delay(1); // async警告解消用
             var option = FSharpOption<User>.None;
+
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogInformation("GetByIdAsync completed for userId: {UserId} in {Duration}ms (no user found)",
+                id.Item, duration.TotalMilliseconds);
+
             return FSharpResult<FSharpOption<User>, string>.NewOk(option);
         }
         catch (Exception ex)
         {
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "GetByIdAsync failed for userId: {UserId} after {Duration}ms",
+                id.Item, duration.TotalMilliseconds);
             return FSharpResult<FSharpOption<User>, string>.NewError(ex.Message);
         }
     }
@@ -74,13 +96,24 @@ public class UserRepository : IUserRepository
     /// </summary>
     public async Task<FSharpResult<User, string>> SaveAsync(User user)
     {
+        var startTime = DateTime.UtcNow;
         try
         {
+            _logger.LogDebug("Starting SaveAsync for user: {Email}", user.Email.Value);
+
             await Task.Delay(1); // async警告解消用
+
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogInformation("SaveAsync completed successfully for user: {Email} in {Duration}ms",
+                user.Email.Value, duration.TotalMilliseconds);
+
             return FSharpResult<User, string>.NewOk(user);
         }
         catch (Exception ex)
         {
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "SaveAsync failed for user: {Email} after {Duration}ms",
+                user.Email.Value, duration.TotalMilliseconds);
             return FSharpResult<User, string>.NewError(ex.Message);
         }
     }
