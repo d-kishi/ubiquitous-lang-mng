@@ -12,28 +12,30 @@
 - [ ] **Phase計画確認**: `Phase_Summary.md`から全Step構成・当該Step位置確認
 - [ ] **次Step判定**: Phase計画から実行すべき次Stepの自動判定
 
-### 2. Step組織設計（コア機能）
+### 2. Step組織設計（簡素化・効率化）
 - [ ] **Step特性判定**: 当該Stepの作業特性判断（分析/実装/テスト/統合/品質保証）
-- [ ] **🔧 subagent-selection Command実行**: [subagent-selection Command](./.claude/commands/subagent-selection.md)でStep作業特性に基づくSubAgent組み合わせ選択
-- [ ] **SubAgent選択結果確認**: subagent-selection実行結果の確認・選択SubAgent組み合わせの取得
-- [ ] **並列実行計画策定**: 選択SubAgentの並列実行計画・効率化戦略
-- [ ] **StepXX_[内容].md作成**: Step組織設計記録ファイル作成（Step1の場合はStep01_Analysis.md）
+- [ ] **🎯 SubAgent組み合わせ選択**: 特性に応じたPattern A/B/Cから選択
+  - **Pattern A**: 新機能実装 (Domain→Application→Infrastructure→Web UI)
+  - **Pattern B**: 機能拡張 (影響分析→実装・統合→品質保証)
+  - **Pattern C**: 品質改善 (課題分析→改善実装→検証・完成)
+- [ ] **🚀 並列実行必須**: 選択SubAgentを同一メッセージ内で複数Task実行
+- [ ] **StepXX_[内容].md作成**: Step組織設計記録ファイル作成（簡素化テンプレート）
 
-### 3. Step固有準備
-- [ ] **Step1特化準備**（Step1の場合）:
-  - 分析範囲・調査項目確定
-  - 技術検証ポイント特定
-  - 成果物出力先準備（`/Doc/05_Research/Phase_XX/`）
-- [ ] **Step2以降準備**（Step2以降の場合）:
-  - 前Step成果物確認・分析結果読み込み
-    - `/Doc/05_Research/Phase_XX/SpecAnalysis_*.md` - 仕様分析結果
-    - `/Doc/05_Research/Phase_XX/TechResearch_*.md` - 技術調査結果
-    - `/Doc/05_Research/Phase_XX/DependencyAnalysis_*.md` - 依存関係分析
-    - `/Doc/05_Research/Phase_XX/Spec_Compliance_Matrix.md` - 仕様準拠マトリックス
-  - Step1分析結果活用計画策定
-  - 実装対象機能・範囲確定
-- [ ] **仕様書該当セクション特定**: Step対象機能の機能仕様書セクション確認
-- [ ] **仕様準拠マトリックス準備**: 実装すべき仕様・制約の整理
+### 3. Step Stage構成設計（品質チェックStage組み込み）
+- [ ] **🎯 Step内Stage構成設計**:
+  ```
+  Stage 1: 設計・技術調査
+  Stage 2: TDD Red（テスト作成）
+  Stage 3: TDD Green（実装）
+  Stage 4: 品質チェック＆リファクタリング統合
+    - spec-compliance（仕様準拠確認）
+    - code-review（品質レビュー）
+    - TDD Refactor（問題点の改善）
+    - 再度品質チェック（改善確認）
+  Stage 5: 統合確認
+  ```
+- [ ] **成果物出力先更新**: `/Doc/08_Organization/Active/Phase_XX/Research/`配下
+- [ ] **仕様書照合確認**: Step対象機能の機能仕様書セクション特定
 
 ### 4. 技術的前提条件確認
 - [ ] **開発環境確認**: 必要な開発環境・ツール・依存関係の確認
@@ -41,18 +43,16 @@
 - [ ] **データベース状況確認**: マイグレーション・テストデータの状況確認
 - [ ] **ビルド・テスト状況確認**: 0エラー0警告状態・テスト成功率確認
 
-### 5. 品質保証準備
-- [ ] **TDD実践計画**: Red-Green-Refactorサイクルの適用計画
-- [ ] **テスト戦略設定**: 単体テスト・統合テスト・E2Eテストの計画
-- [ ] **品質確認基準設定**: Step完了時の品質確認基準・成功基準設定
-- [ ] **カバレッジ目標設定**: テストカバレッジ目標・測定方法確認
+### 5. TDD実践必須化（ルール組み込み）
+- [ ] **✅ TDD必須宣言**: 実装系SubAgent全てでTDD実践を必須化
+- [ ] **TDDサイクル開始**: Red-Green-Refactorサイクル明示開始
+- [ ] **テストファースト**: 必ずテストから作成するルール確認
+- [ ] **品質バリア設定**: 0エラー0警告・テスト100%成功の維持
 
-### 6. Step開始承認・実行準備
-- [ ] **Step目的明確化**: 当該Stepの具体的目的・期待成果の明確化
-- [ ] **作業計画提示**: 推定所要時間・主要作業項目・マイルストーンの提示
-- [ ] **SubAgent実行計画提示**: 選択SubAgent・並列実行計画・効率化戦略をユーザーに提示
-- [ ] **リスク・制約確認**: 技術リスク・時間制約・依存関係リスクの確認
-- [ ] **ユーザー承認取得**: Step開始・組織設計・SubAgent実行計画の最終承認
+### 6. Step開始承認（簡素化）
+- [ ] **Step目的・成果物明示**: 当該Stepの具体的目的・期待成果の明示
+- [ ] **SubAgent並列実行計画提示**: 選択SubAgent・並列実行計画をユーザーに提示
+- [ ] **❗ ユーザー承認取得**: Step開始・SubAgent並列実行の最終承認（必須）
 
 ## StepXX.md作成テンプレート
 
