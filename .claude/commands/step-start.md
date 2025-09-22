@@ -14,25 +14,45 @@
 
 ### 2. Step組織設計（簡素化・効率化）
 - [ ] **Step特性判定**: 当該Stepの作業特性判断（分析/実装/テスト/統合/品質保証）
-- [ ] **🎯 SubAgent組み合わせ選択**: 特性に応じたPattern A/B/Cから選択
+- [ ] **段階種別判定**: Phase B/C/D対応・段階種別の自動判定
+  - **基本実装段階（1-3）**: 基本CRUD・関連機能・機能完成
+  - **品質保証段階（4-6）**: 技術負債解消・UI/UX最適化・統合テスト
+  - **拡張段階（7-8）**: 高度機能・外部連携・運用最適化
+- [ ] **🎯 SubAgent組み合わせ選択**: 特性・段階に応じたPattern A/B/C/D/Eから選択
   - **Pattern A**: 新機能実装 (Domain→Application→Infrastructure→Web UI)
   - **Pattern B**: 機能拡張 (影響分析→実装・統合→品質保証)
   - **Pattern C**: 品質改善 (課題分析→改善実装→検証・完成)
+  - **Pattern D**: 品質保証段階 (技術負債特定→品質改善→統合検証)
+  - **Pattern E**: 拡張段階 (外部連携設計→拡張実装→運用準備)
 - [ ] **🚀 並列実行必須**: 選択SubAgentを同一メッセージ内で複数Task実行
 - [ ] **StepXX_[内容].md作成**: Step組織設計記録ファイル作成（簡素化テンプレート）
 
-### 3. Step Stage構成設計（品質チェックStage組み込み）
-- [ ] **🎯 Step内Stage構成設計**:
+### 3. Step Stage構成設計（段階種別対応・品質チェックStage組み込み）
+- [ ] **🎯 Step内Stage構成設計（段階種別対応）**:
   ```
+  【基本実装段階（1-3）用構成】
   Stage 1: 設計・技術調査
   Stage 2: TDD Red（テスト作成）
   Stage 3: TDD Green（実装）
   Stage 4: 品質チェック＆リファクタリング統合
-    - spec-compliance（仕様準拠確認）
-    - code-review（品質レビュー）
-    - TDD Refactor（問題点の改善）
-    - 再度品質チェック（改善確認）
   Stage 5: 統合確認
+
+  【品質保証段階（4-6）用構成】
+  Stage 1: 技術負債特定・改善計画
+  Stage 2: 品質改善実装（リファクタリング）
+  Stage 3: 品質チェック重点実行
+    - code-review（品質レビュー）
+    - spec-compliance（仕様準拠確認）
+    - integration-test（統合テスト）
+  Stage 4: UI/UX最適化（該当時）
+  Stage 5: E2E検証・パフォーマンステスト
+
+  【拡張段階（7-8）用構成】
+  Stage 1: 外部連携設計・セキュリティ要件
+  Stage 2: 拡張機能実装
+  Stage 3: 外部連携テスト
+  Stage 4: セキュリティ・性能確認
+  Stage 5: 運用準備・監視設定
   ```
 - [ ] **成果物出力先更新**: `/Doc/08_Organization/Active/Phase_XX/Research/`配下
 - [ ] **仕様書照合確認**: Step対象機能の機能仕様書セクション特定

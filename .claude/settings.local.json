@@ -60,7 +60,9 @@
       "Bash(tasklist)",
       "Bash(timeout:*)",
       "Bash(del \"src\\UbiquitousLanguageManager.Web\\Components\\Pages\\Auth\\Logout.razor\")",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(copy:*)",
+      "Read(//c/**)"
     ],
     "deny": [],
     "ask": [],

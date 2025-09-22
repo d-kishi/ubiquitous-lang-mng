@@ -137,6 +137,52 @@ Phase3（検証・完成）:
   - code-review(コードレビュー): 改善効果・品質向上確認
 ```
 
+#### **品質保証段階Pattern（Phase B4-B5, C5-C6, D7等）**
+**対象**: 技術負債解消・UI/UX最適化・統合テスト段階
+**特徴**: 既存実装の品質向上・保守性改善・運用品質確保
+
+**推奨組み合わせD（品質保証重視）**:
+```yaml
+Phase1（技術負債特定・分析）:
+  - code-review(コードレビュー): 既存コードの問題点・改善箇所特定
+  - dependency-analysis(依存関係分析): リファクタリング影響範囲分析
+  - tech-research(技術調査): 最新ベストプラクティス・改善手法調査
+
+Phase2（品質改善実装）:
+  - 対象層に応じた実装系Agent選択（リファクタリング・最適化）
+    * F#品質改善: fsharp-domain(F#ドメイン), fsharp-application(F#アプリケーション)
+    * 境界最適化: contracts-bridge(F#↔C#境界)
+    * C#品質改善: csharp-infrastructure(C#インフラ), csharp-web-ui(C# Web UI)
+  - unit-test(単体テスト): リファクタリング安全性確保・テスト充実
+  - code-review(コードレビュー): 改善効果確認・コード品質向上
+
+Phase3（統合検証・品質確認）:
+  - integration-test(統合テスト): E2E動作確認・パフォーマンステスト
+  - spec-compliance(仕様準拠監査): 仕様準拠維持確認・品質基準達成確認
+```
+
+#### **拡張段階Pattern（Phase D7-D8等）**
+**対象**: 高度機能・外部連携・運用最適化段階
+**特徴**: Claude Code連携・エクスポート機能・監視・ログ・保守機能
+
+**推奨組み合わせE（拡張機能重視）**:
+```yaml
+Phase1（外部連携設計・調査）:
+  - tech-research(技術調査): 外部API調査・連携手法・セキュリティ要件
+  - design-review(設計レビュー): アーキテクチャ影響確認・統合設計
+  - spec-analysis(仕様分析): 外部連携要件・エクスポート仕様分析
+
+Phase2（拡張機能実装）:
+  - csharp-infrastructure(C#インフラ): 外部API連携・データエクスポート実装
+  - contracts-bridge(F#↔C#境界): 外部連携用データ変換・フォーマット変換
+  - csharp-web-ui(C# Web UI): エクスポートUI・外部連携画面実装
+
+Phase3（運用準備・統合確認）:
+  - integration-test(統合テスト): 外部連携テスト・エクスポート機能テスト
+  - code-review(コードレビュー): セキュリティ・性能・保守性確認
+  - spec-compliance(仕様準拠監査): 外部連携仕様準拠・運用要件達成確認
+```
+
 ## 🔄 動的調整パターン
 
 ### Agent追加・変更の判断基準
@@ -297,3 +343,7 @@ Step3 - 記録・改善:
 **更新履歴**:
 - 2025-08-08 初版作成（Phase特性別テンプレート.mdからの移行・SubAgent方式対応）
 - 2025-08-31 実行制御・異常対策セクション追加（integration-test大量起動対策）
+- **2025-09-22 Pattern D・E追加**（縦方向スライス実装マスタープラン改訂対応）
+  - Pattern D: 品質保証段階（Phase B4-B5, C5-C6, D7等）追加
+  - Pattern E: 拡張段階（Phase D7-D8等）追加
+  - Phase B/C/D の5-8段階構成への完全対応
