@@ -73,7 +73,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **技術基盤**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）
 - **現在フェーズ**: Phase A1-A6完了（認証・ユーザー管理）、Phase A7実施予定（要件準拠・アーキテクチャ統一）
 - **技術負債管理**: GitHub Issues #5, #6で管理（ADR_015準拠）
-- **詳細状況**: `/Doc/プロジェクト状況.md`参照
+- **詳細状況**: Serenaメモリー`project_overview`参照
 
 ## アーキテクチャ概要
 
