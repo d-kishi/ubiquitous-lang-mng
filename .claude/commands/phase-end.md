@@ -62,7 +62,7 @@
 ### 7. Phase完了処理実行
 - [ ] **Phase_Summary.md最終更新**: 総括レポート完成・承認記録
 - [ ] **ディレクトリ移動実行**: `/Doc/08_Organization/Active/Phase_XX/` → `/Doc/08_Organization/Completed/Phase_XX/`
-- [ ] **プロジェクト状況更新**: `/Doc/プロジェクト状況.md`の更新
+- [ ] **プロジェクト状況更新**: Serenaメモリー`project_overview`の更新
 - [ ] **次Action提示**: 次Phase開始 or セッション終了 or 週次振り返り
 
 ## Phase_Summary.md更新テンプレート

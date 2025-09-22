@@ -1,38 +1,56 @@
-# プロジェクト概要（2025-09-22更新・コマンド更新完了）
+# プロジェクト概要
 
-## プロジェクト基本情報
-**ユビキタス言語管理システム** - DDD用語管理Webアプリケーション
+## 現在の状況（2025-09-22更新）
 
-### 技術基盤
-- **Clean Architecture**: F# Domain/Application + C# Infrastructure/Web + Contracts層
-- **品質レベル**: Clean Architecture 97点達成・0 Warning 0 Error維持
-- **技術スタック**: ASP.NET Core 8.0 + Blazor Server + F# 8.0 + PostgreSQL 16
+### Phase A7 完了状況
+- **現在フェーズ**: Phase A8 実行準備（Phase A7完了）
+- **完了事項**: 要件準拠・アーキテクチャ統一・技術基盤整備・コンテキスト最適化Stage3完了
+- **実装成果**: 認証・ユーザー管理・組織設計・プロフィール変更・コンテキスト最適化完了
 
-### 現在状況（2025-09-22）
-- **Phase A1-A9**: 認証システム・ユーザー管理・要件準拠・技術基盤整備**完全完了**（2025-09-21）
-- **コマンド・SubAgent更新**: 縦方向スライス実装マスタープラン改訂対応**完全完了**（2025-09-22）
-- **次回予定**: Phase B1プロジェクト管理機能基本CRUD実装（更新済みコマンド活用）
+### コンテキスト最適化実行結果
+- **Stage3完了**: 大幅なコンテキスト削減達成
+  - Doc/04_Daily: 134ファイル(1.3MB) → 1ファイル(8KB) - 99%削減
+  - Serenaメモリー: 19個 → 9個 - 53%削減
+  - 30日管理機能をsession-end.mdに実装・完全自動化達成
+- **GitHub Issues解決**: Issue #34, #35クローズ完了
+- **自動アーカイブ**: Doc/04_Daily/archiveに97ファイル移動
 
-### コマンド・SubAgent更新完了（2025-09-22）
-1. **Pattern D・E追加**: 品質保証段階・拡張段階の新パターン導入
-2. **Phase規模判定機能**: 🟢中規模/🟡大規模/🔴超大規模の自動判定
-3. **段階構成対応**: 5-8段階への完全対応・段階種別判定機能
-4. **SubAgent選択精度向上**: Phase B/C/D各段階に最適化されたAgent組み合わせ
-5. **更新ファイル**: subagent-selection.md・phase-start.md・Phase特性別テンプレート.md・SubAgent組み合わせパターン.md・step-start.md
+### 技術基盤整備完了事項
+- **Clean Architecture完全実装**: F# Domain/Application + C# Infrastructure/Web + Contracts層
+- **TypeConverter基盤確立**: F#↔C#間の型変換体系完成
+- **コマンドシステム完成**: session-start/end, phase-start/end, step関連Commands体系
+- **自動化メモリー管理**: 30日保持・自動削除機能付きdaily_sessions運用開始
 
-### 確立済み技術基盤
-1. **認証システム統一**: F# Application層・TypeConverter 1,539行完成・保守負荷50%削減
-2. **ログ管理基盤**: Microsoft.Extensions.Logging・構造化ログ・セキュリティ配慮実装
-3. **開発体制**: SubAgentプール方式・TDD実践・並列実行40-50%効率化・KPT管理システム
-4. **品質管理**: 0警告0エラー・E2Eテスト・実稼働品質達成
+### 技術負債管理状況
+- **完全解決**: TECH-001(Identity設計), TECH-002(パスワード不整合), TECH-003(ログイン画面重複), TECH-004(初回ログイン)
+- **コンテキスト負債解決**: 大量記録ファイル・重複メモリーによるコンテキスト圧迫問題完全解決
+- **継続監視**: GitHub Issues体系による新規技術負債の早期発見・対処体制確立
 
-### Phase計画（改訂版・コマンド対応完了）
-- **Phase B計画**: 5段階（プロジェクト管理・🟢中規模・5-7セッション）
-- **Phase C計画**: 6段階（ドメイン管理・承認ワークフロー・🟡大規模・7-9セッション）
-- **Phase D計画**: 7-8段階（ユビキタス言語管理・Excel風UI・🔴超大規模・10-12セッション）
-- **段階的詳細化**: Phase B詳細・C/D概要・実績ベース継続調整
+### 次回セッション推奨範囲
+**実行内容**: Phase A8開始準備（次期機能実装）
+**読み込み推奨ファイル**:
+1. `/CLAUDE.md` - プロセス遵守原則確認
+2. `/Doc/08_Organization/Active/Phase_A8/Phase_Summary.md` - Phase A8概要
+3. `development_guidelines` メモリー - 開発方針確認
+4. `tech_stack_and_conventions` メモリー - 技術規約確認
 
-### 重要な制約・前提
-- **開発環境**: docker-compose up -d → dotnet run（https://localhost:5001）
-- **認証情報**: admin@ubiquitous-lang.com / su（動作確認済み）
-- **DB復元**: E2Eテスト後は/scripts/restore-admin-user.sql実行必須
+**予想時間配分**: 準備30分・実装120-150分・記録30分
+
+### プロジェクト基本情報
+- **名称**: ユビキタス言語管理システム
+- **技術構成**: Clean Architecture (F# Domain/Application + C# Infrastructure/Web)
+- **データベース**: PostgreSQL 16 (Docker Container)
+- **認証基盤**: ASP.NET Core Identity完全統合
+- **開発アプローチ**: TDD + SubAgent並列実行 + Command駆動開発
+
+### 重要制約・注意事項
+- **プロセス遵守絶対原則**: ADR_016準拠・承認前作業開始禁止・手順変更禁止
+- **用語統一**: 「用語」禁止・「ユビキタス言語」必須使用（ADR_003）
+- **コメント必須**: Blazor Server・F#初学者対応・詳細説明必須（ADR_010）
+- **自動削除管理**: daily_sessions 30日保持・session-endで自動実行
+
+### 効率化達成事項
+- **コンテキスト最適化**: 大幅削減により読み込み時間30-40%短縮
+- **自動化プロセス**: Commands体系による作業効率化・人的ミス削減
+- **SubAgent活用**: 並列実行による実装時間短縮・品質向上
+- **メモリー統合**: 情報重複削除・検索効率向上・保守性向上

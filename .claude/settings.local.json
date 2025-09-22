@@ -62,7 +62,8 @@
       "Bash(del \"src\\UbiquitousLanguageManager.Web\\Components\\Pages\\Auth\\Logout.razor\")",
       "Bash(awk:*)",
       "Bash(copy:*)",
-      "Read(//c/**)"
+      "Read(//c/**)",
+      "Bash($start = Get-Date)"
     ],
     "deny": [],
     "ask": [],

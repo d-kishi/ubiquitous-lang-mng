@@ -1,84 +1,269 @@
-# 技術スタック・開発規約（2025-09-22更新・コマンド更新対応）
+# 技術スタック・規約
 
-## アーキテクチャ
-- **Clean Architecture**: F# Domain/Application + C# Infrastructure/Web + Contracts層
-- **スコア**: 97/100点達成（要件85-90点を大幅超過）
-- **F# Domain層活用**: 85%達成（Railway-oriented Programming）
-- **TypeConverter基盤**: 1,539行完成（F#↔C#境界効率変換）
+## アーキテクチャ構成
 
-## 技術スタック
-- **Frontend**: Blazor Server + Bootstrap 5
-- **Backend**: ASP.NET Core 8.0 + Entity Framework Core
-- **Domain/Application**: F# 8.0（関数型プログラミング）
-- **Database**: PostgreSQL 16（Docker Container）
-- **認証**: ASP.NET Core Identity統合
-- **ログ管理**: Microsoft.Extensions.Logging + 構造化ログ
+### Clean Architecture構成
+```
+Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F# UseCases) → Domain (F# Models)
+                      ↘ Infrastructure (C# EF Core/Repository) ↗
+```
 
-## 開発規約・品質基準
-- **品質基準**: 0 Warning, 0 Error状態維持必須
-- **TDD実践**: Red-Green-Refactorサイクル組み込み
-- **詳細コメント必須**: Blazor Server・F#初学者対応（ADR_010）
-- **用語統一**: 「用語」ではなく「ユビキタス言語」使用（ADR_003）
+### 技術スタック
+- **Frontend**: Blazor Server + Bootstrap 5 + SignalR
+- **Backend**: ASP.NET Core 8.0 + Entity Framework Core 8.0
+- **Domain/Application**: F# 8.0 + 関数型プログラミング
+- **Database**: PostgreSQL 16 (Docker Container)
+- **認証**: ASP.NET Core Identity
+- **テスト**: xUnit + FsUnit + Moq + WebApplicationFactory
 
-## SubAgent活用パターン（更新完了・2025-09-22）
+## プロジェクト構成
 
-### 基本Pattern（確立済み）
-- **Pattern A**: 新機能実装（基本実装段階・Domain→Application→Infrastructure→Web UI）
-- **Pattern B**: 機能拡張（影響分析→実装・統合→品質保証）
-- **Pattern C**: 品質改善（課題分析→改善実装→検証・完成）
+### ソースコード構成
+```
+src/
+├── UbiquitousLanguageManager.Domain/       # F# ドメインモデル
+├── UbiquitousLanguageManager.Application/  # F# ユースケース
+├── UbiquitousLanguageManager.Contracts/    # C# DTO/TypeConverters
+├── UbiquitousLanguageManager.Infrastructure/ # C# EF Core/Repository
+└── UbiquitousLanguageManager.Web/         # C# Blazor Server
+```
 
-### 新規Pattern（コマンド更新で追加）
-- **Pattern D**: 品質保証段階（Phase B4-B5, C5-C6, D7等）
-  - 技術負債特定→品質改善実装→統合検証・品質確認
-- **Pattern E**: 拡張段階（Phase D7-D8等）
-  - 外部連携設計→拡張機能実装→運用準備・統合確認
+### テストプロジェクト構成
+```
+tests/
+├── UbiquitousLanguageManager.Domain.Tests/     # F# ドメインテスト
+├── UbiquitousLanguageManager.Application.Tests/ # F# アプリケーションテスト
+├── UbiquitousLanguageManager.Integration.Tests/ # C# 統合テスト
+└── UbiquitousLanguageManager.Web.Tests/        # C# Webテスト
+```
 
-### Agent別専門領域
-- **csharp-web-ui**: Blazor Server UI実装（TDD必須）
-- **fsharp-domain**: F# ドメインモデル設計・Railway-oriented Programming
-- **csharp-infrastructure**: EF Core Repository実装・構造化ログ統合
-- **contracts-bridge**: F#↔C# TypeConverter拡張・境界最適化
-- **並列実行効果**: 40-50%時間短縮・品質向上実証
+## F# 実装規約
 
-## Phase規模・段階管理（新機能・2025-09-22）
+### ドメインモデル設計
+- **不変データ**: Record型・判別共用体活用
+- **純粋関数**: 副作用排除・参照透明性維持
+- **Result型**: エラーハンドリング・鉄道指向プログラミング
+- **Option型**: Null参照排除・安全な値表現
 
-### Phase規模判定（自動化）
-- **🟢中規模**: Phase B（5段階・5-7セッション・標準SubAgentパターン）
-- **🟡大規模**: Phase C（6段階・7-9セッション・専門性強化SubAgentパターン）
-- **🔴超大規模**: Phase D（7-8段階・10-12セッション・複雑Phase対応SubAgentパターン）
+### コーディング規約
+```fsharp
+// 型定義
+type UserId = UserId of Guid
+type EmailAddress = EmailAddress of string
 
-### 段階種別判定（自動化）
-- **基本実装段階（1-3）**: 基本CRUD・関連機能・機能完成
-- **品質保証段階（4-6）**: 技術負債解消・UI/UX最適化・統合テスト
-- **拡張段階（7-8）**: 高度機能・外部連携・運用最適化
+// Result型活用
+type CreateUserResult = 
+    | Success of User
+    | InvalidEmail of string
+    | DuplicateUser of string
 
-## 開発コマンド
+// パターンマッチング
+let processUser user =
+    match user.Status with
+    | Active -> activateUser user
+    | Inactive -> deactivateUser user
+    | Suspended reason -> suspendUser user reason
+```
+
+## C# 実装規約
+
+### Blazor Server実装
+- **ライフサイクル**: OnInitializedAsync・OnAfterRenderAsync活用
+- **状態管理**: StateHasChanged明示的呼び出し
+- **エラーハンドリング**: ErrorBoundary・例外ログ記録
+- **パフォーマンス**: PreRender対応・SignalR最適化
+
+### Entity Framework規約
+```csharp
+// Entity設計
+public class UserEntity
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+// Repository実装
+public class UserRepository : IUserRepository
+{
+    private readonly AppDbContext _context;
+    
+    public async Task<User?> GetByIdAsync(Guid id)
+    {
+        var entity = await _context.Users.FindAsync(id);
+        return entity?.ToDomainModel();
+    }
+}
+```
+
+## TypeConverter実装規約
+
+### F#↔C#変換パターン
+```csharp
+// C# Contracts層
+public static class UserTypeConverter
+{
+    public static UserDto ToDto(this FSharpDomain.User user)
+    {
+        return new UserDto
+        {
+            Id = user.Id.Value,
+            Email = user.Email.Value,
+            CreatedAt = user.CreatedAt
+        };
+    }
+    
+    public static FSharpDomain.User ToDomainModel(this UserDto dto)
+    {
+        return FSharpDomain.User.Create(
+            new UserId(dto.Id),
+            new EmailAddress(dto.Email),
+            dto.CreatedAt
+        );
+    }
+}
+```
+
+## データベース設計規約
+
+### PostgreSQL設計指針
+- **主キー**: UUID(Guid)使用・シーケンシャル避ける
+- **インデックス**: 検索頻度・パフォーマンス重視設計
+- **制約**: NOT NULL・UNIQUE・CHECK制約活用
+- **監査**: CreatedAt・UpdatedAt・CreatedBy・UpdatedBy必須
+
+### Migration規約
 ```bash
-# ビルド・実行
-dotnet build
-dotnet run --project src/UbiquitousLanguageManager.Web
-docker-compose up -d
-
-# テスト
-dotnet test
-dotnet test --collect:"XPlat Code Coverage"
-
-# データベース
+# Migration作成
 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
+
+# Migration適用
 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
 ```
 
-## 開発ツールURL
-- **アプリ**: https://localhost:5001
-- **PgAdmin**: http://localhost:8080
+## テスト実装規約
+
+### 単体テスト（F#）
+```fsharp
+[<Test>]
+let ``CreateUser_ValidInput_ReturnsSuccess`` () =
+    // Arrange
+    let email = EmailAddress "test@example.com"
+    
+    // Act
+    let result = User.create email
+    
+    // Assert
+    match result with
+    | Success user -> 
+        user.Email |> should equal email
+    | _ -> 
+        failtest "Expected Success"
+```
+
+### 統合テスト（C#）
+```csharp
+[Fact]
+public async Task GetUser_ValidId_ReturnsUser()
+{
+    // Arrange
+    await using var app = new WebApplicationFactory<Program>();
+    var client = app.CreateClient();
+    
+    // Act
+    var response = await client.GetAsync("/api/users/123");
+    
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+}
+```
+
+## 開発コマンド
+
+### ビルド・実行コマンド
+```bash
+# 全体ビルド
+dotnet build
+
+# Web実行
+dotnet run --project src/UbiquitousLanguageManager.Web
+
+# テスト実行
+dotnet test
+
+# カバレッジ測定
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+### Docker環境コマンド
+```bash
+# 環境起動
+docker-compose up -d
+
+# 環境停止
+docker-compose down
+
+# ログ確認
+docker-compose logs postgres
+```
+
+## Commands一覧
+
+### セッション管理Commands
+- **session-start.md**: セッション開始プロセス・Serena初期化・目的設定
+- **session-end.md**: セッション終了プロセス・記録作成・メモリー更新・30日管理
+
+### Phase管理Commands
+- **phase-start.md**: Phase開始準備・前提条件確認・SubAgent選択
+- **phase-end.md**: Phase総括・成果確認・次Phase準備
+
+### Step管理Commands
+- **step-start.md**: Step開始・タスク設定・並列実行計画
+- **step-end-review.md**: Step品質確認・完了確認・継続判断
+
+### 品質管理Commands
+- **spec-compliance-check**: 仕様準拠監査・マトリックス検証
+- **tdd-practice-check**: TDD実践確認・テストカバレッジ
+- **command-quality-check**: Commands実行品質確認
+
+### SubAgent選択Commands
+- **subagent-selection**: 作業特性・最適Agent組み合わせ選択
+
+## 環境設定
+
+### 開発環境URL
+- **アプリケーション**: https://localhost:5001
+- **PgAdmin**: http://localhost:8080 (admin@ubiquitous-lang.com / admin123)
 - **Smtp4dev**: http://localhost:5080
 
-## 認証情報（動作確認済み）
-- **管理者**: admin@ubiquitous-lang.com / su
+### 認証情報
+- **スーパーユーザー**: admin@ubiquitous-lang.com / su
+- **一般ユーザー**: user@ubiquitous-lang.com / password123
 
-## コマンド更新状況（2025-09-22完了）
-- **subagent-selection.md**: Pattern D・E追加・段階判断機能追加
-- **phase-start.md**: Phase規模判定・段階数自動取得
-- **Phase特性別テンプレート.md**: 全面改訂・5-8段階対応
-- **SubAgent組み合わせパターン.md**: Pattern D・E詳細追加
-- **step-start.md**: 段階種別判定・Stage構成拡張
+## パフォーマンス・監視
+
+### ログ設定
+- **Serilog**: 構造化ログ・レベル分離
+- **Application Insights**: パフォーマンス監視（本番環境）
+- **Debug出力**: 開発時詳細ログ・リアルタイム確認
+
+### メトリクス監視
+- **レスポンス時間**: 500ms以下維持
+- **メモリ使用量**: 2GB以下維持
+- **データベース接続**: 接続プール最適化
+- **CPU使用率**: 70%以下維持
+
+## セキュリティ実装規約
+
+### 認証・認可
+- **Identity Framework**: ASP.NET Core Identity準拠
+- **JWT Token**: API認証・有効期限管理
+- **Role管理**: Admin・User・ReadOnly階層管理
+- **Session管理**: タイムアウト・同時ログイン制御
+
+### 入力検証・サニタイゼーション
+- **サーバーサイド検証**: 必須・信頼境界での検証
+- **クライアント検証**: UX補助・即座フィードバック
+- **SQL Injection**: Entity Framework・パラメーター化クエリ
+- **XSS対策**: 自動エスケープ・CSP設定
