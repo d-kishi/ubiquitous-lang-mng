@@ -179,6 +179,39 @@ public async Task GetUser_ValidId_ReturnsUser()
 }
 ```
 
+## 開発環境・ツール
+
+### 現在の開発環境
+- **基本構成**: ローカル環境 + Docker Compose
+- **IDE**: VS Code/Cursor + 28個推奨拡張機能
+- **データベース**: PostgreSQL 16 (Docker Container)
+- **開発補助**: PgAdmin, Smtp4dev (Docker Container)
+
+### Dev Container移行計画（GitHub Issue #37）
+- **移行予定**: 後日実施・詳細計画策定完了
+- **期待効果**: 環境構築時間90%短縮（1-2時間 → 5分）
+- **技術要件**: .NET 8.0 + F# + PostgreSQL完全対応確認済み
+- **ROI分析**: 新規メンバー2名参加で投資回収・開発効率10-20%向上
+
+### VS Code拡張機能（自動設定予定）
+```json
+// Dev Container移行時の自動インストール拡張機能
+[
+  "ms-dotnettools.csharp",           // C#開発
+  "ms-dotnettools.csdevkit",         // C# Dev Kit
+  "ionide.ionide-fsharp",            // F#開発
+  "formulahendry.dotnet-test-explorer", // テスト実行
+  "ms-azuretools.vscode-docker",     // Docker管理
+  "mtxr.sqltools",                   // データベース接続
+  "mtxr.sqltools-driver-pg",         // PostgreSQL Driver
+  "eamodio.gitlens",                 // Git拡張
+  "christian-kohler.path-intellisense", // パス補完
+  "streetsidesoftware.code-spell-checker", // スペルチェック
+  "shardulm94.trailing-spaces",      // 末尾スペース管理
+  "editorconfig.editorconfig"        // EditorConfig
+]
+```
+
 ## 開発コマンド
 
 ### ビルド・実行コマンド
@@ -241,6 +274,15 @@ docker-compose logs postgres
 - **スーパーユーザー**: admin@ubiquitous-lang.com / su
 - **一般ユーザー**: user@ubiquitous-lang.com / password123
 
+### 接続文字列（Dev Container移行時調整予定）
+```json
+// 現在（ローカル環境）
+"DefaultConnection": "Host=localhost;Database=ubiquitous_lang_db;Username=ubiquitous_lang_user;Password=ubiquitous_lang_password;Port=5432"
+
+// Dev Container移行後
+"DefaultConnection": "Host=postgres;Database=ubiquitous_lang_db;Username=ubiquitous_lang_user;Password=ubiquitous_lang_password;Port=5432"
+```
+
 ## パフォーマンス・監視
 
 ### ログ設定
@@ -267,3 +309,7 @@ docker-compose logs postgres
 - **クライアント検証**: UX補助・即座フィードバック
 - **SQL Injection**: Entity Framework・パラメーター化クエリ
 - **XSS対策**: 自動エスケープ・CSP設定
+
+---
+**最終更新**: 2025-09-24（Dev Container移行計画追加）  
+**次回更新**: Dev Container移行実施時または重要な技術変更時

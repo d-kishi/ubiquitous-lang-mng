@@ -68,6 +68,19 @@
 - **テスト時**: unit-test + integration-test 並列実行
 - **品質確認**: spec-compliance + code-review 並列実行
 
+## 環境管理・改善方針（2025-09-24追加）
+
+### Dev Container移行計画
+- **GitHub Issue**: #37で管理・後日実施予定
+- **期待効果**: 環境構築時間90%短縮（1-2時間 → 5分）
+- **技術要件**: .NET 8.0 + F# + PostgreSQL + VS Code拡張機能完全対応
+- **ROI評価**: 新規メンバー2名参加で投資回収・開発効率10-20%向上
+
+### 環境標準化指針
+- **現状**: ローカル環境・Docker Compose（PostgreSQL/PgAdmin/Smtp4dev）
+- **移行後**: Dev Container統合環境・VS Code拡張機能自動設定
+- **利点**: 環境差異解消・オンボーディング簡易化・Issue #29根本解決
+
 ## 情報管理・選択指針
 
 ### 必要最小限読み込み原則
@@ -125,3 +138,7 @@
 - **継続監視**: GitHub Issues による課題管理
 - **学習蓄積**: daily_sessions による知見共有
 - **プロセス改善**: 週次振り返りによる改善循環
+
+---
+**最終更新**: 2025-09-24（Dev Container移行計画追加）  
+**次回更新**: Phase B1開始時または重要な方針変更時
