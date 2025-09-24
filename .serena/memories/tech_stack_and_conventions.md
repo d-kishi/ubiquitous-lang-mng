@@ -241,27 +241,74 @@ docker-compose down
 docker-compose logs postgres
 ```
 
-## Commands一覧
+## 🚀 Commands一覧（2025-09-25更新）
 
 ### セッション管理Commands
 - **session-start.md**: セッション開始プロセス・Serena初期化・目的設定
-- **session-end.md**: セッション終了プロセス・記録作成・メモリー更新・30日管理
+- **session-end.md**: セッション終了プロセス・差分更新・記録作成・メモリー30日管理
 
 ### Phase管理Commands
 - **phase-start.md**: Phase開始準備・前提条件確認・SubAgent選択
 - **phase-end.md**: Phase総括・成果確認・次Phase準備
 
 ### Step管理Commands
-- **step-start.md**: Step開始・タスク設定・並列実行計画
+- **step-start.md**: Step開始・task-breakdown統合・並列実行計画
 - **step-end-review.md**: Step品質確認・完了確認・継続判断
 
-### 品質管理Commands
-- **spec-compliance-check**: 仕様準拠監査・マトリックス検証
+### 品質管理Commands（強化版）
+- **spec-validate**: Phase/Step開始前事前検証（100点満点・3カテゴリ）
+- **spec-compliance-check**: 加重スコアリング仕様準拠監査（50/30/20点配分）
 - **tdd-practice-check**: TDD実践確認・テストカバレッジ
 - **command-quality-check**: Commands実行品質確認
 
+### 新規Commands（2025-09-25追加）
+- **task-breakdown**: 自動タスク分解・TodoList連携・Clean Architecture層別分解
+
 ### SubAgent選択Commands
 - **subagent-selection**: 作業特性・最適Agent組み合わせ選択
+
+## 🎯 仕様駆動開発強化体制（2025-09-25追加）
+
+### 加重スコアリング体系
+```yaml
+肯定的仕様準拠度: 50点満点（重要度: 最高）
+  - 必須機能実装: 30点
+  - 推奨機能実装: 15点
+  - 拡張機能実装: 5点
+
+否定的仕様遵守度: 30点満点（重要度: 高）
+  - 禁止事項遵守: 20点
+  - 制約条件遵守: 10点
+
+実行可能性・品質: 20点満点（重要度: 中）
+  - テストカバレッジ: 8点
+  - パフォーマンス: 6点
+  - 保守性: 6点
+```
+
+### 自動証跡記録機能
+- **実装箇所自動検出**: 仕様項番コメントからの逆引き
+- **コードスニペット収集**: 重要実装部分の自動抽出
+- **実装行番号マッピング**: 仕様項番 ↔ ソースコード行番号対応表
+
+### Phase B1特化機能
+```yaml
+GitHub Issue連携:
+  - Issue #38自動読み込み: 3項目の詳細タスク化
+  - 新規Issue自動作成: サブタスクIssue作成
+  
+Clean Architecture層別分解:
+  - Domain層（F#）: Project型定義・Smart Constructor実装
+  - Application層（F#）: CreateProjectCommand/Query定義
+  - Contracts層（C#）: ProjectDto/CreateProjectDto実装
+  - Infrastructure層（C#）: ProjectRepository実装
+  - Web層（C#/Blazor Server）: プロジェクト管理画面実装
+
+権限制御実装:
+  - 4ロール×4機能=16通りテストケース
+  - SuperUser/ProjectManager/DomainApprover/GeneralUser
+  - 作成・編集・削除・参照機能の組み合わせ
+```
 
 ## 環境設定
 
@@ -311,5 +358,5 @@ docker-compose logs postgres
 - **XSS対策**: 自動エスケープ・CSP設定
 
 ---
-**最終更新**: 2025-09-24（Dev Container移行計画追加）  
-**次回更新**: Dev Container移行実施時または重要な技術変更時
+**最終更新**: 2025-09-25（仕様駆動開発強化・Command体系統合・task-breakdown追加）  
+**重要追加**: 加重スコアリング・自動証跡記録・Phase B1特化・GitHub Issue連携

@@ -13,20 +13,62 @@
 - **承認記録**: 取得した承認の明示的記録
 - **チェックリスト実行**: 組織管理運用マニュアルのプロセス遵守チェック
 
+## 🚀 強化されたCommand体系（2025-09-25更新）
+
+### 仕様駆動開発Command群
+- **spec-validate**: Phase/Step開始前事前検証（100点満点・3カテゴリ）
+- **spec-compliance-check**: 加重スコアリング仕様準拠確認（50/30/20点配分）
+- **task-breakdown**: 自動タスク分解・TodoList連携・Clean Architecture層別分解
+
+### 統合workflow（step-start強化版）
+```
+step-start Command実行
+↓
+task-breakdown自動実行（新機能）
+├─ GitHub Issue読み込み（高優先度・phase-B1）
+├─ Clean Architecture層別タスク分解
+├─ TodoList自動生成・工数見積もり
+└─ ユーザー承認
+↓
+SubAgent並列実行（Pattern A/B/C/D/E選択）
+```
+
+### session-end改善（差分更新方式・2025-09-25）
+- **既存内容読み込み**: 各メモリー更新前にmcp__serena__read_memory実行必須
+- **差分更新方式**: 全面書き換え禁止・既存内容保持・必要部分のみ更新
+- **履歴管理**: daily_sessions 30日保持・task_completion_checklist状態更新
+
 ## コマンド駆動開発プロセス
 
 ### 自動実行Commands
-- **セッション管理**: session-start.md / session-end.md
+- **セッション管理**: session-start.md / session-end.md（差分更新方式）
 - **Phase管理**: phase-start.md / phase-end.md
-- **Step管理**: step-start.md / step-end-review Commands
-- **品質管理**: spec-compliance-check / tdd-practice-check
+- **Step管理**: step-start.md（task-breakdown統合） / step-end-review Commands
+- **品質管理**: spec-validate・spec-compliance-check・tdd-practice-check
 
-### セッション終了時必須更新（自動化完了）
-- **daily_sessions**: 30日保持・自動削除・重要情報構造化
-- **project_overview**: Phase進捗・技術負債・完了事項
-- **development_guidelines**: 方針変更・プロセス改善
-- **tech_stack_and_conventions**: 技術発見・規約変更
-- **task_completion_checklist**: タスク状況・継続課題
+### セッション終了時必須更新（差分更新自動化）
+- **daily_sessions**: 30日保持・自動削除・重要情報構造化・既存履歴保持
+- **project_overview**: Phase進捗・技術負債・完了事項・該当セクションのみ更新
+- **development_guidelines**: 方針変更・プロセス改善・新規追記のみ
+- **tech_stack_and_conventions**: 技術発見・規約変更・新規追記のみ
+- **task_completion_checklist**: タスク状況・継続課題・状態更新のみ
+
+## 🎯 品質管理強化体制（2025-09-25強化）
+
+### 加重スコアリング体系
+- **肯定的仕様準拠度**: 50点満点（最高重要度）
+- **否定的仕様遵守度**: 30点満点（高重要度）  
+- **実行可能性・品質**: 20点満点（中重要度）
+- **目標**: 95点以上達成・維持
+
+### 自動証跡記録
+- **実装箇所自動検出**: 仕様項番コメントからの逆引き
+- **コードスニペット収集**: 重要実装部分の自動抽出
+- **実装行番号マッピング**: 仕様項番 ↔ ソースコード行番号対応
+
+### 事前検証体制
+- **spec-validate**: Phase/Step開始前の仕様完全性検証
+- **品質ゲート**: 95点未満時の開始禁止・改善必須
 
 ## 技術実装方針
 
@@ -54,19 +96,28 @@
 - **統合テスト**: WebApplicationFactory
 - **カバレッジ**: 95%以上維持
 
-## SubAgent活用戦略
+## 🤖 SubAgent活用戦略
 
 ### 主要SubAgent
 - **csharp-web-ui**: Blazor Server・認証UI・リアルタイム機能
 - **fsharp-domain**: ドメインモデル・ビジネスロジック・関数型パターン
 - **contracts-bridge**: F#↔C#型変換・相互運用・TypeConverter
 - **integration-test**: WebApplicationFactory・E2E・API・DB統合
-- **spec-compliance**: 仕様準拠監査・マトリックス検証・受け入れ基準
+- **spec-compliance**: 仕様準拠監査・加重スコアリング・証跡記録
+- **spec-analysis**: 仕様書分析・原典仕様確認・完全性検証
 
 ### 並列実行パターン
 - **実装時**: fsharp-domain + csharp-web-ui + contracts-bridge 並列実行
 - **テスト時**: unit-test + integration-test 並列実行
 - **品質確認**: spec-compliance + code-review 並列実行
+- **設計時**: spec-analysis + design-review 並列実行
+
+### Pattern選択ガイドライン（2025-09-25追加）
+- **Pattern A**: 新機能実装（Domain→Application→Infrastructure→Web）
+- **Pattern B**: 機能拡張（影響分析→実装統合→品質保証）
+- **Pattern C**: 品質改善（課題分析→改善実装→検証完成）
+- **Pattern D**: 品質保証段階（技術負債→品質改善→統合検証）
+- **Pattern E**: 拡張段階（外部連携→拡張実装→運用準備）
 
 ## 環境管理・改善方針（2025-09-24追加）
 
@@ -80,6 +131,23 @@
 - **現状**: ローカル環境・Docker Compose（PostgreSQL/PgAdmin/Smtp4dev）
 - **移行後**: Dev Container統合環境・VS Code拡張機能自動設定
 - **利点**: 環境差異解消・オンボーディング簡易化・Issue #29根本解決
+
+## 📋 GitHub Issues管理強化（2025-09-25追加）
+
+### Issue作成・管理規約
+- **高優先度**: Phase開始前必須対応事項（即座対応）
+- **低優先度**: 将来実装・研究開発的要素（詳細記録・再開可能状態）
+- **技術負債**: TECH-XXX形式・系統管理
+
+### Issue種別・ラベル体系
+- **phase-B1**: Phase B1関連作業
+- **spec-driven**: 仕様駆動開発関連
+- **quality**: 品質改善・技術負債
+- **enhancement**: 機能拡張・改善提案
+
+### 現在のIssue状況
+- **Issue #38**: Phase B1開始前必須対応事項（🔴高優先度・次回セッション対応）
+- **Issue #39**: 仕様駆動開発強化Phase 2・3（🔵低優先度・将来実装）
 
 ## 情報管理・選択指針
 
@@ -140,5 +208,5 @@
 - **プロセス改善**: 週次振り返りによる改善循環
 
 ---
-**最終更新**: 2025-09-24（Dev Container移行計画追加）  
-**次回更新**: Phase B1開始時または重要な方針変更時
+**最終更新**: 2025-09-25（仕様駆動開発強化・Command体系統合・session-end差分更新方式）  
+**重要変更**: 加重スコアリング・task-breakdown統合・GitHub Issues管理・差分更新方式
