@@ -110,6 +110,42 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **Blazor Server**: ライフサイクル・StateHasChanged・SignalR接続の説明
 - **F#**: パターンマッチング・Option型・Result型の概念説明
 
+### 🔴 メインエージェント必須遵守事項（ADR_016準拠）
+**エラー修正時の責務分担原則** - タイミング問わず適用
+
+#### MainAgent責務定義
+```markdown
+✅ 実行可能な作業:
+- 全体調整・オーケストレーション
+- SubAgentへの作業委託・指示
+- 品質確認・統合テスト実行
+- プロセス管理・進捗管理
+- ドキュメント統合・レポート作成
+
+❌ 禁止事項（例外を除く）:
+- 実装コードの直接修正
+- ビジネスロジックの追加・変更
+- 型変換ロジックの実装
+- テストコードの作成・修正
+- データベーススキーマの変更
+```
+
+#### エラー発生時の必須対応原則
+1. **エラー内容で責務判定**（発生場所・タイミング問わず）
+2. **責務マッピングでSubAgent選定**：
+   - F# Domain/Application層 → fsharp-domain/fsharp-application
+   - F#↔C#境界・型変換 → contracts-bridge
+   - C# Infrastructure/Web層 → csharp-infrastructure/csharp-web-ui
+   - テストエラー → unit-test/integration-test
+3. **Fix-Mode活用**：`"[SubAgent名] Agent, Fix-Mode: [修正内容]"`
+4. **効率性より責務遵守を優先**
+
+#### 例外（直接修正可能）
+- 単純なtypo（1-2文字）
+- import文の追加のみ
+- コメントの追加・修正
+- 空白・インデントの調整
+
 ## 開発コマンド
 
 ### ビルド・実行

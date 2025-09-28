@@ -88,7 +88,7 @@ with
         name
 
 // 📝 説明文値オブジェクト
-type Description = 
+type Description =
     private Description of string
 with
     static member create (descStr: string) =
@@ -98,10 +98,81 @@ with
             Error "説明は1000文字以内で入力してください"
         else
             Ok (Description descStr)
-    
-    member this.Value = 
+
+    member this.Value =
         let (Description desc) = this
         desc
+
+// 📁 プロジェクト名値オブジェクト（Phase B1 新規追加）
+// 【F#初学者向け解説】
+// Smart Constructor パターンを適用したプロジェクト名の値オブジェクトです。
+// privateコンストラクタにより、不正な値での作成を防ぎ、createメソッドを通じてのみ
+// 適切に検証された値でインスタンスを作成できます。これにより型安全性を確保します。
+type ProjectName =
+    private ProjectName of string
+with
+    static member create (nameStr: string) : Result<ProjectName, string> =
+        if System.String.IsNullOrWhiteSpace(nameStr) then
+            Error "プロジェクト名は必須です"
+        elif nameStr.Length > 100 then
+            Error "プロジェクト名は100文字以内で入力してください"
+        elif nameStr.Length < 3 then
+            Error "プロジェクト名は3文字以上で入力してください"
+        else
+            Ok (ProjectName nameStr)
+
+    member this.Value =
+        let (ProjectName name) = this
+        name
+
+// 📝 プロジェクト説明値オブジェクト（Phase B1 新規追加）
+// 【F#初学者向け解説】
+// Option型を活用してプロジェクト説明の任意性を表現します。
+// None = 説明なし、Some description = 説明ありを型安全に表現し、
+// 空文字列とnullによる混乱を防ぎます。
+type ProjectDescription =
+    private ProjectDescription of string option
+with
+    static member create (descStr: string option) : Result<ProjectDescription, string> =
+        match descStr with
+        | None -> Ok (ProjectDescription None)
+        | Some desc when System.String.IsNullOrWhiteSpace(desc) ->
+            Ok (ProjectDescription None)  // 空文字列はNoneとして扱う
+        | Some desc when desc.Length > 1000 ->
+            Error "プロジェクト説明は1000文字以内で入力してください"
+        | Some desc -> Ok (ProjectDescription (Some (desc.Trim())))
+
+    // 文字列オプションから作成するヘルパーメソッド
+    static member createFromString (descStr: string) : Result<ProjectDescription, string> =
+        if System.String.IsNullOrWhiteSpace(descStr) then
+            Ok (ProjectDescription None)
+        else
+            ProjectDescription.create (Some descStr)
+
+    member this.Value =
+        let (ProjectDescription desc) = this
+        desc
+
+// 🏷️ ドメイン名値オブジェクト（Phase B1 新規追加）
+// 【F#初学者向け解説】
+// ドメイン名のためのSmart Constructor実装
+// ビジネスルール：必須・最大100文字・デフォルトドメイン自動生成対応
+type DomainName =
+    private DomainName of string
+with
+    static member create (nameStr: string) : Result<DomainName, string> =
+        if System.String.IsNullOrWhiteSpace(nameStr) then
+            Error "ドメイン名は必須です"
+        elif nameStr.Length > 100 then
+            Error "ドメイン名は100文字以内で入力してください"
+        elif nameStr.Length < 3 then
+            Error "ドメイン名は3文字以上で入力してください"
+        else
+            Ok (DomainName nameStr)
+
+    member this.Value =
+        let (DomainName name) = this
+        name
 
 // 🎭 ユーザーロール: 権限管理のための列挙型
 type UserRole =

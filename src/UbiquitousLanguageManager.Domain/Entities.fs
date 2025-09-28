@@ -401,44 +401,180 @@ type User = {
             UpdatedBy = UserId.create 1L
         }
 
-// 📁 プロジェクトエンティティ: ドメイン領域の管理単位
+// 📁 プロジェクトエンティティ: ドメイン領域の管理単位（Phase B1 拡張版）
+// 【F#初学者向け解説】
+// Clean Architecture Aggregate Rootパターンを適用したプロジェクトエンティティです。
+// レコード型の不変性により、データの整合性を保ちながら安全にプロジェクト管理ができます。
+// Smart Constructorパターンと組み合わせることで、不正な状態のProjectを作成できません。
 type Project = {
     Id: ProjectId
-    Name: JapaneseName
-    Description: Description
+    Name: ProjectName               // Phase B1: 専用のProjectName値オブジェクト使用
+    Description: ProjectDescription  // Phase B1: 専用のProjectDescription値オブジェクト使用
+    OwnerId: UserId                 // Phase B1: プロジェクト所有者の追加
+    CreatedAt: DateTime             // Phase B1: 作成日時の追加（監査情報）
+    UpdatedAt: DateTime option      // Phase B1: 更新日時をOption型で表現
     IsActive: bool
-    UpdatedAt: DateTime
-    UpdatedBy: UserId
 } with
-    // 🔧 プロジェクト作成
-    static member create (name: JapaneseName) (description: Description) (createdBy: UserId) = {
-        Id = ProjectId 0L
+    // 🔧 プロジェクト作成（Phase B1 拡張版）
+    // 【F#初学者向け解説】
+    // ファクトリーメソッドパターンにより、適切に初期化されたProjectを作成します。
+    // IDは0Lで仮設定し、Infrastructure層で実際のIDが設定されます。
+    static member create (name: ProjectName) (description: ProjectDescription) (ownerId: UserId) : Project = {
+        Id = ProjectId 0L  // 🔄 実際のIDはInfrastructure層で設定
         Name = name
         Description = description
+        OwnerId = ownerId
+        CreatedAt = DateTime.UtcNow
+        UpdatedAt = None    // 作成時は更新日時なし
         IsActive = true
-        UpdatedAt = DateTime.UtcNow
-        UpdatedBy = createdBy
     }
 
-// 🏷️ ドメインエンティティ: プロジェクト内の特定領域
+    // 🔧 ID付きプロジェクト作成（テスト用）
+    // 【F#初学者向け解説】
+    // テストやApplication層での型変換確認のため、IDを明示的に指定できるメソッドです。
+    // F#のメソッドオーバーロード制限により、異なる名前を使用します。
+    static member createWithId (id: ProjectId) (name: ProjectName) (description: ProjectDescription) (ownerId: UserId) : Project = {
+        Id = id
+        Name = name
+        Description = description
+        OwnerId = ownerId
+        CreatedAt = DateTime.UtcNow
+        UpdatedAt = None
+        IsActive = true
+    }
+
+    // 📝 プロジェクト名変更: ビジネスルールを適用した更新
+    // 【F#初学者向け解説】
+    // Result型を使用することで、エラーハンドリングをコンパイル時に強制します。
+    // プロジェクトの状態変更は新しいインスタンスを返すことで不変性を保ちます。
+    member this.changeName (newName: ProjectName) (updatedBy: UserId) : Result<Project, string> =
+        if not this.IsActive then
+            Error "非アクティブなプロジェクトの名前は変更できません"
+        else
+            Ok { this with
+                    Name = newName
+                    UpdatedAt = Some DateTime.UtcNow }
+
+    // 📝 プロジェクト説明変更: 説明の更新処理
+    member this.changeDescription (newDescription: ProjectDescription) (updatedBy: UserId) : Result<Project, string> =
+        if not this.IsActive then
+            Error "非アクティブなプロジェクトの説明は変更できません"
+        else
+            Ok { this with
+                    Description = newDescription
+                    UpdatedAt = Some DateTime.UtcNow }
+
+    // 🚫 プロジェクト無効化: 論理削除によるプロジェクト無効化
+    // 【F#初学者向け解説】
+    // 物理削除ではなく論理削除を行います。これにより、関連するドメインや
+    // ユビキタス言語との関係を保ちながら、新規作業を防ぐことができます。
+    member this.deactivate (operatorUser: User) (updatedBy: UserId) : Result<Project, string> =
+        if not (PermissionMappings.hasPermission operatorUser.Role DeleteProjects) then
+            Error "プロジェクト削除の権限がありません"
+        elif not this.IsActive then
+            Error "既に無効化されているプロジェクトです"
+        else
+            Ok { this with
+                    IsActive = false
+                    UpdatedAt = Some DateTime.UtcNow }
+
+    // ✅ プロジェクト有効化: 無効化されたプロジェクトの再有効化
+    member this.activate (operatorUser: User) (updatedBy: UserId) : Result<Project, string> =
+        if not (PermissionMappings.hasPermission operatorUser.Role ManageProjects) then
+            Error "プロジェクト管理の権限がありません"
+        elif this.IsActive then
+            Error "既に有効化されているプロジェクトです"
+        else
+            Ok { this with
+                    IsActive = true
+                    UpdatedAt = Some DateTime.UtcNow }
+
+    // 👤 プロジェクト所有者変更: 所有権移譲の処理
+    member this.changeOwner (newOwnerId: UserId) (operatorUser: User) (updatedBy: UserId) : Result<Project, string> =
+        if not (PermissionMappings.hasPermission operatorUser.Role ManageProjects) then
+            Error "プロジェクト管理の権限がありません"
+        elif not this.IsActive then
+            Error "非アクティブなプロジェクトの所有者は変更できません"
+        elif this.OwnerId = newOwnerId then
+            Error "現在の所有者と同じユーザーが指定されています"
+        else
+            Ok { this with
+                    OwnerId = newOwnerId
+                    UpdatedAt = Some DateTime.UtcNow }
+
+// 🏷️ ドメインエンティティ: プロジェクト内の特定領域（Phase B1 拡張版）
+// 【F#初学者向け解説】
+// プロジェクト内のドメイン境界を表現するエンティティです。
+// 新しいDomainName値オブジェクトを使用し、デフォルトドメイン自動作成に対応しています。
 type Domain = {
     Id: DomainId
     ProjectId: ProjectId
-    Name: JapaneseName
-    Description: Description
+    Name: DomainName                // Phase B1: 専用のDomainName値オブジェクト使用
+    Description: ProjectDescription // Phase B1: プロジェクトと統一したDescription使用
+    OwnerId: UserId                 // Phase B1: ドメイン所有者の追加
+    IsDefault: bool                 // Phase B1: デフォルトドメインフラグの追加
+    CreatedAt: DateTime             // Phase B1: 作成日時の追加（監査情報）
+    UpdatedAt: DateTime option      // Phase B1: 更新日時をOption型で表現
     IsActive: bool
-    UpdatedAt: DateTime
-    UpdatedBy: UserId
 } with
-    // 🔧 ドメイン作成
-    static member create (projectId: ProjectId) (name: JapaneseName) (description: Description) (createdBy: UserId) = {
-        Id = DomainId 0L
+    // 🔧 ドメイン作成（Phase B1 拡張版）
+    // 【F#初学者向け解説】
+    // プロジェクト作成時のデフォルトドメイン自動作成に対応したファクトリーメソッドです。
+    static member create (name: DomainName) (projectId: ProjectId) (ownerId: UserId) : Domain = {
+        Id = DomainId 0L  // 🔄 実際のIDはInfrastructure層で設定
         ProjectId = projectId
         Name = name
-        Description = description
+        Description = ProjectDescription.create None |> function
+                     | Ok desc -> desc
+                     | Error _ -> failwith "空の説明作成に失敗"
+        OwnerId = ownerId
+        IsDefault = false
+        CreatedAt = DateTime.UtcNow
+        UpdatedAt = None
         IsActive = true
-        UpdatedAt = DateTime.UtcNow
-        UpdatedBy = createdBy
+    }
+
+    // 🔧 デフォルトドメイン作成（Phase B1 新規追加）
+    // 【F#初学者向け解説】
+    // プロジェクト作成時に自動的に作成されるデフォルトドメインのファクトリーメソッドです。
+    // IsDefault = true により、このドメインがデフォルトであることを示します。
+    static member createDefault (projectId: ProjectId) (projectName: ProjectName) (ownerId: UserId) : Result<Domain, string> =
+        let defaultDomainName = $"{projectName.Value}_Default"
+        match DomainName.create defaultDomainName with
+        | Ok domainName ->
+            let description =
+                ProjectDescription.create (Some "プロジェクト作成時に自動生成されたデフォルトドメインです")
+                |> function
+                   | Ok desc -> desc
+                   | Error _ -> ProjectDescription.create None |> function
+                                | Ok desc -> desc
+                                | Error _ -> failwith "デフォルトドメイン説明作成に失敗"
+            Ok {
+                Id = DomainId 0L
+                ProjectId = projectId
+                Name = domainName
+                Description = description
+                OwnerId = ownerId
+                IsDefault = true   // デフォルトドメインフラグ
+                CreatedAt = DateTime.UtcNow
+                UpdatedAt = None
+                IsActive = true
+            }
+        | Error err -> Error $"デフォルトドメイン作成失敗: {err}"
+
+    // 🔧 ID付きドメイン作成（テスト用）
+    static member createWithId (id: DomainId) (name: DomainName) (projectId: ProjectId) (ownerId: UserId) : Domain = {
+        Id = id
+        ProjectId = projectId
+        Name = name
+        Description = ProjectDescription.create None |> function
+                     | Ok desc -> desc
+                     | Error _ -> failwith "空の説明作成に失敗"
+        OwnerId = ownerId
+        IsDefault = false
+        CreatedAt = DateTime.UtcNow
+        UpdatedAt = None
+        IsActive = true
     }
 
 // 📝 下書きユビキタス言語エンティティ: 承認前の用語定義

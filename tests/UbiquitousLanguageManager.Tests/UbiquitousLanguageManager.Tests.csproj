@@ -25,11 +25,12 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <!--
   <ItemGroup>
     <Compile Include="Application\AuthenticationServiceTests.fs" />
+    <Compile Include="Domain\ProjectTests.fs" />
+    <Compile Include="Domain\ProjectDomainServiceTests.fs" />
+    <Compile Include="Domain\ProjectErrorHandlingTests.fs" />
   </ItemGroup>
-  -->
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />

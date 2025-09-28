@@ -30,6 +30,34 @@ public static class TypeConverters
     {
         _logger = logger;
     }
+
+    // =================================================================
+    // 🔧 F# Option型変換ヘルパーメソッド（Phase B1 新規追加）
+    // =================================================================
+
+    /// <summary>
+    /// F# Option&lt;string&gt; を C# string? に変換
+    /// </summary>
+    private static string? ConvertOptionString(FSharpOption<string> optionValue)
+    {
+        return FSharpOption<string>.get_IsNone(optionValue) ? null : optionValue.Value;
+    }
+
+    /// <summary>
+    /// F# Option&lt;DateTime&gt; を C# DateTime? に変換
+    /// </summary>
+    private static DateTime? ConvertOptionDateTime(FSharpOption<DateTime> optionValue)
+    {
+        return FSharpOption<DateTime>.get_IsNone(optionValue) ? null : optionValue.Value;
+    }
+
+    /// <summary>
+    /// F# string option を C# string に変換（null時は空文字列）
+    /// </summary>
+    private static string ConvertOptionStringToString(FSharpOption<string> optionValue)
+    {
+        return FSharpOption<string>.get_IsNone(optionValue) ? string.Empty : optionValue.Value ?? string.Empty;
+    }
     // =================================================================
     // 🔄 F# → C# 変換メソッド（ドメインエンティティ → DTO）
     // =================================================================
@@ -139,20 +167,58 @@ public static class TypeConverters
     }
 
     /// <summary>
-    /// F#のProjectエンティティをC#のProjectDTOに変換
+    /// Phase B1: F#のProjectエンティティをC#のProjectDTOに変換（拡張版）
+    /// F#ドメインエンティティの完全な情報をC# DTOに型安全に変換
+    /// CreatedAt、OwnerId等の新フィールドに対応
     /// </summary>
     /// <param name="project">F#で定義されたProjectエンティティ</param>
     /// <returns>C#のProjectDTO</returns>
+    /// <exception cref="ArgumentNullException">projectがnullの場合</exception>
     public static ProjectDto ToDto(Project project)
     {
-        return new ProjectDto
+        var stopwatch = Stopwatch.StartNew();
+
+        try
         {
-            Id = project.Id.Value,                  // F#のProjectId判別共用体から値を取得
-            Name = project.Name.Value,               // F#のJapaneseName値オブジェクトから値を取得
-            Description = project.Description.Value, // F#のDescription値オブジェクトから値を取得
-            UpdatedAt = project.UpdatedAt,
-            UpdatedBy = project.UpdatedBy.Value      // F#のUserId判別共用体から値を取得
-        };
+            if (project == null)
+            {
+                _logger?.LogError("F# Project→C# ProjectDTO変換失敗: Projectエンティティがnull");
+                throw new ArgumentNullException(nameof(project), "Projectエンティティがnullです");
+            }
+
+            _logger?.LogDebug("F# Project→C# ProjectDTO変換開始 ProjectId: {ProjectId}, Name: {Name}",
+                project.Id.Value, project.Name.Value);
+
+            // F#のProject型から新しいProjectDto仕様への完全変換
+            var result = new ProjectDto
+            {
+                Id = project.Id.Value,                      // F#のProjectId判別共用体から値を取得
+                Name = project.Name.Value,                   // F#のJapaneseName値オブジェクトから値を取得
+                Description = ConvertOptionStringToString(project.Description.Value), // F# ProjectDescription Option型変換
+                OwnerId = project.OwnerId.Value,             // F# UserId判別共用体（Phase B1で追加）
+                CreatedAt = project.CreatedAt,               // F# DateTime（Phase B1で追加）
+                UpdatedAt = ConvertOptionDateTime(project.UpdatedAt), // F# DateTime option変換
+                UpdatedBy = project.OwnerId.Value,           // 暫定: 所有者をUpdatedByとして設定
+                IsActive = project.IsActive,                // F#のIsActive（bool）
+                Domains = new List<DomainDto>(),            // 関連ドメインは別途取得・設定
+                MemberCount = 0                             // プロジェクト参加者数は別途算出・設定
+            };
+
+            _logger?.LogInformation("F# Project→C# ProjectDTO変換成功 ProjectId: {ProjectId}, ConversionTime: {ConversionTime}ms",
+                project.Id.Value, stopwatch.ElapsedMilliseconds);
+
+            return result;
+        }
+        catch (Exception ex) when (!(ex is ArgumentNullException))
+        {
+            _logger?.LogError(ex, "F# Project→C# ProjectDTO変換で予期しないエラーが発生 ProjectId: {ProjectId}, ConversionTime: {ConversionTime}ms",
+                project?.Id?.Value ?? 0L, stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+        finally
+        {
+            stopwatch.Stop();
+        }
     }
 
     /// <summary>
@@ -166,11 +232,11 @@ public static class TypeConverters
         {
             Id = domain.Id.Value,                   // F#のDomainId判別共用体から値を取得
             ProjectId = domain.ProjectId.Value,      // F#のProjectId判別共用体から値を取得
-            Name = domain.Name.Value,                // F#のJapaneseName値オブジェクトから値を取得
-            Description = domain.Description.Value,  // F#のDescription値オブジェクトから値を取得
+            Name = domain.Name.Value,                // F#のDomainName値オブジェクトから値を取得
+            Description = ConvertOptionStringToString(domain.Description.Value),  // F#のProjectDescription Option型変換
             IsActive = domain.IsActive,
-            UpdatedAt = domain.UpdatedAt,
-            UpdatedBy = domain.UpdatedBy.Value       // F#のUserId判別共用体から値を取得
+            UpdatedAt = ConvertOptionDateTime(domain.UpdatedAt) ?? domain.CreatedAt, // F# DateTime option変換（null時はCreatedAt使用）
+            UpdatedBy = domain.OwnerId.Value         // 暫定: 所有者をUpdatedByとして設定
         };
     }
 
@@ -263,13 +329,13 @@ public static class TypeConverters
     public static FSharpResult<DomainEntity, string> FromCreateDto(CreateDomainDto dto)
     {
         var projectIdResult = CreateProjectId(dto.ProjectId);
-        var nameResult = JapaneseName.create(dto.Name ?? "");
+        var nameResult = DomainName.create(dto.Name ?? "");
         var descriptionResult = Description.create(dto.Description ?? "");
         var createdByResult = CreateUserId(dto.CreatedBy);
 
         if (projectIdResult.IsOk && nameResult.IsOk && descriptionResult.IsOk && createdByResult.IsOk)
         {
-            var domain = DomainEntity.create(projectIdResult.ResultValue, nameResult.ResultValue, descriptionResult.ResultValue, createdByResult.ResultValue);
+            var domain = DomainEntity.create(nameResult.ResultValue, projectIdResult.ResultValue, createdByResult.ResultValue);
             return FSharpResult<DomainEntity, string>.NewOk(domain);
         }
         else
@@ -310,6 +376,44 @@ public static class TypeConverters
             if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
             if (createdByResult.IsError) errors.Add($"CreatedBy: {createdByResult.ErrorValue}");
             return FSharpResult<DraftUbiquitousLanguage, string>.NewError(string.Join(", ", errors));
+        }
+    }
+
+    /// <summary>
+    /// Phase B1: C#のCreateProjectCommandからF#ドメイン型への変換
+    /// TypeConverter基盤拡張: プロジェクト作成コマンドの型安全変換
+    /// F#のJapaneseName・Description・UserIdへの適切なマッピング
+    /// </summary>
+    /// <param name="command">C#のCreateProjectCommand</param>
+    /// <returns>F#のResult型（成功時は変換済みパラメータタプル、失敗時はエラーメッセージ）</returns>
+    public static FSharpResult<Tuple<JapaneseName, Description, UserId>, string> FromCreateDto(CreateProjectCommand command)
+    {
+        if (command == null)
+            return FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError("CreateProjectCommandがnullです");
+
+        // F#の値オブジェクトを使用してバリデーションを実施
+        var nameResult = JapaneseName.create(command.Name ?? "");
+        var descriptionResult = Description.create(command.Description ?? "");  // nullチェック対応
+        var ownerIdResult = CreateUserId(command.OwnerId);
+
+        // 複数のResult型をチェック（すべて成功した場合のみタプルを作成）
+        if (nameResult.IsOk && descriptionResult.IsOk && ownerIdResult.IsOk)
+        {
+            var parameters = Tuple.Create(
+                nameResult.ResultValue,
+                descriptionResult.ResultValue,
+                ownerIdResult.ResultValue
+            );
+            return FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewOk(parameters);
+        }
+        else
+        {
+            // エラー収集：どのフィールドでエラーが発生したかを特定
+            var errors = new List<string>();
+            if (nameResult.IsError) errors.Add($"Name: {nameResult.ErrorValue}");
+            if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
+            if (ownerIdResult.IsError) errors.Add($"OwnerId: {ownerIdResult.ErrorValue}");
+            return FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError(string.Join(", ", errors));
         }
     }
 
@@ -618,6 +722,137 @@ public static class TypeConverters
     // 📝 注意: UserProfileは値オブジェクトではなくstring optionを使用しているため、
     // DisplayName、Department、PhoneNumber、Notes用の値オブジェクトは定義されていません。
     // 必要に応じて値オブジェクトとして定義することも可能です。
+
+    // =================================================================
+    // 🏗️ Phase B1: プロジェクト関連Result型変換メソッド
+    // =================================================================
+
+    /// <summary>
+    /// Phase B1: F# Project作成結果をC# ProjectCreationResultに変換
+    /// Railway-oriented Programming結果の型安全な変換
+    /// TypeConverter基盤拡張: F# Result&lt;Project * Domain, ProjectCreationError&gt; → C# ProjectCreationResult
+    /// </summary>
+    /// <param name="domainResult">F#のプロジェクト作成結果（Project * Domain のペア）</param>
+    /// <returns>C#のProjectCreationResult</returns>
+    public static ProjectCreationResult ToProjectCreationResult<TError>(
+        FSharpResult<Tuple<Project, DomainEntity>, TError> domainResult)
+        where TError : class
+    {
+        if (domainResult.IsOk)
+        {
+            var (project, domain) = domainResult.ResultValue;
+
+            return ProjectCreationResult.Success(
+                ToDto(project),
+                ToDto(domain)
+            );
+        }
+        else
+        {
+            var error = domainResult.ErrorValue;
+            var (errorType, errorMessage) = ConvertProjectCreationError(error);
+
+            return ProjectCreationResult.Failure(errorType, errorMessage);
+        }
+    }
+
+    /// <summary>
+    /// Phase B1: F#プロジェクト作成エラーをC#エラータイプ・メッセージに変換
+    /// F#判別共用体エラーの型安全な変換ヘルパー
+    /// </summary>
+    /// <param name="error">F#のプロジェクト作成エラー</param>
+    /// <returns>C#のエラータイプとメッセージのタプル</returns>
+    private static (ProjectCreationErrorType ErrorType, string ErrorMessage) ConvertProjectCreationError<TError>(TError error)
+        where TError : class
+    {
+        // F#の判別共用体エラー型に応じた変換
+        // 注意: F#の判別共用体は実行時型チェックが必要
+        var errorString = error?.ToString() ?? "不明なエラー";
+
+        // F#の判別共用体パターンマッチングをC#で模倣
+        // 実際のF#判別共用体の実装に応じて調整が必要
+        if (errorString.Contains("DuplicateProjectName"))
+        {
+            return (ProjectCreationErrorType.DuplicateProjectName,
+                   $"プロジェクト名が重複しています: {ExtractErrorValue(errorString)}");
+        }
+        else if (errorString.Contains("InvalidProjectName"))
+        {
+            return (ProjectCreationErrorType.InvalidProjectName,
+                   $"無効なプロジェクト名: {ExtractErrorValue(errorString)}");
+        }
+        else if (errorString.Contains("InvalidProjectDescription"))
+        {
+            return (ProjectCreationErrorType.InvalidProjectDescription,
+                   $"無効なプロジェクト説明: {ExtractErrorValue(errorString)}");
+        }
+        else if (errorString.Contains("DatabaseError"))
+        {
+            return (ProjectCreationErrorType.DatabaseError,
+                   $"データベースエラー: {ExtractErrorValue(errorString)}");
+        }
+        else if (errorString.Contains("DomainCreationFailed"))
+        {
+            return (ProjectCreationErrorType.DomainCreationFailed,
+                   $"デフォルトドメイン作成エラー: {ExtractErrorValue(errorString)}");
+        }
+        else
+        {
+            return (ProjectCreationErrorType.DatabaseError, $"不明なエラーが発生しました: {errorString}");
+        }
+    }
+
+    /// <summary>
+    /// Phase B1: F#エラー文字列から値部分を抽出
+    /// F#判別共用体の値を含むエラーメッセージから実際の値を取得
+    /// </summary>
+    /// <param name="errorString">F#エラーの文字列表現</param>
+    /// <returns>抽出された値</returns>
+    private static string ExtractErrorValue(string errorString)
+    {
+        // F#判別共用体の文字列表現から値部分を抽出
+        // 例: "DuplicateProjectName(\"既存プロジェクト名\")" → "既存プロジェクト名"
+        var match = System.Text.RegularExpressions.Regex.Match(errorString, @"\""([^""]*)\""");
+        return match.Success ? match.Groups[1].Value : errorString;
+    }
+
+    /// <summary>
+    /// Phase B1: Project関連の便利メソッド
+    /// 既存TypeConverterとの統合パターン
+    /// </summary>
+    /// <param name="project">F#プロジェクトエンティティ</param>
+    /// <param name="owner">プロジェクト所有者</param>
+    /// <returns>所有者情報付きProjectDto</returns>
+    public static ProjectDto ToProjectDtoWithOwner(Project project, User owner)
+    {
+        var projectDto = ToDto(project);
+        // 所有者情報を適切に設定（F#のProject型にOwnerIdがない場合の対応）
+        projectDto.OwnerId = owner.Id.Value;
+        return projectDto;
+    }
+
+    /// <summary>
+    /// プロジェクトリストの一括変換（パフォーマンス最適化）
+    /// </summary>
+    /// <param name="projects">F#プロジェクトエンティティリスト</param>
+    /// <returns>ProjectDtoリスト</returns>
+    public static List<ProjectDto> ToProjectDtos(IEnumerable<Project> projects)
+    {
+        return projects.Select(ToDto).ToList();
+    }
+
+    /// <summary>
+    /// アクティブなプロジェクトのみをフィルタリングして変換
+    /// </summary>
+    /// <param name="projects">F#プロジェクトエンティティリスト</param>
+    /// <returns>アクティブなProjectDtoリスト</returns>
+    public static List<ProjectDto> ToActiveProjectDtos(IEnumerable<Project> projects)
+    {
+        return projects
+            .Where(p => p.IsActive)
+            .Select(ToDto)
+            .ToList();
+    }
 
     // =================================================================
     // 🔐 Phase A9: 認証専用TypeConverter統合メソッド
