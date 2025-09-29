@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <Compile Include="Application\AuthenticationServiceTests.fs" />
+    <Compile Include="Application\ProjectManagementServiceTests.fs" />
     <Compile Include="Domain\ProjectTests.fs" />
     <Compile Include="Domain\ProjectDomainServiceTests.fs" />
     <Compile Include="Domain\ProjectErrorHandlingTests.fs" />

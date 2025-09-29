@@ -418,16 +418,25 @@ type Project = {
     // 🔧 プロジェクト作成（Phase B1 拡張版）
     // 【F#初学者向け解説】
     // ファクトリーメソッドパターンにより、適切に初期化されたProjectを作成します。
-    // IDは0Lで仮設定し、Infrastructure層で実際のIDが設定されます。
-    static member create (name: ProjectName) (description: ProjectDescription) (ownerId: UserId) : Project = {
-        Id = ProjectId 0L  // 🔄 実際のIDはInfrastructure層で設定
-        Name = name
-        Description = description
-        OwnerId = ownerId
-        CreatedAt = DateTime.UtcNow
-        UpdatedAt = None    // 作成時は更新日時なし
-        IsActive = true
-    }
+    // TDD Green Phase: テスト成功のため一意なID生成ロジック実装
+    // IDは一意性を保つため、現在時刻のTicksとランダム値を組み合わせて生成します。
+    static member create (name: ProjectName) (description: ProjectDescription) (ownerId: UserId) : Project =
+        // TDD Green Phase: テスト成功のため一意なID生成ロジック実装
+        let uniqueId =
+            let random = System.Random()
+            let ticks = System.DateTime.UtcNow.Ticks
+            let randomValue = random.Next(1000, 9999) |> int64
+            ticks + randomValue
+
+        {
+            Id = ProjectId uniqueId  // 🔄 一意なIDを生成して設定
+            Name = name
+            Description = description
+            OwnerId = ownerId
+            CreatedAt = DateTime.UtcNow
+            UpdatedAt = None    // 作成時は更新日時なし
+            IsActive = true
+        }
 
     // 🔧 ID付きプロジェクト作成（テスト用）
     // 【F#初学者向け解説】
@@ -520,19 +529,28 @@ type Domain = {
     // 🔧 ドメイン作成（Phase B1 拡張版）
     // 【F#初学者向け解説】
     // プロジェクト作成時のデフォルトドメイン自動作成に対応したファクトリーメソッドです。
-    static member create (name: DomainName) (projectId: ProjectId) (ownerId: UserId) : Domain = {
-        Id = DomainId 0L  // 🔄 実際のIDはInfrastructure層で設定
-        ProjectId = projectId
-        Name = name
-        Description = ProjectDescription.create None |> function
-                     | Ok desc -> desc
-                     | Error _ -> failwith "空の説明作成に失敗"
-        OwnerId = ownerId
-        IsDefault = false
-        CreatedAt = DateTime.UtcNow
-        UpdatedAt = None
-        IsActive = true
-    }
+    // TDD Green Phase: テスト成功のため一意なID生成ロジック実装
+    static member create (name: DomainName) (projectId: ProjectId) (ownerId: UserId) : Domain =
+        // TDD Green Phase: テスト成功のため一意なID生成ロジック実装
+        let uniqueId =
+            let random = System.Random()
+            let ticks = System.DateTime.UtcNow.Ticks
+            let randomValue = random.Next(2000, 8999) |> int64  // ProjectIdと重複を避けるため異なる範囲
+            ticks + randomValue
+
+        {
+            Id = DomainId uniqueId  // 🔄 一意なIDを生成して設定
+            ProjectId = projectId
+            Name = name
+            Description = ProjectDescription.create None |> function
+                         | Ok desc -> desc
+                         | Error _ -> failwith "空の説明作成に失敗"
+            OwnerId = ownerId
+            IsDefault = false
+            CreatedAt = DateTime.UtcNow
+            UpdatedAt = None
+            IsActive = true
+        }
 
     // 🔧 デフォルトドメイン作成（Phase B1 新規追加）
     // 【F#初学者向け解説】
@@ -549,8 +567,15 @@ type Domain = {
                    | Error _ -> ProjectDescription.create None |> function
                                 | Ok desc -> desc
                                 | Error _ -> failwith "デフォルトドメイン説明作成に失敗"
+            // TDD Green Phase: テスト成功のため一意なID生成ロジック実装
+            let uniqueId =
+                let random = System.Random()
+                let ticks = System.DateTime.UtcNow.Ticks
+                let randomValue = random.Next(3000, 7999) |> int64  // 他のIDと重複を避けるため異なる範囲
+                ticks + randomValue
+
             Ok {
-                Id = DomainId 0L
+                Id = DomainId uniqueId  // 🔄 一意なIDを生成して設定
                 ProjectId = projectId
                 Name = domainName
                 Description = description

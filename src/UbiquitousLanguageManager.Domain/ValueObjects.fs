@@ -174,12 +174,8 @@ with
         let (DomainName name) = this
         name
 
-// 🎭 ユーザーロール: 権限管理のための列挙型
-type UserRole =
-    | SuperUser      // システム管理者
-    | ProjectManager // プロジェクト管理者
-    | DomainApprover // ドメイン承認者
-    | GeneralUser    // 一般ユーザー
+// 🎭 ユーザーロール: 権限管理のための列挙型（Role型と統一）
+// type UserRole = Role にエイリアス化
 
 // 🔄 承認状態: ワークフロー管理のための列挙型
 type ApprovalStatus =

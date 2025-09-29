@@ -7,8 +7,10 @@ using Microsoft.FSharp.Core;
 using Microsoft.FSharp.Collections;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
+using UbiquitousLanguageManager.Contracts.DTOs.Application;
 using UbiquitousLanguageManager.Domain;
-using DomainEntity = UbiquitousLanguageManager.Domain.Domain;
+// UbiquitousLanguageManager.Domain.Domain型は使用箇所で直接指定
+// Microsoft.FSharp.Core.FSharpResult型は使用箇所で直接指定
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
 
@@ -226,7 +228,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="domain">F#で定義されたDomainエンティティ</param>
     /// <returns>C#のDomainDTO</returns>
-    public static DomainDto ToDto(DomainEntity domain)
+    public static DomainDto ToDto(UbiquitousLanguageManager.Domain.Domain domain)
     {
         return new DomainDto
         {
@@ -294,7 +296,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のCreateUserDTO</param>
     /// <returns>F#のResult型（成功時はUser、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<User, string> FromCreateDto(CreateUserDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<User, string> FromCreateDto(CreateUserDto dto)
     {
         // F#のValue Objectを使用してバリデーションを実施
         // 各Value Objectのcreateメソッドは検証を含む
@@ -307,7 +309,7 @@ public static class TypeConverters
         if (emailResult.IsOk && nameResult.IsOk && roleResult.IsOk && createdByResult.IsOk)
         {
             var user = User.create(emailResult.ResultValue, nameResult.ResultValue, roleResult.ResultValue, createdByResult.ResultValue);
-            return FSharpResult<User, string>.NewOk(user);
+            return Microsoft.FSharp.Core.FSharpResult<User, string>.NewOk(user);
         }
         else
         {
@@ -317,7 +319,7 @@ public static class TypeConverters
             if (nameResult.IsError) errors.Add($"Name: {nameResult.ErrorValue}");
             if (roleResult.IsError) errors.Add($"Role: {roleResult.ErrorValue}");
             if (createdByResult.IsError) errors.Add($"CreatedBy: {createdByResult.ErrorValue}");
-            return FSharpResult<User, string>.NewError(string.Join(", ", errors));
+            return Microsoft.FSharp.Core.FSharpResult<User, string>.NewError(string.Join(", ", errors));
         }
     }
 
@@ -326,7 +328,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のCreateDomainDTO</param>
     /// <returns>F#のResult型（成功時はDomain、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<DomainEntity, string> FromCreateDto(CreateDomainDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.Domain, string> FromCreateDto(CreateDomainDto dto)
     {
         var projectIdResult = CreateProjectId(dto.ProjectId);
         var nameResult = DomainName.create(dto.Name ?? "");
@@ -335,8 +337,8 @@ public static class TypeConverters
 
         if (projectIdResult.IsOk && nameResult.IsOk && descriptionResult.IsOk && createdByResult.IsOk)
         {
-            var domain = DomainEntity.create(nameResult.ResultValue, projectIdResult.ResultValue, createdByResult.ResultValue);
-            return FSharpResult<DomainEntity, string>.NewOk(domain);
+            var domain = UbiquitousLanguageManager.Domain.Domain.create(nameResult.ResultValue, projectIdResult.ResultValue, createdByResult.ResultValue);
+            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.Domain, string>.NewOk(domain);
         }
         else
         {
@@ -345,7 +347,7 @@ public static class TypeConverters
             if (nameResult.IsError) errors.Add($"Name: {nameResult.ErrorValue}");
             if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
             if (createdByResult.IsError) errors.Add($"CreatedBy: {createdByResult.ErrorValue}");
-            return FSharpResult<DomainEntity, string>.NewError(string.Join(", ", errors));
+            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.Domain, string>.NewError(string.Join(", ", errors));
         }
     }
 
@@ -354,7 +356,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のCreateUbiquitousLanguageDTO</param>
     /// <returns>F#のResult型（成功時はDraftUbiquitousLanguage、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<DraftUbiquitousLanguage, string> FromCreateDto(CreateUbiquitousLanguageDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<DraftUbiquitousLanguage, string> FromCreateDto(CreateUbiquitousLanguageDto dto)
     {
         var domainIdResult = CreateDomainId(dto.DomainId);
         var japaneseNameResult = JapaneseName.create(dto.JapaneseName ?? "");
@@ -365,7 +367,7 @@ public static class TypeConverters
         if (domainIdResult.IsOk && japaneseNameResult.IsOk && englishNameResult.IsOk && descriptionResult.IsOk && createdByResult.IsOk)
         {
             var draft = DraftUbiquitousLanguage.create(domainIdResult.ResultValue, japaneseNameResult.ResultValue, englishNameResult.ResultValue, descriptionResult.ResultValue, createdByResult.ResultValue);
-            return FSharpResult<DraftUbiquitousLanguage, string>.NewOk(draft);
+            return Microsoft.FSharp.Core.FSharpResult<DraftUbiquitousLanguage, string>.NewOk(draft);
         }
         else
         {
@@ -375,7 +377,7 @@ public static class TypeConverters
             if (englishNameResult.IsError) errors.Add($"EnglishName: {englishNameResult.ErrorValue}");
             if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
             if (createdByResult.IsError) errors.Add($"CreatedBy: {createdByResult.ErrorValue}");
-            return FSharpResult<DraftUbiquitousLanguage, string>.NewError(string.Join(", ", errors));
+            return Microsoft.FSharp.Core.FSharpResult<DraftUbiquitousLanguage, string>.NewError(string.Join(", ", errors));
         }
     }
 
@@ -386,10 +388,10 @@ public static class TypeConverters
     /// </summary>
     /// <param name="command">C#のCreateProjectCommand</param>
     /// <returns>F#のResult型（成功時は変換済みパラメータタプル、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<Tuple<JapaneseName, Description, UserId>, string> FromCreateDto(CreateProjectCommand command)
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string> FromCreateDto(CreateProjectCommand command)
     {
         if (command == null)
-            return FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError("CreateProjectCommandがnullです");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError("CreateProjectCommandがnullです");
 
         // F#の値オブジェクトを使用してバリデーションを実施
         var nameResult = JapaneseName.create(command.Name ?? "");
@@ -404,7 +406,7 @@ public static class TypeConverters
                 descriptionResult.ResultValue,
                 ownerIdResult.ResultValue
             );
-            return FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewOk(parameters);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewOk(parameters);
         }
         else
         {
@@ -413,7 +415,44 @@ public static class TypeConverters
             if (nameResult.IsError) errors.Add($"Name: {nameResult.ErrorValue}");
             if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
             if (ownerIdResult.IsError) errors.Add($"OwnerId: {ownerIdResult.ErrorValue}");
-            return FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError(string.Join(", ", errors));
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError(string.Join(", ", errors));
+        }
+    }
+
+    /// <summary>
+    /// Phase B1 Application層拡張: CreateProjectCommandDtoからF#ドメイン型への変換
+    /// 新しいApplication向けDTOsとの統合メソッド
+    /// </summary>
+    /// <param name="dto">Application向けCreateProjectCommandDto</param>
+    /// <returns>F#のResult型（成功時は変換済みパラメータタプル、失敗時はエラーメッセージ）</returns>
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string> FromCreateDto(CreateProjectCommandDto dto)
+    {
+        if (dto == null)
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError("CreateProjectCommandDtoがnullです");
+
+        // F#の値オブジェクトを使用してバリデーションを実施
+        var nameResult = JapaneseName.create(dto.Name ?? "");
+        var descriptionResult = Description.create(dto.Description ?? "");  // nullチェック対応
+        var ownerIdResult = CreateUserId(dto.OwnerId);
+
+        // 複数のResult型をチェック（すべて成功した場合のみタプルを作成）
+        if (nameResult.IsOk && descriptionResult.IsOk && ownerIdResult.IsOk)
+        {
+            var parameters = Tuple.Create(
+                nameResult.ResultValue,
+                descriptionResult.ResultValue,
+                ownerIdResult.ResultValue
+            );
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewOk(parameters);
+        }
+        else
+        {
+            // エラー収集：どのフィールドでエラーが発生したかを特定
+            var errors = new List<string>();
+            if (nameResult.IsError) errors.Add($"Name: {nameResult.ErrorValue}");
+            if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
+            if (ownerIdResult.IsError) errors.Add($"OwnerId: {ownerIdResult.ErrorValue}");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<JapaneseName, Description, UserId>, string>.NewError(string.Join(", ", errors));
         }
     }
 
@@ -443,16 +482,16 @@ public static class TypeConverters
     /// </summary>
     /// <param name="roleString">ロールの文字列表現</param>
     /// <returns>F#のResult型（成功時はRole、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<Role, string> StringToRole(string roleString)
+    private static Microsoft.FSharp.Core.FSharpResult<Role, string> StringToRole(string roleString)
     {
         // F#の判別共用体は、C#からはNewXxxという静的メソッドでケースを作成
         return roleString switch
         {
-            "SuperUser" => FSharpResult<Role, string>.NewOk(Role.SuperUser),
-            "ProjectManager" => FSharpResult<Role, string>.NewOk(Role.ProjectManager),
-            "DomainApprover" => FSharpResult<Role, string>.NewOk(Role.DomainApprover),
-            "GeneralUser" => FSharpResult<Role, string>.NewOk(Role.GeneralUser),
-            _ => FSharpResult<Role, string>.NewError($"無効なユーザーロールです: {roleString}")
+            "SuperUser" => Microsoft.FSharp.Core.FSharpResult<Role, string>.NewOk(Role.SuperUser),
+            "ProjectManager" => Microsoft.FSharp.Core.FSharpResult<Role, string>.NewOk(Role.ProjectManager),
+            "DomainApprover" => Microsoft.FSharp.Core.FSharpResult<Role, string>.NewOk(Role.DomainApprover),
+            "GeneralUser" => Microsoft.FSharp.Core.FSharpResult<Role, string>.NewOk(Role.GeneralUser),
+            _ => Microsoft.FSharp.Core.FSharpResult<Role, string>.NewError($"無効なユーザーロールです: {roleString}")
         };
     }
 
@@ -491,28 +530,28 @@ public static class TypeConverters
     /// </summary>
     /// <param name="permissionString">権限の文字列表現</param>
     /// <returns>F#のResult型（成功時はPermission、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<Permission, string> StringToPermission(string permissionString)
+    private static Microsoft.FSharp.Core.FSharpResult<Permission, string> StringToPermission(string permissionString)
     {
         return permissionString switch
         {
-            "ViewUsers" => FSharpResult<Permission, string>.NewOk(Permission.ViewUsers),
-            "CreateUsers" => FSharpResult<Permission, string>.NewOk(Permission.CreateUsers),
-            "EditUsers" => FSharpResult<Permission, string>.NewOk(Permission.EditUsers),
-            "DeleteUsers" => FSharpResult<Permission, string>.NewOk(Permission.DeleteUsers),
-            "ManageUserRoles" => FSharpResult<Permission, string>.NewOk(Permission.ManageUserRoles),
-            "ViewProjects" => FSharpResult<Permission, string>.NewOk(Permission.ViewProjects),
-            "CreateProjects" => FSharpResult<Permission, string>.NewOk(Permission.CreateProjects),
-            "ManageProjects" => FSharpResult<Permission, string>.NewOk(Permission.ManageProjects),
-            "DeleteProjects" => FSharpResult<Permission, string>.NewOk(Permission.DeleteProjects),
-            "ViewDomains" => FSharpResult<Permission, string>.NewOk(Permission.ViewDomains),
-            "ManageDomains" => FSharpResult<Permission, string>.NewOk(Permission.ManageDomains),
-            "ApproveDomains" => FSharpResult<Permission, string>.NewOk(Permission.ApproveDomains),
-            "ViewUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.ViewUbiquitousLanguages),
-            "CreateUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.CreateUbiquitousLanguages),
-            "EditUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.EditUbiquitousLanguages),
-            "ApproveUbiquitousLanguages" => FSharpResult<Permission, string>.NewOk(Permission.ApproveUbiquitousLanguages),
-            "ManageSystemSettings" => FSharpResult<Permission, string>.NewOk(Permission.ManageSystemSettings),
-            _ => FSharpResult<Permission, string>.NewError($"無効な権限です: {permissionString}")
+            "ViewUsers" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ViewUsers),
+            "CreateUsers" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.CreateUsers),
+            "EditUsers" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.EditUsers),
+            "DeleteUsers" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.DeleteUsers),
+            "ManageUserRoles" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ManageUserRoles),
+            "ViewProjects" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ViewProjects),
+            "CreateProjects" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.CreateProjects),
+            "ManageProjects" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ManageProjects),
+            "DeleteProjects" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.DeleteProjects),
+            "ViewDomains" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ViewDomains),
+            "ManageDomains" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ManageDomains),
+            "ApproveDomains" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ApproveDomains),
+            "ViewUbiquitousLanguages" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ViewUbiquitousLanguages),
+            "CreateUbiquitousLanguages" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.CreateUbiquitousLanguages),
+            "EditUbiquitousLanguages" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.EditUbiquitousLanguages),
+            "ApproveUbiquitousLanguages" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ApproveUbiquitousLanguages),
+            "ManageSystemSettings" => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewOk(Permission.ManageSystemSettings),
+            _ => Microsoft.FSharp.Core.FSharpResult<Permission, string>.NewError($"無効な権限です: {permissionString}")
         };
     }
 
@@ -535,15 +574,15 @@ public static class TypeConverters
     /// </summary>
     /// <param name="statusString">ステータスの文字列表現</param>
     /// <returns>F#のResult型（成功時はApprovalStatus、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<ApprovalStatus, string> StringToApprovalStatus(string statusString)
+    private static Microsoft.FSharp.Core.FSharpResult<ApprovalStatus, string> StringToApprovalStatus(string statusString)
     {
         return statusString switch
         {
-            "Draft" => FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Draft),
-            "Submitted" => FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Submitted),
-            "Approved" => FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Approved),
-            "Rejected" => FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Rejected),
-            _ => FSharpResult<ApprovalStatus, string>.NewError($"無効な承認ステータスです: {statusString}")
+            "Draft" => Microsoft.FSharp.Core.FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Draft),
+            "Submitted" => Microsoft.FSharp.Core.FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Submitted),
+            "Approved" => Microsoft.FSharp.Core.FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Approved),
+            "Rejected" => Microsoft.FSharp.Core.FSharpResult<ApprovalStatus, string>.NewOk(ApprovalStatus.Rejected),
+            _ => Microsoft.FSharp.Core.FSharpResult<ApprovalStatus, string>.NewError($"無効な承認ステータスです: {statusString}")
         };
     }
 
@@ -556,11 +595,11 @@ public static class TypeConverters
     /// </summary>
     /// <param name="id">ユーザーID</param>
     /// <returns>F#のResult型（成功時はUserId、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<UserId, string> CreateUserId(long id)
+    private static Microsoft.FSharp.Core.FSharpResult<UserId, string> CreateUserId(long id)
     {
         if (id <= 0)
-            return FSharpResult<UserId, string>.NewError("ユーザーIDは正の値である必要があります");
-        return FSharpResult<UserId, string>.NewOk(UserId.NewUserId(id));
+            return Microsoft.FSharp.Core.FSharpResult<UserId, string>.NewError("ユーザーIDは正の値である必要があります");
+        return Microsoft.FSharp.Core.FSharpResult<UserId, string>.NewOk(UserId.NewUserId(id));
     }
 
     /// <summary>
@@ -568,11 +607,11 @@ public static class TypeConverters
     /// </summary>
     /// <param name="id">プロジェクトID</param>
     /// <returns>F#のResult型（成功時はProjectId、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<ProjectId, string> CreateProjectId(long id)
+    private static Microsoft.FSharp.Core.FSharpResult<ProjectId, string> CreateProjectId(long id)
     {
         if (id <= 0)
-            return FSharpResult<ProjectId, string>.NewError("プロジェクトIDは正の値である必要があります");
-        return FSharpResult<ProjectId, string>.NewOk(ProjectId.NewProjectId(id));
+            return Microsoft.FSharp.Core.FSharpResult<ProjectId, string>.NewError("プロジェクトIDは正の値である必要があります");
+        return Microsoft.FSharp.Core.FSharpResult<ProjectId, string>.NewOk(ProjectId.NewProjectId(id));
     }
 
     /// <summary>
@@ -580,11 +619,11 @@ public static class TypeConverters
     /// </summary>
     /// <param name="id">ドメインID</param>
     /// <returns>F#のResult型（成功時はDomainId、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<DomainId, string> CreateDomainId(long id)
+    private static Microsoft.FSharp.Core.FSharpResult<DomainId, string> CreateDomainId(long id)
     {
         if (id <= 0)
-            return FSharpResult<DomainId, string>.NewError("ドメインIDは正の値である必要があります");
-        return FSharpResult<DomainId, string>.NewOk(DomainId.NewDomainId(id));
+            return Microsoft.FSharp.Core.FSharpResult<DomainId, string>.NewError("ドメインIDは正の値である必要があります");
+        return Microsoft.FSharp.Core.FSharpResult<DomainId, string>.NewOk(DomainId.NewDomainId(id));
     }
 
     /// <summary>
@@ -592,11 +631,11 @@ public static class TypeConverters
     /// </summary>
     /// <param name="id">ユビキタス言語ID</param>
     /// <returns>F#のResult型（成功時はUbiquitousLanguageId、失敗時はエラーメッセージ）</returns>
-    private static FSharpResult<UbiquitousLanguageId, string> CreateUbiquitousLanguageId(long id)
+    private static Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageId, string> CreateUbiquitousLanguageId(long id)
     {
         if (id <= 0)
-            return FSharpResult<UbiquitousLanguageId, string>.NewError("ユビキタス言語IDは正の値である必要があります");
-        return FSharpResult<UbiquitousLanguageId, string>.NewOk(UbiquitousLanguageId.NewUbiquitousLanguageId(id));
+            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageId, string>.NewError("ユビキタス言語IDは正の値である必要があります");
+        return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageId, string>.NewOk(UbiquitousLanguageId.NewUbiquitousLanguageId(id));
     }
 
     // =================================================================
@@ -609,12 +648,12 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のUserProfileDTO</param>
     /// <returns>F#のResult型（成功時はUserProfile、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<UserProfile, string> FromDto(UserProfileDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<UserProfile, string> FromDto(UserProfileDto dto)
     {
         // F#初学者向け解説: UserProfileはstring optionを使用しているため、
         // 値オブジェクトではなく、直接文字列を渡す
         var profile = UserProfile.create(dto.DisplayName, dto.Department, dto.PhoneNumber, dto.Notes);
-        return FSharpResult<UserProfile, string>.NewOk(profile);
+        return Microsoft.FSharp.Core.FSharpResult<UserProfile, string>.NewOk(profile);
     }
 
     /// <summary>
@@ -623,12 +662,12 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のProjectPermissionDTO</param>
     /// <returns>F#のResult型（成功時はProjectPermission、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<ProjectPermission, string> FromDto(ProjectPermissionDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<ProjectPermission, string> FromDto(ProjectPermissionDto dto)
     {
         // ProjectId作成
         var projectIdResult = CreateProjectId(dto.ProjectId);
         if (projectIdResult.IsError)
-            return FSharpResult<ProjectPermission, string>.NewError(projectIdResult.ErrorValue);
+            return Microsoft.FSharp.Core.FSharpResult<ProjectPermission, string>.NewError(projectIdResult.ErrorValue);
 
         // 権限文字列リストをF#のPermission Set型に変換
         var permissions = new List<Permission>();
@@ -649,7 +688,7 @@ public static class TypeConverters
 
         if (errors.Count > 0) // List<T>.Any()の代わりにCountを使用
         {
-            return FSharpResult<ProjectPermission, string>.NewError($"無効な権限が含まれています: {string.Join(", ", errors)}");
+            return Microsoft.FSharp.Core.FSharpResult<ProjectPermission, string>.NewError($"無効な権限が含まれています: {string.Join(", ", errors)}");
         }
 
         // F#のList型に変換（ProjectPermission.createはListを期待）
@@ -657,7 +696,7 @@ public static class TypeConverters
         
         // ProjectPermission作成
         var projectPermission = ProjectPermission.create(projectIdResult.ResultValue, permissionList);
-        return FSharpResult<ProjectPermission, string>.NewOk(projectPermission);
+        return Microsoft.FSharp.Core.FSharpResult<ProjectPermission, string>.NewOk(projectPermission);
     }
 
     /// <summary>
@@ -666,7 +705,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のChangeUserRoleDTO</param>
     /// <returns>F#のResult型（成功時はRole、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<Role, string> FromDto(ChangeUserRoleDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<Role, string> FromDto(ChangeUserRoleDto dto)
     {
         return StringToRole(dto.NewRole);
     }
@@ -677,7 +716,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のChangeEmailDTO</param>
     /// <returns>F#のResult型（成功時はEmail、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<Email, string> FromDto(ChangeEmailDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<Email, string> FromDto(ChangeEmailDto dto)
     {
         return Email.create(dto.NewEmail);
     }
@@ -688,7 +727,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のChangePasswordDTO</param>
     /// <returns>F#のResult型（成功時はPassword、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<Password, string> FromDto(ChangePasswordDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<Password, string> FromDto(ChangePasswordDto dto)
     {
         return Password.create(dto.NewPassword);
     }
@@ -703,7 +742,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="passwordString">パスワード文字列</param>
     /// <returns>F#のResult型（成功時はPassword、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<Password, string> CreatePassword(string passwordString)
+    public static Microsoft.FSharp.Core.FSharpResult<Password, string> CreatePassword(string passwordString)
     {
         return Password.create(passwordString);
     }
@@ -714,7 +753,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="emailString">メールアドレス文字列</param>
     /// <returns>F#のResult型（成功時はStrongEmail、失敗時はエラーメッセージ）</returns>
-    public static FSharpResult<StrongEmail, string> CreateStrongEmail(string emailString)
+    public static Microsoft.FSharp.Core.FSharpResult<StrongEmail, string> CreateStrongEmail(string emailString)
     {
         return StrongEmail.create(emailString);
     }
@@ -735,7 +774,7 @@ public static class TypeConverters
     /// <param name="domainResult">F#のプロジェクト作成結果（Project * Domain のペア）</param>
     /// <returns>C#のProjectCreationResult</returns>
     public static ProjectCreationResult ToProjectCreationResult<TError>(
-        FSharpResult<Tuple<Project, DomainEntity>, TError> domainResult)
+        Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.Domain>, TError> domainResult)
         where TError : class
     {
         if (domainResult.IsOk)
@@ -865,7 +904,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="authResult">F#の認証結果</param>
     /// <returns>C#のAuthenticationResultDto</returns>
-    public static AuthenticationResultDto ToDto(FSharpResult<User, AuthenticationError> authResult)
+    public static AuthenticationResultDto ToDto(Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError> authResult)
     {
         return AuthenticationConverter.ToDto(authResult);
     }
@@ -888,7 +927,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="loginDto">ログインリクエストDTO</param>
     /// <returns>F#のResult型（Email*string or エラー）</returns>
-    public static FSharpResult<Tuple<Email, string>, string> FromDto(LoginRequestDto loginDto)
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string> FromDto(LoginRequestDto loginDto)
     {
         return AuthenticationConverter.ToFSharpLoginParams(loginDto);
     }
@@ -899,7 +938,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="resultDto">C#の認証結果DTO</param>
     /// <returns>F#のResult型</returns>
-    public static FSharpResult<User, AuthenticationError> ToFSharpResult(AuthenticationResultDto resultDto)
+    public static Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError> ToFSharpResult(AuthenticationResultDto resultDto)
     {
         return AuthenticationConverter.ToFSharpResult(resultDto);
     }
@@ -915,7 +954,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="resetDto">パスワードリセット要求DTO</param>
     /// <returns>F#のResult型（Email or エラー）</returns>
-    public static FSharpResult<Email, string> FromDto(PasswordResetRequestDto resetDto)
+    public static Microsoft.FSharp.Core.FSharpResult<Email, string> FromDto(PasswordResetRequestDto resetDto)
     {
         return AuthenticationConverter.ToFSharpPasswordResetParams(resetDto);
     }
@@ -927,7 +966,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="tokenDto">パスワードリセットトークンDTO</param>
     /// <returns>F#のResult型（Email*Token*Password or エラー）</returns>
-    public static FSharpResult<Tuple<Email, string, string>, string> FromDto(PasswordResetTokenDto tokenDto)
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string> FromDto(PasswordResetTokenDto tokenDto)
     {
         return AuthenticationConverter.ToFSharpPasswordResetExecuteParams(tokenDto);
     }
@@ -940,7 +979,7 @@ public static class TypeConverters
     /// <param name="result">F#のパスワードリセット結果</param>
     /// <param name="userEmail">対象ユーザーのメールアドレス</param>
     /// <returns>C#のPasswordResetResultDto</returns>
-    public static PasswordResetResultDto ToDto<T>(FSharpResult<T, AuthenticationError> result, string userEmail)
+    public static PasswordResetResultDto ToDto<T>(Microsoft.FSharp.Core.FSharpResult<T, AuthenticationError> result, string userEmail)
     {
         return AuthenticationConverter.ToPasswordResetResultDto(result, userEmail);
     }
@@ -970,7 +1009,7 @@ public static class TypeConverters
     /// <param name="successConverter">成功時の変換関数</param>
     /// <returns>C#のAuthenticationResultDto</returns>
     public static AuthenticationResultDto ToDto<TSuccess>(
-        FSharpResult<TSuccess, AuthenticationError> result,
+        Microsoft.FSharp.Core.FSharpResult<TSuccess, AuthenticationError> result,
         Func<TSuccess, UserDto> successConverter)
     {
         if (result.IsOk)

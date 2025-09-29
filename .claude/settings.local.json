@@ -63,7 +63,8 @@
       "Bash(awk:*)",
       "Bash(copy:*)",
       "Read(//c/**)",
-      "Bash($start = Get-Date)"
+      "Bash($start = Get-Date)",
+      "Bash(md5sum:*)"
     ],
     "deny": [],
     "ask": [],
