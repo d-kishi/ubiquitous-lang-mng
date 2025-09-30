@@ -3,11 +3,11 @@
 ## 📊 Phase概要
 - **Phase名**: Phase B1 (プロジェクト基本CRUD)
 - **Phase規模**: 🟢中規模（マスタープランから自動取得）
-- **Phase段階数**: 5段階（B1-B5段階構成）
-- **Phase特性**: 新機能実装
-- **推定期間**: 5-7セッション（規模に応じた予測）
+- **Phase段階数**: 6段階（Domain層リファクタリング追加によるStep再構成）
+- **Phase特性**: 新機能実装 + リファクタリング
+- **推定期間**: 6-8セッション（Domain層リファクタリング追加）
 - **開始予定日**: 2025-09-25
-- **完了予定日**: 2025-10-02（推定）
+- **完了予定日**: 2025-10-03（推定・リファクタリング追加により1セッション延長）
 
 ## 🎯 Phase成功基準
 - **機能要件**: プロジェクト基本CRUD（作成・編集・削除・一覧表示）完全実装
@@ -83,7 +83,43 @@
   - SubAgent並列実行成功・責務分担最適化実証
   - ADR_018・実行ガイドライン作成で改善知見永続化
 
-### Step4: Infrastructure層実装 🔄 即座実行可能
+### Step4: Domain層リファクタリング 🔄 即座実行可能（**新規追加**）
+- **実行内容**: Bounded Context別ディレクトリ分離・Phase C/D準備
+- **SubAgent計画**: fsharp-domain単独実行・リファクタリング特化
+- **実装対象**:
+  - Bounded Context別ディレクトリ構造（Common/Authentication/ProjectManagement）
+  - ファイル分割（ValueObjects/Entities/DomainServices/Errors）
+  - F#コンパイル順序調整（.fsproj更新）
+  - 品質保証（0 Warning/0 Error・52テスト100%成功継続）
+- **推定時間**: 3-4時間（5フェーズ実装）
+- **実施理由**: Infrastructure層実装前の最適タイミング・Phase C/D成長予測対応
+
+#### 🔴 Step4開始前必須手順（簡易版step-start・15分）
+**重要**: Step4実装開始前に以下の簡易版step-start実行必須（Phase/Step開始処理充足のため）
+
+1. **現状確認**（5分）:
+   - `dotnet build` 実行（0 Warning/0 Error確認）
+   - `dotnet test` 実行（52テスト100%成功確認）
+   - Phase B1 Step3完了状態確認
+   - Domain層現状ファイル構成確認
+
+2. **TodoList作成**（5分）:
+   - TodoWriteツールで5フェーズをタスク化
+   - Phase 1: ディレクトリ・ファイル作成（30分）
+   - Phase 2: Common層移行（45分）
+   - Phase 3: Authentication層移行（60分）
+   - Phase 4: ProjectManagement層移行（45分）
+   - Phase 5: 品質保証・検証（30分）
+
+3. **ユーザー承認取得**（5分）:
+   - Step4実施開始の最終承認
+   - 5フェーズ実装計画の確認・承認
+   - 推定時間3-4時間の確認・承認
+   - fsharp-domain SubAgent単独実行の承認
+
+**注記**: task-breakdown Commandは省略可（5フェーズ実装計画が十分詳細なため）
+
+### Step5: Infrastructure層実装 🔄 Step4完了後実施（**旧Step4から繰り下げ**）
 - **予定実行内容**: ProjectRepository・EF Core・権限フィルタ実装
 - **SubAgent計画**: csharp-infrastructure中心・fsharp-application連携
 - **実装対象**:
@@ -92,7 +128,7 @@
   - 原子性保証（トランザクション・デフォルトドメイン同時作成）
   - Application層統合（IProjectManagementService実装）
 
-### Step5: Web層実装 🔄 準備完了
+### Step6: Web層実装 🔄 Step5完了後実施（**旧Step5から繰り下げ**）
 - **予定実行内容**: Blazor Server・権限ベース表示制御・UI実装
 - **SubAgent計画**: csharp-web-ui中心・全SubAgent統合
 - **実装対象**:
@@ -102,9 +138,9 @@
   - UI/UX最適化・ユーザビリティ向上
 
 ### Phase B1全体実装進捗
-- **実行期間**: 5セッション予定（当初予測5-7セッション内）
-- **進捗状況**: Step1-3完了（60%進捗）・Step4-5残り（40%）
-- **実装順序**: Domain→Application→Infrastructure→Web（Clean Architecture準拠）
+- **実行期間**: 6セッション予定（Domain層リファクタリング追加により+1セッション）
+- **進捗状況**: Step1-3完了（50%進捗）・Step4-6残り（50%）
+- **実装順序**: Domain→Application→**Domain層リファクタリング**→Infrastructure→Web（Clean Architecture準拠 + 品質改善）
 - **品質達成状況**:
   - ✅ 仕様準拠度100点満点達成（Step3）
   - ✅ 0 Warning/0 Error達成（Step2-3）
@@ -113,6 +149,7 @@
   - ✅ 原子性保証実装完了（Domain・Application層）
   - ✅ 権限制御完全実装（4ロール×4機能マトリックス）
   - ✅ 否定的仕様完全遵守（プロジェクト名変更禁止等）
+  - 🔄 Domain層リファクタリング追加（Phase C/D成長予測対応・可読性保守性リスク事前回避）
 
 ## 📊 Step間成果物参照マトリックス
 
@@ -124,10 +161,12 @@
 | **Step2** | Domain層実装 | `Step01_Integrated_Analysis.md` | Domain層実装準備完了事項 | 技術方針・品質基準確認 |
 | **Step3** | Application層実装 | `Dependency_Analysis_Results.md` | Clean Architecture層間依存関係 | Application層設計制約 |
 | **Step3** | Application層実装 | `Step01_Requirements_Analysis.md` | IProjectManagementService仕様 | Command/Query実装指針 |
-| **Step4** | Infrastructure層実装 | `Design_Review_Results.md` | 既存システム統合設計 | EF Core・Repository統合 |
-| **Step4** | Infrastructure層実装 | `Technical_Research_Results.md` | EF Core多対多関連最適実装 | UserProjects中間テーブル |
-| **Step5** | Web層実装 | `Step01_Requirements_Analysis.md` | 権限制御マトリックス（4ロール×4機能） | UI権限制御実装 |
-| **Step5** | Web層実装 | `Technical_Research_Results.md` | Blazor Server権限制御最新実装 | セキュリティ強化実装 |
+| **Step4** | Domain層リファクタリング | `Domain層リファクタリング調査結果.md` | Bounded Context別ディレクトリ分離計画 | リファクタリング実装指針 |
+| **Step4** | Domain層リファクタリング | `GitHub Issue #41` | 実装工数・5フェーズ計画・品質保証 | Phase C/D準備・リスク回避 |
+| **Step5** | Infrastructure層実装 | `Design_Review_Results.md` | 既存システム統合設計 | EF Core・Repository統合 |
+| **Step5** | Infrastructure層実装 | `Technical_Research_Results.md` | EF Core多対多関連最適実装 | UserProjects中間テーブル |
+| **Step6** | Web層実装 | `Step01_Requirements_Analysis.md` | 権限制御マトリックス（4ロール×4機能） | UI権限制御実装 |
+| **Step6** | Web層実装 | `Technical_Research_Results.md` | Blazor Server権限制御最新実装 | セキュリティ強化実装 |
 
 ### 成果物ファイル所在
 **出力ディレクトリ**: `/Doc/08_Organization/Active/Phase_B1/Research/`
@@ -136,6 +175,10 @@
 - `Design_Review_Results.md` - 既存システム整合性レビュー
 - `Dependency_Analysis_Results.md` - 実装順序・依存関係分析
 - `Step01_Integrated_Analysis.md` - 統合分析結果・実装方針確立
+
+**Phase B1ディレクトリ直下**:
+- `Domain層リファクタリング調査結果.md` - Domain層リファクタリング調査・Phase C/D成長予測
+- **GitHub Issue #41** - Domain層リファクタリング提案・実装計画
 
 ## 📊 Phase B1中間総括レポート（Step3完了時点）
 
@@ -159,9 +202,10 @@
 - **TDD実践**: Red-Green-Refactorサイクル完全実践・優秀評価
 - **プロセス効率**: Fix-Mode 75%効率化・SubAgent並列実行成功
 
-### 🎯 Step4-5実装価値予測
-- **Infrastructure層**: EF Core・Repository・トランザクション統合完成
-- **Web層**: Blazor Server・権限制御UI・SignalR統合完成
-- **Phase B1完成**: プロジェクト管理機能完全実装・最高品質達成見込み
+### 🎯 Step4-6実装価値予測
+- **Domain層リファクタリング（Step4）**: Bounded Context明確化・Phase C/D準備・可読性保守性向上
+- **Infrastructure層（Step5）**: EF Core・Repository・トランザクション統合完成
+- **Web層（Step6）**: Blazor Server・権限制御UI・SignalR統合完成
+- **Phase B1完成**: プロジェクト管理機能完全実装・最高品質達成見込み・Phase C/D最適構造確立
 
-**Phase B1は、Step3完了時点で既に技術的価値・プロセス改善価値の大部分を確立済み。Step4-5でのインフラ・UI統合により、プロジェクト史上最高品質のプロジェクト管理システムが完成予定。**
+**Phase B1は、Step3完了時点で既に技術的価値・プロセス改善価値の大部分を確立済み。Step4でのDomain層最適化、Step5-6でのインフラ・UI統合により、プロジェクト史上最高品質のプロジェクト管理システム + Phase C/D実装最適基盤が完成予定。**

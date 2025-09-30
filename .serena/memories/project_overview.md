@@ -1,52 +1,83 @@
 # プロジェクト概要
 
-**最終更新**: 2025-09-30（Domain層リファクタリング調査完了・GitHub Issue #41作成・Phase B1再設計準備完了）
+**最終更新**: 2025-09-30（Phase B1再設計完了・Step4追加・次回Domain層リファクタリング実施準備完了）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
 ### Phase完了状況（マスタープラン準拠）
 - [x] **Phase A（ユーザー管理機能）**: A1-A9完了（2025-09-16完了）✅ 100%
-- [ ] **Phase B（プロジェクト管理機能）**: B1進行中・Step3完了・**Domain層リファクタリング準備完了** 🚀 **← 次回Phase B1再設計→リファクタリング実施**
+- [ ] **Phase B（プロジェクト管理機能）**: B1進行中・Step3完了・**Phase B1再設計完了・Step4準備完了** 🚀 **← 次回Step4（Domain層リファクタリング）実施**
   - [x] B1-Step1: 要件分析・技術調査完了（**4SubAgent並列実行・成果物活用体制確立**）
   - [x] B1-Step2: Domain層実装完了（**F# + Railway-oriented Programming + TDD Red Phase**）
   - [x] B1-Step3: Application層実装完了（**F# Application層・権限制御・TDD Green Phase・100点満点品質達成**）✅ 
-  - [ ] **Domain層リファクタリング（Issue #41）**: 新Step4として実施予定・Bounded Context別ディレクトリ分離（3-4時間）
-  - [ ] B1-Step5: Infrastructure層実装（旧Step4・リファクタリング後実施）
-  - [ ] B1-Step6: Web層実装（旧Step5）
+  - [ ] **B1-Step4: Domain層リファクタリング（新規追加）**: 次回実施・Bounded Context別ディレクトリ分離（3-4時間）🚀 **← 次回セッション**
+  - [ ] B1-Step5: Infrastructure層実装（旧Step4から繰り下げ・Step4完了後実施）
+  - [ ] B1-Step6: Web層実装（旧Step5から繰り下げ）
   - [ ] B2-B5: 後続Phase計画中
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
 - **Phase完了**: 1/4 (25%)
-- **Step完了**: 13/29 (45%) ※A9 + B1-Step1-2-3完了 + Domain層リファクタリング追加
+- **Step完了**: 13/30 (43%) ※A9 + B1-Step1-2-3完了 + Step4追加（6段階構成）
 - **機能実装**: 認証・ユーザー管理完了、プロジェクト管理Domain+Application層完了・100点品質
 
-### 最新の重要成果（2025-09-30）
-- **🔍 Domain層リファクタリング調査完了**: 全レイヤー評価・Phase C/D成長予測・リスク分析完了
-- **📋 GitHub Issue #41作成**: Domain層リファクタリング提案・Bounded Context別ディレクトリ分離
-- **📊 全レイヤー評価完了**: Domain（必須）・Application（良好）・Contracts（監視）・Infrastructure/Web（良好）
-- **🎯 Phase B1再設計準備**: Step4追加・Step構成変更・次回セッション実施計画確定
+### 最新の重要成果（2025-09-30・Phase B1再設計完了）
+- **✅ Phase B1再設計完了**: Step構成6段階化・Step4（Domain層リファクタリング）追加
+- **📋 Phase_Summary.md更新完了**: 進捗率50%・推定期間6-8セッション・Step4詳細記載
+- **📊 Step間依存関係マトリックス.md作成**: 6 Step依存関係Mermaid図・各Step詳細（前提・成果物・引き継ぎ）
+- **📝 Step04_Domain層リファクタリング.md作成**: 5フェーズ実装計画（合計3-4時間）・品質保証計画
+- **🔍 Phase/Step開始処理充足状況分析完了**: 80%充足・簡易版step-start（15分）で完全準拠達成可能
 
 ## 🎯 次回セッション実施計画
 
-### Phase B1再設計→Domain層リファクタリング実施
-- **最優先**: Phase B1再設計（Phase_Summary.md・Step間依存関係マトリックス.md更新・Step04_Domain層リファクタリング.md作成）
-- **対象作業**: Domain層Bounded Context別ディレクトリ分離（Issue #41）
-- **推定時間**: 再設計1時間 + リファクタリング3-4時間 = 合計4-5時間
-- **成果物**: 新Step4完了・Domain層最適構造確立・Infrastructure層実装準備完了
+### Domain層リファクタリング実施（Step4）
+- **最優先作業**: 簡易版step-start実行（15分）→ 5フェーズ実装（3-4時間）
+- **対象**: Domain層Bounded Context別ディレクトリ分離（GitHub Issue #41）
+- **推定時間**: 簡易版step-start 15分 + リファクタリング3-4時間 = 合計3.5-4.5時間
+- **成果物**: Step4完了・Domain層最適構造確立・Infrastructure層実装準備完了
+
+### 簡易版step-start（15分・必須）
+**Phase/Step開始処理充足のため必須実行**:
+
+1. **現状確認**（5分）:
+   - `dotnet build` 実行（0 Warning/0 Error確認）
+   - `dotnet test` 実行（52テスト100%成功確認）
+   - Phase B1 Step3完了状態確認
+   - Domain層現状ファイル構成確認
+
+2. **TodoList作成**（5分）:
+   - TodoWriteツールで5フェーズをタスク化
+   - Phase 1: ディレクトリ・ファイル作成（30分）
+   - Phase 2: Common層移行（45分）
+   - Phase 3: Authentication層移行（60分）
+   - Phase 4: ProjectManagement層移行（45分）
+   - Phase 5: 品質保証・検証（30分）
+
+3. **ユーザー承認取得**（5分）:
+   - Step4実施開始の最終承認
+   - 5フェーズ実装計画の確認・承認
+   - 推定時間3-4時間の確認・承認
+   - fsharp-domain SubAgent単独実行の承認
+
+### 必須参照文書
+- `/Doc/08_Organization/Active/Phase_B1/Phase_Summary.md` - Step4セクション・簡易版step-start手順
+- `/Doc/08_Organization/Active/Phase_B1/Step04_Domain層リファクタリング.md` - 5フェーズ実装計画詳細
+- `/Doc/08_Organization/Active/Phase_B1/Step間依存関係マトリックス.md` - Step3→Step4引き継ぎ事項
+- `/Doc/08_Organization/Active/Phase_B1/Domain層リファクタリング調査結果.md` - リファクタリング必要性・Phase C/D成長予測
+- **GitHub Issue #41** - Domain層リファクタリング提案・実装計画
 
 ### リファクタリング必要性（緊急性高）
-**現状**：
+**現状**:
 - Domain層4ファイル・1,289行（全境界文脈混在）
 - Phase D完了時予測：ValueObjects 754行・Entities 1,145行・DomainServices 770行
 
-**リスク**：
+**リスク**:
 - 🔴 可読性低下（1,000行超ファイル・初学者不適切）
 - 🔴 保守性低下（並列開発困難・影響範囲特定困難）
 - 🟡 F#コンパイル順序制約（将来リファクタリング工数3-5倍増加）
 
-**実施タイミング**: Infrastructure層実装前が最適（影響範囲最小化）
+**実施タイミング**: Infrastructure層実装前が最適（影響範囲最小化・今が最適タイミング）
 
 ### 継承する技術価値（リファクタリング後活用）
 - **Railway-oriented Programming**: Infrastructure層での継続活用
@@ -121,7 +152,7 @@
 - Clean Architecture: 97点品質継続維持
 
 **次週重点事項**:
-- Phase B1再設計・Domain層リファクタリング実施
+- Domain層リファクタリング実施（Step4）
 - Fix-Mode効果測定継続
 - SubAgent並列実行最適化継続
 
@@ -142,10 +173,11 @@
 - **TDD実践**: ⭐⭐⭐⭐⭐ 5/5優秀評価・52テスト100%成功・Green Phase完全達成
 - **プロセス改善**: Fix-Mode 100%成功率・SubAgent並列実行成功・責務分担完全確立
 
-### Domain層リファクタリング準備完了（次回実施）
-- **調査完了**: 全レイヤー評価・Phase C/D成長予測・リスク分析・実装計画策定
-- **GitHub Issue #41作成**: Bounded Context別ディレクトリ分離提案・実装工数3-4時間
-- **Phase B1再設計準備**: Step4追加・Step構成変更・次回セッション実施計画確定
+### Phase B1再設計完了（次回Domain層リファクタリング実施）
+- **再設計完了**: Step構成6段階化・Step4追加・既存Step4-5繰り下げ
+- **成果物作成**: Phase_Summary.md・Step間依存関係マトリックス.md・Step04詳細設計書
+- **Phase/Step開始処理充足状況分析**: 80%充足・簡易版step-start（15分）で完全準拠達成
+- **次回実施**: Step4（Domain層リファクタリング）・3-4時間・fsharp-domain単独実行
 
 ## 📋 技術負債管理状況
 
@@ -156,7 +188,7 @@
 
 ### 新規技術負債記録・解決計画
 - **GitHub Issue #40**: テストプロジェクト重複問題（Phase B完了後対応・統合方式・1-2時間）
-- **GitHub Issue #41**: Domain層リファクタリング（次回Phase B1再設計後即座実施・3-4時間）
+- **GitHub Issue #41**: Domain層リファクタリング（**次回Step4で実施・3-4時間**）🚀
 - **管理方法**: GitHub Issues完全移行・TECH-XXX番号体系確立継続
 
 ### 現在の状況
@@ -182,18 +214,18 @@
 
 ## 📊 セッション記録管理（最新）
 
-### 最新セッション記録（2025-09-30・Domain層リファクタリング調査完了）
+### 最新セッション記録（2025-09-30・Phase B1再設計完了）
 - **主要実施内容**: 
-  - Domain層リファクタリング調査実施（全レイヤー評価・Phase C/D成長予測）
-  - GitHub Issue #41作成（Bounded Context別ディレクトリ分離提案）
-  - 調査結果文書作成（Doc/08_Organization/Active/Phase_B1/Domain層リファクタリング調査結果.md）
-  - Phase B1再設計の必要性確認・次回セッション方針確定
-- **調査結果**: Domain層リファクタリング必須（Phase B1 Step4前実施推奨）
-- **リスク評価**: 可読性・保守性高リスク・F#コンパイル順序制約中リスク
-- **次回計画**: Phase B1再設計→Domain層リファクタリング実施（合計4-5時間）
+  - Phase B1再設計完了（Step構成6段階化・Step4追加）
+  - Phase_Summary.md更新（進捗率50%・推定期間6-8セッション）
+  - Step間依存関係マトリックス.md作成（6 Step依存関係Mermaid図・詳細記載）
+  - Step04_Domain層リファクタリング.md作成（5フェーズ実装計画・品質保証計画）
+  - Phase/Step開始処理充足状況分析（80%充足・簡易版step-start推奨）
+- **成果物精度**: 95%（高精度達成・実装開始可能レベル）
+- **次回作業**: 簡易版step-start（15分）→ Domain層リファクタリング実施（3-4時間）
 
 ### 引き継ぎ体制
-- **Phase B1再設計準備完了**: Step4追加・Step構成変更・実施計画策定完了
+- **Phase B1再設計完了**: Step4追加・Step構成変更・実施計画策定完了
 - **技術基盤**: Railway-oriented Programming・権限制御・TDD実践・プロセス改善確立
 - **品質基準**: 仕様準拠度100点・TDD実践優秀・Clean Architecture 97点継続
 - **メモリー更新完了**: project_overview・daily_sessions・task_completion_checklist差分更新・次回セッション参照可能状態
