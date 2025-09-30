@@ -22,10 +22,59 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 ```
 src/
 ├── UbiquitousLanguageManager.Domain/       # F# ドメインモデル
+│   ├── Common/                            # 共通境界文脈（Phase B1 Step4で確立）
+│   │   ├── CommonTypes.fs                 # 共通ID型・Permission・Role定義
+│   │   ├── CommonValueObjects.fs          # Description・ApprovalStatus
+│   │   └── CommonSpecifications.fs        # Specification Pattern実装
+│   ├── Authentication/                    # 認証境界文脈（Phase B1 Step4で確立）
+│   │   ├── AuthenticationValueObjects.fs  # Email・UserName・Password
+│   │   ├── AuthenticationErrors.fs        # AuthenticationError型
+│   │   ├── AuthenticationEntities.fs      # User集約
+│   │   └── UserDomainService.fs           # ユーザードメインサービス
+│   ├── ProjectManagement/                 # プロジェクト管理境界文脈（Phase B1 Step4で確立）
+│   │   ├── ProjectValueObjects.fs         # ProjectName・DomainName
+│   │   ├── ProjectErrors.fs               # ProjectError型
+│   │   ├── ProjectEntities.fs             # Project・Domain集約
+│   │   └── ProjectDomainService.fs        # プロジェクトドメインサービス
+│   └── UbiquitousLanguageManagement/      # ユビキタス言語管理境界文脈（Phase B1 Step4 Phase6で確立）
+│       ├── UbiquitousLanguageValueObjects.fs  # JapaneseName・EnglishName
+│       ├── UbiquitousLanguageErrors.fs    # UbiquitousLanguageError型
+│       ├── UbiquitousLanguageEntities.fs  # DraftUbiquitousLanguage・FormalUbiquitousLanguage集約
+│       └── UbiquitousLanguageDomainService.fs  # ユビキタス言語ドメインサービス
 ├── UbiquitousLanguageManager.Application/  # F# ユースケース
 ├── UbiquitousLanguageManager.Contracts/    # C# DTO/TypeConverters
 ├── UbiquitousLanguageManager.Infrastructure/ # C# EF Core/Repository
 └── UbiquitousLanguageManager.Web/         # C# Blazor Server
+```
+
+### Domain層Bounded Context構成（Phase B1 Step4完成・2025-10-01）
+Phase B1 Step4で確立された4つの境界文脈構造：
+
+```yaml
+Common（共通境界文脈）: 411行・3ファイル
+  - CommonTypes.fs: 全境界文脈共通のID型・Permission（17種類）・Role（4種類）
+  - CommonValueObjects.fs: Description・ApprovalStatus
+  - CommonSpecifications.fs: Specification Pattern実装
+
+Authentication（認証境界文脈）: 983行・4ファイル
+  - AuthenticationValueObjects.fs: Email・UserName・Password・SecurityStamp（Smart Constructor）
+  - AuthenticationErrors.fs: AuthenticationError型（22エラーケース）
+  - AuthenticationEntities.fs: User集約ルート（50+フィールド・20+メソッド）
+  - UserDomainService.fs: 8つのユーザー検証関数
+
+ProjectManagement（プロジェクト管理境界文脈）: 887行・4ファイル
+  - ProjectValueObjects.fs: ProjectName・DomainName（Smart Constructor）
+  - ProjectErrors.fs: ProjectError型（Railway-oriented Programming）
+  - ProjectEntities.fs: Project・Domain集約ルート
+  - ProjectDomainService.fs: createProjectWithDefaultDomain（原子性保証実装）
+
+UbiquitousLanguageManagement（ユビキタス言語管理境界文脈）: 350行・4ファイル
+  - UbiquitousLanguageValueObjects.fs: JapaneseName・EnglishName
+  - UbiquitousLanguageErrors.fs: UbiquitousLanguageError型（9エラーケース）
+  - UbiquitousLanguageEntities.fs: DraftUbiquitousLanguage・FormalUbiquitousLanguage集約
+  - UbiquitousLanguageDomainService.fs: 4つの検証関数
+
+合計: 2,631行・16ファイル・4境界文脈
 ```
 
 ### テストプロジェクト構成
@@ -40,7 +89,84 @@ tests/
 # 重複状況: UbiquitousLanguageManager.Tests/Domain ⊆ UbiquitousLanguageManager.Domain.Tests
 ```
 
-## F# 実装規約・パターン（2025-09-25拡張・2025-09-30完全実証）
+## F# 実装規約・パターン（2025-09-25拡張・2025-09-30完全実証・2025-10-01 Bounded Context化）
+
+### Bounded Context分離パターン（Phase B1 Step4確立・2025-10-01）
+Domain層をBounded Contextディレクトリに分離し、Clean Architecture・DDD原則に基づく構造を確立：
+
+#### F# Compilation Order規約（厳格遵守必須）
+F#は前方宣言不可のため、依存関係順に厳密なコンパイル順序が必要：
+
+```xml
+<!-- .fsprojファイルの標準構造（Phase B1 Step4で確立） -->
+<ItemGroup>
+  <!-- 1. Common Bounded Context: 全境界文脈で共有される共通型 -->
+  <Compile Include="Common\CommonTypes.fs" />      <!-- 最初: ID型・Permission・Role定義 -->
+  <Compile Include="Common\CommonValueObjects.fs" /><!-- 2番目: CommonTypes依存 -->
+  <Compile Include="Common\CommonSpecifications.fs" /><!-- 3番目: 前2つ依存 -->
+
+  <!-- 2. Authentication Bounded Context: 認証・ユーザー管理境界文脈 -->
+  <Compile Include="Authentication\AuthenticationValueObjects.fs" /><!-- Common依存 -->
+  <Compile Include="Authentication\AuthenticationErrors.fs" /><!-- ValueObjects依存 -->
+  <Compile Include="Authentication\AuthenticationEntities.fs" /><!-- Errors依存 -->
+  <Compile Include="Authentication\UserDomainService.fs" /><!-- Entities依存 -->
+
+  <!-- 3. ProjectManagement Bounded Context: プロジェクト管理境界文脈 -->
+  <Compile Include="ProjectManagement\ProjectValueObjects.fs" /><!-- Common依存 -->
+  <Compile Include="ProjectManagement\ProjectErrors.fs" /><!-- ValueObjects依存 -->
+  <Compile Include="ProjectManagement\ProjectEntities.fs" /><!-- Errors+Common依存 -->
+  <Compile Include="ProjectManagement\ProjectDomainService.fs" /><!-- Entities依存 -->
+
+  <!-- 4. UbiquitousLanguageManagement Bounded Context: ユビキタス言語管理境界文脈 -->
+  <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageValueObjects.fs" /><!-- Common依存 -->
+  <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageErrors.fs" /><!-- ValueObjects依存 -->
+  <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageEntities.fs" /><!-- Errors+Common依存 -->
+  <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageDomainService.fs" /><!-- Entities依存 -->
+</ItemGroup>
+```
+
+#### Bounded Context内ファイル構成規約（Phase B1 Step4で確立）
+各Bounded Context内のファイル構成パターン（依存関係順）：
+
+```yaml
+1. ValueObjects.fs:
+   - Smart Constructor実装
+   - ドメイン固有値オブジェクト定義
+   - 依存: Common\CommonTypes.fs のみ
+
+2. Errors.fs:
+   - エラー型（Discriminated Union）
+   - ToMessage()・GetCategory()メソッド
+   - 依存: ValueObjects.fs
+
+3. Entities.fs:
+   - 集約ルート（Aggregate Root）
+   - ビジネスロジックメソッド
+   - 依存: ValueObjects.fs・Errors.fs・Common\CommonTypes.fs
+
+4. DomainService.fs:
+   - ドメインサービス（複数集約にまたがるロジック）
+   - Railway-oriented Programming実装
+   - 依存: 同Bounded Context全ファイル
+```
+
+#### Bounded Context分離の設計原則（Phase B1 Step4実証）
+```yaml
+分離判断基準:
+  - **凝集性**: 関連する概念を1つのBounded Contextに集約
+  - **独立性**: 他Bounded Contextへの依存を最小化
+  - **境界明確化**: ドメイン用語の意味が境界内で一貫
+
+依存関係管理:
+  - **Common優先**: 共通型はCommon Bounded Contextに集約
+  - **循環依存禁止**: コンパイル順序で循環依存を防止
+  - **境界間依存最小**: 境界を越える依存はCommon経由
+
+ユーザーフィードバック活用:
+  - Phase B1 Step4 Phase6追加の経緯: ユーザーが「雛型の名残」を指摘
+  - 当初3境界文脈計画 → ユーザー提案で4境界文脈に拡張
+  - 結果: Step5（namespace階層化）の問題を事前回避
+```
 
 ### Railway-oriented Programming（ROP）実装パターン
 Phase B1 Domain層実装において、以下のROPパターンを標準適用：
@@ -61,7 +187,7 @@ let createProjectWithDomain projectName =
     |> Result.bind saveWithTransaction
 ```
 
-### Phase B1 Step3 Application層実装パターン（2025-09-30完全実装・100点満点品質）
+### Phase B1 Step3 Application層実装パターン（2025-09-30完全実装・100点満点品質達成）
 
 #### IProjectManagementService実装パターン（完全実装・仕様準拠度100点達成）
 ```fsharp
@@ -345,7 +471,7 @@ let ``createProjectWithDomain_ValidInput_ReturnsProjectAndDomain`` () =
     // Green: 実装してテスト成功（Step3実施完了・100%成功）
     let result = ProjectDomainService.createProjectWithDefaultDomain projectName
     
-    // Refactor: リファクタリング・品質向上（Step4継続予定）
+    // Refactor: リファクタリング・品質向上（Step4完了・Bounded Context化）
     match result with
     | Success (project, domain) -> 
         project.Name |> should equal projectName
@@ -480,7 +606,27 @@ public async Task CreateProject_ValidInput_CreatesProjectAndDomain()
   - 保守性: 6点 - Clean Architecture・可読性・拡張性確保
 ```
 
-### Phase B1技術実装パターン（2025-09-25確立・2025-09-30完全実装）
+### Phase B1技術実装パターン（2025-09-25確立・2025-09-30完全実装・2025-10-01 Bounded Context化）
+
+#### Phase B1 Step4完全実装パターン（2025-10-01完全成功・Bounded Context化達成）
+```yaml
+Domain層リファクタリング（100%完了・0エラー・Bounded Context化達成）:
+  - 4 Bounded Contexts分離: Common/Authentication/ProjectManagement/UbiquitousLanguageManagement（✅完了）
+  - F# Compilation Order最適化: 依存関係順厳格管理・前方宣言制約対応（✅完了）
+  - 2,631行・16ファイル移行: モノリシック構造から境界文脈分離（✅完了）
+  - ユーザーフィードバック活用: Phase6追加・4境界文脈化・Step5問題事前回避（✅完了）
+  - 0 Warning/0 Error達成: 全ビルド成功・既存テスト100%維持（✅完了）
+
+Bounded Context設計原則確立（実証済み・継続活用推奨）:
+  - 凝集性: 関連概念の境界内集約・ドメイン用語一貫性
+  - 独立性: 境界間依存最小化・Common経由での依存管理
+  - 境界明確化: 各境界の責務定義・循環依存ゼロ達成
+
+Step5準備完了状態（namespace階層化基盤確立）:
+  - 16ファイル準備: 当初計画12ファイル→Phase6で16ファイルに拡張
+  - ディレクトリ構造: 将来namespaceに対応する構造確立
+  - 技術負債回避: ユーザー指摘「雛型の名残」完全解消
+```
 
 #### Phase B1 Step3完全実装パターン（2025-09-30完全成功・100点満点品質達成）
 ```yaml
@@ -505,10 +651,11 @@ SubAgent並列実行成果（完全成功・技術価値確立）:
 
 #### 既存実装パターン（Phase B1 Step1-2完了・Step4基盤確立）
 ```yaml
-Domain層実装（Step2完了・100点品質基盤）:
+Domain層実装（Step2完了・100点品質基盤→Step4 Bounded Context化完成）:
   - F# Railway-oriented Programming: Result型パイプライン完全実装
   - ProjectDomainService: 原子性保証・失敗時ロールバック完全実装
   - Smart Constructor: ProjectName・ProjectId制約実装完全実装
+  - Bounded Context分離: 4境界文脈確立（Common/Authentication/ProjectManagement/UbiquitousLanguageManagement）
 
 Infrastructure層実装（Step4準備完了・Application層統合基盤確立）:
   - EF Core BeginTransaction: 原子性保証実装パターン確立
@@ -647,5 +794,5 @@ docker-compose logs postgres
 - **XSS対策**: 自動エスケープ・CSP設定
 
 ---
-**最終更新**: 2025-09-30（Phase B1 Step3完全成功・仕様準拠度100点満点達成・Fix-Mode改善完全実証・Contracts層構文エラー9件完全修正・SubAgent並列実行効果確認・ADR_018策定・SubAgent実行ガイドライン策定・プロセス改善価値永続化完了・技術基盤価値確立・Step4準備完了）  
-**重要追加**: Fix-Mode完全実証結果・C#構文規約100%準拠・SubAgent並列実行効果・仕様準拠度100点満点・TDD⭐⭐⭐⭐⭐優秀評価・継続改善循環確立・技術負債Issue #40記録
+**最終更新**: 2025-10-01（Phase B1 Step4完全成功・Domain層Bounded Context化達成・4境界文脈確立・2,631行16ファイル移行完了・F# Compilation Order規約確立・ユーザーフィードバック活用Phase6追加・Step5準備完了）  
+**重要追加**: Bounded Context分離パターン確立・F# Compilation Order規約・依存関係管理原則・ユーザーフィードバック活用事例・雛型の名残解消・Step5問題事前回避

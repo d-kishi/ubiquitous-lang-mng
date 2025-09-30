@@ -62,16 +62,16 @@ type ProjectManagementService(
                                         existingProjects
 
                                 match domainResult with
-                                | Error (ProjectDomainService.InsufficientPermissions msg) ->
+                                | Error (ProjectCreationError.InsufficientPermissions msg) ->
                                     return Error $"権限エラー: {msg}"
-                                | Error (ProjectDomainService.DuplicateProjectName msg) ->
+                                | Error (ProjectCreationError.DuplicateProjectName msg) ->
                                     return Error $"重複エラー: {msg}"
-                                | Error (ProjectDomainService.DomainCreationFailed msg) ->
+                                | Error (ProjectCreationError.DomainCreationFailed msg) ->
                                     return Error $"デフォルトドメイン作成エラー: {msg}"
-                                | Error (ProjectDomainService.SystemError ex) ->
+                                | Error (ProjectCreationError.SystemError ex) ->
                                     return Error $"システムエラー: {ex.Message}"
                                 | Error err ->
-                                    return Error (err.ToString())
+                                    return Error (ErrorConversions.getProjectCreationErrorMessage err)
                                 | Ok (project, domain) ->
 
                                     // Step 5: 原子性保証による永続化（REQ-3.1.2-2準拠）
@@ -178,8 +178,8 @@ type ProjectManagementService(
 
                                                 // Step 6: ProjectDomainService削除検証活用
                                                 match ProjectDomainService.validateProjectDeletion project relatedDomains operatorUser with
-                                                | Error (ProjectDomainService.DatabaseError msg) -> return Error msg
-                                                | Error err -> return Error (err.ToString())
+                                                | Error (ProjectCreationError.DatabaseError msg) -> return Error msg
+                                                | Error err -> return Error (ErrorConversions.getProjectCreationErrorMessage err)
                                                 | Ok () ->
 
                                                     // Step 7: ドメインロジック実行（論理削除）

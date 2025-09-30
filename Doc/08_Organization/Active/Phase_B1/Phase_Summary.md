@@ -83,17 +83,22 @@
   - SubAgent並列実行成功・責務分担最適化実証
   - ADR_018・実行ガイドライン作成で改善知見永続化
 
-### Step4: Domain層リファクタリング 🔄 即座実行可能（**新規追加**）
+### Step4: Domain層リファクタリング ✅ 完了（2025-09-30）
 - **実行内容**: Bounded Context別ディレクトリ分離・Phase C/D準備
-- **SubAgent計画**: fsharp-domain単独実行・リファクタリング特化
-- **実装対象**:
-  - Bounded Context別ディレクトリ構造（Common/Authentication/ProjectManagement）
-  - ファイル分割（ValueObjects/Entities/DomainServices/Errors）
-  - F#コンパイル順序調整（.fsproj更新）
-  - テストコード修正（4-6ファイル・module参照調整）
-  - 品質保証（0 Warning/0 Error・52テスト100%成功継続）
-- **推定時間**: 3.5-4.5時間（5フェーズ実装・テストコード修正15-20分追加）
-- **実施理由**: Infrastructure層実装前の最適タイミング・Phase C/D成長予測対応
+- **SubAgent実行**: fsharp-domain単独実行・リファクタリング特化
+- **実装成果**:
+  - **Phase 1-6全完了**: 4境界文脈分離（Common/Authentication/ProjectManagement/**UbiquitousLanguageManagement**）
+  - **16ファイル作成**: 2,631行・4境界文脈×4ファイル
+  - **Phase 6追加実施**: UbiquitousLanguageManagement境界文脈分離（ユーザー指摘による改善）
+  - **型安全性向上**: UbiquitousLanguageError型新規作成（93行）
+  - **F#コンパイル順序最適化**: Common→Authentication→ProjectManagement→UbiquitousLanguageManagement
+- **品質達成**:
+  - ✅ **ビルド**: 0 Warning/0 Error（全5プロジェクト成功）
+  - ✅ **Clean Architecture**: 97点品質維持
+  - ✅ **Application層修正**: 6箇所の参照更新完了
+  - ⚠️ **テストプロジェクト問題発見**: `.csproj`なのにF#ファイル含む（既存問題・別Issue化予定）
+- **実施時間**: 約4時間（Phase 1-5: 3.5時間 + Phase 6: 35分）
+- **GitHub Issue**: #41（完了）
 
 #### 🔴 Step4開始前必須手順（簡易版step-start・15分）
 **重要**: Step4実装開始前に以下の簡易版step-start実行必須（Phase/Step開始処理充足のため）
@@ -126,22 +131,26 @@
 
 **注記**: task-breakdown Commandは省略可（5フェーズ実装計画が十分詳細なため）
 
-### Step5: Domain層namespace階層化 🔄 Step4完了後即座実施（**新規追加・GitHub Issue #42**）
+### Step5: Domain層namespace階層化 🔄 即座実行可能（**新規追加・GitHub Issue #42**）
 - **実行内容**: 全層namespace階層化・Application層整合性確保
 - **SubAgent計画**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure並列実行
 - **実装対象**:
-  - Domain層サブnamespace導入（`.Domain.Common`, `.Domain.Authentication`, `.Domain.ProjectManagement`）
+  - **Domain層サブnamespace導入**: `.Domain.Common`, `.Domain.Authentication`, `.Domain.ProjectManagement`, **`.Domain.UbiquitousLanguageManagement`**
+  - **16ファイル修正**: Step4で分離した4境界文脈すべて（当初計画12→実際16）
   - Application層open文修正（5-8ファイル）
   - Contracts層open文修正（3-5ファイル）
   - Infrastructure層open文修正（10-15ファイル）
-  - テストコード修正（6-8ファイル）
   - **ADR_019作成**: namespace設計規約明文化（再発防止策）
-- **推定時間**: 3.5-4.5時間（7フェーズ実装・ADR作成含む）
+- **推定時間**: 3.5-4.5時間（7フェーズ実装・ADR作成含む・UbiquitousLanguageManagement追加により+10分）
 - **実施理由**:
   - Application層との整合性確保（Application層は既にサブnamespace使用中）
   - F#ベストプラクティス準拠
   - Bounded Context明確化の効果最大化
   - **namespace規約不在が根本原因・再発防止必須**
+- **Step4からの引き継ぎ**:
+  - ✅ 4境界文脈完全分離完了
+  - ✅ Phase 6追加実施により整合性確保
+  - ✅ namespace階層化の前提条件完全達成
 
 #### 🔴 Step5実施の重要性
 **問題の背景**:

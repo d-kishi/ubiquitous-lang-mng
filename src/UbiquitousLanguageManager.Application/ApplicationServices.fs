@@ -407,8 +407,8 @@ type UbiquitousLanguageApplicationService(
                     | None -> Task.FromResult(Error "指定されたドメインが見つかりません")
                     | Some domain ->
                         // 🔐 ドメインサービス: 作成権限の検証
-                        match DomainService.validateUserCanCreateInDomain createdBy domain with
-                        | Error err -> Task.FromResult(Error err)
+                        match UbiquitousLanguageDomainService.validateUserCanCreateInDomain createdBy domain.IsActive with
+                        | Error err -> Task.FromResult(Error (err.ToMessage()))
                         | Ok () ->
                             // 🔍 重複チェック: 同一ドメイン内での名前重複確認
                             task {
@@ -419,8 +419,8 @@ type UbiquitousLanguageApplicationService(
                                     | Error err -> Task.FromResult(Error err)
                                     | Ok existingTerms ->
                                         // 🎯 ドメインサービス: 重複検証
-                                        match DomainService.validateUniqueNamesInDomain japaneseName englishName existingTerms with
-                                        | Error err -> Task.FromResult(Error err)
+                                        match UbiquitousLanguageDomainService.validateUniqueNamesInDomain japaneseName englishName existingTerms with
+                                        | Error err -> Task.FromResult(Error (err.ToMessage()))
                                         | Ok () ->
                                             // 🔧 ドメインエンティティ作成
                                             let draft = DraftUbiquitousLanguage.create domainId japaneseName englishName description createdBy
@@ -448,7 +448,7 @@ type UbiquitousLanguageApplicationService(
                     | Some draft ->
                         // 🎯 ドメインロジック: 承認申請処理
                         match draft.submitForApproval submittedBy with
-                        | Error err -> Task.FromResult(Error err)
+                        | Error err -> Task.FromResult(Error (err.ToMessage()))
                         | Ok updatedDraft ->
                             // 💾 更新の永続化
                             task {
@@ -489,16 +489,16 @@ type UbiquitousLanguageApplicationService(
                                     | None -> Task.FromResult(Error "関連するドメインが見つかりません")
                                     | Some domain ->
                                         // 🔐 承認権限の検証
-                                        match DomainService.validateApprovalAuthorization approvedBy approver.Role domain with
-                                        | Error err -> Task.FromResult(Error err)
+                                        match UbiquitousLanguageDomainService.validateApprovalAuthorization approvedBy approver.Role with
+                                        | Error err -> Task.FromResult(Error (err.ToMessage()))
                                         | Ok () ->
                                             // 🎯 ドメインロジック: 承認処理
                                             match draft.approve approvedBy with
-                                            | Error err -> Task.FromResult(Error err)
+                                            | Error err -> Task.FromResult(Error (err.ToMessage()))
                                             | Ok approvedDraft ->
                                                 // 🔄 正式版への変換
                                                 match FormalUbiquitousLanguage.createFromDraft approvedDraft approvedBy with
-                                                | Error err -> Task.FromResult(Error err)
+                                                | Error err -> Task.FromResult(Error (err.ToMessage()))
                                                 | Ok formalVersion ->
                                                     // 💾 正式版の永続化
                                                     task {
