@@ -79,7 +79,11 @@
       "Bash(xargs:*)",
       "SlashCommand(/step-end-review)",
       "Bash(Select-Object -First 50)",
-      "SlashCommand(/session-end)"
+      "SlashCommand(/session-end)",
+      "Bash(findstr:*)",
+      "Bash(Get-ChildItem -Path . -Recurse -Directory -ErrorAction SilentlyContinue)",
+      "Bash(Where-Object { $_ame -match \"serena|memoria|memory|mcp\" })",
+      "Bash(Select-Object -First 10 FullName)"
     ],
     "deny": [],
     "ask": [],
