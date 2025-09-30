@@ -12,14 +12,16 @@ graph TD
     Step1[Step1: 要件詳細分析] --> Step2[Step2: Domain層実装]
     Step2 --> Step3[Step3: Application層実装]
     Step3 --> Step4[Step4: Domain層リファクタリング]
-    Step4 --> Step5[Step5: Infrastructure層実装]
-    Step5 --> Step6[Step6: Web層実装]
+    Step4 --> Step5[Step5: namespace階層化]
+    Step5 --> Step6[Step6: Infrastructure層実装]
+    Step6 --> Step7[Step7: Web層実装]
 
     Step1 -.-> Step4[調査結果活用]
-    Step1 -.-> Step5[技術調査結果活用]
-    Step1 -.-> Step6[権限制御マトリックス活用]
-    Step2 -.-> Step5[Domain層基盤統合]
-    Step3 -.-> Step5[Application層統合]
+    Step1 -.-> Step6[技術調査結果活用]
+    Step1 -.-> Step7[権限制御マトリックス活用]
+    Step2 -.-> Step6[Domain層基盤統合]
+    Step3 -.-> Step6[Application層統合]
+    Step4 -.-> Step5[Bounded Context分離活用]
 ```
 
 ## 📋 Step別依存関係詳細
@@ -160,7 +162,13 @@ graph TD
    - Common → Authentication → ProjectManagement順
    - 依存関係確認・循環参照排除
 
-4. **品質保証・テスト検証**
+4. **テストコード修正**（15-20分）
+   - Domain.Tests 3ファイル修正（ProjectDomainServiceTests.fs等）
+   - Application.Tests 1ファイル修正（ProjectManagementServiceTests.fs）
+   - module参照調整（`open UbiquitousLanguageManager.Domain.ProjectDomainService`等）
+   - `dotnet test`で52テスト100%成功確認
+
+5. **品質保証・テスト検証**
    - 0 Warning/0 Error維持
    - 52テスト100%成功継続
    - namespace変更なし（後方互換性維持）
@@ -169,8 +177,9 @@ graph TD
 - [ ] Bounded Context別ディレクトリ構造完成
 - [ ] 全ファイル分割完了（ValueObjects/Entities/DomainServices/Errors）
 - [ ] .fsprojコンパイル順序調整完了
+- [ ] **テストコード修正完了（4-6ファイル）**
 - [ ] `dotnet build` 成功（0 Warning, 0 Error）
-- [ ] `dotnet test` 成功（52テスト100%成功）
+- [ ] **`dotnet test` 成功（52テスト100%成功）** ← 最重要確認
 - [ ] Clean Architecture 97点品質維持
 
 #### Step5への引き継ぎ事項
@@ -187,11 +196,80 @@ graph TD
 
 ---
 
-### Step5: Infrastructure層実装（**旧Step4から繰り下げ**）
-**状態**: 🔄 **Step4完了後実施予定**
+### Step5: Domain層namespace階層化（**新規追加・GitHub Issue #42**）
+**状態**: 🔄 **Step4完了後即座実施**
 
 #### 前提条件
 - ✅ Step4完了: Domain層Bounded Context別ディレクトリ分離完了
+- ✅ Step3完了: Application層実装完了・サブnamespace使用中
+- [ ] GitHub Issue #42確認
+- [ ] Application層namespace構造確認（整合性検証）
+
+#### 実施タスク
+1. **Domain層namespace変更**（60分）
+   - Common層: `UbiquitousLanguageManager.Domain.Common`
+   - Authentication層: `UbiquitousLanguageManager.Domain.Authentication`
+   - ProjectManagement層: `UbiquitousLanguageManager.Domain.ProjectManagement`
+   - .fsproj更新
+
+2. **Application層修正**（30分）
+   - ProjectManagementService.fs等open文修正（5-8ファイル）
+   - AuthenticationServices.fs等open文修正
+
+3. **Contracts層修正**（20分）
+   - TypeConverters.cs等using文修正（3-5ファイル）
+   - DTOs.cs等参照修正
+
+4. **Infrastructure層修正**（40分）
+   - Repository実装open文修正（10-15ファイル）
+   - EF Core Configurations修正
+
+5. **テストコード修正**（30分）
+   - Domain.Tests: 3ファイルopen文修正
+   - Application.Tests: 2-3ファイルopen文修正
+   - Infrastructure.Tests: 1-2ファイルopen文修正
+
+6. **統合ビルド・テスト検証**（30分）
+   - `dotnet build`（0 Warning/0 Error確認）
+   - `dotnet test`（52テスト100%成功確認）
+   - Clean Architecture整合性確認
+
+7. **完了処理・再発防止策（ADR作成）**（40-55分）
+   - **ADR_019作成**: namespace設計規約明文化
+   - **ADR_010更新**: namespace規約参照追加
+   - **関連ドキュメント更新**: Phase_Summary.md等
+
+#### 完了判定基準
+- [ ] Domain層サブnamespace導入完了
+- [ ] Application層・Contracts層・Infrastructure層open文修正完了
+- [ ] **テストコード修正完了（6-8ファイル）**
+- [ ] `dotnet build` 成功（0 Warning, 0 Error）
+- [ ] **`dotnet test` 成功（52テスト100%成功）** ← 最重要確認
+- [ ] Application層との整合性確保完了
+- [ ] F#ベストプラクティス準拠確認
+- [ ] **ADR_019作成完了（namespace規約明文化）** ← 再発防止
+
+#### Step6への引き継ぎ事項
+- **完成**: Domain層サブnamespace階層化完了
+- **準備**: Infrastructure層実装準備完了（namespace統一・参照整合性確保）
+- **品質**: 0 Warning/0 Error・52テスト100%成功継続
+- **整合性**: Application層との完全整合性確保
+- **再発防止**: ADR_019作成完了・namespace規約確立
+
+#### 阻害要因・注意点
+- ❌ **Step4未完了時の実施禁止**: Bounded Context別ディレクトリ分離未完成時は実施不可
+- ⚠️ **全層影響**: Domain層のみならず全層修正必要・影響範囲大
+- ⚠️ **SubAgent並列実行**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure必須
+- ⚠️ **テスト確認**: 各フェーズ完了後のビルド・テスト実行必須
+
+---
+
+### Step6: Infrastructure層実装（**旧Step5から繰り下げ**）
+**状態**: 🔄 **Step5完了後実施予定**
+
+#### 前提条件
+- ✅ Step4完了: Domain層Bounded Context別ディレクトリ分離完了
+- ✅ Step5完了: Domain層namespace階層化完了・全層整合性確保
 - [ ] 最適化されたDomain層構造確認
 - [ ] ProjectDomainService統合方針確認
 - [ ] EF Core・Repository設計確認
@@ -238,11 +316,11 @@ graph TD
 
 ---
 
-### Step6: Web層実装（**旧Step5から繰り下げ**）
-**状態**: 🔄 **Step5完了後実施予定**
+### Step7: Web層実装（**旧Step6から繰り下げ**）
+**状態**: 🔄 **Step6完了後実施予定**
 
 #### 前提条件
-- ✅ Step5完了: Infrastructure層実装完了
+- ✅ Step6完了: Infrastructure層実装完了
 - [ ] Repository基盤動作確認
 - [ ] Application層統合動作確認
 - [ ] 権限制御マトリックス実装確認

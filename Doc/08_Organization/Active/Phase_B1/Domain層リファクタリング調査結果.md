@@ -70,8 +70,10 @@ Domain/
     └── LanguageManagement/    # ユビキタス言語管理境界文脈
 ```
 
-**実装工数**：3-4時間（5フェーズ）
-**最適タイミング**：Phase B1 Step4実施前（現在）
+**実装工数**：
+- **Step4（ディレクトリ分離）**：3.5-4.5時間
+- **Step5（namespace階層化）**：3-4時間
+**最適タイミング**：Phase B1 Step4-5（分割実施）
 
 ### 実施しない場合の影響
 
@@ -184,16 +186,18 @@ Web/Components/
 
 ## 🎯 実施推奨事項
 
-### 最優先：Domain層リファクタリング
+### 最優先：Domain層リファクタリング（2段階実施）
 
-**実施タイミング**：Phase B1 Step4実施前（今すぐ）
+**実施タイミング**：Phase B1 Step4-5（連続実施）
 **理由**：
 1. Step3完了でDomain/Application層実装完了・Infrastructure層未実装
 2. 影響範囲最小化（Infrastructure/Web層実装前）
 3. テスト基盤確立（52テスト100%成功状態）
 4. Phase C/D前準備（最適な構造で開始可能）
 
-**実装工数**：3-4時間
+**実装工数**：
+- **Step4（Bounded Context別ディレクトリ分離）**：3.5-4.5時間
+- **Step5（全層namespace階層化）**：3-4時間（GitHub Issue #42）
 **品質保証**：0 Warning/0 Error・52テスト100%成功継続
 
 ### 第2優先：Contracts層TypeConverters分割
@@ -205,11 +209,13 @@ Web/Components/
 ## 📋 関連ドキュメント
 
 ### Issue作成
-- **Issue文書**：`/Doc/06_Issues/ISSUE_Domain層リファクタリング提案.md`
-- **GitHub Issue手動作成必要**（gh CLI未利用可能）
+- **Step4関連Issue文書**：`/Doc/06_Issues/ISSUE_Domain層リファクタリング提案.md`
+- **Step5関連GitHub Issue**：#42 Domain層namespace階層化対応
 
 ### 参考文書
 - Phase B1 Phase_Summary：`/Doc/08_Organization/Active/Phase_B1/Phase_Summary.md`
+- Step04詳細設計：`/Doc/08_Organization/Active/Phase_B1/Step04_Domain層リファクタリング.md`
+- Step05詳細設計：`/Doc/08_Organization/Active/Phase_B1/Step05_namespace階層化.md`
 - 機能仕様書（Phase C/D定義）：`/Doc/01_Requirements/機能仕様書.md`
 - Clean Architecture ADR：`/Doc/07_Decisions/ADR_001_アーキテクチャ構成決定.md`
 
@@ -231,4 +237,4 @@ Web/Components/
 
 **調査実施者**：Claude Code
 **調査完了日**：2025-09-30
-**次アクション**：ユーザー承認取得後、Domain層リファクタリング実施
+**対応決定**：Step4（ディレクトリ分離）・Step5（namespace階層化）の2段階実施（GitHub Issue #42）

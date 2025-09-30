@@ -3,7 +3,7 @@
 ## 📋 Step概要
 - **Step名**: Step04 Domain層リファクタリング（**新規追加**）
 - **作業特性**: リファクタリング・品質改善（Phase C/D準備）
-- **推定期間**: 1セッション（3-4時間）
+- **推定期間**: 1セッション（3.5-4.5時間）
 - **実施予定日**: 2025-09-30以降
 - **SubAgent組み合わせ**: fsharp-domain単独実行・リファクタリング特化
 
@@ -42,7 +42,7 @@
 
 ### 単独実行理由
 - リファクタリングは単一責務（Domain層のみ変更）
-- 他層への影響なし（namespace変更なし・後方互換性維持）
+- 他層への影響最小化（namespace階層化はStep5実施）
 - 段階的実装により品質確保容易
 
 ## 📚 Step1・Step3成果物活用（必須参照）
@@ -85,8 +85,9 @@
 
 ### 品質基準（必須）
 - [ ] **Clean Architecture 97点維持**: 循環依存なし・層責務分離遵守
-- [ ] **後方互換性維持**: namespace変更なし・Application層影響なし
+- [ ] **Bounded Context分離完了**: ディレクトリ構造明確化（namespace階層化はStep5）
 - [ ] **Phase C/D準備完了**: 最適構造での実装開始可能状態
+- [ ] **Step5準備完了**: namespace階層化実施準備（Bounded Context別ディレクトリ基盤）
 
 ## 🔧 5フェーズ実装計画
 
@@ -216,10 +217,10 @@ ProjectManagement/
 
 ---
 
-### Phase 5: 品質保証・検証（30分）
+### Phase 5: 品質保証・検証・テストコード修正（45-50分）
 
 #### 作業内容
-1. **.fsprojファイルコンパイル順序調整**
+1. **.fsprojファイルコンパイル順序調整**（15分）
 ```xml
 <ItemGroup>
   <!-- Common: 共通定義（最優先） -->
@@ -241,15 +242,43 @@ ProjectManagement/
 </ItemGroup>
 ```
 
-2. **全プロジェクトビルド・テスト実行**
-   - `dotnet build`（0 Warning/0 Error確認）
-   - `dotnet test`（52テスト100%成功確認）
+2. **テストコードopen文修正**（15-20分）**← 新規追加**
 
-3. **Application層・Contracts層参照確認**
+   **修正対象ファイル**（4-6ファイル）:
+   ```
+   tests/UbiquitousLanguageManager.Domain.Tests/
+   ├── ProjectDomainServiceTests.fs        (280行)
+   ├── ProjectErrorHandlingTests.fs        (280行)
+   └── ProjectTests.fs                     (確認必要)
+
+   tests/UbiquitousLanguageManager.Tests/Application/
+   └── ProjectManagementServiceTests.fs    (確認必要)
+   ```
+
+   **修正パターン**:
+   ```fsharp
+   // 修正前
+   open UbiquitousLanguageManager.Domain.ProjectDomainService
+
+   // 修正後（予測）
+   // namespace変更なしだが、module参照の調整が必要な可能性
+   // 具体的修正内容はPhase 1-4完了後の構造による
+   ```
+
+   **重要**:
+   - namespace `UbiquitousLanguageManager.Domain`は変更なし（後方互換性維持）
+   - module参照が変更される可能性あり（ProjectManagement/ProjectDomainService.fs移動後）
+   - テストコード修正後、必ず`dotnet test`で52テスト100%成功確認
+
+3. **全プロジェクトビルド・テスト実行**（10分）
+   - `dotnet build`（0 Warning/0 Error確認）
+   - `dotnet test`（52テスト100%成功確認）**← 最重要確認**
+
+4. **Application層・Contracts層参照確認**（5分）
    - Application層からのDomain層参照動作確認
    - Contracts層からのDomain層型変換動作確認
 
-4. **既存ファイル削除（オプション）**
+5. **既存ファイル削除（オプション）**（5分）
    - ValueObjects.fs削除（バックアップ推奨）
    - Entities.fs削除（バックアップ推奨）
    - DomainServices.fs削除（バックアップ推奨）
@@ -257,8 +286,9 @@ ProjectManagement/
 
 #### 完了確認
 - [ ] .fsprojコンパイル順序調整完了
+- [ ] **テストコードopen文修正完了（4-6ファイル）**
 - [ ] `dotnet build` 成功（0 Warning, 0 Error）
-- [ ] `dotnet test` 成功（52テスト100%成功）
+- [ ] `dotnet test` 成功（52テスト100%成功）**← 最重要確認**
 - [ ] Application層・Contracts層参照動作確認
 - [ ] 既存ファイル削除 or バックアップ完了
 
@@ -301,6 +331,24 @@ src/UbiquitousLanguageManager.Domain/
 - **平均ファイル**: 322行 → 123行（62%削減）
 - **ファイル数**: 4ファイル → 12ファイル（3倍分散）
 
+### テストコード修正対象詳細
+
+#### 修正対象ファイル（4-6ファイル）
+- **Domain.Tests**: ProjectDomainServiceTests.fs（280行）・ProjectErrorHandlingTests.fs（280行）・ProjectTests.fs
+- **Application.Tests**: ProjectManagementServiceTests.fs
+
+#### 修正内容（予測）
+1. **module参照の調整**
+   - 現在: `open UbiquitousLanguageManager.Domain.ProjectDomainService`
+   - リファクタリング後: module構造変更による調整必要性
+
+2. **namespace確認**
+   - `UbiquitousLanguageManager.Domain`は変更なし（後方互換性維持）
+   - 既存テストコードのnamespace・open文は原則維持
+
+3. **修正時間見積もり**
+   - 1ファイルあたり3-5分×4-6ファイル = 15-20分
+
 ## 📋 品質保証計画
 
 ### ビルド品質
@@ -313,15 +361,15 @@ src/UbiquitousLanguageManager.Domain/
 - **TDD基盤維持**: Red-Green-Refactorサイクル継続可能状態
 - **回帰テストなし**: 既存機能の動作変更なし
 
-### 後方互換性
-- **namespace変更なし**: `UbiquitousLanguageManager.Domain`統一維持
-- **Application層影響なし**: IProjectManagementService実装変更不要
-- **Contracts層影響なし**: TypeConverter実装変更不要
+### Step5への引き継ぎ
+- **Bounded Context分離完了**: Common/Authentication/ProjectManagement明確化
+- **ディレクトリ構造確立**: namespace階層化の基盤完成
+- **Step5実施準備**: namespace階層化即座実施可能状態
 
 ## 🔄 次Step準備状況
 
-### Step5（Infrastructure層実装）準備
-- **Domain層最適構造確立**: Bounded Context明確化
+### Step6（Infrastructure層実装）準備
+- **Domain層最適構造確立**: Bounded Context明確化（Step5 namespace階層化後）
 - **Repository統合準備**: 最適化されたDomain層との統合容易
 - **EF Core Configurations**: 境界文脈別Configuration実装準備
 
@@ -364,6 +412,7 @@ src/UbiquitousLanguageManager.Domain/
 ---
 
 **Step作成日**: 2025-09-30
+**最終更新日**: 2025-09-30（テストコード修正追加）
 **実施予定日**: 2025-09-30以降（Step3完了後即座実行可能）
-**推定時間**: 3-4時間（5フェーズ実装）
+**推定時間**: 3.5-4.5時間（5フェーズ実装・テストコード修正15-20分追加）
 **SubAgent**: fsharp-domain単独実行・リファクタリング特化

@@ -1,71 +1,67 @@
 # プロジェクト概要
 
-**最終更新**: 2025-09-30（Phase B1再設計完了・Step4追加・次回Domain層リファクタリング実施準備完了）
+**最終更新**: 2025-09-30（Phase B1 Step5追加・namespace階層化対応計画策定完了）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
 ### Phase完了状況（マスタープラン準拠）
 - [x] **Phase A（ユーザー管理機能）**: A1-A9完了（2025-09-16完了）✅ 100%
-- [ ] **Phase B（プロジェクト管理機能）**: B1進行中・Step3完了・**Phase B1再設計完了・Step4準備完了** 🚀 **← 次回Step4（Domain層リファクタリング）実施**
+- [ ] **Phase B（プロジェクト管理機能）**: B1進行中・Step3完了・**Phase B1 7段階構成化・Step5追加・namespace階層化対応計画完了** 🚀 **← 次回Step4（Domain層リファクタリング）実施**
   - [x] B1-Step1: 要件分析・技術調査完了（**4SubAgent並列実行・成果物活用体制確立**）
   - [x] B1-Step2: Domain層実装完了（**F# + Railway-oriented Programming + TDD Red Phase**）
   - [x] B1-Step3: Application層実装完了（**F# Application層・権限制御・TDD Green Phase・100点満点品質達成**）✅ 
-  - [ ] **B1-Step4: Domain層リファクタリング（新規追加）**: 次回実施・Bounded Context別ディレクトリ分離（3-4時間）🚀 **← 次回セッション**
-  - [ ] B1-Step5: Infrastructure層実装（旧Step4から繰り下げ・Step4完了後実施）
-  - [ ] B1-Step6: Web層実装（旧Step5から繰り下げ）
+  - [ ] **B1-Step4: Domain層リファクタリング**: 次回実施・Bounded Context別ディレクトリ分離（3.5-4.5時間）🚀 **← 次回セッション**
+  - [ ] **B1-Step5: namespace階層化（新規追加・GitHub Issue #42）**: Step4完了後即座実施・全層namespace階層化・ADR_019作成（3.5-4.5時間）🆕
+  - [ ] B1-Step6: Infrastructure層実装（旧Step5から繰り下げ・Step5完了後実施）
+  - [ ] B1-Step7: Web層実装（旧Step6から繰り下げ）
   - [ ] B2-B5: 後続Phase計画中
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
 - **Phase完了**: 1/4 (25%)
-- **Step完了**: 13/30 (43%) ※A9 + B1-Step1-2-3完了 + Step4追加（6段階構成）
+- **Step完了**: 13/30 (43%) ※A9 + B1-Step1-2-3完了 + Step5追加（7段階構成）
 - **機能実装**: 認証・ユーザー管理完了、プロジェクト管理Domain+Application層完了・100点品質
 
-### 最新の重要成果（2025-09-30・Phase B1再設計完了）
-- **✅ Phase B1再設計完了**: Step構成6段階化・Step4（Domain層リファクタリング）追加
-- **📋 Phase_Summary.md更新完了**: 進捗率50%・推定期間6-8セッション・Step4詳細記載
-- **📊 Step間依存関係マトリックス.md作成**: 6 Step依存関係Mermaid図・各Step詳細（前提・成果物・引き継ぎ）
-- **📝 Step04_Domain層リファクタリング.md作成**: 5フェーズ実装計画（合計3-4時間）・品質保証計画
-- **🔍 Phase/Step開始処理充足状況分析完了**: 80%充足・簡易版step-start（15分）で完全準拠達成可能
+### 最新の重要成果（2025-09-30・Phase B1 Step5追加・namespace階層化対応計画完了）
+- **✅ Phase B1 7段階構成化完了**: Step5（namespace階層化）追加・既存Step5→Step6・Step6→Step7繰り下げ
+- **📋 GitHub Issue #42作成**: Domain層namespace階層化対応・7フェーズ実装計画・ADR_019作成計画
+- **📝 Step05_namespace階層化.md作成**: 詳細設計656行・7フェーズ実装計画・再発防止策組み込み
+- **🔍 namespace規約不在問題特定**: ADR_010具体的規約なし・業界標準実践2024調査実施・ADR_019作成計画確立
+- **📊 関連ドキュメント整合性確保**: Phase_Summary.md・Step間依存関係マトリックス.md・Step04等更新完了
 
 ## 🎯 次回セッション実施計画
 
 ### Domain層リファクタリング実施（Step4）
-- **最優先作業**: 簡易版step-start実行（15分）→ 5フェーズ実装（3-4時間）
+- **最優先作業**: Step4（Domain層リファクタリング）実施
 - **対象**: Domain層Bounded Context別ディレクトリ分離（GitHub Issue #41）
-- **推定時間**: 簡易版step-start 15分 + リファクタリング3-4時間 = 合計3.5-4.5時間
-- **成果物**: Step4完了・Domain層最適構造確立・Infrastructure層実装準備完了
-
-### 簡易版step-start（15分・必須）
-**Phase/Step開始処理充足のため必須実行**:
-
-1. **現状確認**（5分）:
-   - `dotnet build` 実行（0 Warning/0 Error確認）
-   - `dotnet test` 実行（52テスト100%成功確認）
-   - Phase B1 Step3完了状態確認
-   - Domain層現状ファイル構成確認
-
-2. **TodoList作成**（5分）:
-   - TodoWriteツールで5フェーズをタスク化
-   - Phase 1: ディレクトリ・ファイル作成（30分）
-   - Phase 2: Common層移行（45分）
-   - Phase 3: Authentication層移行（60分）
-   - Phase 4: ProjectManagement層移行（45分）
-   - Phase 5: 品質保証・検証（30分）
-
-3. **ユーザー承認取得**（5分）:
-   - Step4実施開始の最終承認
-   - 5フェーズ実装計画の確認・承認
-   - 推定時間3-4時間の確認・承認
-   - fsharp-domain SubAgent単独実行の承認
+- **推定時間**: 3.5-4.5時間（5フェーズ実装）
+- **成果物**: Step4完了・Domain層最適構造確立・Step5（namespace階層化）準備完了
 
 ### 必須参照文書
-- `/Doc/08_Organization/Active/Phase_B1/Phase_Summary.md` - Step4セクション・簡易版step-start手順
+- `/Doc/08_Organization/Active/Phase_B1/Phase_Summary.md` - Step4-5セクション・7段階構成
 - `/Doc/08_Organization/Active/Phase_B1/Step04_Domain層リファクタリング.md` - 5フェーズ実装計画詳細
-- `/Doc/08_Organization/Active/Phase_B1/Step間依存関係マトリックス.md` - Step3→Step4引き継ぎ事項
-- `/Doc/08_Organization/Active/Phase_B1/Domain層リファクタリング調査結果.md` - リファクタリング必要性・Phase C/D成長予測
+- `/Doc/08_Organization/Active/Phase_B1/Step05_namespace階層化.md` - 7フェーズ実装計画・ADR_019作成計画
+- `/Doc/08_Organization/Active/Phase_B1/Step間依存関係マトリックス.md` - Step3→Step4→Step5依存関係
+- `/Doc/08_Organization/Active/Phase_B1/Domain層リファクタリング調査結果.md` - リファクタリング必要性・2段階実施
 - **GitHub Issue #41** - Domain層リファクタリング提案・実装計画
+- **GitHub Issue #42** - namespace階層化対応・ADR_019作成計画
+
+### Step5（namespace階層化）重要性
+**問題の背景**:
+- Application層: 既にサブnamespace使用（`UbiquitousLanguageManager.Application.ProjectManagement`）
+- Domain層: フラットnamespace（`UbiquitousLanguageManager.Domain`のみ）
+- **アーキテクチャ不整合発生**
+
+**根本原因**:
+- ADR_010に「レイヤー構造を反映した階層化」記載のみ（具体的規約なし）
+- Bounded Context別サブnamespace使用の明示的ルールなし
+- namespace構造妥当性チェックプロセスなし
+
+**再発防止策**:
+- **ADR_019作成**: namespace設計規約明文化（Bounded Context別サブnamespace必須化）
+- **業界標準実践2024準拠**: F#・C# namespace規約・技術根拠明示
+- **検証プロセス組み込み**: Step開始時・Phase完了時のnamespace構造レビュー
 
 ### リファクタリング必要性（緊急性高）
 **現状**:
@@ -153,8 +149,8 @@
 
 **次週重点事項**:
 - Domain層リファクタリング実施（Step4）
+- namespace階層化対応（Step5）
 - Fix-Mode効果測定継続
-- SubAgent並列実行最適化継続
 
 **振り返り文書**: `Doc/05_Weekly/2025-W38-W39_週次振り返り.md`
 
@@ -173,11 +169,12 @@
 - **TDD実践**: ⭐⭐⭐⭐⭐ 5/5優秀評価・52テスト100%成功・Green Phase完全達成
 - **プロセス改善**: Fix-Mode 100%成功率・SubAgent並列実行成功・責務分担完全確立
 
-### Phase B1再設計完了（次回Domain層リファクタリング実施）
-- **再設計完了**: Step構成6段階化・Step4追加・既存Step4-5繰り下げ
-- **成果物作成**: Phase_Summary.md・Step間依存関係マトリックス.md・Step04詳細設計書
-- **Phase/Step開始処理充足状況分析**: 80%充足・簡易版step-start（15分）で完全準拠達成
-- **次回実施**: Step4（Domain層リファクタリング）・3-4時間・fsharp-domain単独実行
+### Phase B1 Step5追加・namespace階層化対応計画完了（2025-09-30）
+- **7段階構成化完了**: Step5追加・既存Step5→Step6・Step6→Step7繰り下げ
+- **GitHub Issue #42**: Domain層namespace階層化対応・7フェーズ実装計画・ADR_019作成計画
+- **Step05詳細設計**: 656行詳細設計書・業界標準実践2024調査・再発防止策組み込み
+- **根本原因特定**: namespace規約不在・ADR_010具体的規約なし・検証プロセスなし
+- **次回実施**: Step4（Domain層リファクタリング）→ Step5（namespace階層化）連続実施
 
 ## 📋 技術負債管理状況
 
@@ -188,11 +185,13 @@
 
 ### 新規技術負債記録・解決計画
 - **GitHub Issue #40**: テストプロジェクト重複問題（Phase B完了後対応・統合方式・1-2時間）
-- **GitHub Issue #41**: Domain層リファクタリング（**次回Step4で実施・3-4時間**）🚀
+- **GitHub Issue #41**: Domain層リファクタリング（**次回Step4で実施・3.5-4.5時間**）🚀
+- **GitHub Issue #42**: namespace階層化対応（**Step4完了後Step5で実施・3.5-4.5時間・ADR_019作成含む**）🆕
 - **管理方法**: GitHub Issues完全移行・TECH-XXX番号体系確立継続
 
 ### 現在の状況
 - **技術負債ゼロ状態**: Phase B1 Step3完了・重大技術負債なし
+- **アーキテクチャ不整合特定**: Application層サブnamespace使用・Domain層フラット→Issue #42対応計画完了
 - **GitHub Issue #39**: 仕様駆動開発強化Phase 2・3（低優先度・将来実装）
 
 ## 🔄 継続改善・効率化実績
@@ -214,20 +213,21 @@
 
 ## 📊 セッション記録管理（最新）
 
-### 最新セッション記録（2025-09-30・Phase B1再設計完了）
+### 最新セッション記録（2025-09-30・Phase B1 Step5追加・namespace階層化対応計画完了）
 - **主要実施内容**: 
-  - Phase B1再設計完了（Step構成6段階化・Step4追加）
-  - Phase_Summary.md更新（進捗率50%・推定期間6-8セッション）
-  - Step間依存関係マトリックス.md作成（6 Step依存関係Mermaid図・詳細記載）
-  - Step04_Domain層リファクタリング.md作成（5フェーズ実装計画・品質保証計画）
-  - Phase/Step開始処理充足状況分析（80%充足・簡易版step-start推奨）
+  - Phase B1 7段階構成化完了（Step5追加・既存Step5→Step6・Step6→Step7）
+  - GitHub Issue #42作成（Domain層namespace階層化対応・7フェーズ実装計画・ADR_019作成）
+  - Step05_namespace階層化.md作成（656行詳細設計・再発防止策組み込み）
+  - namespace規約不在問題特定（ADR_010具体的規約なし・業界標準実践2024調査）
+  - 関連ドキュメント整合性確保（Phase_Summary.md・Step間依存関係マトリックス.md等更新）
 - **成果物精度**: 95%（高精度達成・実装開始可能レベル）
-- **次回作業**: 簡易版step-start（15分）→ Domain層リファクタリング実施（3-4時間）
+- **次回作業**: Step4（Domain層リファクタリング）→ Step5（namespace階層化）連続実施
 
 ### 引き継ぎ体制
-- **Phase B1再設計完了**: Step4追加・Step構成変更・実施計画策定完了
+- **Phase B1 7段階構成化完了**: Step5追加・namespace階層化対応計画策定完了
 - **技術基盤**: Railway-oriented Programming・権限制御・TDD実践・プロセス改善確立
 - **品質基準**: 仕様準拠度100点・TDD実践優秀・Clean Architecture 97点継続
+- **再発防止策**: ADR_019作成計画・業界標準実践2024準拠・検証プロセス組み込み
 - **メモリー更新完了**: project_overview・daily_sessions・task_completion_checklist差分更新・次回セッション参照可能状態
 
 ## 🎯 重要制約・注意事項
@@ -237,23 +237,24 @@
 - **SubAgent責務境界遵守**: エラー発生時の必須SubAgent委託・Fix-Mode標準テンプレート活用
 - **メインエージェント制限**: 実装修正禁止・調整専念の徹底継続
 
-### 品質維持原則（Domain層リファクタリング後継続）
+### 品質維持原則（Domain層リファクタリング・namespace階層化後継続）
 - **TDD実践**: Red-Green-Refactorサイクル厳守・52テスト基盤活用
 - **Domain+Application層基盤活用**: ProjectDomainService・IProjectManagementService統合活用
 - **仕様準拠度**: 100点品質継続目標・Clean Architecture 98点目標
 
-### Fix-Mode標準適用（Domain層リファクタリング後継続）
+### Fix-Mode標準適用（Domain層リファクタリング・namespace階層化後継続）
 - **標準テンプレート活用**: 実証済み成功パターン（100%成功率・15分/9件実績）
 - **効果測定継続**: 成功率・修正時間・品質向上の継続測定
 - **継続改善**: 学習蓄積・テンプレート改善・品質向上循環
 
 ## 📈 期待効果・次期目標
 
-### Domain層リファクタリング期待効果（次回セッション）
+### Domain層リファクタリング・namespace階層化期待効果（次回セッション）
 - **可読性向上**: 単一ファイル100-200行・境界文脈明確分離・初学者適切構造
 - **保守性向上**: 並列開発容易・影響範囲特定容易・SubAgent競合リスク低減
+- **アーキテクチャ整合性**: Application層・Domain層namespace構造統一・不整合解消
+- **再発防止策確立**: ADR_019作成・namespace規約明文化・検証プロセス組み込み
 - **Phase C/D準備**: 最適構造での実装開始・成長予測対応・リスク事前回避
-- **技術基盤発展**: Bounded Context明確化・F#コンパイル順序最適化・品質維持
 
 ### 長期目標（Phase B完了）
 - **プロジェクト管理基盤**: CRUD操作・権限制御・デフォルトドメイン自動作成完全実装

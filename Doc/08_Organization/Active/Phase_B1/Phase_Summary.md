@@ -3,11 +3,11 @@
 ## 📊 Phase概要
 - **Phase名**: Phase B1 (プロジェクト基本CRUD)
 - **Phase規模**: 🟢中規模（マスタープランから自動取得）
-- **Phase段階数**: 6段階（Domain層リファクタリング追加によるStep再構成）
-- **Phase特性**: 新機能実装 + リファクタリング
-- **推定期間**: 6-8セッション（Domain層リファクタリング追加）
+- **Phase段階数**: 7段階（Domain層リファクタリング + namespace階層化追加）
+- **Phase特性**: 新機能実装 + リファクタリング + アーキテクチャ整合性確保
+- **推定期間**: 7-9セッション（リファクタリング・namespace階層化追加）
 - **開始予定日**: 2025-09-25
-- **完了予定日**: 2025-10-03（推定・リファクタリング追加により1セッション延長）
+- **完了予定日**: 2025-10-05（推定・アーキテクチャ整合性確保により2セッション延長）
 
 ## 🎯 Phase成功基準
 - **機能要件**: プロジェクト基本CRUD（作成・編集・削除・一覧表示）完全実装
@@ -90,8 +90,9 @@
   - Bounded Context別ディレクトリ構造（Common/Authentication/ProjectManagement）
   - ファイル分割（ValueObjects/Entities/DomainServices/Errors）
   - F#コンパイル順序調整（.fsproj更新）
+  - テストコード修正（4-6ファイル・module参照調整）
   - 品質保証（0 Warning/0 Error・52テスト100%成功継続）
-- **推定時間**: 3-4時間（5フェーズ実装）
+- **推定時間**: 3.5-4.5時間（5フェーズ実装・テストコード修正15-20分追加）
 - **実施理由**: Infrastructure層実装前の最適タイミング・Phase C/D成長予測対応
 
 #### 🔴 Step4開始前必須手順（簡易版step-start・15分）
@@ -109,17 +110,58 @@
    - Phase 2: Common層移行（45分）
    - Phase 3: Authentication層移行（60分）
    - Phase 4: ProjectManagement層移行（45分）
-   - Phase 5: 品質保証・検証（30分）
+   - Phase 5: 品質保証・検証・テストコード修正（45-50分）
+     - .fsprojコンパイル順序調整（15分）
+     - テストコードopen文修正（15-20分）
+     - 全ビルド・テスト実行（10分）
+     - Application層・Contracts層参照確認（5分）
+     - 既存ファイル削除（5分）
 
 3. **ユーザー承認取得**（5分）:
    - Step4実施開始の最終承認
    - 5フェーズ実装計画の確認・承認
-   - 推定時間3-4時間の確認・承認
+   - 推定時間3.5-4.5時間の確認・承認
+   - テストコード修正（15-20分）追加の承認
    - fsharp-domain SubAgent単独実行の承認
 
 **注記**: task-breakdown Commandは省略可（5フェーズ実装計画が十分詳細なため）
 
-### Step5: Infrastructure層実装 🔄 Step4完了後実施（**旧Step4から繰り下げ**）
+### Step5: Domain層namespace階層化 🔄 Step4完了後即座実施（**新規追加・GitHub Issue #42**）
+- **実行内容**: 全層namespace階層化・Application層整合性確保
+- **SubAgent計画**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure並列実行
+- **実装対象**:
+  - Domain層サブnamespace導入（`.Domain.Common`, `.Domain.Authentication`, `.Domain.ProjectManagement`）
+  - Application層open文修正（5-8ファイル）
+  - Contracts層open文修正（3-5ファイル）
+  - Infrastructure層open文修正（10-15ファイル）
+  - テストコード修正（6-8ファイル）
+  - **ADR_019作成**: namespace設計規約明文化（再発防止策）
+- **推定時間**: 3.5-4.5時間（7フェーズ実装・ADR作成含む）
+- **実施理由**:
+  - Application層との整合性確保（Application層は既にサブnamespace使用中）
+  - F#ベストプラクティス準拠
+  - Bounded Context明確化の効果最大化
+  - **namespace規約不在が根本原因・再発防止必須**
+
+#### 🔴 Step5実施の重要性
+**問題の背景**:
+- Application層: 既にサブnamespace使用（`UbiquitousLanguageManager.Application.ProjectManagement`）
+- Domain層: フラットnamespace（`UbiquitousLanguageManager.Domain`のみ）
+- 結果: アーキテクチャ不整合・F#ベストプラクティス不準拠
+
+**実施タイミング**:
+- Step4（Domain層Bounded Context別ディレクトリ分離）完了後即座実施
+- Infrastructure層実装前が最適（影響範囲最小化）
+
+**6フェーズ実装計画**:
+1. Domain層namespace変更（60分）
+2. Application層修正（30分）
+3. Contracts層修正（20分）
+4. Infrastructure層修正（40分）
+5. テストコード修正（30分）
+6. 統合ビルド・テスト検証（30分）
+
+### Step6: Infrastructure層実装 🔄 Step5完了後実施（**旧Step5から繰り下げ**）
 - **予定実行内容**: ProjectRepository・EF Core・権限フィルタ実装
 - **SubAgent計画**: csharp-infrastructure中心・fsharp-application連携
 - **実装対象**:
@@ -128,7 +170,7 @@
   - 原子性保証（トランザクション・デフォルトドメイン同時作成）
   - Application層統合（IProjectManagementService実装）
 
-### Step6: Web層実装 🔄 Step5完了後実施（**旧Step5から繰り下げ**）
+### Step7: Web層実装 🔄 Step6完了後実施（**旧Step6から繰り下げ**）
 - **予定実行内容**: Blazor Server・権限ベース表示制御・UI実装
 - **SubAgent計画**: csharp-web-ui中心・全SubAgent統合
 - **実装対象**:
@@ -138,9 +180,9 @@
   - UI/UX最適化・ユーザビリティ向上
 
 ### Phase B1全体実装進捗
-- **実行期間**: 6セッション予定（Domain層リファクタリング追加により+1セッション）
-- **進捗状況**: Step1-3完了（50%進捗）・Step4-6残り（50%）
-- **実装順序**: Domain→Application→**Domain層リファクタリング**→Infrastructure→Web（Clean Architecture準拠 + 品質改善）
+- **実行期間**: 7-9セッション予定（リファクタリング・namespace階層化追加により+2セッション）
+- **進捗状況**: Step1-3完了（43%進捗）・Step4-7残り（57%）
+- **実装順序**: Domain→Application→**Domain層リファクタリング**→**namespace階層化**→Infrastructure→Web（Clean Architecture準拠 + 品質改善 + アーキテクチャ整合性確保）
 - **品質達成状況**:
   - ✅ 仕様準拠度100点満点達成（Step3）
   - ✅ 0 Warning/0 Error達成（Step2-3）
@@ -163,10 +205,13 @@
 | **Step3** | Application層実装 | `Step01_Requirements_Analysis.md` | IProjectManagementService仕様 | Command/Query実装指針 |
 | **Step4** | Domain層リファクタリング | `Domain層リファクタリング調査結果.md` | Bounded Context別ディレクトリ分離計画 | リファクタリング実装指針 |
 | **Step4** | Domain層リファクタリング | `GitHub Issue #41` | 実装工数・5フェーズ計画・品質保証 | Phase C/D準備・リスク回避 |
-| **Step5** | Infrastructure層実装 | `Design_Review_Results.md` | 既存システム統合設計 | EF Core・Repository統合 |
-| **Step5** | Infrastructure層実装 | `Technical_Research_Results.md` | EF Core多対多関連最適実装 | UserProjects中間テーブル |
-| **Step6** | Web層実装 | `Step01_Requirements_Analysis.md` | 権限制御マトリックス（4ロール×4機能） | UI権限制御実装 |
-| **Step6** | Web層実装 | `Technical_Research_Results.md` | Blazor Server権限制御最新実装 | セキュリティ強化実装 |
+| **Step5** | namespace階層化 | `GitHub Issue #42` | 全層namespace階層化・7フェーズ計画・ADR_019作成 | Application層整合性確保・再発防止 |
+| **Step5** | namespace階層化 | `Domain層リファクタリング調査結果.md` | Application層サブnamespace使用状況 | アーキテクチャ不整合解消 |
+| **Step5** | namespace階層化 | `業界標準実践調査2024` | F#・C# namespace規約・Bounded Context実践 | ADR_019技術根拠 |
+| **Step6** | Infrastructure層実装 | `Design_Review_Results.md` | 既存システム統合設計 | EF Core・Repository統合 |
+| **Step6** | Infrastructure層実装 | `Technical_Research_Results.md` | EF Core多対多関連最適実装 | UserProjects中間テーブル |
+| **Step7** | Web層実装 | `Step01_Requirements_Analysis.md` | 権限制御マトリックス（4ロール×4機能） | UI権限制御実装 |
+| **Step7** | Web層実装 | `Technical_Research_Results.md` | Blazor Server権限制御最新実装 | セキュリティ強化実装 |
 
 ### 成果物ファイル所在
 **出力ディレクトリ**: `/Doc/08_Organization/Active/Phase_B1/Research/`

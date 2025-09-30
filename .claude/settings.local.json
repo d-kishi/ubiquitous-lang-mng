@@ -68,7 +68,8 @@
       "Bash(mcp__serena__check_onboarding_performed:*)",
       "Bash(mcp__serena__list_memories:*)",
       "Bash(Select-Object -First 5)",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": [],
