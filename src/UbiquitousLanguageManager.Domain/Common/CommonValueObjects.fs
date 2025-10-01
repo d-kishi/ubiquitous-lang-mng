@@ -1,4 +1,4 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.Common
 
 // 🎯 CommonValueObjects.fs: 共通値オブジェクト定義
 // Bounded Context: Common

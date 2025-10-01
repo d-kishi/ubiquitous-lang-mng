@@ -1,6 +1,10 @@
 namespace UbiquitousLanguageManager.Application
 
-open UbiquitousLanguageManager.Domain
+// F# Domain層namespace階層化対応: Bounded Context別にopen
+open UbiquitousLanguageManager.Domain.Common                  // UserId, ProjectId, DomainId, Role, Permission
+open UbiquitousLanguageManager.Domain.Authentication          // User, Email, UserName, Password, PasswordHash
+open UbiquitousLanguageManager.Domain.ProjectManagement       // Project, Domain
+open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // DraftUbiquitousLanguage, FormalUbiquitousLanguage, UbiquitousLanguageId
 open System.Threading.Tasks
 
 // 🎯 Application層インターフェース: Clean Architectureの境界定義

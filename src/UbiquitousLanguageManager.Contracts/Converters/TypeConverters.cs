@@ -8,8 +8,11 @@ using Microsoft.FSharp.Collections;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
 using UbiquitousLanguageManager.Contracts.DTOs.Application;
-using UbiquitousLanguageManager.Domain;
-// UbiquitousLanguageManager.Domain.Domain型は使用箇所で直接指定
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
+using UbiquitousLanguageManager.Domain.ProjectManagement;
+using UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement;
+// UbiquitousLanguageManager.Domain.ProjectManagement.Domain型は使用箇所で直接指定
 // Microsoft.FSharp.Core.FSharpResult型は使用箇所で直接指定
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
@@ -228,7 +231,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="domain">F#で定義されたDomainエンティティ</param>
     /// <returns>C#のDomainDTO</returns>
-    public static DomainDto ToDto(UbiquitousLanguageManager.Domain.Domain domain)
+    public static DomainDto ToDto(UbiquitousLanguageManager.Domain.ProjectManagement.Domain domain)
     {
         return new DomainDto
         {
@@ -328,7 +331,7 @@ public static class TypeConverters
     /// </summary>
     /// <param name="dto">C#のCreateDomainDTO</param>
     /// <returns>F#のResult型（成功時はDomain、失敗時はエラーメッセージ）</returns>
-    public static Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.Domain, string> FromCreateDto(CreateDomainDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.ProjectManagement.Domain, string> FromCreateDto(CreateDomainDto dto)
     {
         var projectIdResult = CreateProjectId(dto.ProjectId);
         var nameResult = DomainName.create(dto.Name ?? "");
@@ -337,8 +340,8 @@ public static class TypeConverters
 
         if (projectIdResult.IsOk && nameResult.IsOk && descriptionResult.IsOk && createdByResult.IsOk)
         {
-            var domain = UbiquitousLanguageManager.Domain.Domain.create(nameResult.ResultValue, projectIdResult.ResultValue, createdByResult.ResultValue);
-            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.Domain, string>.NewOk(domain);
+            var domain = UbiquitousLanguageManager.Domain.ProjectManagement.Domain.create(nameResult.ResultValue, projectIdResult.ResultValue, createdByResult.ResultValue);
+            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.ProjectManagement.Domain, string>.NewOk(domain);
         }
         else
         {
@@ -347,7 +350,7 @@ public static class TypeConverters
             if (nameResult.IsError) errors.Add($"Name: {nameResult.ErrorValue}");
             if (descriptionResult.IsError) errors.Add($"Description: {descriptionResult.ErrorValue}");
             if (createdByResult.IsError) errors.Add($"CreatedBy: {createdByResult.ErrorValue}");
-            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.Domain, string>.NewError(string.Join(", ", errors));
+            return Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Domain.ProjectManagement.Domain, string>.NewError(string.Join(", ", errors));
         }
     }
 
@@ -774,7 +777,7 @@ public static class TypeConverters
     /// <param name="domainResult">F#のプロジェクト作成結果（Project * Domain のペア）</param>
     /// <returns>C#のProjectCreationResult</returns>
     public static ProjectCreationResult ToProjectCreationResult<TError>(
-        Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.Domain>, TError> domainResult)
+        Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.ProjectManagement.Domain>, TError> domainResult)
         where TError : class
     {
         if (domainResult.IsOk)

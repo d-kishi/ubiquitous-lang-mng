@@ -2,7 +2,8 @@ namespace UbiquitousLanguageManager.Tests.Domain
 
 open System
 open Xunit
-open UbiquitousLanguageManager.Domain
+open UbiquitousLanguageManager.Domain.Common
+open UbiquitousLanguageManager.Domain.ProjectManagement
 
 // 🧪 F# Domain層プロジェクトテスト（Phase B1 TDD実装）
 // Railway-oriented Programming・Result型・Smart Constructorのテスト

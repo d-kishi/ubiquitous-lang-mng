@@ -1,6 +1,8 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.ProjectManagement
 
 open System
+open UbiquitousLanguageManager.Domain.Common
+open UbiquitousLanguageManager.Domain.Authentication
 
 // 🎯 ProjectEntities.fs: プロジェクト管理エンティティ
 // Bounded Context: ProjectManagement

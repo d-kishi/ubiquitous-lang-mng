@@ -1,4 +1,4 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement
 
 // 🎯 UbiquitousLanguageValueObjects.fs: ユビキタス言語管理の値オブジェクト
 // Bounded Context: UbiquitousLanguageManagement

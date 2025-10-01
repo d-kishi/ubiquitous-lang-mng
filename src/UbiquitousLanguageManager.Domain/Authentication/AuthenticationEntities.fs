@@ -1,6 +1,7 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.Authentication
 
 open System
+open UbiquitousLanguageManager.Domain.Common
 
 // 🎯 AuthenticationEntities.fs: 認証関連エンティティ定義
 // Bounded Context: Authentication

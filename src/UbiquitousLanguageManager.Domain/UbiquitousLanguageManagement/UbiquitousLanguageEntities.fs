@@ -1,6 +1,7 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement
 
 open System
+open UbiquitousLanguageManager.Domain.Common
 
 // 🎯 UbiquitousLanguageEntities.fs: ユビキタス言語管理エンティティ
 // Bounded Context: UbiquitousLanguageManagement

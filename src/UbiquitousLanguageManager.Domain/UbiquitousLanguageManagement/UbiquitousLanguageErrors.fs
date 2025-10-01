@@ -1,4 +1,4 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement
 
 open System
 

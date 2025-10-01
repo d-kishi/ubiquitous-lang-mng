@@ -1,4 +1,4 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.Common
 
 // 🎯 CommonTypes.fs: 共通型定義
 // Bounded Context: Common

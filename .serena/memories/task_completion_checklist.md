@@ -1,6 +1,6 @@
 # タスク完了チェックリスト
 
-**最終更新**: 2025-09-30（Phase B1 Step4完了・4境界文脈分離達成）
+**最終更新**: 2025-10-01（Phase B1 Step5完了・namespace整合性100%達成）
 **管理方針**: 完了タスク・継続タスク・新規タスクの一元管理・状態更新方式
 
 ## 📊 Phase別完了状況
@@ -23,8 +23,8 @@
 - [x] **Phase B1再設計実施**（🎉完了・Phase_Summary.md・Step間依存関係マトリックス.md・Step04詳細計画完成）
 - [x] **Phase B1 Step5追加・namespace階層化対応計画**（🎉完了・GitHub Issue #42・ADR_019作成計画・再発防止策確立）
 - [x] **B1 Step4: Domain層リファクタリング（Issue #41）**（🎉完了・4境界文脈分離・2,631行・16ファイル・Phase 6追加実施）
-- [ ] **B1 Step5: namespace階層化（Issue #42）**（🚀次回最優先・3.5-4.5時間・ADR_019作成）
-- [ ] **B1 Step6: Infrastructure層実装**（Step5完了後実施）
+- [x] **B1 Step5: namespace階層化（Issue #42）**（🎉完了・42ファイル修正・ADR_019作成・0 Warning/0 Error・32テスト100%成功）
+- [ ] **B1 Step6: Infrastructure層実装**（🚀次回最優先・Repository・EF Core・権限制御統合）
 - [ ] **B1 Step7: Web層実装**（Step6完了後実施）
 - [ ] B2: ユーザー・プロジェクト関連管理
 - [ ] B3: プロジェクト機能完成
@@ -51,19 +51,17 @@
 
 ## 🔄 次回セッション継続タスク
 
-### 🚀 最優先（次回セッション・namespace階層化実施）
-1. [ ] **namespace階層化実施（Issue #42）**（3.5-4.5時間・全層namespace階層化・ADR_019作成）：
-   - [ ] Phase 1: Domain層namespace変更（16ファイル・60分）
-   - [ ] Phase 2: Application層open文修正（5-8ファイル・30分）
-   - [ ] Phase 3: Contracts層using文修正（3-5ファイル・20分）
-   - [ ] Phase 4: Infrastructure層open文修正（10-15ファイル・40分）
-   - [ ] Phase 5: テストコード修正（6-8ファイル・30分）
-   - [ ] Phase 6: 統合ビルド・テスト検証（30分）
-   - [ ] **Phase 7: ADR_019作成・再発防止策確立**（40-55分）
-2. [ ] **Infrastructure層実装準備確認**（namespace階層化後即座着手可能状態確認）
+### 🚀 最優先（次回セッション・Infrastructure層実装）
+1. [ ] **Phase B1 Step6: Infrastructure層実装**（4-5時間・Repository実装・EF Core統合・権限制御統合）：
+   - [ ] Stage 1: ProjectRepository実装（IProjectRepository・権限フィルタ統合）
+   - [ ] Stage 2: DomainRepository実装（IDomainRepository・承認者制約）
+   - [ ] Stage 3: UbiquitousLanguageRepository実装（IUbiquitousLanguageRepository・ドラフト/正式版）
+   - [ ] Stage 4: EF Core DbContext統合（3Repository統合・マイグレーション）
+   - [ ] Stage 5: 統合テスト（WebApplicationFactory・権限制御・Railway-oriented Programming統合）
+   - [ ] Stage 6: Step6完了処理（step-end-review・仕様準拠確認・品質評価）
 
-### 🟡 高優先度（namespace階層化後・Infrastructure層実装）
-- [ ] **Phase B1 Step6開始**（Infrastructure層実装・ProjectRepository・EF Core・権限フィルタ統合）
+### 🟡 高優先度（Step6完了後・Web層実装準備）
+- [ ] **Phase B1 Step7開始**（Web層実装・Blazor Server・権限制御UI・SignalR統合）
 - [ ] **Clean Architecture 4層統合**（Domain・Application・Infrastructure・Contracts統合・98点目標）
 - [ ] **TDD Refactorフェーズ継続**（Infrastructure層でのGreen→Refactor・52テスト基盤活用）
 

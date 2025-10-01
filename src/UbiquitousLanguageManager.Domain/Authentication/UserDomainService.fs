@@ -1,4 +1,6 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.Authentication
+
+open UbiquitousLanguageManager.Domain.Common
 
 // 🎯 UserDomainService.fs: ユーザー管理ドメインサービス
 // Bounded Context: Authentication

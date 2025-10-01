@@ -1,6 +1,10 @@
 namespace UbiquitousLanguageManager.Application.Interfaces
 
-open UbiquitousLanguageManager.Domain
+// F# Domain層namespace階層化対応: Bounded Context別にopen
+open UbiquitousLanguageManager.Domain.Common                  // UserId, ProjectId
+open UbiquitousLanguageManager.Domain.Authentication          // (使用なし)
+open UbiquitousLanguageManager.Domain.ProjectManagement       // (使用なし)
+open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // DraftUbiquitousLanguage, FormalUbiquitousLanguage, UbiquitousLanguageId
 open System.Threading.Tasks
 
 /// <summary>

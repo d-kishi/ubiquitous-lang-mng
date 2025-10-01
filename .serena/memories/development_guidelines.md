@@ -13,6 +13,57 @@
 - **承認記録**: 取得した承認の明示的記録
 - **チェックリスト実行**: 組織管理運用マニュアルのプロセス遵守チェック
 
+## 🔧 namespace設計原則（ADR_019準拠・2025-10-01確立）
+
+### 必須遵守事項
+**基本テンプレート**: `<ProjectName>.<Layer>.<BoundedContext>[.<Feature>]`
+
+#### 具体的namespace規約
+- **Domain層**:
+  ```fsharp
+  namespace UbiquitousLanguageManager.Domain.Common
+  namespace UbiquitousLanguageManager.Domain.Authentication
+  namespace UbiquitousLanguageManager.Domain.ProjectManagement
+  namespace UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement
+  ```
+- **Application層**: `UbiquitousLanguageManager.Application.<BoundedContext>`
+- **Infrastructure層**: `UbiquitousLanguageManager.Infrastructure.<Feature>`
+- **Contracts層**: `UbiquitousLanguageManager.Contracts.<Feature>`
+- **Web層**: `UbiquitousLanguageManager.Web.<Feature>`
+
+#### 階層構造ルール
+- **Common特別扱い**: 全Bounded Contextで使用する共通定義（ID型・Permission・Role等）
+- **Bounded Context分離**: Authentication/ProjectManagement/UbiquitousLanguageManagement/DomainManagement
+- **最大階層制限**: 3階層推奨・4階層許容（深すぎる階層は可読性低下）
+
+#### F#特別考慮事項
+- **Module設計**: Module = Bounded Context推奨だが強制しない・保守性優先
+- **コンパイル順序**: Common→Authentication→ProjectManagement→UbiquitousLanguageManagement（前方参照不可制約）
+- **namespace + module組み合わせ活用**: 型定義・Smart Constructor・ドメインサービスの整理
+
+#### C#特別考慮事項
+- **using文推奨パターン**: Bounded Context別にusing文を明示的に記載
+- **using alias使用**: 型名衝突回避時に活用（例: `using DomainModel = UbiquitousLanguageManager.Domain.ProjectManagement.Domain;`）
+
+### 検証プロセス（必須実行）
+
+#### Step開始時検証
+- [ ] namespace構造レビュー実施
+- [ ] Bounded Context境界確認
+- [ ] 循環依存なし確認
+- [ ] ADR_019規約準拠確認
+
+#### Phase完了時検証
+- [ ] 全層namespace整合性確認
+- [ ] ADR_019規約準拠確認
+- [ ] F#/C#ベストプラクティス準拠確認
+- [ ] Clean Architecture 97点以上維持確認
+
+### 重要性・リスク
+**違反時の影響**: Phase完了後の大規模手戻り（3.5-4.5時間・42ファイル修正の実績あり）
+
+**詳細**: `/Doc/07_Decisions/ADR_019_namespace設計規約.md`（247行・業界標準準拠）
+
 ## 🔧 SubAgent責務境界原則（2025-09-28新設・2025-09-30改善実証・セッション終了処理対応）
 
 ### エラー修正時の必須遵守原則（タイミング問わず適用）

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Microsoft.FSharp.Control;
 using UbiquitousLanguageManager.Contracts.Exceptions;
+using UbiquitousLanguageManager.Domain.Common;
 
 namespace UbiquitousLanguageManager.Contracts.Mappers
 {

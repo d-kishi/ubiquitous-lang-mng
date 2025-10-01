@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Application;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
+using UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement;
 
 namespace UbiquitousLanguageManager.Infrastructure.Services;
 

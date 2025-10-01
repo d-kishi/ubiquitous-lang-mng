@@ -1,4 +1,7 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.ProjectManagement
+
+open UbiquitousLanguageManager.Domain.Common
+open UbiquitousLanguageManager.Domain.Authentication
 
 // 🎯 ProjectDomainService.fs: プロジェクト管理ドメインサービス
 // Bounded Context: ProjectManagement

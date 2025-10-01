@@ -2,7 +2,11 @@ namespace UbiquitousLanguageManager.Application
 
 open Microsoft.Extensions.Logging
 open System.Threading.Tasks
-open UbiquitousLanguageManager.Domain
+// F# Domain層namespace階層化対応: Bounded Context別にopen
+open UbiquitousLanguageManager.Domain.Common                  // UserId, Role, Permission, PermissionMappings
+open UbiquitousLanguageManager.Domain.Authentication          // User
+open UbiquitousLanguageManager.Domain.ProjectManagement       // Project, ProjectName, ProjectDescription, Domain, ProjectDomainService, ProjectError
+open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // (使用なし)
 open UbiquitousLanguageManager.Application.ProjectManagement
 
 // 🎯 Phase B1 Step3: プロジェクト管理アプリケーションサービス実装

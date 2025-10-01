@@ -3,8 +3,9 @@ namespace UbiquitousLanguageManager.Tests.Domain
 open System
 open System.Diagnostics
 open Xunit
-open UbiquitousLanguageManager.Domain
-open UbiquitousLanguageManager.Domain.ProjectDomainService
+open UbiquitousLanguageManager.Domain.Common
+open UbiquitousLanguageManager.Domain.ProjectManagement
+open UbiquitousLanguageManager.Domain.ProjectManagement.ProjectDomainService
 
 // 🧪 F# Domain層エラーハンドリング・パフォーマンステスト
 // Result型パイプライン・エラー伝播・例外ケーステスト
@@ -31,12 +32,12 @@ type ProjectErrorHandlingTests() =
     [<Fact>]
     member this.``ProjectCreationError_ToString_ReturnsCorrectMessage``() =
         // Arrange & Act & Assert
-        let duplicateError = DuplicateProjectName "Test Project"
-        let invalidNameError = InvalidProjectName "Invalid"
-        let invalidDescError = InvalidProjectDescription "Too long"
-        let permissionError = InsufficientPermissions "No permission"
-        let dbError = DatabaseError "Connection failed"
-        let domainError = DomainCreationFailed "Domain error"
+        let duplicateError = ProjectCreationError.DuplicateProjectName "Test Project"
+        let invalidNameError = ProjectCreationError.InvalidProjectName "Invalid"
+        let invalidDescError = ProjectCreationError.InvalidProjectDescription "Too long"
+        let permissionError = ProjectCreationError.InsufficientPermissions "No permission"
+        let dbError = ProjectCreationError.DatabaseError "Connection failed"
+        let domainError = ProjectCreationError.DomainCreationFailed "Domain error"
 
         // 【F#初学者向け解説】
         // 判別共用体の各ケースが正しく定義され、nullでないことを確認します。
@@ -119,8 +120,8 @@ type ProjectErrorHandlingTests() =
     member this.``combineValidations_FirstFails_ReturnsFirstError``() =
         // Arrange
         let validation1 () = Ok ()
-        let validation2 () = Error (DuplicateProjectName "First error")
-        let validation3 () = Error (InvalidProjectName "Second error")  // これは実行されない
+        let validation2 () = Error (ProjectCreationError.DuplicateProjectName "First error")
+        let validation3 () = Error (ProjectCreationError.InvalidProjectName "Second error")  // これは実行されない
         let validations = [validation1; validation2; validation3]
 
         // Act
@@ -128,7 +129,7 @@ type ProjectErrorHandlingTests() =
 
         // Assert
         match result with
-        | Error (DuplicateProjectName msg) ->
+        | Error (ProjectCreationError.DuplicateProjectName msg) ->
             Assert.Equal("First error", msg)
         | Ok _ ->
             Assert.True(false, "エラーが期待されましたが成功しました")

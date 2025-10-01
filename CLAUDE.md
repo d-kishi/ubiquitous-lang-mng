@@ -24,35 +24,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **詳細**: `/Doc/07_Decisions/ADR_016_プロセス遵守違反防止策.md`
 
-## 📋 次回セッション（ログイン検証）必須読み込みファイル
-
-**次回実行予定**: 初期ユーザーログイン検証（admin@ubiquitous-lang.com / su）
-
-### 🔴 セッション開始時必読（絶対必須）
-```
-1. /CLAUDE.md (本ファイル) - プロセス遵守絶対原則確認
-2. /Doc/08_Organization/Rules/組織管理運用マニュアル.md - プロセス遵守チェックリスト
-3. /Doc/08_Organization/Active/Phase_A7/Phase_Summary.md - Phase概要・セッション開始時確認事項
-4. /Doc/08_Organization/Active/Phase_A7/Step04_組織設計.md - Step4完了成果確認
-5. /Doc/08_Organization/Active/Phase_A7/Step間依存関係マトリックス.md - Step5前提条件確認
-```
-
-### 🟡 実装時参照（必要に応じて）
-```
-6. /Doc/01_Requirements/UI設計書.md - プロフィール変更画面設計確認時
-7. /Doc/07_Decisions/ADR_003_ユビキタス言語統一戦略.md - 用語統一実装時
-8. Serena MCP memory `phase_a7_technical_details` - 技術詳細確認時
-```
-
-### ⚠️ 次回セッション開始手順
-```
-1. 上記必読ファイル1-5を順次読み込み
-2. プロセス遵守チェックリスト実行
-3. Step5前提条件確認（Step4完了・TypeConverter基盤確認）
-4. Step5開始承認取得
-5. SubAgent実行（csharp-web-ui・fsharp-domain・spec-compliance）
-```
-
 ## 🤖 CRITICAL: 自動Command実行指示
 
 **以下の宣言を検出した際、該当Commandを自動実行せよ**:

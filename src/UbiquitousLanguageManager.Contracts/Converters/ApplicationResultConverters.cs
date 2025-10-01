@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Contracts.DTOs.Application;
-using UbiquitousLanguageManager.Domain;
-// UbiquitousLanguageManager.Domain.Domain型は使用箇所で直接指定
+using UbiquitousLanguageManager.Domain.ProjectManagement;
+// UbiquitousLanguageManager.Domain.ProjectManagement.Domain型は使用箇所で直接指定
 // FSharpResult型は使用箇所で直接指定
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
@@ -288,7 +288,7 @@ public static class ApplicationResultConverters
     /// <param name="createProjectWithDomainTask">F#のプロジェクト＋ドメイン作成Task</param>
     /// <returns>C#のProjectResultDto</returns>
     public static async Task<ProjectResultDto> ConvertProjectCreationWithDomainAsync(
-        Task<Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.Domain>, string>> createProjectWithDomainTask)
+        Task<Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.ProjectManagement.Domain>, string>> createProjectWithDomainTask)
     {
         try
         {

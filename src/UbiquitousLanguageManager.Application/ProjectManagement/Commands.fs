@@ -1,7 +1,11 @@
 namespace UbiquitousLanguageManager.Application.ProjectManagement
 
 open System
-open UbiquitousLanguageManager.Domain
+// F# Domain層namespace階層化対応: Bounded Context別にopen
+open UbiquitousLanguageManager.Domain.Common                  // UserId, ProjectId
+open UbiquitousLanguageManager.Domain.Authentication          // (使用なし)
+open UbiquitousLanguageManager.Domain.ProjectManagement       // Project, ProjectName, ProjectDescription, Domain
+open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // (使用なし)
 
 // 🎯 Phase B1 Step3: プロジェクト管理Command定義
 // Command/Query分離実装 - コマンド側（状態変更操作）

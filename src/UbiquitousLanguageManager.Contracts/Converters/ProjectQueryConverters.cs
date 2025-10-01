@@ -5,8 +5,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Contracts.DTOs.Application;
-using UbiquitousLanguageManager.Domain;
-// UbiquitousLanguageManager.Domain.Domain型は使用箇所で直接指定
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
+using UbiquitousLanguageManager.Domain.ProjectManagement;
+// UbiquitousLanguageManager.Domain.ProjectManagement.Domain型は使用箇所で直接指定
 // FSharpResult型は使用箇所で直接指定
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
@@ -87,7 +89,7 @@ public static class ProjectQueryConverters
     /// <param name="fsharpResult">F#のプロジェクト作成結果（Project * Domain）</param>
     /// <returns>C#のProjectResultDto</returns>
     public static ProjectResultDto ToProjectCreationResultDto(
-        Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.Domain>, string> fsharpResult)
+        Microsoft.FSharp.Core.FSharpResult<Tuple<Project, UbiquitousLanguageManager.Domain.ProjectManagement.Domain>, string> fsharpResult)
     {
         try
         {

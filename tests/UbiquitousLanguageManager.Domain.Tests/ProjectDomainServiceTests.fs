@@ -2,8 +2,9 @@ namespace UbiquitousLanguageManager.Tests.Domain
 
 open System
 open Xunit
-open UbiquitousLanguageManager.Domain
-open UbiquitousLanguageManager.Domain.ProjectDomainService
+open UbiquitousLanguageManager.Domain.Common
+open UbiquitousLanguageManager.Domain.ProjectManagement
+open UbiquitousLanguageManager.Domain.ProjectManagement.ProjectDomainService
 
 // 🧪 F# Domain層ProjectDomainServiceテスト（Phase B1 TDD実装）
 // Railway-oriented Programming・Result型・ドメインサービスのテスト
@@ -95,7 +96,7 @@ type ProjectDomainServiceTests() =
 
         // Assert
         match result with
-        | Error (DuplicateProjectName msg) ->
+        | Error (ProjectCreationError.DuplicateProjectName msg) ->
             Assert.Equal("指定されたプロジェクト名は既に使用されています", msg)
         | Ok _ ->
             Assert.True(false, "Expected DuplicateProjectName error but got Ok")
@@ -189,7 +190,7 @@ type ProjectDomainServiceTests() =
         // Railway-oriented Programmingでは、エラーが自動的に伝播され、
         // 後続の処理は実行されません。この動作をテストで確認します。
         match result with
-        | Error (DuplicateProjectName _) ->
+        | Error (ProjectCreationError.DuplicateProjectName _) ->
             Assert.True(true)  // 期待通りのエラー
         | Ok _ ->
             Assert.True(false, "Expected error propagation but got Ok")
@@ -230,7 +231,7 @@ type ProjectDomainServiceTests() =
 
         // Assert
         match result with
-        | Error (DuplicateProjectName msg) ->
+        | Error (ProjectCreationError.DuplicateProjectName msg) ->
             Assert.Equal("指定されたプロジェクト名は既に使用されています", msg)
         | Ok () ->
             Assert.True(false, "Expected DuplicateProjectName error but got Ok")
@@ -254,7 +255,7 @@ type ProjectDomainServiceTests() =
         // StringComparison.OrdinalIgnoreCaseにより、大文字小文字を区別しない
         // 比較が行われることをテストで確認します。
         match result with
-        | Error (DuplicateProjectName _) ->
+        | Error (ProjectCreationError.DuplicateProjectName _) ->
             Assert.True(true)  // 期待通りのエラー
         | Ok () ->
             Assert.True(false, "Expected case-insensitive duplicate error but got Ok")

@@ -1,4 +1,4 @@
-namespace UbiquitousLanguageManager.Domain
+namespace UbiquitousLanguageManager.Domain.Common
 
 // 🎯 CommonSpecifications.fs: 仕様パターン（Specification Pattern）
 // Bounded Context: Common

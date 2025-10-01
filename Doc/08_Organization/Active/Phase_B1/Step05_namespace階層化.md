@@ -4,8 +4,10 @@
 - **Step名**: Step05 Domain層namespace階層化（**新規追加・GitHub Issue #42**）
 - **作業特性**: アーキテクチャ整合性確保・F#ベストプラクティス準拠・再発防止策
 - **推定期間**: 1セッション（3.5-4.5時間）
-- **実施予定日**: Step4完了後即座実施
-- **SubAgent組み合わせ**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure並列実行
+- **実施日**: 2025-10-01
+- **実施時間**: 約4時間
+- **SubAgent組み合わせ**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure + csharp-web-ui + unit-test（順次実行）
+- **実施ステータス**: ✅ **完了**（2025-10-01）
 
 ## 🎯 Step目的・成果目標
 - **Application層との整合性確保**: Application層は既にサブnamespace使用・Domain層も階層化
@@ -38,7 +40,7 @@
 ## 🏢 組織設計
 
 ### SubAgent構成（4SubAgent並列実行）
-- **fsharp-domain**: Domain層namespace変更（12ファイル）
+- **fsharp-domain**: Domain層namespace変更（15ファイル）
 - **fsharp-application**: Application層open文修正（5-8ファイル）
 - **contracts-bridge**: Contracts層using文修正（3-5ファイル）
 - **csharp-infrastructure**: Infrastructure層open文修正（10-15ファイル）
@@ -72,7 +74,7 @@
 - ✅ **型安全性向上**: UbiquitousLanguageError型新規作成（93行）
 
 **🔴 Step5での重要な変更点**:
-- **namespace階層化対象ファイル数**: 12ファイル→**16ファイル**（UbiquitousLanguageManagement追加）
+- **namespace階層化対象ファイル数**: **15ファイル**（Common 3 + Authentication 4 + ProjectManagement 4 + UbiquitousLanguageManagement 4）
 - **UbiquitousLanguageErrors.fs**: 新規作成ファイル（Step4で追加）
 - **4境界文脈すべて**: namespace階層化対象
 
@@ -129,7 +131,7 @@
 
 ## 🔧 7フェーズ実装計画
 
-### Phase 1: Domain層namespace変更（60分）
+### Phase 1: Domain層namespace変更（75分）
 
 #### 作業内容
 1. **Common層namespace変更**（3ファイル）
@@ -162,12 +164,21 @@ namespace UbiquitousLanguageManager.Domain.ProjectManagement
 - ProjectErrors.fs
 - ProjectDomainService.fs
 
-4. **.fsproj確認**（変更不要）
-   - コンパイル順序は維持（Common → Authentication → ProjectManagement）
+4. **UbiquitousLanguageManagement層namespace変更**（4ファイル）
+```fsharp
+namespace UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement
+```
+- UbiquitousLanguageValueObjects.fs
+- UbiquitousLanguageErrors.fs
+- UbiquitousLanguageEntities.fs
+- UbiquitousLanguageDomainService.fs
+
+5. **.fsproj確認**（変更不要）
+   - コンパイル順序は維持（Common → Authentication → ProjectManagement → UbiquitousLanguageManagement）
    - namespace変更のみでファイル順序変更なし
 
 #### 完了確認
-- [ ] 12ファイルnamespace変更完了
+- [ ] 15ファイルnamespace変更完了
 - [ ] .fsprojコンパイル順序確認
 - [ ] `dotnet build src/UbiquitousLanguageManager.Domain` 成功確認
 
@@ -357,6 +368,7 @@ open UbiquitousLanguageManager.Domain.ProjectManagement
 namespace UbiquitousLanguageManager.Domain.Common          // 共通定義
 namespace UbiquitousLanguageManager.Domain.Authentication  // 認証境界文脈
 namespace UbiquitousLanguageManager.Domain.ProjectManagement  // プロジェクト管理境界文脈
+namespace UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // ユビキタス言語管理境界文脈
 ```
 
 **Application層**:
@@ -387,10 +399,11 @@ namespace UbiquitousLanguageManager.Contracts.Interfaces
 - **依存関係**: 他のBounded Contextに依存しない
 
 #### Bounded Context別分離
+- **Common**: 全境界文脈共通定義（ID型・Permission・Role等）
 - **Authentication**: ユーザー・認証・権限管理
 - **ProjectManagement**: プロジェクト管理
+- **UbiquitousLanguageManagement**: ユビキタス言語管理（Phase D拡張予定）
 - **DomainManagement**: ドメイン管理（Phase C実装予定）
-- **LanguageManagement**: ユビキタス言語管理（Phase D実装予定）
 
 #### 最大階層制限
 - **推奨**: 3階層まで（`<Project>.<Layer>.<BoundedContext>`）
@@ -529,7 +542,7 @@ using DomainProject = UbiquitousLanguageManager.Domain.ProjectManagement;
 
 ### 修正ファイル一覧
 
-#### Domain層（12ファイル）
+#### Domain層（15ファイル）
 ```
 src/UbiquitousLanguageManager.Domain/
 ├── Common/ (3ファイル)
@@ -541,11 +554,16 @@ src/UbiquitousLanguageManager.Domain/
 │   ├── AuthenticationEntities.fs
 │   ├── AuthenticationErrors.fs
 │   └── UserDomainService.fs
-└── ProjectManagement/ (4ファイル)
-    ├── ProjectValueObjects.fs
-    ├── ProjectEntities.fs
-    ├── ProjectErrors.fs
-    └── ProjectDomainService.fs
+├── ProjectManagement/ (4ファイル)
+│   ├── ProjectValueObjects.fs
+│   ├── ProjectEntities.fs
+│   ├── ProjectErrors.fs
+│   └── ProjectDomainService.fs
+└── UbiquitousLanguageManagement/ (4ファイル)
+    ├── UbiquitousLanguageValueObjects.fs
+    ├── UbiquitousLanguageErrors.fs
+    ├── UbiquitousLanguageEntities.fs
+    └── UbiquitousLanguageDomainService.fs
 ```
 
 #### Application層（5-8ファイル）
@@ -683,8 +701,179 @@ using UbiquitousLanguageManager.Domain.ProjectManagement;
 ---
 
 **Step作成日**: 2025-09-30
-**最終更新日**: 2025-09-30（Phase 7: ADR作成追加）
-**実施予定日**: Step4完了後即座実施
-**推定時間**: 3.5-4.5時間（7フェーズ実装・ADR作成含む）
-**SubAgent**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure並列実行
-**GitHub Issue**: #42
+**最終更新日**: 2025-10-01（実施完了記録追加）
+**実施日**: 2025-10-01
+**実施時間**: 約4時間（計画: 3.5-4.5時間）
+**SubAgent**: fsharp-domain + fsharp-application + contracts-bridge + csharp-infrastructure + csharp-web-ui + unit-test（順次実行）
+**GitHub Issue**: #42（✅ クローズ済み）
+
+---
+
+## ✅ 実施完了記録（2025-10-01）
+
+### 📊 実施サマリー
+
+**実施日時**: 2025-10-01
+**実施時間**: 約4時間
+**実施者**: Claude Code（MainAgent + 6 SubAgents）
+
+### 🎯 Phase別実施結果
+
+#### Phase 0: 事前準備・現状分析（15分）
+- ✅ Step05文書精読完了
+- ✅ 現在のnamespace構造調査完了（Domain層15ファイル確認）
+- ✅ 変更対象ファイルリスト作成完了
+- ✅ SubAgent責務分担計画策定完了
+
+#### Phase 1: Domain層namespace階層化（60分）
+- ✅ 15ファイルnamespace宣言変更完了
+  - Common: 3ファイル
+  - Authentication: 4ファイル
+  - ProjectManagement: 4ファイル
+  - UbiquitousLanguageManagement: 4ファイル
+- ✅ 6ファイルにopen文追加（Bounded Context間依存対応）
+- ✅ Domain層単体ビルド成功（0 Warning/0 Error）
+
+**SubAgent**: fsharp-domain Agent
+
+#### Phase 2: Application層namespace階層化（45分）
+- ✅ 12ファイルopen文修正完了
+- ✅ 古い`open UbiquitousLanguageManager.Domain`完全削除
+- ✅ Bounded Context別open文追加（平均3-4行/ファイル）
+- ✅ F#初学者向けコメント追加
+- ✅ Application層単体ビルド成功（0 Warning/0 Error）
+
+**SubAgent**: fsharp-application Agent
+
+#### Phase 3: Contracts層namespace階層化（30分）
+- ✅ 7ファイルusing文修正完了
+  - TypeConverters.cs: 全4 Bounded Context対応
+  - AuthenticationConverter/Mapper: Common + Authentication
+  - ProjectCommand/QueryConverters: Common + ProjectManagement + Authentication
+  - ResultMapper: Common
+- ✅ Phase B1 Step3の成功実績（100%成功率）維持
+- ✅ Contracts層単体ビルド成功（0 Warning/0 Error）
+
+**SubAgent**: contracts-bridge Agent
+
+#### Phase 4: Infrastructure層namespace階層化（30分）
+- ✅ 4ファイルusing文修正完了
+  - UserRepository.cs: Common + Authentication
+  - UserRepositoryAdapter.cs: Common + Authentication
+  - AuthenticationService.cs: Common + Authentication
+  - NotificationService.cs: Common + Authentication + UbiquitousLanguageManagement
+- ✅ Infrastructure層単体ビルド成功（0 Warning/0 Error）
+
+**SubAgent**: csharp-infrastructure Agent
+
+#### Phase 5: Web層namespace階層化（20分）
+- ✅ 2ファイル修正完了
+  - BlazorAuthenticationService.cs: using文追加・完全修飾名簡略化
+  - UserManagement.razor: @usingディレクティブ追加（エラー修正）
+- ✅ Web層単体ビルド成功（0 Warning/0 Error）
+
+**SubAgent**: csharp-web-ui Agent（Fix-Mode 1回実行）
+
+#### Phase 6: 統合テスト・品質確認（45分）
+- ✅ 全プロジェクト統合ビルド成功（0 Warning/0 Error）
+- ✅ Domain.Testsテスト修正完了
+  - ProjectDomainServiceTests.fs: 4箇所完全修飾名修正
+  - ProjectErrorHandlingTests.fs: 8箇所完全修飾名修正
+  - 型衝突問題解決（`ProjectCreationError.DuplicateProjectName`）
+- ✅ 全テスト成功（32/32テスト・100%成功）
+
+**SubAgent**: unit-test Agent（Fix-Mode 1回実行）
+
+#### Phase 7: ADR_019作成・Step終了処理（40分）
+- ✅ ADR_019作成完了（`Doc/07_Decisions/ADR_019_namespace設計規約.md`）
+- ✅ ADR_010更新完了（Line 74にADR_019参照追加）
+- ✅ Step05文書更新完了（実施記録追加）
+- ✅ GitHub Issue #42クローズ完了
+
+**SubAgent**: MainAgent単独
+
+### 📊 最終成果物
+
+#### 修正ファイル数（合計42ファイル）
+- **Domain層**: 15ファイル（namespace宣言変更 + open文追加）
+- **Application層**: 12ファイル（open文修正）
+- **Contracts層**: 7ファイル（using文修正）
+- **Infrastructure層**: 4ファイル（using文修正）
+- **Web層**: 2ファイル（using/@using修正）
+- **Tests層**: 2ファイル（完全修飾名修正・型衝突解決）
+
+#### 品質結果
+- ✅ **全層ビルド成功**: 0 Warning / 0 Error
+- ✅ **全テスト成功**: 32/32テスト（100%）
+- ✅ **Clean Architecture維持**: 97点品質継続
+- ✅ **既存機能維持**: 破壊的変更なし
+
+#### 作成文書
+- ✅ **ADR_019**: namespace設計規約（再発防止策確立）
+- ✅ **ADR_010更新**: namespace規約参照追加
+- ✅ **Step05実施記録**: 本記録
+
+### 🚨 発見された課題と対応
+
+#### 課題1: 型名衝突（Tests層）
+**問題**: `ProjectCreationError.DuplicateProjectName` と `ProjectUpdateError.DuplicateProjectName` の名前衝突
+
+**対応**: テストコードで完全修飾名使用（12箇所修正）
+
+**選択理由**: 最小変更で済む・Domain層への影響なし
+
+**教訓**: 同一namespace内で同名コンストラクタを持つ判別共用体は型衝突リスクあり
+
+#### 課題2: Web層エラー（後発発覚）
+**問題**: `UserManagement.razor`で`User`型と`Role`型が見つからないエラー
+
+**対応**: @usingディレクティブ追加（Fix-Mode実行）
+
+**原因**: 初回調査で見落とし・ビルドエラー駆動で発見
+
+**教訓**: .razorファイルもusing文修正対象・事前調査の徹底
+
+### 📈 期待効果の達成状況
+
+#### 短期効果（Step5完了時）
+- ✅ **Application層との整合性確保**: Domain層もサブnamespace使用・階層構造統一
+- ✅ **F#ベストプラクティス準拠**: Bounded Context別namespace分離適用
+- ✅ **Bounded Context明確化**: ディレクトリ構造とnamespace構造の完全一致
+- ✅ **namespace規約明文化**: ADR_019作成・再発防止策確立
+
+#### 長期効果（Phase C/D実装時）
+- ✅ **Phase C/D拡張性向上**: 最適なnamespace構造での実装開始準備完了
+- ✅ **並列開発効率向上**: Bounded Context別namespace明確化
+- ✅ **保守性・可読性向上**: コード探索容易性・変更影響範囲明確化
+- ✅ **再発防止策確立**: 同様問題の未然防止（ADR_019による規約化）
+
+### 🎓 学習事項・知見
+
+#### F# namespace階層化
+- **前方参照不可制約**: open文追加が必須（Bounded Context間依存時）
+- **コンパイル順序重要性**: Common → Authentication → ProjectManagement → UbiquitousLanguageManagement
+- **型衝突リスク**: 同名コンストラクタは完全修飾名で明示
+
+#### C# using文最適化
+- **必要最小限の原則**: 使用している型があるBounded Contextのみusing
+- **完全修飾名活用**: 型名衝突時の有効な解決策
+- **@using形式**: Blazor Razorファイルでの特殊構文
+
+#### SubAgent責務分担
+- **Fix-Mode活用**: 2回実行（csharp-web-ui, unit-test）・高速エラー解決
+- **順次実行の有効性**: Phase 1完了後に他Phase実行・依存関係明確
+- **専門性活用**: 各SubAgentの専門知識による高品質修正
+
+### 🔄 次Step準備状況
+
+#### Step6（Infrastructure層実装）準備
+- ✅ **namespace整合性確立**: Domain層サブnamespace完成・参照整合性確保
+- ✅ **Repository統合準備**: 最適化されたnamespace構造での実装開始可能
+- ✅ **EF Core Configurations**: Bounded Context別Configuration実装準備完了
+
+---
+
+**実施完了日**: 2025-10-01
+**実施時間**: 約4時間（計画通り）
+**品質結果**: 0 Warning/0 Error・全32テスト成功
+**成果物**: 42ファイル修正・ADR_019作成・GitHub Issue #42クローズ
