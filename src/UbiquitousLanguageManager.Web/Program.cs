@@ -205,11 +205,29 @@ public partial class Program
 
         // 🎯 Clean Architecture: 依存関係注入設定
         // Repository実装の登録
-        // Phase A9: UserRepositoryAdapterに更新（ASP.NET Core Identity統合）
+
+        // 👥 認証・ユーザー管理Repository（Phase A9完成）
         builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepositoryAdapter>();
-        // 将来の拡張用（現在は実装なし）
-        // builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-        // builder.Services.AddScoped<IDomainRepository, DomainRepository>();
+
+        // 📁 プロジェクト管理Repository（Phase B1 Step6 - 実装準備完了）
+        // 【F#初学者向け解説】
+        // Application層（F#）のIProjectRepositoryインターフェースを、
+        // Infrastructure層（C#）のProjectRepositoryクラスで実装します。
+        // ProjectManagementService.fsはコンストラクタインジェクションで
+        // このRepositoryを受け取り、Railway-oriented Programmingパターンで
+        // データベース操作を実行します。
+        //
+        // 【Phase B1 Step6 実装状況】
+        // ✅ Application層: IProjectManagementService完全実装済み（Repository統合完了）
+        // ✅ Application層: IProjectRepository定義済み（IProjectManagementService.fs 行137-201）
+        // ⏳ Infrastructure層: ProjectRepository実装中（Stage 3-1並列実行）
+        // ⏳ Infrastructure層: DomainRepository実装予定（別Stage）
+        //
+        // 実装完了後、以下のコメントを解除してDI設定を有効化してください:
+        // builder.Services.AddScoped<UbiquitousLanguageManager.Application.IProjectRepository, UbiquitousLanguageManager.Infrastructure.Repositories.ProjectRepository>();
+        // builder.Services.AddScoped<UbiquitousLanguageManager.Application.IDomainRepository, UbiquitousLanguageManager.Infrastructure.Repositories.DomainRepository>();
+
+        // 🔤 ユビキタス言語管理Repository（将来の拡張用）
         // builder.Services.AddScoped<IUbiquitousLanguageRepository, UbiquitousLanguageRepository>();
 
         // 🔐 Application層の認証サービス実装の登録（Phase A4 Step2で追加）
@@ -249,15 +267,33 @@ public partial class Program
         // F#のILogger<T>インターフェースをMicrosoft.Extensions.LoggingのILogger<T>にアダプト
         builder.Services.AddScoped(typeof(UbiquitousLanguageManager.Application.ILogger<>), typeof(UbiquitousLanguageManager.Infrastructure.Services.FSharpLoggerAdapter<>));
 
-        // Application Service実装の登録
+        // 🎯 Application Service実装の登録（F# Application層）
+
+        // 👥 ユーザー管理Application Service（Phase A完成）
         builder.Services.AddScoped<UbiquitousLanguageManager.Application.UserApplicationService>();
-        
-        // 🚀 Phase A9: F# 認証Application層サービスの登録
+
+        // 🔐 認証Application Service（Phase A9完成）
         // 【F#初学者向け解説】
         // Step 1-1で実装されたF#のAuthenticationApplicationServiceを登録します。
         // これにより、Railway-oriented Programmingによる型安全な認証処理が利用可能になります。
         builder.Services.AddScoped<UbiquitousLanguageManager.Application.AuthenticationApplicationService>();
-        // 将来の拡張用（現在は実装なし）
+
+        // 📁 プロジェクト管理Application Service（Phase B1 Step6 - 実装準備完了）
+        // 【F#初学者向け解説】
+        // ProjectManagementServiceは、IProjectRepository、IDomainRepository、IUserRepositoryの
+        // 3つのRepositoryをコンストラクタインジェクションで受け取ります。
+        // Railway-oriented Programmingにより、複数のRepository操作を型安全に連鎖処理します。
+        //
+        // 【Phase B1 Step6 実装状況】
+        // ✅ Application層: ProjectManagementService.fs完全実装済み
+        // ✅ Railway-oriented Programming統合済み
+        // ✅ 権限制御マトリックス完全実装済み
+        // ⏳ Infrastructure層: Repository実装待ち（Stage 3-1並列実行中）
+        //
+        // Repository実装完了後、以下のコメントを解除してDI設定を有効化してください:
+        // builder.Services.AddScoped<UbiquitousLanguageManager.Application.ProjectManagement.ProjectManagementService>();
+
+        // 🔤 ユビキタス言語管理Application Service（将来の拡張用）
         // builder.Services.AddScoped<UbiquitousLanguageApplicationService>();
 
         // 🔧 初期データサービスの登録

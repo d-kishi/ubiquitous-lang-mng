@@ -271,6 +271,9 @@ namespace UbiquitousLanguageManager.Infrastructure.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("DomainId"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasComment("ドメイン説明");
@@ -281,17 +284,26 @@ namespace UbiquitousLanguageManager.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(50)")
                         .HasComment("ドメイン名（プロジェクト内一意）");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasComment("論理削除フラグ（false:有効、true:削除済み）");
 
+                    b.Property<long>("OwnerId")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("ProjectId")
                         .HasColumnType("bigint")
                         .HasComment("所属プロジェクトID");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamptz")
                         .HasComment("最終更新日時（タイムゾーン付き）");
 
@@ -684,9 +696,15 @@ namespace UbiquitousLanguageManager.Infrastructure.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ProjectId"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasComment("プロジェクト説明");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -694,13 +712,16 @@ namespace UbiquitousLanguageManager.Infrastructure.Data.Migrations
                         .HasDefaultValue(false)
                         .HasComment("論理削除フラグ（false:有効、true:削除済み）");
 
+                    b.Property<long>("OwnerId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasComment("プロジェクト名（システム内一意）");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamptz")
                         .HasComment("最終更新日時（タイムゾーン付き）");
 
