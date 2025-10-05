@@ -1,0 +1,327 @@
+@page "/projects/create"
+@using UbiquitousLanguageManager.Contracts.DTOs
+@using UbiquitousLanguageManager.Application.ProjectManagement
+@using UbiquitousLanguageManager.Domain.Common
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.FSharp.Core
+@using System.ComponentModel.DataAnnotations
+@inject IProjectManagementService ProjectManagementService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "SuperUser")]
+
+@*
+    【Blazor Server初学者向け解説】
+    このコンポーネントはプロジェクト作成画面です。
+
+    主要機能:
+    1. EditFormコンポーネント: Blazor標準のフォーム検証機能
+    2. DataAnnotationsValidator: [Required]等の属性によるバリデーション
+    3. デフォルトドメイン自動作成: プロジェクト作成時に「共通」ドメインが自動作成されます
+    4. Railway-oriented Programming: F# Result型によるエラーハンドリング
+
+    権限制御:
+    - SuperUserのみアクセス可能（@attribute [Authorize]）
+*@
+
+<PageTitle>プロジェクト作成</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/projects" @onclick:preventDefault @onclick="NavigateToList">
+                            <i class="fas fa-project-diagram me-1"></i>プロジェクト管理
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">新規作成</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        新規プロジェクト作成
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>プロジェクト作成について：</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>プロジェクト名は一意である必要があります（重複不可）</li>
+                            <li>作成時にデフォルトドメイン「共通」が自動作成されます</li>
+                            <li>プロジェクト名は後から変更できません（PROHIBITION-3.3.1-1準拠）</li>
+                        </ul>
+                    </div>
+
+                    @* 【Blazor Server初学者向け解説】
+                        EditForm: Blazor標準のフォームコンポーネント
+                        - Model: バインドするデータモデル
+                        - OnValidSubmit: バリデーション成功時のイベントハンドラ
+                        - OnInvalidSubmit: バリデーション失敗時のイベントハンドラ
+                    *@
+                    <EditForm Model="@model" OnValidSubmit="CreateProject" OnInvalidSubmit="OnFormInvalid">
+                        @* DataAnnotationsValidator: C#属性によるバリデーション有効化 *@
+                        <DataAnnotationsValidator />
+
+                        @* ValidationSummary: 全バリデーションエラーの一覧表示 *@
+                        <ValidationSummary class="alert alert-danger" />
+
+                        @* プロジェクト名入力 *@
+                        <div class="mb-4">
+                            <label for="projectName" class="form-label fw-bold">
+                                プロジェクト名
+                                <span class="text-danger">*</span>
+                            </label>
+                            @* 【Blazor Server初学者向け解説】
+                                InputText: Blazorの双方向バインディング対応テキストボックス
+                                @bind-Value: サーバー側変数とクライアント側入力の自動同期
+                            *@
+                            <InputText id="projectName"
+                                      @bind-Value="model.Name"
+                                      class="form-control"
+                                      placeholder="例: ECサイトリニューアル"
+                                      maxlength="100" />
+                            @* ValidationMessage: 特定プロパティのバリデーションエラー表示 *@
+                            <ValidationMessage For="@(() => model.Name)" class="text-danger" />
+                            <small class="form-text text-muted">
+                                ※ プロジェクト名は100文字以内で入力してください。作成後は変更できません。
+                            </small>
+                        </div>
+
+                        @* プロジェクト説明入力 *@
+                        <div class="mb-4">
+                            <label for="projectDescription" class="form-label fw-bold">
+                                説明
+                                <span class="text-muted">(任意)</span>
+                            </label>
+                            @* InputTextArea: 複数行テキスト入力コンポーネント *@
+                            <InputTextArea id="projectDescription"
+                                          @bind-Value="model.Description"
+                                          class="form-control"
+                                          rows="5"
+                                          placeholder="プロジェクトの目的や概要を入力してください"
+                                          maxlength="1000" />
+                            <ValidationMessage For="@(() => model.Description)" class="text-danger" />
+                            <small class="form-text text-muted">
+                                @{
+                                    var descriptionLength = model.Description?.Length ?? 0;
+                                }
+                                @descriptionLength / 1000 文字
+                            </small>
+                        </div>
+
+                        @* デフォルトドメイン作成通知 *@
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-tag me-2"></i>
+                            <strong>デフォルトドメイン自動作成：</strong>
+                            プロジェクト作成時に、ドメイン「共通」が自動的に作成されます。
+                            このドメインは、プロジェクト全体で共通するユビキタス言語を管理するために使用されます。
+                        </div>
+
+                        @* ボタングループ *@
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" @onclick="NavigateToList" disabled="@isSubmitting">
+                                <i class="fas fa-times me-2"></i>
+                                キャンセル
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>作成中...</span>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-check me-2"></i>
+                                    <span>プロジェクト作成</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // 【Blazor Server初学者向け解説】
+    // CreateProjectModel: フォーム入力値を保持するモデルクラス
+    // DataAnnotations属性によるバリデーションルールを定義
+
+    /// <summary>
+    /// プロジェクト作成フォームモデル
+    /// </summary>
+    private CreateProjectModel model = new();
+
+    /// <summary>
+    /// 送信中フラグ（二重送信防止）
+    /// </summary>
+    private bool isSubmitting = false;
+
+    /// <summary>
+    /// 現在のユーザーID
+    /// </summary>
+    private Guid currentUserId;
+
+    /// <summary>
+    /// コンポーネント初期化
+    /// 【Blazor Server初学者向け解説】
+    /// 認証状態からユーザーIDを取得します。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
+        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        {
+            currentUserId = userId;
+        }
+    }
+
+    /// <summary>
+    /// プロジェクト作成処理
+    /// 【Blazor Server初学者向け解説】
+    /// Railway-oriented Programming: F# Application層のResult型を処理します。
+    /// - 成功時: プロジェクト一覧画面へ遷移
+    /// - 失敗時: エラーメッセージをToast表示
+    /// </summary>
+    private async Task CreateProject()
+    {
+        if (isSubmitting) return;
+
+        isSubmitting = true;
+        StateHasChanged(); // 送信中状態を即座に反映
+
+        try
+        {
+            // CreateProjectCommand作成
+            // F# Record型はコンストラクタ引数による初期化が必要
+            // 型のあいまいさ回避のため、F# Application層のCommandを使用
+            var command = new UbiquitousLanguageManager.Application.ProjectManagement.CreateProjectCommand(
+                name: model.Name,
+                description: string.IsNullOrWhiteSpace(model.Description)
+                    ? FSharpOption<string>.None
+                    : FSharpOption<string>.Some(model.Description),
+                ownerId: currentUserId,
+                operatorUserId: currentUserId
+            );
+
+            // Application層呼び出し（Railway-oriented Programming）
+            var result = await ProjectManagementService.CreateProjectAsync(command);
+
+            // Result型のパターンマッチング処理
+            // FSharpResult<T,E>.IsOkプロパティを使用
+            if (result.IsOk)
+            {
+                var creationResult = result.ResultValue;
+
+                // 成功時: Toast表示してプロジェクト一覧へ遷移
+                await ShowToast("success", "プロジェクトとデフォルトドメイン「共通」を作成しました");
+
+                // NavigationManager: Blazor Serverのページ遷移機能
+                NavigationManager.NavigateTo("/projects");
+            }
+            else
+            {
+                // エラー時: エラーメッセージをToast表示
+                await ShowToast("error", result.ErrorValue);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("error", $"プロジェクト作成エラー: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// バリデーションエラー時の処理
+    /// </summary>
+    private async Task OnFormInvalid()
+    {
+        await ShowToast("warning", "入力内容に不備があります。エラーメッセージを確認してください。");
+    }
+
+    /// <summary>
+    /// プロジェクト一覧画面へ遷移
+    /// </summary>
+    private void NavigateToList()
+    {
+        NavigationManager.NavigateTo("/projects");
+    }
+
+    /// <summary>
+    /// Toastメッセージ表示
+    /// 【Blazor Server初学者向け解説】
+    /// IJSRuntime: JavaScript相互運用機能
+    /// InvokeVoidAsync: JavaScriptの関数を非同期呼び出し（戻り値なし）
+    /// </summary>
+    private async Task ShowToast(string type, string message)
+    {
+        await JSRuntime.InvokeVoidAsync("showToast", type, message);
+    }
+
+    /// <summary>
+    /// プロジェクト作成フォームモデル
+    /// 【Blazor Server初学者向け解説】
+    /// DataAnnotations属性により、クライアントサイド・サーバーサイド両方で
+    /// 自動バリデーションが実行されます。
+    /// @codeブロック内にネストクラスとして定義することで、
+    /// コンポーネントと同じスコープでコンパイルされます。
+    /// </summary>
+    public class CreateProjectModel
+    {
+        /// <summary>
+        /// プロジェクト名（必須・100文字以内）
+        /// </summary>
+        [Required(ErrorMessage = "プロジェクト名は必須です")]
+        [StringLength(100, ErrorMessage = "プロジェクト名は100文字以内で入力してください")]
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// プロジェクト説明（任意・1000文字以内）
+        /// </summary>
+        [StringLength(1000, ErrorMessage = "説明は1000文字以内で入力してください")]
+        public string? Description { get; set; }
+    }
+}
+
+<style>
+    .breadcrumb-item a {
+        text-decoration: none;
+    }
+
+    .breadcrumb-item a:hover {
+        text-decoration: underline;
+    }
+
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .form-label.fw-bold {
+        font-weight: 600;
+    }
+
+    .btn:disabled {
+        cursor: not-allowed;
+    }
+
+    .alert ul {
+        padding-left: 1.5rem;
+    }
+</style>

@@ -68,8 +68,13 @@
       "Bash(test:*)",
       "Bash(tee:*)",
       "Bash(findstr:*)",
-      "Bash(Select-Object -First :*)",
-      "Bash(Select-String -Pattern :*)"
+      "Bash(Select-Object -First:*)",
+      "Bash(Select-String -Pattern:*)",
+      "WebFetch(domain:bunit.dev)",
+      "WebFetch(domain:gsscoder.github.io)",
+      "WebFetch(domain:playwright.dev)",
+      "WebFetch(domain:chrisdunderdale.medium.com)",
+      "WebFetch(domain:gist.github.com)"
     ],
     "deny": [],
     "ask": [],

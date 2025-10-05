@@ -1,0 +1,250 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+@*
+    【Blazor Server初学者向け解説】
+    このコンポーネントはプロジェクト削除確認ダイアログです。
+
+    主要機能:
+    1. 関連データ数表示: ドメイン数・ユビキタス言語数を明示
+    2. 論理削除説明: 物理削除ではなく論理削除であることを説明
+    3. Bootstrap Modal活用: JavaScript相互運用によるモーダル表示
+
+    使用方法:
+    <ProjectDeleteDialog @ref="deleteDialog"
+                        ProjectName="@selectedProject.Name"
+                        DomainCount="@domainCount"
+                        UbiquitousLanguageCount="@termCount"
+                        OnConfirm="ExecuteDelete"
+                        OnCancel="CancelDelete" />
+
+    @code {
+        private ProjectDeleteDialog deleteDialog;
+
+        private async Task ShowDeleteConfirmation() {
+            await deleteDialog.Show();
+        }
+    }
+*@
+
+@if (isVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        プロジェクト削除確認
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Cancel"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>論理削除について：</strong>
+                        プロジェクトは完全に削除されず、「非アクティブ」状態になります。
+                        必要に応じて後から再有効化できます。
+                    </div>
+
+                    <p class="mb-3">
+                        以下のプロジェクトを削除してもよろしいですか？
+                    </p>
+
+                    <div class="card mb-3">
+                        <div class="card-body bg-light">
+                            <h6 class="card-title">
+                                <i class="fas fa-folder me-2"></i>
+                                @ProjectName
+                            </h6>
+                            <hr />
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <i class="fas fa-tags fa-2x text-primary"></i>
+                                    </div>
+                                    <strong>@DomainCount</strong>
+                                    <small class="d-block text-muted">ドメイン</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <i class="fas fa-book fa-2x text-info"></i>
+                                    </div>
+                                    <strong>@UbiquitousLanguageCount</strong>
+                                    <small class="d-block text-muted">ユビキタス言語</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (DomainCount > 0 || UbiquitousLanguageCount > 0)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong>関連データ注意：</strong>
+                            このプロジェクトには関連するデータが存在します。
+                            削除すると、関連するドメインとユビキタス言語も一緒に非アクティブになります。
+                        </div>
+                    }
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="confirmCheckbox"
+                               @bind="confirmChecked" />
+                        <label class="form-check-label" for="confirmCheckbox">
+                            上記の内容を理解し、削除を実行します
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                        <i class="fas fa-times me-2"></i>
+                        キャンセル
+                    </button>
+                    <button type="button"
+                            class="btn btn-danger"
+                            @onclick="Confirm"
+                            disabled="@(!confirmChecked)">
+                        <i class="fas fa-trash me-2"></i>
+                        削除実行
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// プロジェクト名
+    /// </summary>
+    [Parameter]
+    public string ProjectName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 関連ドメイン数
+    /// </summary>
+    [Parameter]
+    public int DomainCount { get; set; }
+
+    /// <summary>
+    /// 関連ユビキタス言語数
+    /// </summary>
+    [Parameter]
+    public int UbiquitousLanguageCount { get; set; }
+
+    /// <summary>
+    /// 削除確認時のコールバック
+    /// </summary>
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    /// <summary>
+    /// キャンセル時のコールバック
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// ダイアログ表示状態
+    /// </summary>
+    private bool isVisible = false;
+
+    /// <summary>
+    /// 確認チェックボックス状態
+    /// </summary>
+    private bool confirmChecked = false;
+
+    /// <summary>
+    /// ダイアログ表示
+    /// 【Blazor Server初学者向け解説】
+    /// 親コンポーネントから@refで参照して呼び出します。
+    /// StateHasChanged()により、サーバー側の状態変更をクライアントに通知します。
+    /// </summary>
+    public async Task Show()
+    {
+        isVisible = true;
+        confirmChecked = false;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// ダイアログ非表示
+    /// </summary>
+    public async Task Hide()
+    {
+        isVisible = false;
+        confirmChecked = false;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 削除確定処理
+    /// 【Blazor Server初学者向け解説】
+    /// EventCallback: 親コンポーネントへのイベント通知機能
+    /// InvokeAsync: 非同期イベント発火
+    /// </summary>
+    private async Task Confirm()
+    {
+        if (!confirmChecked) return;
+
+        await Hide();
+        await OnConfirm.InvokeAsync();
+    }
+
+    /// <summary>
+    /// キャンセル処理
+    /// </summary>
+    private async Task Cancel()
+    {
+        await Hide();
+        await OnCancel.InvokeAsync();
+    }
+}
+
+<style>
+    .modal.show {
+        display: block;
+        opacity: 1;
+    }
+
+    .modal-content {
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @@keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header.bg-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+
+    .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+
+    .card.bg-light {
+        border: 2px solid #dee2e6;
+    }
+
+    .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .btn-danger:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+</style>

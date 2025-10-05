@@ -61,6 +61,9 @@
     <!-- Infrastructure層テスト（Phase B1 Step6新規作成） -->
     <Compile Include="Infrastructure\ProjectRepositoryTests.cs" />
 
+    <!-- Integration層テスト（Phase B1 Step7新規作成） -->
+    <Compile Include="Integration\ProjectManagementIntegrationTests.cs" />
+
     <!-- TestUtilities（共通ヘルパー） -->
     <Compile Include="TestUtilities\TestWebApplicationFactory.cs" />
 

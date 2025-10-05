@@ -1,0 +1,510 @@
+@page "/projects/edit/{ProjectId:long}"
+@using UbiquitousLanguageManager.Contracts.DTOs
+@using UbiquitousLanguageManager.Application.ProjectManagement
+@using UbiquitousLanguageManager.Domain.Common
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.FSharp.Core
+@using System.ComponentModel.DataAnnotations
+@inject IProjectManagementService ProjectManagementService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "SuperUser,ProjectManager")]
+
+@*
+    【Blazor Server初学者向け解説】
+    このコンポーネントはプロジェクト編集画面です。
+
+    主要機能:
+    1. プロジェクト名表示（readonly）: PROHIBITION-3.3.1-1準拠で変更禁止
+    2. 説明編集: 唯一編集可能な項目
+    3. ステータス変更: ラジオボタンによるアクティブ/非アクティブ切替
+    4. 権限制御: SuperUserは全プロジェクト、ProjectManagerは担当プロジェクトのみ編集可能
+
+    ルートパラメータ:
+    - ProjectId: URLから取得するプロジェクトID（long型）
+*@
+
+<PageTitle>プロジェクト編集</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/projects" @onclick:preventDefault @onclick="NavigateToList">
+                            <i class="fas fa-project-diagram me-1"></i>プロジェクト管理
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">編集</li>
+                </ol>
+            </nav>
+
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">読み込み中...</span>
+                    </div>
+                    <p class="mt-3 text-muted">プロジェクト情報を読み込んでいます...</p>
+                </div>
+            }
+            else if (project == null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    プロジェクトが見つかりません。
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            プロジェクト編集
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong>プロジェクト名変更禁止：</strong>
+                            プロジェクト名は作成後に変更できません（PROHIBITION-3.3.1-1準拠）。
+                            編集可能な項目は「説明」と「ステータス」のみです。
+                        </div>
+
+                        @* 【Blazor Server初学者向け解説】
+                            EditForm: 編集フォーム
+                            model変数をバインドし、バリデーション・送信処理を統合
+                        *@
+                        <EditForm Model="@model" OnValidSubmit="UpdateProject" OnInvalidSubmit="OnFormInvalid">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="alert alert-danger" />
+
+                            @* プロジェクト名（readonly表示） *@
+                            <div class="mb-4">
+                                <label for="projectName" class="form-label fw-bold">
+                                    プロジェクト名
+                                    <span class="badge bg-secondary ms-2">変更不可</span>
+                                </label>
+                                @* 【Blazor Server初学者向け解説】
+                                    readonly・disabled属性: ユーザーによる変更を完全に禁止
+                                    グレーアウト表示により視覚的にも変更不可を明示
+                                *@
+                                <input type="text"
+                                       id="projectName"
+                                       class="form-control bg-light"
+                                       value="@project.Name"
+                                       readonly
+                                       disabled />
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-lock me-1"></i>
+                                    プロジェクト名は作成後に変更できません。
+                                </small>
+                            </div>
+
+                            @* プロジェクト説明（編集可能） *@
+                            <div class="mb-4">
+                                <label for="projectDescription" class="form-label fw-bold">
+                                    説明
+                                    <span class="badge bg-success ms-2">編集可能</span>
+                                </label>
+                                <InputTextArea id="projectDescription"
+                                              @bind-Value="model.Description"
+                                              class="form-control"
+                                              rows="5"
+                                              placeholder="プロジェクトの目的や概要を入力してください"
+                                              maxlength="1000" />
+                                <ValidationMessage For="@(() => model.Description)" class="text-danger" />
+                                <small class="form-text text-muted">
+                                    @{
+                                        var descriptionLength = model.Description?.Length ?? 0;
+                                    }
+                                    @descriptionLength / 1000 文字
+                                </small>
+                            </div>
+
+                            @* ステータス変更（ラジオボタン） *@
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    ステータス
+                                    <span class="badge bg-success ms-2">編集可能</span>
+                                </label>
+                                <div class="card p-3 bg-light">
+                                    @* 【Blazor Server初学者向け解説】
+                                        InputRadioGroup + InputRadio: Blazor標準のラジオボタングループ
+                                        InputRadioGroup: @bind-Valueでbool型プロパティとバインド
+                                        InputRadio: Value属性でtrueまたはfalseを設定
+                                        TValue="bool"を明示的に指定することで型安全性を確保
+                                    *@
+                                    <InputRadioGroup @bind-Value="model.IsActive">
+                                        <div class="form-check form-check-inline">
+                                            <InputRadio Name="isActive"
+                                                       TValue="bool"
+                                                       Value="true"
+                                                       class="form-check-input"
+                                                       id="statusActive" />
+                                            <label class="form-check-label" for="statusActive">
+                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                アクティブ
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <InputRadio Name="isActive"
+                                                       TValue="bool"
+                                                       Value="false"
+                                                       class="form-check-input"
+                                                       id="statusInactive" />
+                                            <label class="form-check-label" for="statusInactive">
+                                                <i class="fas fa-ban text-secondary me-1"></i>
+                                                非アクティブ
+                                            </label>
+                                        </div>
+                                    </InputRadioGroup>
+                                </div>
+                                <small class="form-text text-muted">
+                                    非アクティブにすると、このプロジェクトは一覧から非表示になります。
+                                </small>
+                            </div>
+
+                            @* メタ情報表示 *@
+                            <div class="mb-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">プロジェクト情報</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">作成日時:</small><br />
+                                                <strong>@project.CreatedAt.ToString("yyyy/MM/dd HH:mm")</strong>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">最終更新日時:</small><br />
+                                                <strong>@(project.UpdatedAt?.ToString("yyyy/MM/dd HH:mm") ?? "未更新")</strong>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6">
+                                                <small class="text-muted">関連ドメイン数:</small><br />
+                                                <strong>@project.Domains.Count 個</strong>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted">プロジェクトメンバー数:</small><br />
+                                                <strong>@project.MemberCount 名</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @* ボタングループ *@
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-secondary" @onclick="NavigateToList" disabled="@isSubmitting">
+                                    <i class="fas fa-times me-2"></i>
+                                    キャンセル
+                                </button>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>更新中...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-save me-2"></i>
+                                        <span>変更を保存</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// ルートパラメータ: プロジェクトID
+    /// 【Blazor Server初学者向け解説】
+    /// [Parameter]属性により、URLから自動的に値がバインドされます。
+    /// /projects/edit/123 → ProjectId = 123
+    /// </summary>
+    [Parameter]
+    public long ProjectId { get; set; }
+
+    /// <summary>
+    /// 編集対象プロジェクト
+    /// </summary>
+    private ProjectDto? project;
+
+    /// <summary>
+    /// 編集フォームモデル
+    /// </summary>
+    private EditProjectModel model = new();
+
+    /// <summary>
+    /// ローディング状態
+    /// </summary>
+    private bool isLoading = false;
+
+    /// <summary>
+    /// 送信中フラグ
+    /// </summary>
+    private bool isSubmitting = false;
+
+    /// <summary>
+    /// 現在のユーザーID
+    /// </summary>
+    private Guid currentUserId;
+
+    /// <summary>
+    /// 現在のユーザーロール
+    /// </summary>
+    private Role currentUserRole = Role.GeneralUser;  // デフォルト値設定
+
+    /// <summary>
+    /// コンポーネント初期化
+    /// 【Blazor Server初学者向け解説】
+    /// OnInitializedAsync: プロジェクト詳細を読み込みます。
+    /// パラメータ変更時（ProjectIdが変わった時）も再実行されます。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        // 認証状態取得
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
+        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        {
+            currentUserId = userId;
+        }
+
+        var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role);
+        if (roleClaim != null)
+        {
+            // F# Role型（Discriminated Union）のパース
+            currentUserRole = roleClaim.Value switch
+            {
+                "SuperUser" => Role.SuperUser,
+                "ProjectManager" => Role.ProjectManager,
+                "DomainApprover" => Role.DomainApprover,
+                "GeneralUser" => Role.GeneralUser,
+                _ => Role.GeneralUser // デフォルト値
+            };
+        }
+
+        // プロジェクト詳細読み込み
+        await LoadProject();
+    }
+
+    /// <summary>
+    /// プロジェクト詳細読み込み
+    /// 【Blazor Server初学者向け解説】
+    /// Railway-oriented Programming: F# Result型処理パターン
+    /// </summary>
+    private async Task LoadProject()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // GetProjectDetailQuery作成
+            // F# Record型はコンストラクタ引数による初期化が必要
+            var query = new GetProjectDetailQuery(
+                projectId: Guid.NewGuid(), // ProjectIdからの変換が必要（仮実装）
+                userId: currentUserId,
+                userRole: currentUserRole
+            );
+
+            var result = await ProjectManagementService.GetProjectDetailAsync(query);
+
+            // FSharpResult<T,E>.IsOkプロパティを使用
+            if (result.IsOk)
+            {
+                var detailResult = result.ResultValue;
+                // F# Projectエンティティ → C# ProjectDto変換
+                var p = detailResult.Project;
+
+                // F# ProjectDescription.Value は string option型を返す
+                var descriptionOption = p.Description.Value;
+                var description = descriptionOption != null && FSharpOption<string>.get_IsSome(descriptionOption)
+                    ? descriptionOption.Value
+                    : string.Empty;
+
+                project = new ProjectDto
+                {
+                    Id = p.Id.Value,  // F# ProjectId判別共用体のValueプロパティ
+                    Name = p.Name.Value,  // F# ProjectName値オブジェクトのValueプロパティ
+                    Description = description,
+                    OwnerId = p.OwnerId.Value,  // F# UserId判別共用体のValueプロパティ
+                    CreatedAt = p.CreatedAt,
+                    // F# Option<DateTime> → C# DateTime? 変換
+                    UpdatedAt = p.UpdatedAt != null && FSharpOption<DateTime>.get_IsSome(p.UpdatedAt)
+                        ? p.UpdatedAt.Value
+                        : (DateTime?)null,
+                    UpdatedBy = 0,  // F# Projectエンティティには存在しないプロパティ（Phase B1では未実装）
+                    IsActive = p.IsActive,
+                    Domains = new List<DomainDto>(), // Phase B1では簡易実装
+                    MemberCount = detailResult.UserCount
+                };
+
+                // フォームモデルに値を設定
+                model = new EditProjectModel
+                {
+                    Description = project.Description,
+                    IsActive = project.IsActive
+                };
+            }
+            else
+            {
+                await ShowToast("error", result.ErrorValue);
+                project = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("error", $"プロジェクト読み込みエラー: {ex.Message}");
+            project = null;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// プロジェクト更新処理
+    /// 【Blazor Server初学者向け解説】
+    /// Railway-oriented Programming: UpdateProjectCommandによる状態変更操作
+    /// </summary>
+    private async Task UpdateProject()
+    {
+        if (isSubmitting || project == null) return;
+
+        isSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            // UpdateProjectCommand作成
+            // F# Record型はコンストラクタ引数による初期化が必要
+            // 型のあいまいさ回避のため、F# Application層のCommandを使用
+            var command = new UbiquitousLanguageManager.Application.ProjectManagement.UpdateProjectCommand(
+                projectId: Guid.NewGuid(), // ProjectIdからの変換が必要
+                description: string.IsNullOrWhiteSpace(model.Description)
+                    ? FSharpOption<string>.None
+                    : FSharpOption<string>.Some(model.Description),
+                operatorUserId: currentUserId
+            );
+
+            var result = await ProjectManagementService.UpdateProjectAsync(command);
+
+            // FSharpResult<T,E>.IsOkプロパティを使用
+            if (result.IsOk)
+            {
+                await ShowToast("success", "プロジェクトを更新しました");
+                NavigationManager.NavigateTo("/projects");
+            }
+            else
+            {
+                await ShowToast("error", result.ErrorValue);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("error", $"プロジェクト更新エラー: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// バリデーションエラー時の処理
+    /// </summary>
+    private async Task OnFormInvalid()
+    {
+        await ShowToast("warning", "入力内容に不備があります。エラーメッセージを確認してください。");
+    }
+
+    /// <summary>
+    /// プロジェクト一覧画面へ遷移
+    /// </summary>
+    private void NavigateToList()
+    {
+        NavigationManager.NavigateTo("/projects");
+    }
+
+    /// <summary>
+    /// Toastメッセージ表示
+    /// </summary>
+    private async Task ShowToast(string type, string message)
+    {
+        await JSRuntime.InvokeVoidAsync("showToast", type, message);
+    }
+
+    /// <summary>
+    /// プロジェクト編集フォームモデル
+    /// 【Blazor Server初学者向け解説】
+    /// 編集可能な項目のみを含むモデルクラス（プロジェクト名は含まない）
+    /// @codeブロック内にネストクラスとして定義することで、
+    /// コンポーネントと同じスコープでコンパイルされます。
+    /// </summary>
+    public class EditProjectModel
+    {
+        /// <summary>
+        /// プロジェクト説明（任意・1000文字以内）
+        /// </summary>
+        [StringLength(1000, ErrorMessage = "説明は1000文字以内で入力してください")]
+        public string? Description { get; set; }
+
+        /// <summary>
+        /// アクティブ状態フラグ
+        /// </summary>
+        public bool IsActive { get; set; } = true;
+    }
+}
+
+<style>
+    .breadcrumb-item a {
+        text-decoration: none;
+    }
+
+    .breadcrumb-item a:hover {
+        text-decoration: underline;
+    }
+
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .form-label.fw-bold {
+        font-weight: 600;
+    }
+
+    .btn:disabled {
+        cursor: not-allowed;
+    }
+
+    .bg-light input[readonly],
+    .bg-light input[disabled] {
+        background-color: #e9ecef !important;
+        cursor: not-allowed;
+    }
+
+    .badge.bg-secondary {
+        font-weight: normal;
+    }
+
+    .badge.bg-success {
+        font-weight: normal;
+    }
+</style>

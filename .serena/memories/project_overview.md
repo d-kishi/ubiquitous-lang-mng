@@ -1,19 +1,25 @@
 # プロジェクト概要
 
-**最終更新**: 2025-10-03（Phase B1 Step6完全完了・Infrastructure層実装完成・Phase進捗85.7%達成）
+**最終更新**: 2025-10-06（Phase B1 Step7 Stage4完了・Issue #40スコープ拡大・ADR_020作成・Stage5-6準備完了）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
 ### Phase完了状況（マスタープラン準拠）
 - [x] **Phase A（ユーザー管理機能）**: A1-A9完了（2025-09-16完了）✅ 100%
-- [ ] **Phase B（プロジェクト管理機能）**: B1進行中・**Step6完了** 🚀 **← Step7実施可能（Phase B1最終Step）**
+- [ ] **Phase B（プロジェクト管理機能）**: B1進行中・**Step7 Stage4完了** 🚀 **← Stage5-6実施可能**
   - [x] B1-Step1: 要件分析・技術調査完了（**4SubAgent並列実行・成果物活用体制確立**）✅
   - [x] B1-Step2: Domain層実装完了（**F# + Railway-oriented Programming + TDD Red Phase**）✅
   - [x] B1-Step3: Application層実装完了（**F# Application層・権限制御・TDD Green Phase・100点満点品質達成**）✅
   - [x] **B1-Step4: Domain層リファクタリング完了**（**4境界文脈分離・2,631行・16ファイル・Phase 6追加実施**）✅
   - [x] **B1-Step5: namespace階層化完了**（**42ファイル修正・0 Warning/0 Error・ADR_019作成完了**）✅
-  - [x] **B1-Step6: Infrastructure層実装完了**（**ProjectRepository完全実装・EF Core統合・TDD Green Phase達成**）✅ **← 2025-10-02完了**
-  - [ ] B1-Step7: Web層実装 🚀 **← 次回セッション（Phase B1最終Step）**
+  - [x] **B1-Step6: Infrastructure層実装完了**（**ProjectRepository完全実装・EF Core統合・TDD Green Phase達成**）✅
+  - [ ] B1-Step7: Web層実装（Stage4完了・Stage5-6実施可能） 🚀 **← 次回セッション（Stage5-6: 品質チェック＆統合確認）**
+    - [x] Stage1: 設計・技術調査完了（UI実装設計メモ作成）✅
+    - [x] Stage2: TDD Red（テスト作成）完了（10テスト・TDD Red Phase成功）✅
+    - [x] **Stage3: TDD Green（Blazor Server実装）完了**（**4画面1400行・0 Error/0 Warning・F#↔C#型変換パターン確立**）✅
+    - [x] **Stage4: bUnit UIテスト実装完了**（**テストアーキテクチャ移行・10テスト実装・70%成功（Phase B1範囲内100%）**）✅
+    - [ ] **Stage5: 品質チェック＆リファクタリング統合** 🚀 **← 次回セッション（spec-compliance, code-review）**
+    - [ ] **Stage6: 統合確認** 🚀 **← 次回セッション（Step7完了宣言）**
   - [ ] B2-B5: 後続Phase計画中
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
@@ -21,29 +27,75 @@
 ### 全体進捗率
 - **Phase完了**: 1/4 (25%)
 - **Step完了**: 16/30 (53%) ※A9 + B1-Step1-2-3-4-5-6完了
-- **Phase B1進捗**: 6/7 (85.7%) ※Step7のみ残り
-- **機能実装**: 認証・ユーザー管理完了、プロジェクト管理Domain+Application+Infrastructure層完了・**永続化基盤確立**
+- **Phase B1進捗**: 6/7 (85.7%) ※Step7進行中（Stage4/6完了・67%進捗）
+- **機能実装**: 認証・ユーザー管理完了、プロジェクト管理Domain+Application+Infrastructure+Web層（UI+bUnitテスト）完了
 
-### 最新の重要成果（2025-10-03・Phase B1 Step6完了処理）
-- **✅ Step6完了**: ProjectRepository完全実装・EF Core統合・TDD Green Phase達成
-- **✅ GitHub Issue #43原因特定**: Phase B1 Step5のnamespace階層化修正漏れが原因・修正方針明記
-- **✅ Phase進捗更新**: Step完了6/7（85.7%）・実装完了層Domain/Application/Infrastructure（3/4層）
-- **✅ 品質達成**: 0 Warning/0 Error・32/32テスト100%成功・Clean Architecture 97点維持
-- **✅ Phase B1最終段階**: 残りStep7（Web層実装）のみ
+### 最新の重要成果（2025-10-06・Phase B1 Step7 Stage4完了）
+- **✅ テストアーキテクチャ評価完了**: Issue #40スコープ拡大・レイヤー×テストタイプ分離方式決定（7プロジェクト構成）
+- **✅ ADR_020作成**: テストアーキテクチャ決定記録・2024年.NET Clean Architectureベストプラクティス準拠
+- **✅ E2Eフレームワーク選定**: Playwright for .NET推奨決定（Blazor Server最適・Auto-wait・Flaky Tests 1/3・速度2-3倍）
+- **✅ 再発防止策策定**: 6つの再発防止策（設計書・チェックリスト・CI/CD検証・定期レビュー等）
+- **📋 次回準備完了**: Stage5-6実施計画（spec-compliance, code-review Commands + 統合確認）
 
 ## 🎯 次回セッション実施計画
 
-### Web層実装実施（Step7・Phase B1最終Step）
-- **最優先作業**: Step7（Web層実装）実施
-- **対象**: Blazor Serverコンポーネント・プロジェクト管理画面・権限ベース表示制御・SignalR統合
-- **推定時間**: 3-4時間（Web層実装・E2Eテスト含む）
-- **成果物**: Step7完了・Phase B1完全完了・E2Eテスト成功
+### Phase B1 Step7 Stage5-6実施（品質チェック＆統合確認・Step7完了）
+**重要**: spec-compliance/code-review Commands実行・統合確認・Step7完了宣言
 
-### 必須参照文書
-- `/Doc/08_Organization/Active/Phase_B1/Phase_Summary.md` - Step6完了・Phase進捗状況（85.7%）
-- `/Doc/08_Organization/Active/Phase_B1/Step06_Completion_Report.md` - Step6完了レポート（Infrastructure層実装成果）
-- `/Doc/08_Organization/Active/Phase_B1/Research/Technical_Research_Results.md` - Blazor Server実装パターン（Step1成果）
-- `/Doc/07_Decisions/ADR_019_namespace設計規約.md` - namespace設計規約（Step5成果）
+#### Stage5: 品質チェック＆リファクタリング統合（推定1時間）
+- **🔧 spec-compliance-check Command実行**（20-30分・spec-compliance Agent）:
+  - 仕様準拠確認・監査実施
+  - Phase B1要件定義書との整合性確認
+  - 仕様逸脱リスク特定・対策提案
+
+- **🔧 code-review Command実行**（20-30分・code-review Agent）:
+  - コード品質評価（Clean Architecture準拠確認）
+  - パフォーマンス・セキュリティレビュー
+  - ベストプラクティス適用確認
+  - リファクタリング提案
+
+- **品質評価・改善実施**（10-20分）:
+  - Command実行結果の統合評価
+  - 優先度高の改善事項実施
+  - 0 Warning/0 Error維持確認
+
+#### Stage6: 統合確認（推定30分）
+- **統合テスト実行確認**:
+  - 全テスト実行（Unit + Integration + bUnit UIテスト）
+  - テスト成功率確認（Phase B1範囲内100%目標）
+  - ビルド最終確認（0 Warning/0 Error）
+
+- **Step7完了宣言**:
+  - Phase B1 Step7完了報告
+  - 成果物一覧確認
+  - 次Phase準備確認
+
+**推定時間**: 1.5時間（Stage5-6合計）
+
+### 必須参照文書（Stage5-6実施）
+- `Doc/01_Requirements/要件定義書.md` - Phase B1仕様準拠確認用
+- `Doc/08_Organization/Active/Phase_B1/Step07_Web層実装.md` - セッション記録（Stage4完了状況確認）
+- `Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md` - テストアーキテクチャ設計方針
+- `.claude/commands/spec-compliance-check.md` - 仕様準拠確認Command
+- `.claude/commands/code-review.md` - コードレビューCommand（存在する場合）
+
+### 既存成果物（Stage4完了・利用可能）
+- **Web層実装完了**: 4画面（ProjectList, ProjectCreate, ProjectEdit, ProjectDeleteDialog）1400行
+- **bUnitテスト完了**: 10テストケース実装・70%成功（Phase B1範囲内100%）
+- **テストインフラ確立**: BlazorComponentTestBase・FSharpTypeHelpers・ProjectManagementServiceMockBuilder
+- **テストアーキテクチャ決定**: ADR_020・レイヤー×テストタイプ分離方式・Issue #40スコープ拡大
+- **E2Eフレームワーク選定**: Playwright for .NET推奨（Phase B2向け）
+
+### Stage3スキップ判断経緯（2025-10-04セッション4）
+- **判定結果**: 重大指摘3件（C-1, C-2, C-3）すべてPhase B2・B3対応範囲
+- **Phase B1スコープ**: 「プロジェクト基本CRUD」（マスタープラン準拠）
+- **現状テスト**: 10テスト・6パターンで基本CRUD動作検証は十分
+- **推定時間更新**: 8-8.5時間 → 5.5-6時間（当初計画に戻す）
+
+### AutoCompact対策
+- **Stage完了時の必須確認**: 次Stage継続 or 次セッション送り判断
+- **Stage別推定時間**: Stage1(1h)・Stage2(1h)・Stage3(2h)・Stage4(1h)・Stage5(30m)
+- **コンテキスト管理**: 各Stage完了時にコンテキスト使用状況確認
 
 ### Step6完了事項（2025-10-02）
 **完了成果**:

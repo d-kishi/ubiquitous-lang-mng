@@ -117,6 +117,31 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - コメントの追加・修正
 - 空白・インデントの調整
 
+### 🧪 新規テストプロジェクト作成時の必須確認事項
+
+**新規テストプロジェクト作成前に以下を必ず確認すること**（GitHub Issue #40再発防止策）：
+
+1. **ADR_020**: テストアーキテクチャ決定
+   - `/Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md`
+   - レイヤー×テストタイプ分離方式の理解
+
+2. **テストアーキテクチャ設計書**: `/Doc/02_Design/テストアーキテクチャ設計書.md`
+   - プロジェクト構成図・命名規則・参照関係原則の確認
+   - （Issue #40 Phase 3完了後に作成予定）
+
+3. **新規プロジェクト作成チェックリスト**: `/Doc/08_Organization/Rules/新規テストプロジェクト作成ガイドライン.md`
+   - 事前確認・プロジェクト作成・参照関係設定・ビルド確認・ドキュメント更新の全手順実施
+   - （Issue #40 Phase 3完了後に作成予定）
+
+**命名規則（厳守）**: `UbiquitousLanguageManager.{Layer}.{TestType}.Tests`
+- **Layer**: Domain / Application / Contracts / Infrastructure / Web
+- **TestType**: Unit / Integration / UI / E2E
+
+**参照関係原則**:
+- **Unit Tests**: テスト対象レイヤーのみ参照
+- **Integration Tests**: 必要な依存層のみ参照
+- **E2E Tests**: 全層参照可
+
 ## 開発コマンド
 
 ### ビルド・実行

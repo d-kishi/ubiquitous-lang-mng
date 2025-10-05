@@ -793,6 +793,165 @@ docker-compose logs postgres
 - **SQL Injection**: Entity Framework・パラメーター化クエリ
 - **XSS対策**: 自動エスケープ・CSP設定
 
+## F#↔C# 型変換パターン（Phase B1 Step7確立・2025-10-05）
+
+### F# Result型のC#統合パターン
+**Phase B1 Step7 Stage3で確立・Blazor Server実装で実証**
+
+#### パターン1: IsOkプロパティ直接アクセス（推奨）
+```csharp
+// Blazor Serverコンポーネント内での使用例
+var result = await ProjectManagementService.GetProjectsAsync(query);
+
+// ✅ 正しいパターン（Phase B1 Step7確立）
+if (result.IsOk)
+{
+    var listResult = result.ResultValue;
+    projects = listResult.Projects.ToList();
+}
+else
+{
+    errorMessage = result.ErrorValue;
+}
+```
+
+#### パターン2: C#からのF# Result生成
+```csharp
+// F# Result型の生成（C#からF#サービスへの返却時）
+return FSharpResult<ProjectCreationResultDto, string>.NewOk(successData);
+return FSharpResult<ProjectCreationResultDto, string>.NewError("エラーメッセージ");
+```
+
+### F# Record型のC#統合パターン
+**F# Recordは不変型・C#ではコンストラクタベース初期化必須**
+
+```csharp
+// ❌ 誤ったパターン（Phase B1 Step7で36件エラー発生）
+var query = new GetProjectsQuery
+{
+    UserId = currentUser.Id,  // Error: Read-only property
+    UserRole = currentUserRole,
+    // ...
+};
+
+// ✅ 正しいパターン（コンストラクタ使用）
+var query = new GetProjectsQuery(
+    userId: currentUser.Id,
+    userRole: currentUserRole,
+    pageNumber: currentPage,
+    pageSize: pageSize,
+    includeInactive: showDeleted,
+    searchKeyword: string.IsNullOrWhiteSpace(searchTerm)
+        ? FSharpOption<string>.None
+        : FSharpOption<string>.Some(searchTerm)
+);
+```
+
+### F# Option型のC#統合パターン
+
+#### パターン1: Option型の生成
+```csharp
+// Some/None生成
+FSharpOption<string>.Some("値あり")
+FSharpOption<string>.None
+
+// 条件分岐での生成
+string.IsNullOrEmpty(description)
+    ? FSharpOption<string>.None
+    : FSharpOption<string>.Some(description)
+```
+
+#### パターン2: Option型の値取得
+```csharp
+// IsSomeチェック後の値取得
+var descriptionOption = project.Description.Value;
+if (descriptionOption != null && FSharpOption<string>.get_IsSome(descriptionOption))
+{
+    string description = descriptionOption.Value;
+}
+```
+
+### F# Discriminated Union型のC#統合パターン
+**Role型（Discriminated Union）のパターンマッチング**
+
+```csharp
+// ❌ 誤ったパターン（Enumと誤認）
+if (Enum.TryParse<Role>(roleClaim.Value, out var role))  // Error: Roleは値型ではない
+
+// ✅ 正しいパターン（switch式でパターンマッチング）
+currentUserRole = roleClaim.Value switch
+{
+    "SuperUser" => Role.SuperUser,
+    "ProjectManager" => Role.ProjectManager,
+    "DomainApprover" => Role.DomainApprover,
+    "GeneralUser" => Role.GeneralUser,
+    _ => Role.GeneralUser  // デフォルト値
+};
+```
+
+### Blazor Server実装パターン（Phase B1 Step7確立）
+
+#### InputRadioGroupパターン
+```razor
+<!-- ✅ 正しいパターン -->
+<InputRadioGroup @bind-Value="model.IsActive">
+    <InputRadio Name="isActive" TValue="bool" Value="true" />
+    <label>有効</label>
+    <InputRadio Name="isActive" TValue="bool" Value="false" />
+    <label>無効</label>
+</InputRadioGroup>
+```
+
+#### @bind:afterパターン（.NET 7.0+）
+```razor
+<!-- ✅ 正しいパターン（変更後イベント処理） -->
+<select @bind="pageSize" @bind:after="OnPageSizeChangedAsync">
+    <option value="10">10件</option>
+    <option value="25">25件</option>
+</select>
+```
+
+#### Model Classスコープパターン
+```razor
+@code {
+    // ✅ 正しいパターン（@code内にネストクラスとして定義）
+    public class CreateProjectModel
+    {
+        [Required(ErrorMessage = "プロジェクト名は必須です")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(1000)]
+        public string? Description { get; set; }
+    }
+
+    private CreateProjectModel model = new();
+}
+```
+
+### Railway-oriented Programming統合パターン
+**F# Result型とBlazor Serverの統合**
+
+```csharp
+// Application層呼び出し（Railway-oriented Programming）
+var result = await ProjectManagementService.CreateProjectAsync(command);
+
+// Result型のパターンマッチング処理
+if (result.IsOk)
+{
+    var creationResult = result.ResultValue;
+
+    // 成功時: Toast表示してリダイレクト
+    await ShowToast("success", "プロジェクトとデフォルトドメイン「共通」を作成しました");
+    NavigationManager.NavigateTo("/projects");
+}
+else
+{
+    // エラー時: エラーメッセージ表示
+    errorMessage = result.ErrorValue;
+    await ShowToast("danger", errorMessage);
+}
+```
+
 ---
-**最終更新**: 2025-10-01（Phase B1 Step4完全成功・Domain層Bounded Context化達成・4境界文脈確立・2,631行16ファイル移行完了・F# Compilation Order規約確立・ユーザーフィードバック活用Phase6追加・Step5準備完了）  
-**重要追加**: Bounded Context分離パターン確立・F# Compilation Order規約・依存関係管理原則・ユーザーフィードバック活用事例・雛型の名残解消・Step5問題事前回避
+**最終更新**: 2025-10-05（Phase B1 Step7 Stage3完了・F#↔C#型変換パターン確立・Blazor Server実装パターン確立）
+**重要追加**: F# Result/Record/Option/Discriminated Union型のC#統合パターン・Blazor Server実装パターン・Railway-oriented Programming統合パターン

@@ -1,0 +1,625 @@
+@page "/projects"
+@using UbiquitousLanguageManager.Contracts.DTOs
+@using UbiquitousLanguageManager.Application.ProjectManagement
+@using UbiquitousLanguageManager.Domain.Common
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.FSharp.Core
+@using UbiquitousLanguageManager.Web.Pages.Admin.Components
+@using UbiquitousLanguageManager.Web.Components.Authorization
+@inject IProjectManagementService ProjectManagementService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@attribute [Authorize(Roles = "SuperUser,ProjectManager")]
+
+@*
+    【Blazor Server初学者向け解説】
+    このコンポーネントはプロジェクト一覧画面です。
+
+    主要機能:
+    1. 権限制御: SuperUserは全プロジェクト、ProjectManagerは担当プロジェクトのみ表示
+    2. 検索フィルタ: プロジェクト名部分一致検索・削除済み表示切替
+    3. ページング: 50/100/200件選択対応
+    4. Railway-oriented Programming: F# Result型によるエラーハンドリング
+
+    ライフサイクル:
+    - OnInitializedAsync: コンポーネント初期化時に一度だけ実行（データ読み込み）
+    - StateHasChanged: サーバー側状態変更をクライアントに通知（UI再描画）
+*@
+
+<PageTitle>プロジェクト管理</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-project-diagram me-2"></i>
+                    プロジェクト管理
+                </h2>
+                <SecureButton Text="新規プロジェクト作成"
+                             IconClass="fas fa-plus"
+                             CssClass="btn btn-primary"
+                             RequiredRoles='new List<string> { "SuperUser" }'
+                             RequiredPermission="CreateProject"
+                             OnClick="NavigateToCreate"
+                             FallbackText="作成権限なし" />
+            </div>
+
+            @* 検索・フィルター Section *@
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">プロジェクト名検索</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="プロジェクト名で検索"
+                                       @bind="searchTerm" @bind:event="oninput" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="SearchProjects">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">表示件数</label>
+                            <select class="form-select" @bind="pageSize" @bind:after="OnPageSizeChangedAsync">
+                                <option value="50">50件</option>
+                                <option value="100">100件</option>
+                                <option value="200">200件</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       id="showDeleted"
+                                       @bind="showDeleted"
+                                       @bind:after="OnShowDeletedChangedAsync" />
+                                <label class="form-check-label" for="showDeleted">
+                                    削除済みを表示
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Loading State with LoadingOverlay *@
+            <div class="position-relative">
+                <LoadingOverlay IsVisible="@isLoading"
+                               LoadingText="プロジェクト情報を読み込んでいます..."
+                               SpinnerType="LoadingOverlay.SpinnerStyle.Border"
+                               Size="LoadingOverlay.SpinnerSize.Medium" />
+
+                @if (!isLoading)
+                {
+                    @* Projects DataGrid *@
+                    <div class="card">
+                        <div class="card-body p-0">
+                            @if (filteredProjects?.Any() == true)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">
+                                                    <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="@(() => SortBy("Name"))">
+                                                        プロジェクト名
+                                                        @if (sortColumn == "Name")
+                                                        {
+                                                            <i class="fas @(sortDirection == "asc" ? "fa-sort-up" : "fa-sort-down") ms-1"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fas fa-sort ms-1 text-muted"></i>
+                                                        }
+                                                    </button>
+                                                </th>
+                                                <th scope="col">
+                                                    <button class="btn btn-link p-0 text-decoration-none text-dark fw-bold" @onclick="@(() => SortBy("CreatedAt"))">
+                                                        作成日
+                                                        @if (sortColumn == "CreatedAt")
+                                                        {
+                                                            <i class="fas @(sortDirection == "asc" ? "fa-sort-up" : "fa-sort-down") ms-1"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fas fa-sort ms-1 text-muted"></i>
+                                                        }
+                                                    </button>
+                                                </th>
+                                                <th scope="col">ドメイン数</th>
+                                                <th scope="col">状態</th>
+                                                <th scope="col" width="150">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var project in paginatedProjects)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="project-icon me-2 @(project.IsActive ? "bg-primary" : "bg-secondary")">
+                                                                <i class="fas fa-folder"></i>
+                                                            </div>
+                                                            <div>
+                                                                <strong>@project.Name</strong>
+                                                                @if (!string.IsNullOrEmpty(project.Description))
+                                                                {
+                                                                    <br />
+                                                                    <small class="text-muted">@project.Description</small>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <small>@project.CreatedAt.ToString("yyyy/MM/dd HH:mm")</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info">@project.Domains.Count</span>
+                                                    </td>
+                                                    <td>
+                                                        @if (project.IsActive)
+                                                        {
+                                                            <span class="badge bg-success">アクティブ</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">非アクティブ</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <SecureButton Text=""
+                                                                         IconClass="fas fa-edit"
+                                                                         CssClass="btn btn-outline-primary btn-sm"
+                                                                         RequiredRoles='new List<string> { "SuperUser", "ProjectManager" }'
+                                                                         OnClick="@(() => NavigateToEdit(project.Id))"
+                                                                         Tooltip="編集"
+                                                                         ShowFallback="false" />
+
+                                                            <SecureButton Text=""
+                                                                         IconClass="fas fa-trash"
+                                                                         CssClass="btn btn-outline-danger btn-sm"
+                                                                         RequiredRoles='new List<string> { "SuperUser" }'
+                                                                         OnClick="@(() => ShowDeleteConfirmation(project))"
+                                                                         Tooltip="削除"
+                                                                         ShowFallback="false" />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                @* ページング *@
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">
+                                                表示中: @((currentPage - 1) * pageSize + 1) - @Math.Min(currentPage * pageSize, totalCount) 件 / 全 @totalCount 件
+                                            </small>
+                                        </div>
+                                        <nav aria-label="ページネーション">
+                                            <ul class="pagination mb-0">
+                                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                                    <button class="page-link" @onclick="PreviousPage" disabled="@(currentPage == 1)">
+                                                        <i class="fas fa-chevron-left"></i> 前
+                                                    </button>
+                                                </li>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">@currentPage / @totalPages</span>
+                                                </li>
+                                                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                                                    <button class="page-link" @onclick="NextPage" disabled="@(currentPage >= totalPages)">
+                                                        次 <i class="fas fa-chevron-right"></i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">プロジェクトが見つかりません</p>
+                                    <SecureButton Text="新規プロジェクト作成"
+                                                 IconClass="fas fa-plus"
+                                                 CssClass="btn btn-primary"
+                                                 RequiredRoles='new List<string> { "SuperUser" }'
+                                                 OnClick="NavigateToCreate" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* 削除確認ダイアログ *@
+<ConfirmationDialog @ref="deleteDialog"
+                   Title="プロジェクト削除確認"
+                   Message="@deleteConfirmMessage"
+                   Type="ConfirmationDialog.DialogType.Danger"
+                   OnConfirm="ExecuteDelete"
+                   ConfirmText="削除"
+                   CancelText="キャンセル" />
+
+@code {
+    // 【Blazor Server初学者向け解説】
+    // 以下の変数はサーバー側で管理される状態です。
+    // Blazor Serverでは、SignalR接続を通じてクライアントとサーバー間で状態が同期されます。
+
+    // データ管理
+    private List<ProjectDto> projects = new();
+    private List<ProjectDto> filteredProjects = new();
+    private List<ProjectDto> paginatedProjects = new();
+
+    // フィルタ・ページング状態
+    private string searchTerm = "";
+    private bool showDeleted = false;
+    private int currentPage = 1;
+    private int pageSize = 50;
+    private int totalCount = 0;
+    private int totalPages = 0;
+
+    // ソート状態
+    private string sortColumn = "CreatedAt";
+    private string sortDirection = "desc";
+
+    // UI状態
+    private bool isLoading = false;
+
+    // 削除関連
+    private ProjectDto? selectedProject;
+    private string deleteConfirmMessage = "";
+    private ConfirmationDialog? deleteDialog;
+
+    // 認証状態
+    private Guid currentUserId;
+    private Role currentUserRole = Role.GeneralUser;  // デフォルト値設定
+
+    /// <summary>
+    /// コンポーネント初期化処理
+    /// 【Blazor Server初学者向け解説】
+    /// OnInitializedAsync: コンポーネントが最初にレンダリングされる際に一度だけ実行されます。
+    /// async/awaitにより、非同期的にデータを取得し、その間クライアントは待機状態になります。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        // 認証状態取得
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // ユーザーID取得（Claim from Identity）
+        var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
+        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        {
+            currentUserId = userId;
+        }
+
+        // ユーザーロール取得
+        var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role);
+        if (roleClaim != null)
+        {
+            // F# Role型（Discriminated Union）のパース
+            currentUserRole = roleClaim.Value switch
+            {
+                "SuperUser" => Role.SuperUser,
+                "ProjectManager" => Role.ProjectManager,
+                "DomainApprover" => Role.DomainApprover,
+                "GeneralUser" => Role.GeneralUser,
+                _ => Role.GeneralUser // デフォルト値
+            };
+        }
+
+        // プロジェクト一覧読み込み
+        await LoadProjects();
+    }
+
+    /// <summary>
+    /// プロジェクト一覧読み込み
+    /// 【Blazor Server初学者向け解説】
+    /// Railway-oriented Programming: F# Result型によるエラーハンドリングパターンです。
+    /// 成功時はデータを取得、失敗時はエラーメッセージをToast表示します。
+    /// </summary>
+    private async Task LoadProjects()
+    {
+        isLoading = true;
+        StateHasChanged(); // ローディング表示を即座に反映
+
+        try
+        {
+            // GetProjectsQuery作成
+            // F# Record型はコンストラクタ引数による初期化が必要
+            var query = new GetProjectsQuery(
+                userId: currentUserId,
+                userRole: currentUserRole,
+                pageNumber: currentPage,
+                pageSize: pageSize,
+                includeInactive: showDeleted,
+                searchKeyword: string.IsNullOrWhiteSpace(searchTerm)
+                    ? FSharpOption<string>.None
+                    : FSharpOption<string>.Some(searchTerm)
+            );
+
+            // Application層呼び出し（Railway-oriented Programming）
+            var result = await ProjectManagementService.GetProjectsAsync(query);
+
+            // Result型のパターンマッチング処理
+            // FSharpResult<T,E>.IsOkプロパティを使用
+            if (result.IsOk)
+            {
+                var listResult = result.ResultValue;
+                // F# Projectエンティティ → C# ProjectDto変換
+                projects = listResult.Projects.Select(p =>
+                {
+                    // F# ProjectDescription.Value は string option型を返す
+                    var descriptionOption = p.Description.Value;
+                    var description = descriptionOption != null && FSharpOption<string>.get_IsSome(descriptionOption)
+                        ? descriptionOption.Value
+                        : string.Empty;
+
+                    return new ProjectDto
+                    {
+                        Id = p.Id.Value,  // F# ProjectId判別共用体のValueプロパティ使用
+                        Name = p.Name.Value,  // F# ProjectName値オブジェクトのValueプロパティ
+                        Description = description,
+                        OwnerId = p.OwnerId.Value,  // F# UserId判別共用体のValueプロパティ
+                        CreatedAt = p.CreatedAt,
+                        // F# Option<DateTime> → C# DateTime? 変換
+                        UpdatedAt = p.UpdatedAt != null && FSharpOption<DateTime>.get_IsSome(p.UpdatedAt)
+                            ? p.UpdatedAt.Value
+                            : (DateTime?)null,
+                        UpdatedBy = 0,  // F# Projectエンティティには存在しないプロパティ（Phase B1では未実装）
+                        IsActive = p.IsActive,
+                        Domains = new List<DomainDto>(), // Phase B1では簡易実装
+                        MemberCount = 0 // Phase B2で実装
+                    };
+                }).ToList();
+                totalCount = listResult.TotalCount;
+                totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                ApplyFiltersAndSort();
+            }
+            else
+            {
+                // エラー時の処理
+                await ShowToast("error", result.ErrorValue);
+                projects = new List<ProjectDto>();
+                filteredProjects = new List<ProjectDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("error", $"プロジェクト読み込みエラー: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged(); // ローディング解除を反映
+        }
+    }
+
+    /// <summary>
+    /// フィルタ・ソート・ページング適用
+    /// </summary>
+    private void ApplyFiltersAndSort()
+    {
+        // フィルタ適用
+        filteredProjects = projects
+            .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
+                       p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                       (p.Description != null && p.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+            .Where(p => showDeleted || p.IsActive)
+            .ToList();
+
+        // ソート適用
+        filteredProjects = sortColumn switch
+        {
+            "Name" => sortDirection == "asc"
+                ? filteredProjects.OrderBy(p => p.Name).ToList()
+                : filteredProjects.OrderByDescending(p => p.Name).ToList(),
+            "CreatedAt" => sortDirection == "asc"
+                ? filteredProjects.OrderBy(p => p.CreatedAt).ToList()
+                : filteredProjects.OrderByDescending(p => p.CreatedAt).ToList(),
+            _ => filteredProjects
+        };
+
+        // ページング適用
+        paginatedProjects = filteredProjects
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        totalCount = filteredProjects.Count;
+        totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+    }
+
+    /// <summary>
+    /// 検索実行
+    /// </summary>
+    private async Task SearchProjects()
+    {
+        currentPage = 1;
+        await LoadProjects();
+    }
+
+    /// <summary>
+    /// ソート処理
+    /// </summary>
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortDirection = sortDirection == "asc" ? "desc" : "asc";
+        }
+        else
+        {
+            sortColumn = column;
+            sortDirection = "asc";
+        }
+        ApplyFiltersAndSort();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// ページサイズ変更
+    /// 【Blazor Server初学者向け解説】
+    /// @bind:after: バインド完了後に自動実行されるイベントハンドラ
+    /// pageSize変数が既に更新された後に呼ばれるため、ChangeEventArgs不要
+    /// </summary>
+    private async Task OnPageSizeChangedAsync()
+    {
+        currentPage = 1;
+        await LoadProjects();
+    }
+
+    /// <summary>
+    /// 削除済み表示切替
+    /// 【Blazor Server初学者向け解説】
+    /// @bind:after: チェックボックス変更後に自動実行
+    /// showDeleted変数が既に更新された状態で呼び出される
+    /// </summary>
+    private async Task OnShowDeletedChangedAsync()
+    {
+        currentPage = 1;
+        await LoadProjects();
+    }
+
+    /// <summary>
+    /// 次ページ
+    /// </summary>
+    private async Task NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            await LoadProjects();
+        }
+    }
+
+    /// <summary>
+    /// 前ページ
+    /// </summary>
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadProjects();
+        }
+    }
+
+    /// <summary>
+    /// 作成画面へ遷移
+    /// </summary>
+    private void NavigateToCreate()
+    {
+        NavigationManager.NavigateTo("/projects/create");
+    }
+
+    /// <summary>
+    /// 編集画面へ遷移
+    /// </summary>
+    private void NavigateToEdit(long projectId)
+    {
+        NavigationManager.NavigateTo($"/projects/edit/{projectId}");
+    }
+
+    /// <summary>
+    /// 削除確認ダイアログ表示
+    /// </summary>
+    private void ShowDeleteConfirmation(ProjectDto project)
+    {
+        selectedProject = project;
+        deleteConfirmMessage = $"プロジェクト「{project.Name}」を削除しますか？\n" +
+                              $"関連ドメイン: {project.Domains.Count}個\n" +
+                              $"※ この操作は取り消せません。";
+
+        if (deleteDialog != null)
+        {
+            deleteDialog.Show();
+        }
+    }
+
+    /// <summary>
+    /// 削除実行
+    /// 【Blazor Server初学者向け解説】
+    /// Railway-oriented Programming: Commandパターンによる状態変更操作です。
+    /// </summary>
+    private async Task ExecuteDelete()
+    {
+        if (selectedProject == null) return;
+
+        try
+        {
+            // DeleteProjectCommand作成
+            // F# Record型はコンストラクタ引数による初期化が必要
+            var command = new DeleteProjectCommand(
+                projectId: Guid.NewGuid(), // ProjectDto.Idからの変換が必要
+                operatorUserId: currentUserId,
+                confirmRelatedDataDeletion: true
+            );
+
+            var result = await ProjectManagementService.DeleteProjectAsync(command);
+
+            // FSharpResult<Unit,string>.IsOkプロパティを使用
+            if (result.IsOk)
+            {
+                await ShowToast("success", "プロジェクトを削除しました");
+                await LoadProjects(); // 一覧再読み込み
+            }
+            else
+            {
+                await ShowToast("error", result.ErrorValue);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ShowToast("error", $"削除処理エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Toastメッセージ表示
+    /// 【Blazor Server初学者向け解説】
+    /// IJSRuntime: JavaScript相互運用によるクライアント側Toast表示です。
+    /// Blazor ServerからブラウザのJavaScript関数を呼び出します。
+    /// </summary>
+    private async Task ShowToast(string type, string message)
+    {
+        await JSRuntime.InvokeVoidAsync("showToast", type, message);
+    }
+}
+
+<style>
+    .project-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        cursor: pointer;
+    }
+
+    .btn-link {
+        border: none;
+        background: none;
+    }
+
+    .btn-link:hover {
+        text-decoration: underline !important;
+    }
+</style>
