@@ -74,7 +74,8 @@
       "WebFetch(domain:gsscoder.github.io)",
       "WebFetch(domain:playwright.dev)",
       "WebFetch(domain:chrisdunderdale.medium.com)",
-      "WebFetch(domain:gist.github.com)"
+      "WebFetch(domain:gist.github.com)",
+      "SlashCommand(/session-start)"
     ],
     "deny": [],
     "ask": [],
