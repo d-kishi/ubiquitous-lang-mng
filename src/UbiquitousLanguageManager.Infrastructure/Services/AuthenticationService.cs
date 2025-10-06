@@ -5,7 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Microsoft.AspNetCore.Identity;
 using UbiquitousLanguageManager.Application;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 using UbiquitousLanguageManager.Contracts.Converters;
 

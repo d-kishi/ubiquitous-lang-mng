@@ -5,7 +5,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
+// Microsoft.FSharp.Core.FSharpResult型は使用箇所で直接指定
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
 
@@ -44,7 +46,7 @@ public static class AuthenticationConverter
     /// <param name="result">F#の認証結果（Result型）</param>
     /// <returns>C#のAuthenticationResultDTO</returns>
     /// <exception cref="ArgumentNullException">resultがnullの場合</exception>
-    public static AuthenticationResultDto ToDto(this FSharpResult<User, AuthenticationError> result)
+    public static AuthenticationResultDto ToDto(this Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError> result)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -472,7 +474,7 @@ public static class AuthenticationConverter
     /// <returns>F#のResult型（成功時はUser、失敗時はAuthenticationError）</returns>
     /// <exception cref="ArgumentNullException">dtoがnullの場合</exception>
     /// <exception cref="InvalidOperationException">DTOの状態が不整合の場合</exception>
-    public static FSharpResult<User, AuthenticationError> ToFSharpResult(AuthenticationResultDto dto)
+    public static Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError> ToFSharpResult(AuthenticationResultDto dto)
     {
         if (dto == null)
             throw new ArgumentNullException(nameof(dto), "AuthenticationResultDtoがnullです");
@@ -494,7 +496,7 @@ public static class AuthenticationConverter
                 throw new InvalidOperationException("失敗結果にErrorが設定されていません");
 
             var authError = ToFSharpAuthenticationError(dto.Error);
-            return FSharpResult<User, AuthenticationError>.NewError(authError);
+            return Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError>.NewError(authError);
         }
     }
 
@@ -554,7 +556,7 @@ public static class AuthenticationConverter
     /// </summary>
     /// <param name="loginDto">C#のログインリクエストDTO</param>
     /// <returns>F#のResult型（成功時はEmail*string、失敗時はvalidationエラー）</returns>
-    public static FSharpResult<Tuple<Email, string>, string> ToFSharpLoginParams(LoginRequestDto loginDto)
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string> ToFSharpLoginParams(LoginRequestDto loginDto)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -566,19 +568,19 @@ public static class AuthenticationConverter
             if (loginDto == null)
             {
                 _logger?.LogWarning("ログインDTO変換失敗: DTOがnull ConversionTime: {ConversionTime}ms", stopwatch.ElapsedMilliseconds);
-                return FSharpResult<Tuple<Email, string>, string>.NewError("ログインリクエストがnullです");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string>.NewError("ログインリクエストがnullです");
             }
 
             if (string.IsNullOrWhiteSpace(loginDto.Email))
             {
                 _logger?.LogWarning("ログインDTO変換失敗: メールアドレス未入力 ConversionTime: {ConversionTime}ms", stopwatch.ElapsedMilliseconds);
-                return FSharpResult<Tuple<Email, string>, string>.NewError("メールアドレスが入力されていません");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string>.NewError("メールアドレスが入力されていません");
             }
 
             if (string.IsNullOrWhiteSpace(loginDto.Password))
             {
                 _logger?.LogWarning("ログインDTO変換失敗: パスワード未入力 ConversionTime: {ConversionTime}ms", stopwatch.ElapsedMilliseconds);
-                return FSharpResult<Tuple<Email, string>, string>.NewError("パスワードが入力されていません");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string>.NewError("パスワードが入力されていません");
             }
 
             // F#のEmail値オブジェクトによる検証
@@ -587,7 +589,7 @@ public static class AuthenticationConverter
             {
                 _logger?.LogWarning("ログインDTO変換失敗: Email値オブジェクト検証エラー Error: {ValidationError}, ConversionTime: {ConversionTime}ms",
                     emailResult.ErrorValue, stopwatch.ElapsedMilliseconds);
-                return FSharpResult<Tuple<Email, string>, string>.NewError(emailResult.ErrorValue);
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string>.NewError(emailResult.ErrorValue);
             }
 
             // 成功: F#のタプルとして返す
@@ -596,12 +598,12 @@ public static class AuthenticationConverter
             _logger?.LogInformation("ログインDTO変換成功 Email: {MaskedEmail}, ConversionTime: {ConversionTime}ms",
                 $"{loginDto.Email[0]}***@{loginDto.Email.Split('@').LastOrDefault()}", stopwatch.ElapsedMilliseconds);
 
-            return FSharpResult<Tuple<Email, string>, string>.NewOk(loginParams);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string>.NewOk(loginParams);
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "ログインDTO変換で予期しないエラーが発生 ConversionTime: {ConversionTime}ms", stopwatch.ElapsedMilliseconds);
-            return FSharpResult<Tuple<Email, string>, string>.NewError($"変換処理中にエラーが発生しました: {ex.Message}");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string>, string>.NewError($"変換処理中にエラーが発生しました: {ex.Message}");
         }
         finally
         {
@@ -619,20 +621,20 @@ public static class AuthenticationConverter
     /// </summary>
     /// <param name="resetDto">C#のパスワードリセット要求DTO</param>
     /// <returns>F#のResult型（成功時はEmail、失敗時はvalidationエラー）</returns>
-    public static FSharpResult<Email, string> ToFSharpPasswordResetParams(PasswordResetRequestDto resetDto)
+    public static Microsoft.FSharp.Core.FSharpResult<Email, string> ToFSharpPasswordResetParams(PasswordResetRequestDto resetDto)
     {
         if (resetDto == null)
-            return FSharpResult<Email, string>.NewError("パスワードリセット要求がnullです");
+            return Microsoft.FSharp.Core.FSharpResult<Email, string>.NewError("パスワードリセット要求がnullです");
 
         if (string.IsNullOrWhiteSpace(resetDto.Email))
-            return FSharpResult<Email, string>.NewError("メールアドレスが入力されていません");
+            return Microsoft.FSharp.Core.FSharpResult<Email, string>.NewError("メールアドレスが入力されていません");
 
         // F#のEmail値オブジェクトによる検証
         var emailResult = Email.create(resetDto.Email);
         if (emailResult.IsError)
-            return FSharpResult<Email, string>.NewError(emailResult.ErrorValue);
+            return Microsoft.FSharp.Core.FSharpResult<Email, string>.NewError(emailResult.ErrorValue);
 
-        return FSharpResult<Email, string>.NewOk(emailResult.ResultValue);
+        return Microsoft.FSharp.Core.FSharpResult<Email, string>.NewOk(emailResult.ResultValue);
     }
 
     /// <summary>
@@ -641,33 +643,33 @@ public static class AuthenticationConverter
     /// </summary>
     /// <param name="tokenDto">C#のパスワードリセットトークンDTO</param>
     /// <returns>F#のResult型（成功時はEmail*string*string、失敗時はvalidationエラー）</returns>
-    public static FSharpResult<Tuple<Email, string, string>, string> ToFSharpPasswordResetExecuteParams(PasswordResetTokenDto tokenDto)
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string> ToFSharpPasswordResetExecuteParams(PasswordResetTokenDto tokenDto)
     {
         if (tokenDto == null)
-            return FSharpResult<Tuple<Email, string, string>, string>.NewError("パスワードリセットトークンがnullです");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError("パスワードリセットトークンがnullです");
 
         if (string.IsNullOrWhiteSpace(tokenDto.Email))
-            return FSharpResult<Tuple<Email, string, string>, string>.NewError("メールアドレスが入力されていません");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError("メールアドレスが入力されていません");
 
         if (string.IsNullOrWhiteSpace(tokenDto.Token))
-            return FSharpResult<Tuple<Email, string, string>, string>.NewError("リセットトークンが入力されていません");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError("リセットトークンが入力されていません");
 
         if (string.IsNullOrWhiteSpace(tokenDto.NewPassword))
-            return FSharpResult<Tuple<Email, string, string>, string>.NewError("新しいパスワードが入力されていません");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError("新しいパスワードが入力されていません");
 
         // F#のEmail値オブジェクトによる検証
         var emailResult = Email.create(tokenDto.Email);
         if (emailResult.IsError)
-            return FSharpResult<Tuple<Email, string, string>, string>.NewError(emailResult.ErrorValue);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError(emailResult.ErrorValue);
 
         // F#のPassword値オブジェクトによる検証
         var passwordResult = Password.create(tokenDto.NewPassword);
         if (passwordResult.IsError)
-            return FSharpResult<Tuple<Email, string, string>, string>.NewError(passwordResult.ErrorValue);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError(passwordResult.ErrorValue);
 
         // 成功: F#のタプルとして返す (Email, Token, NewPassword)
         var resetParams = new Tuple<Email, string, string>(emailResult.ResultValue, tokenDto.Token, tokenDto.NewPassword);
-        return FSharpResult<Tuple<Email, string, string>, string>.NewOk(resetParams);
+        return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewOk(resetParams);
     }
 
     /// <summary>
@@ -677,7 +679,7 @@ public static class AuthenticationConverter
     /// <param name="result">F#のパスワードリセット結果</param>
     /// <param name="userEmail">対象ユーザーのメールアドレス</param>
     /// <returns>C#のPasswordResetResultDto</returns>
-    public static PasswordResetResultDto ToPasswordResetResultDto<T>(FSharpResult<T, AuthenticationError> result, string userEmail)
+    public static PasswordResetResultDto ToPasswordResetResultDto<T>(Microsoft.FSharp.Core.FSharpResult<T, AuthenticationError> result, string userEmail)
     {
         if (result.IsOk)
         {

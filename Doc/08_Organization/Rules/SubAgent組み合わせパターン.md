@@ -29,6 +29,69 @@
   - spec-compliance: 仕様準拠監査・受け入れ基準確認
 ```
 
+## 🚨 SubAgent責務境界（明確化・重要）
+
+### 実装系Agent責務境界
+```yaml
+fsharp-domain:
+  ✅ 実行範囲:
+    - src/UbiquitousLanguageManager.Domain/ 配下のみ
+    - ValueObjects.fs, Entities.fs, DomainServices.fs 実装
+    - F#ドメインモデル・ビジネスロジック実装
+  ❌ 禁止範囲:
+    - tests/ 配下のファイル読み込み・参照
+    - テスト実装・TDD実践（unit-testの責務）
+    - Contracts層・Infrastructure層・Web層への言及
+
+fsharp-application:
+  ✅ 実行範囲:
+    - src/UbiquitousLanguageManager.Application/ 配下のみ
+    - UseCase・ApplicationService実装
+  ❌ 禁止範囲:
+    - tests/ 配下のファイル読み込み・参照
+    - Domain層・Infrastructure層の実装修正
+
+contracts-bridge:
+  ✅ 実行範囲:
+    - src/UbiquitousLanguageManager.Contracts/ 配下のみ
+    - DTO・TypeConverter・F#↔C#境界実装
+  ❌ 禁止範囲:
+    - Domain層・Application層の実装修正
+    - テストプロジェクトへの参照
+
+unit-test:
+  ✅ 実行範囲:
+    - tests/ 配下のすべてのテストプロジェクト
+    - TDD実践・Red-Green-Refactorサイクル
+    - テスト実装・既存テスト修正
+  ❌ 禁止範囲:
+    - src/ 配下の実装コード修正（テスト対象の修正禁止）
+
+integration-test:
+  ✅ 実行範囲:
+    - tests/ 配下の統合テストプロジェクト
+    - WebApplicationFactory・E2Eテスト・データベース統合テスト
+  ❌ 禁止範囲:
+    - src/ 配下の実装コード修正
+```
+
+### 品質保証Agent責務境界
+```yaml
+code-review:
+  ✅ 実行範囲:
+    - 全プロジェクトの読み込み・品質評価
+    - アーキテクチャ準拠・コード品質確認
+  ❌ 禁止範囲:
+    - 実装コードの直接修正（改善提案のみ）
+
+spec-compliance:
+  ✅ 実行範囲:
+    - 仕様書・実装コードの照合確認
+    - 仕様準拠マトリックス検証
+  ❌ 禁止範囲:
+    - 実装コードの直接修正（準拠度評価のみ）
+```
+
 ## 📋 spec-analysis ↔ spec-compliance 連携フロー
 
 ### 成果物継承による効率化
@@ -338,9 +401,133 @@ Step3 - 記録・改善:
   3. 品質保証系（integration-test, spec-compliance等）※監視強化
 ```
 
+## 🔧 エラー修正モード（Fix-Mode）
+
+### 目的・適用範囲
+**エラー修正時の効率的SubAgent活用** - SubAgent作業完了後のエラー発生時専用
+
+### Fix-Mode特徴
+```yaml
+実行目的:
+  - 特定エラーの修正のみ
+  - 新規機能追加なし
+  - 影響範囲が明確・限定的
+
+実行時間:
+  - 通常実行: 5-10分
+  - Fix-Mode: 1-3分（1/3短縮）
+
+実行スコープ:
+  - 特定ファイル・特定エラーのみ
+  - 最小限の分析・実装
+  - 修正完了の即座確認
+```
+
+### Fix-Mode実行指示フォーマット
+```yaml
+基本フォーマット:
+  "[SubAgent名] Agent, Fix-Mode: [修正内容詳細]"
+
+具体例:
+  "contracts-bridge Agent, Fix-Mode: TypeConverters.cs Option型変換エラー修正"
+  "fsharp-domain Agent, Fix-Mode: ValueObjects.fs ProjectName制約エラー修正"
+  "csharp-web-ui Agent, Fix-Mode: Profile.razor using文不足エラー修正"
+  "unit-test Agent, Fix-Mode: ProjectTests.fs 期待値不一致エラー修正"
+```
+
+### エラー種別別SubAgent選択
+```yaml
+F# Domain層エラー:
+  SubAgent: fsharp-domain
+  対象: ValueObjects.fs, Entities.fs, DomainServices.fs
+  Fix例: Smart Constructor制約・型変換・パターンマッチング
+
+F# Application層エラー:
+  SubAgent: fsharp-application
+  対象: UseCase.fs, ApplicationService.fs
+  Fix例: ユースケース実装・ワークフロー・エラーハンドリング
+
+F#↔C#境界エラー:
+  SubAgent: contracts-bridge
+  対象: TypeConverters.cs, DTOs.cs
+  Fix例: Option型変換・Result型変換・プロパティマッピング
+
+C# Infrastructure層エラー:
+  SubAgent: csharp-infrastructure
+  対象: Repository.cs, DbContext.cs, Configuration
+  Fix例: EF Core設定・データアクセス・外部連携
+
+C# Web UI層エラー:
+  SubAgent: csharp-web-ui
+  対象: Razor files, Controllers, Services
+  Fix例: Blazor Server設定・UI実装・ライフサイクル
+
+テストエラー:
+  SubAgent: unit-test または integration-test
+  対象: Tests/*.fs, Tests/*.cs
+  Fix例: テスト期待値・モック設定・テストデータ
+```
+
+### Fix-Mode実行プロセス
+```yaml
+Step1 - エラー分析（MainAgent）:
+  1. エラー内容・場所の特定
+  2. 責務マッピングでSubAgent選定
+  3. 修正規模判定（Fix-Mode適用可否）
+
+Step2 - Fix-Mode実行（SubAgent）:
+  1. 指定エラーのみ修正実行
+  2. 最小限の影響範囲での修正
+  3. 修正完了の即座確認
+
+Step3 - 修正確認（MainAgent）:
+  1. ビルド成功確認
+  2. テスト実行・成功確認
+  3. 修正完了記録
+```
+
+### Fix-Mode使用条件・制限
+```yaml
+適用可能条件:
+  ✅ 明確なエラーメッセージ・場所特定済み
+  ✅ 修正影響範囲が1-2ファイル以内
+  ✅ 新規機能追加なし
+  ✅ ビジネスロジック変更なし
+
+適用不可条件:
+  ❌ エラー原因が不明確
+  ❌ 設計変更・リファクタリングが必要
+  ❌ 複数層にまたがる修正
+  ❌ 新規メソッド・クラス追加が必要
+
+制限事項:
+  - Fix-Mode実行は1回のみ（再実行不可）
+  - 修正失敗時は通常モードに切り替え
+  - 複雑なエラーは通常モード実行
+```
+
+### Fix-Mode効果測定
+```yaml
+効率性指標:
+  - 修正時間: 1-3分目標
+  - 成功率: 80%以上維持
+  - 再修正率: 10%以下維持
+
+品質指標:
+  - ビルド成功率: 100%
+  - テスト成功維持率: 100%
+  - 新規問題発生率: 5%以下
+
+責務遵守効果:
+  - SubAgent専門性活用率: 100%
+  - メインエージェント責務境界遵守率: 100%
+  - プロセス一貫性維持率: 100%
+```
+
 ---
 
 **更新履歴**:
+- **2025-09-28 Fix-Mode（エラー修正モード）追加**（Step2実行改善・責務境界明確化）
 - 2025-08-08 初版作成（Phase特性別テンプレート.mdからの移行・SubAgent方式対応）
 - 2025-08-31 実行制御・異常対策セクション追加（integration-test大量起動対策）
 - **2025-09-22 Pattern D・E追加**（縦方向スライス実装マスタープラン改訂対応）

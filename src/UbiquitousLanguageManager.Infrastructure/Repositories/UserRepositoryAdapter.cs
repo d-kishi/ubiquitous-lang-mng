@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Application;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 
 namespace UbiquitousLanguageManager.Infrastructure.Repositories;

@@ -7,6 +7,9 @@
 @using Microsoft.FSharp.Core
 @using UbiquitousLanguageManager.Web.Pages.Admin.Components
 @using UbiquitousLanguageManager.Web.Components.Authorization
+@* Domain層namespace階層化対応 *@
+@using UbiquitousLanguageManager.Domain.Common
+@using UbiquitousLanguageManager.Domain.Authentication
 @inject UserApplicationService UserApplicationService
 @inject IJSRuntime JSRuntime
 @attribute [Authorize(Roles = "SuperUser,ProjectManager")]

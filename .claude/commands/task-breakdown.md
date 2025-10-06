@@ -43,7 +43,7 @@ echo "📋 作業情報の収集・分析を開始..."
 - [ ] **Phase計画情報**: `/Doc/08_Organization/Active/Phase_XX/Phase_Summary.md`
 - [ ] **GitHub Issues**: 未完了Issue（特にphase-B1, 高優先度ラベル）
 - [ ] **仕様書・設計書**: 該当Phase対象の仕様・設計文書
-- [ ] **技術負債情報**: `/Doc/10_Debt/Technical/`配下の課題
+- [ ] **技術負債情報**: GitHub Issues（TECH-XXXラベル付き）から収集
 
 ### 2. Phase B1専用タスク分解（SpecKit inspired）
 

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Web.Authentication;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 
 namespace UbiquitousLanguageManager.Web.Services;
 
@@ -126,7 +128,7 @@ public class BlazorAuthenticationService
             }
 
             // newPasswordをPassword値オブジェクトに変換
-            var passwordResult = UbiquitousLanguageManager.Domain.Password.create(newPassword);
+            var passwordResult = Password.create(newPassword);
             if (passwordResult.IsError)
             {
                 _logger.LogWarning("Blazor Server パスワード変更失敗: パスワード形式不正 - {Email}", userEmail);
@@ -134,7 +136,7 @@ public class BlazorAuthenticationService
                     passwordResult.ErrorValue);
             }
 
-            var userId = UbiquitousLanguageManager.Domain.UserId.NewUserId(domainUserId.Value);
+            var userId = UserId.NewUserId(domainUserId.Value);
 
             // Application層認証サービスへ委譲
             var result = await _authenticationService.ChangePasswordAsync(

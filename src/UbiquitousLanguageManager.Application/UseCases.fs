@@ -1,6 +1,10 @@
 namespace UbiquitousLanguageManager.Application
 
-open UbiquitousLanguageManager.Domain
+// F# Domain層namespace階層化対応: Bounded Context別にopen
+open UbiquitousLanguageManager.Domain.Common                  // UserId, DomainId, Description
+open UbiquitousLanguageManager.Domain.Authentication          // User, Email, UserName, Password, Role (SuperUser, ProjectManager等)
+open UbiquitousLanguageManager.Domain.ProjectManagement       // (使用なし)
+open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // JapaneseName, EnglishName, UbiquitousLanguageId
 open System.Threading.Tasks
 
 // 🎯 ユースケース: ビジネス要求を直接的に表現する機能単位

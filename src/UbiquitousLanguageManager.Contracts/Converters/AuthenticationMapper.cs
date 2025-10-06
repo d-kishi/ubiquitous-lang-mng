@@ -1,7 +1,8 @@
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Contracts.DTOs.Authentication;
 using UbiquitousLanguageManager.Contracts.DTOs.Common;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 
 namespace UbiquitousLanguageManager.Contracts.Converters;
 

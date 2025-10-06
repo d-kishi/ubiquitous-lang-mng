@@ -9,10 +9,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ValueObjects.fs" />
-    <Compile Include="Entities.fs" />
-    <Compile Include="DomainServices.fs" />
-    <Compile Include="Specifications.fs" />
+    <!-- 🎯 Common Bounded Context: 全境界文脈で共有される共通型 -->
+    <Compile Include="Common\CommonTypes.fs" />
+    <Compile Include="Common\CommonValueObjects.fs" />
+    <Compile Include="Common\CommonSpecifications.fs" />
+
+    <!-- 🔐 Authentication Bounded Context: 認証・ユーザー管理境界文脈 -->
+    <!-- F#コンパイル順序: ValueObjects → Errors → Entities → DomainService -->
+    <Compile Include="Authentication\AuthenticationValueObjects.fs" />
+    <Compile Include="Authentication\AuthenticationErrors.fs" />
+    <Compile Include="Authentication\AuthenticationEntities.fs" />
+    <Compile Include="Authentication\UserDomainService.fs" />
+
+    <!-- 📁 ProjectManagement Bounded Context: プロジェクト管理境界文脈 -->
+    <Compile Include="ProjectManagement\ProjectValueObjects.fs" />
+    <Compile Include="ProjectManagement\ProjectErrors.fs" />
+    <Compile Include="ProjectManagement\ProjectEntities.fs" />
+    <Compile Include="ProjectManagement\ProjectDomainService.fs" />
+
+    <!-- 🌍 UbiquitousLanguageManagement Bounded Context: ユビキタス言語管理境界文脈 -->
+    <!-- F#コンパイル順序: ValueObjects → Errors → Entities → DomainService -->
+    <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageValueObjects.fs" />
+    <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageErrors.fs" />
+    <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageEntities.fs" />
+    <Compile Include="UbiquitousLanguageManagement\UbiquitousLanguageDomainService.fs" />
   </ItemGroup>
 
 

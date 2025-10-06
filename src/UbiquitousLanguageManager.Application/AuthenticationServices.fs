@@ -1,6 +1,10 @@
 namespace UbiquitousLanguageManager.Application
 
-open UbiquitousLanguageManager.Domain
+// F# Domain層namespace階層化対応: Bounded Context別にopen
+open UbiquitousLanguageManager.Domain.Common                  // UserId, Role, Permission, PermissionMappings
+open UbiquitousLanguageManager.Domain.Authentication          // User, Email, UserName, Password, PasswordHash, AuthenticationError (判別共用体)
+open UbiquitousLanguageManager.Domain.ProjectManagement       // (使用なし)
+open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // (使用なし)
 open System.Threading.Tasks
 
 // 🎯 認証Application層サービス: F# Railway-oriented Programming実装

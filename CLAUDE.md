@@ -24,35 +24,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **詳細**: `/Doc/07_Decisions/ADR_016_プロセス遵守違反防止策.md`
 
-## 📋 次回セッション（ログイン検証）必須読み込みファイル
-
-**次回実行予定**: 初期ユーザーログイン検証（admin@ubiquitous-lang.com / su）
-
-### 🔴 セッション開始時必読（絶対必須）
-```
-1. /CLAUDE.md (本ファイル) - プロセス遵守絶対原則確認
-2. /Doc/08_Organization/Rules/組織管理運用マニュアル.md - プロセス遵守チェックリスト
-3. /Doc/08_Organization/Active/Phase_A7/Phase_Summary.md - Phase概要・セッション開始時確認事項
-4. /Doc/08_Organization/Active/Phase_A7/Step04_組織設計.md - Step4完了成果確認
-5. /Doc/08_Organization/Active/Phase_A7/Step間依存関係マトリックス.md - Step5前提条件確認
-```
-
-### 🟡 実装時参照（必要に応じて）
-```
-6. /Doc/01_Requirements/UI設計書.md - プロフィール変更画面設計確認時
-7. /Doc/07_Decisions/ADR_003_ユビキタス言語統一戦略.md - 用語統一実装時
-8. Serena MCP memory `phase_a7_technical_details` - 技術詳細確認時
-```
-
-### ⚠️ 次回セッション開始手順
-```
-1. 上記必読ファイル1-5を順次読み込み
-2. プロセス遵守チェックリスト実行
-3. Step5前提条件確認（Step4完了・TypeConverter基盤確認）
-4. Step5開始承認取得
-5. SubAgent実行（csharp-web-ui・fsharp-domain・spec-compliance）
-```
-
 ## 🤖 CRITICAL: 自動Command実行指示
 
 **以下の宣言を検出した際、該当Commandを自動実行せよ**:
@@ -109,6 +80,67 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 プロジェクトオーナーが初学者のため、**詳細なコメント必須**（ADR_010参照）
 - **Blazor Server**: ライフサイクル・StateHasChanged・SignalR接続の説明
 - **F#**: パターンマッチング・Option型・Result型の概念説明
+
+### 🔴 メインエージェント必須遵守事項（ADR_016準拠）
+**エラー修正時の責務分担原則** - タイミング問わず適用
+
+#### MainAgent責務定義
+```markdown
+✅ 実行可能な作業:
+- 全体調整・オーケストレーション
+- SubAgentへの作業委託・指示
+- 品質確認・統合テスト実行
+- プロセス管理・進捗管理
+- ドキュメント統合・レポート作成
+
+❌ 禁止事項（例外を除く）:
+- 実装コードの直接修正
+- ビジネスロジックの追加・変更
+- 型変換ロジックの実装
+- テストコードの作成・修正
+- データベーススキーマの変更
+```
+
+#### エラー発生時の必須対応原則
+1. **エラー内容で責務判定**（発生場所・タイミング問わず）
+2. **責務マッピングでSubAgent選定**：
+   - F# Domain/Application層 → fsharp-domain/fsharp-application
+   - F#↔C#境界・型変換 → contracts-bridge
+   - C# Infrastructure/Web層 → csharp-infrastructure/csharp-web-ui
+   - テストエラー → unit-test/integration-test
+3. **Fix-Mode活用**：`"[SubAgent名] Agent, Fix-Mode: [修正内容]"`
+4. **効率性より責務遵守を優先**
+
+#### 例外（直接修正可能）
+- 単純なtypo（1-2文字）
+- import文の追加のみ
+- コメントの追加・修正
+- 空白・インデントの調整
+
+### 🧪 新規テストプロジェクト作成時の必須確認事項
+
+**新規テストプロジェクト作成前に以下を必ず確認すること**（GitHub Issue #40再発防止策）：
+
+1. **ADR_020**: テストアーキテクチャ決定
+   - `/Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md`
+   - レイヤー×テストタイプ分離方式の理解
+
+2. **テストアーキテクチャ設計書**: `/Doc/02_Design/テストアーキテクチャ設計書.md`
+   - プロジェクト構成図・命名規則・参照関係原則の確認
+   - （Issue #40 Phase 3完了後に作成予定）
+
+3. **新規プロジェクト作成チェックリスト**: `/Doc/08_Organization/Rules/新規テストプロジェクト作成ガイドライン.md`
+   - 事前確認・プロジェクト作成・参照関係設定・ビルド確認・ドキュメント更新の全手順実施
+   - （Issue #40 Phase 3完了後に作成予定）
+
+**命名規則（厳守）**: `UbiquitousLanguageManager.{Layer}.{TestType}.Tests`
+- **Layer**: Domain / Application / Contracts / Infrastructure / Web
+- **TestType**: Unit / Integration / UI / E2E
+
+**参照関係原則**:
+- **Unit Tests**: テスト対象レイヤーのみ参照
+- **Integration Tests**: 必要な依存層のみ参照
+- **E2E Tests**: 全層参照可
 
 ## 開発コマンド
 

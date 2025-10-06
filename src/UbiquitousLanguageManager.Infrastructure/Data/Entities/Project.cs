@@ -31,6 +31,18 @@ public class Project
     public string? Description { get; set; }
 
     /// <summary>
+    /// プロジェクト所有者ID（Phase B1追加）
+    /// F# Domain層のUserId（long型）に対応
+    /// </summary>
+    [Required]
+    public long OwnerId { get; set; }
+
+    /// <summary>
+    /// 作成日時（Phase B1追加）
+    /// </summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// 最終更新者ID
     /// </summary>
     [Required]
@@ -40,10 +52,16 @@ public class Project
     /// <summary>
     /// 最終更新日時
     /// </summary>
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
 
     /// <summary>
-    /// 論理削除フラグ
+    /// アクティブフラグ（Phase B1追加）
+    /// F# Domain層のIsActiveに対応（論理削除の代わり）
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// 論理削除フラグ（旧設計・互換性のため保持）
     /// </summary>
     public bool IsDeleted { get; set; } = false;
 
