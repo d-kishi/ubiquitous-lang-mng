@@ -62,8 +62,104 @@
 ### 7. Phase完了処理実行
 - [ ] **Phase_Summary.md最終更新**: 総括レポート完成・承認記録
 - [ ] **ディレクトリ移動実行**: `/Doc/08_Organization/Active/Phase_XX/` → `/Doc/08_Organization/Completed/Phase_XX/`
-- [ ] **プロジェクト状況更新**: Serenaメモリー`project_overview`の更新
+- [ ] **Serenaメモリー更新（直接ファイル編集方式）**: 4種類のメモリー更新
 - [ ] **次Action提示**: 次Phase開始 or セッション終了 or 週次振り返り
+
+### 8. Serenaメモリー更新（必須・直接ファイル編集方式）
+
+#### 🔴 重要：Context効率化のため直接ファイル編集を使用
+**理由**: Context消費87.5%削減・時間75%短縮達成（session-end実績）
+**適用範囲**: phase-endコマンド実行時のみ（手動操作・他コマンドでは従来通り`write_memory`使用可能）
+**禁止事項**: phase-end時は`mcp__serena__read_memory` / `mcp__serena__write_memory`使用禁止
+
+#### 更新手順（全メモリー共通）
+1. **Grepツール**: 更新対象セクション・行を検索
+2. **Readツール**: 必要箇所のみ部分読み込み（limit指定推奨）
+3. **Editツール**: 該当箇所のみ差分更新（置換・追記・削除）
+
+#### 各メモリー更新詳細
+
+- [ ] **project_overview更新（`.serena/memories/project_overview.md`）**:
+  ```
+  必須更新:
+  1. Grep "## 📊 プロジェクト進捗管理" で該当セクション特定
+  2. Read該当セクション周辺（Phase完了状況部分）
+  3. Editツールで以下を更新:
+     - Phase完了状況（- [x] Phase XX: 完了（完了日）✅）
+     - 次回セッション実施計画（次Phase準備 or Issue対応 or 週次振り返り）
+     - Phase完了記念セクション追加（Phase成果・品質スコア・価値）
+  ```
+
+- [ ] **development_guidelines更新（`.serena/memories/development_guidelines.md`）**:
+  ```
+  変更がある場合のみ:
+  1. Grep該当セクション名（例: "## 🎯 Phase XX完了成果"）で確認
+  2. 新規追加の場合:
+     - 適切な位置（Phase完了成果セクション）にEditで追記
+     - Phase完了成果・確立した技術パターン・申し送り事項を記録
+  3. 既存更新の場合:
+     - Read該当セクション周辺
+     - Editツールで既存セクション更新
+  変更がない場合: スキップ
+  ```
+
+- [ ] **tech_stack_and_conventions更新（`.serena/memories/tech_stack_and_conventions.md`）**:
+  ```
+  変更がある場合のみ:
+  1. Grep該当セクション名（例: "## F# 実装規約・パターン"）で特定
+  2. Read該当セクション周辺
+  3. Editツールで新規技術スタック・規約を追記 or セクション更新
+  変更がない場合: スキップ
+  ```
+
+- [ ] **task_completion_checklist更新（`.serena/memories/task_completion_checklist.md`）**:
+  ```
+  必須更新:
+  1. Grep "Phase XX" で該当Phase行特定
+  2. Editツールで以下を更新:
+     - Phase完了マーク（- [ ] → - [x]）
+     - 最終更新日時更新
+     - 次回継続タスクセクション更新（次Phase準備 or Issue対応）
+  ```
+
+- [ ] **メモリー更新品質確認**:
+  - 各メモリーの差分更新が適切に実行されたか確認
+  - 既存重要情報が維持されているか確認（破壊的変更なし）
+  - 次回セッションで参照可能な状態か確認
+
+### 9. Command実行完了確認・継続判断
+
+#### 🔴 必須実行確認（自己チェック）
+**実行証跡必須確認**:
+- [ ] **Write/Editツール実行結果確認**: 以下の必須ファイル作成・更新が実際に実行されたか
+  - [ ] `Phase_Summary.md` 最終更新済み（総括レポート追加）
+  - [ ] ディレクトリ移動実行済み（Active → Completed）
+
+- [ ] **Readツール実行確認**: 各メモリー更新に必要な箇所の部分読み込み実行
+  - [ ] project_overview該当セクション読み込み済み（Phase完了状況部分）
+  - [ ] development_guidelines該当セクション読み込み済み（変更がある場合のみ）
+  - [ ] tech_stack_and_conventions該当セクション読み込み済み（変更がある場合のみ）
+  - [ ] task_completion_checklist該当Phase行読み込み済み
+
+- [ ] **Editツール実行確認**: 差分更新で4種類のメモリー更新
+  - [ ] project_overview差分更新実行済み（Phase完了状況・次回計画）
+  - [ ] development_guidelines差分追記実行済み（変更がある場合のみ・スキップ可）
+  - [ ] tech_stack_and_conventions差分追記実行済み（変更がある場合のみ・スキップ可）
+  - [ ] task_completion_checklist状態更新実行済み（Phase完了マーク・次回継続タスク）
+
+- [ ] **write_memory不使用確認**: phase-end時は`mcp__serena__write_memory`使用していないことを確認
+
+- [ ] **実行内容品質確認**: 各更新内容が具体的・実用的で次回セッションで参照可能か
+
+#### 🔴 実行漏れ防止チェック
+- [ ] **抽象的報告の排除**: 「実施しました」ではなく実際のツール呼び出し実行済み
+- [ ] **段階的実行**: 各項目を順次実行し実行結果確認してから次項目へ進行済み
+- [ ] **自己検証完了**: 上記全項目の実行証跡確認済み
+
+#### 継続・終了判断
+- [ ] **Command実行完了確認**: 上記自己チェック全項目が実行完了していることを確認
+- [ ] **次Action提示**: 次Phase開始 or セッション終了 or 週次振り返り
+- [ ] **終了処理**: Phase完了処理全完了確認・次回セッション準備完了宣言
 
 ## Phase_Summary.md更新テンプレート
 

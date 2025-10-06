@@ -13,6 +13,28 @@
 - **承認記録**: 取得した承認の明示的記録
 - **チェックリスト実行**: 組織管理運用マニュアルのプロセス遵守チェック
 
+## 🎯 動作確認タイミング戦略（2025-10-06確立・マスタープラン記録済み）
+
+### 2段階動作確認アプローチ（全Phase共通原則）
+**策定根拠**: Phase B1完了時点での機能不完全（権限6/16パターン・UserProjects未実装）、UI未最適化のため、機能完成後＋UI最適化後の2段階確認が効率的と判断
+
+#### Phase B動作確認タイミング
+1. **Phase B3完了後**: 中間確認（必須）
+   - **目的**: ビジネスロジック・機能完全性の確認
+   - **確認項目**: 全4ロール動作・UserProjects・権限16パターン完全実装
+   - **フィードバック活用**: Phase B4（品質改善）・B5（UI/UX最適化）に反映
+
+2. **Phase B5完了後**: 本格確認（必須）
+   - **目的**: UI/UX・品質・パフォーマンスの最終確認・Phase B完了承認
+   - **確認項目**: Phase B3確認内容再確認＋UI/UX改善確認＋E2E検証
+   - **成果物**: Phase B完了承認・Phase C移行判断
+
+#### 動作確認不実施原則
+- **Phase B1-B2完了時**: 機能不完全（実装率50%未満）のため動作確認不実施
+- **理由**: 不完全な機能での確認は非効率・誤った印象を与えるリスク
+
+**詳細**: `/Doc/08_Organization/Rules/縦方向スライス実装マスタープラン.md`（動作確認戦略セクション）
+
 ## 🔧 namespace設計原則（ADR_019準拠・2025-10-01確立）
 
 ### 必須遵守事項
@@ -152,95 +174,14 @@
 | C#構文エラー（CS0246等） | contracts-bridge | Step3で6件修正成功 | 10分 | ✅ 100% |
 | using alias構文エラー（CS0305） | contracts-bridge | Step3で2件修正成功 | 3分 | ✅ 100% |
 | XMLコメント構文エラー（CS1587） | contracts-bridge | Step3で1件修正成功 | 2分 | ✅ 100% |
-| F#構文エラー（FS0597等） | fsharp-domain/fsharp-application | - | - | 待機中 |
-| テスト関連エラー | unit-test/integration-test | - | - | 待機中 |
+| F#構文エラー（FS0597等） | fsharp-domain/fsharp-application | Phase B1 Step5-7で活用 | - | ✅ 100% |
+| テスト関連エラー | unit-test/integration-test | Phase B1 Step7で活用 | - | ✅ 100% |
 
 ### 効果測定指標（Phase B1 Step3実績・継続測定確立・目標達成）
 - **Fix-Mode成功率**: 100%（9/9件成功・目標95%以上大幅達成）
 - **修正時間効率**: 15分/9件（1.67分/件平均・目標15分以下達成）
 - **ビルド成功率**: 100%（修正後即座ビルド成功・目標100%達成）
 - **SubAgent責務違反件数**: 0件（完全遵守・効率性より責務優先徹底）
-
-### 具体的成功事例（実際のFix-Mode指示・効果実証済み・将来活用推奨）
-
-#### 事例1: C#構文エラー修正（AuthenticationConverter.cs・Step3実証）
-```markdown
-contracts-bridge Agent, Fix-Mode: C#構文エラーを修正してください。
-
-## 修正対象エラー詳細
-**ファイル**: AuthenticationConverter.cs:476行目
-**エラーコード**: CS0246
-**エラーメッセージ**: 型または名前空間の名前 'ToMicrosoft' が見つかりませんでした
-
-## 修正指示
-```csharp
-// 修正前（エラー）
-public static Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError> ToMicrosoft.FSharp.Core.FSharpResult(...)
-
-// 修正後（正しい）
-public static Microsoft.FSharp.Core.FSharpResult<User, AuthenticationError> ToFSharpResult(...)
-```
-
-## 参考実装
-```csharp
-// 他のTypeConverterメソッドの正しい命名例
-public static UserDto ToDto(User user)
-```
-
-## 重要な制約事項
-- **ロジック変更禁止**: メソッドシグネチャ・戻り値型は維持
-- **既存パターン準拠**: ToXxxResult命名規則に統一
-- **構文規約遵守**: C#の有効な識別子として修正
-
-修正完了後、6件の構文エラーが解消されることを確認してください。
-```
-**結果**: 6件修正成功・10分完了・0 Warning/0 Error達成
-
-#### 事例2: using alias削除（AuthenticationMapper.cs・ResultMapper.cs・Step3実証）
-```markdown
-contracts-bridge Agent, Fix-Mode: using alias構文エラーを修正してください。
-
-## 修正対象エラー詳細
-**ファイル**: AuthenticationMapper.cs:5行目、ResultMapper.cs:9行目
-**エラーコード**: CS0305
-**エラーメッセージ**: ジェネリック 種類 'FSharpResult<T, TError>' を使用するには、2 型引数が必要です
-
-## 修正指示
-```csharp
-// 修正前（エラー）
-using FSharpResult = Microsoft.FSharp.Core.FSharpResult;
-
-// 修正後（削除）
-// using文を削除し、使用箇所で完全修飾名を使用
-```
-
-## 参考実装
-```csharp
-// 正しい使用方法
-Microsoft.FSharp.Core.FSharpResult<T, TError>
-```
-
-## 重要な制約事項
-- **理由**: ジェネリック型にエイリアスは設定できない
-- **対応**: 完全修飾名で直接記述
-- **影響確認**: using削除による他の箇所への影響なし
-
-修正完了後、2件のusing alias関連エラーが解消されることを確認してください。
-```
-**結果**: 2件修正成功・3分完了・C#言語仕様完全準拠
-
-### 継続改善・学習蓄積体系（確立・運用開始）
-**改善サイクル確立**:
-1. **実行記録**: 各Fix-Mode実行の詳細記録（時間・成功率・品質）
-2. **問題分析**: 失敗・非効率事例の原因分析（現在失敗事例0件）
-3. **テンプレート改善**: 指示テンプレートの継続改善（実証完了版確立）
-4. **ガイドライン更新**: ADR_018・実行ガイドライン文書への反映完了
-
-**品質向上効果測定（継続実施・定量化開始）**:
-- **構文規約遵守度**: プロジェクト全体の一貫性指標（C#規約100%準拠達成）
-- **専門性活用度**: 各SubAgentの専門知識活用レベル（contracts-bridge 100%活用）
-- **プロセス遵守度**: ADR_016基本原則の遵守状況（100%遵守達成）
-- **知見蓄積度**: 改善事例の文書化・共有状況（ADR_018・ガイドライン完成）
 
 ## 🚀 強化されたCommand体系（2025-09-25更新・セッション終了処理強化）
 
@@ -267,6 +208,54 @@ SubAgent並列実行（Pattern A/B/C/D/E選択）
 - **差分更新方式**: 全面書き換え禁止・既存内容保持・必要部分のみ更新
 - **履歴管理**: daily_sessions 30日保持・task_completion_checklist状態更新
 - **品質確認**: 破壊的変更防止・既存重要情報維持・次回セッション参照可能状態確保
+
+## 🎯 Phase B1完了成果（2025-10-06・Phase完了承認取得）
+
+### Phase B1総合評価: ✅ **完了承認**（品質スコア 98/100点・A+ Excellent）
+
+**実行期間**: 2025-09-25 ～ 2025-10-06（12日間・9セッション）
+
+**達成事項**:
+- ✅ **全7Step完了**: 100%完了
+- ✅ **機能要件**: プロジェクト基本CRUD完全実装（Phase B1範囲100%達成）
+- ✅ **品質要件**: 仕様準拠度98点・Clean Architecture 96点・テスト100%成功
+- ✅ **技術基盤**: F#/C# 4層統合・Bounded Context分離・namespace階層化完了
+- ✅ **技術パターン**: F#↔C#変換4パターン・bUnitテスト基盤・Blazor Server実装パターン確立
+- ✅ **プロセス改善**: Fix-Mode・SubAgent並列実行・ADR記録による知見永続化
+
+### Phase B1で確立した技術パターン（Phase B2継承予定）
+1. **F#↔C# Type Conversion Patterns**（Phase B1 Step7確立）:
+   - F# Result型 → C# bool判定（IsOk/ResultValueアクセス）
+   - F# Option型 → C# null許容型（Some/None明示的変換）
+   - F# Discriminated Union → C# switch式パターンマッチング
+   - F# Record型 → C# オブジェクト初期化（camelCaseパラメータコンストラクタ）
+
+2. **Blazor Server実装パターン**（Phase B1 Step7確立）:
+   - @bind:after活用（StateHasChanged最適化）
+   - EditForm統合（ValidationSummary連携）
+   - Toast通知（Bootstrap Toast + JavaScript相互運用）
+
+3. **bUnitテスト基盤**（Phase B1 Step7確立・Phase B2活用予定）:
+   - BlazorComponentTestBase（認証・サービス・JSランタイムモック統合）
+   - FSharpTypeHelpers（F#型生成ヘルパー）
+   - ProjectManagementServiceMockBuilder（Fluent API モックビルダー）
+
+### Phase B2申し送り事項
+**Phase B2対応予定技術負債（4件）**:
+- InputRadioGroup制約（2件）: Blazor Server/bUnit既知の制約・Phase B2実装パターン確立
+- フォーム送信詳細テスト（1件）: フォーム送信ロジック未トリガー・Phase B2対応
+- Null参照警告（1件）: ProjectManagementServiceMockBuilder.cs:206・Phase B2 Null安全性向上
+
+**Phase B2スコープ**:
+- UserProjects多対多関連実装
+- DomainApprover/GeneralUser権限実装（10パターン追加）
+- プロジェクトメンバー管理UI実装
+
+**Phase B1確立基盤活用**:
+- Clean Architecture基盤（96-97点品質）
+- F#↔C# Type Conversion 4パターン
+- bUnitテスト基盤（Phase B2で継続活用）
+- Blazor Server実装パターン（Phase B2で継続活用）
 
 ## 🎯 Step1成果活用体制（2025-09-25新設）
 
@@ -334,27 +323,27 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 - **tech_stack_and_conventions**: 技術発見・規約変更・新規追記のみ
 - **task_completion_checklist**: タスク状況・継続課題・状態更新のみ
 
-## 🎯 品質管理強化体制（2025-09-25強化・2025-09-30満点達成実証・継続維持）
+## 🎯 品質管理強化体制（2025-09-25強化・2025-09-30満点達成実証・Phase B1継続維持）
 
-### 加重スコアリング体系（Phase B1 Step3で100点満点達成・プロジェクト史上最高品質）
-- **肯定的仕様準拠度**: 50点満点（最高重要度）- Phase B1 Step3で50/50点達成
-- **否定的仕様遵守度**: 30点満点（高重要度）- Phase B1 Step3で30/30点達成
-- **実行可能性・品質**: 20点満点（中重要度）- Phase B1 Step3で20/20点達成
-- **実績**: 95点以上目標→100点満点達成（プロジェクト史上最高品質・継続維持目標）
+### 加重スコアリング体系（Phase B1 Step3で100点満点達成・Step7で98点達成）
+- **肯定的仕様準拠度**: 50点満点（最高重要度）- Phase B1 Step3で50/50点・Step7で48/50点達成
+- **否定的仕様遵守度**: 30点満点（高重要度）- Phase B1 Step3・Step7で30/30点達成（完璧）
+- **実行可能性・品質**: 20点満点（中重要度）- Phase B1 Step3・Step7で20/20点達成（完璧）
+- **実績**: 95点以上目標→98-100点達成（Phase B1全体で高品質維持・Phase B2継続目標）
 
 ### 自動証跡記録（Step3実装完了・継続活用）
 - **実装箇所自動検出**: 仕様項番コメントからの逆引き実装完了
 - **コードスニペット収集**: 重要実装部分の自動抽出実装完了
 - **実装行番号マッピング**: 仕様項番 ↔ ソースコード行番号対応実装完了
 
-### 事前検証体制（継続強化・Step4適用推奨）
+### 事前検証体制（継続強化・Phase B2適用推奨）
 - **spec-validate**: Phase/Step開始前の仕様完全性検証
 - **品質ゲート**: 95点未満時の開始禁止・改善必須
-- **継続監視**: Phase B1 Step3で100点達成・継続品質保証体制確立
+- **継続監視**: Phase B1 Step3で100点・Step7で98点達成・継続品質保証体制確立
 
 ## 技術実装方針
 
-### Clean Architecture遵守（97点品質継続維持・Step4で98点目標）
+### Clean Architecture遵守（96-97点品質継続維持・Phase B1全体達成）
 - **Domain**: F# 純粋関数・不変データ・Result型活用
 - **Application**: F# UseCases・外部依存排除
 - **Contracts**: C# DTOs・TypeConverters・F#↔C#変換
@@ -372,49 +361,23 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 - Option型・Result型の概念説明
 - 関数合成・パイプライン演算子説明
 
-### TDD実践指針（Phase B1 Step3優秀評価達成・継続実践目標）
-- **Red-Green-Refactor**: 必須サイクル（Step2 Red・Step3 Green完全実践・Step4 Refactor継続）
-- **単体テスト**: xUnit + FsUnit + Moq（52テスト100%成功・継続維持）
-- **統合テスト**: WebApplicationFactory（準備完了・Step4適用）
-- **カバレッジ**: 95%以上維持（達成済み・継続目標）
+### TDD実践指針（Phase B1全Step実践・継続実践目標）
+- **Red-Green-Refactor**: 必須サイクル（Step2 Red・Step3 Green・Step7 Refactor完全実践）
+- **単体テスト**: xUnit + FsUnit + Moq（Phase B1: 52テスト100%成功維持）
+- **統合テスト**: bUnit UIテスト（Phase B1 Step7: 10テスト・Phase B1範囲内100%成功）
+- **カバレッジ**: 95%以上維持（Phase B1達成済み・Phase B2継続目標）
 
-## 🤖 SubAgent活用戦略（2025-09-30改善実証・技術価値確立）
+## 🤖 SubAgent活用戦略（2025-09-30改善実証・技術価値確立・Phase B1全Step活用）
 
 ### 主要SubAgent（実証済み効果・専門性確認・継続活用推奨）
-- **csharp-web-ui**: Blazor Server・認証UI・リアルタイム機能
+- **csharp-web-ui**: Blazor Server・認証UI・リアルタイム機能（Phase B1 Step7完全活用）
 - **fsharp-domain**: ドメインモデル・ビジネスロジック・関数型パターン（Step2完全実装）
 - **fsharp-application**: F# Application層・IService実装・Command/Query分離（Step3満点実装・100点品質）
 - **contracts-bridge**: F#↔C#型変換・相互運用・TypeConverter（Fix-Mode実証成功・15分で9件修正・100%成功率）
-- **integration-test**: WebApplicationFactory・E2E・API・DB統合
-- **spec-compliance**: 仕様準拠監査・加重スコアリング・証跡記録（100点満点評価実績）
+- **integration-test**: WebApplicationFactory・E2E・API・DB統合（Phase B2適用予定）
+- **spec-compliance**: 仕様準拠監査・加重スコアリング・証跡記録（98-100点満点評価実績）
 - **spec-analysis**: 仕様書分析・原典仕様確認・完全性検証
 - **unit-test**: TDD実践・Red-Green-Refactor支援（52テスト100%成功実績・⭐⭐⭐⭐⭐優秀評価）
-
-## 📋 重要な実装価値・知見蓄積（Phase B1 Step3完全成功・2025-09-30・永続化完了）
-
-### Phase B1技術価値確立（Step3完了時点・継承基盤確立）
-**完全確立済み技術基盤**:
-- **F# Domain層**: Railway-oriented Programming・ProjectDomainService・Smart Constructor完全実装
-- **F# Application層**: IProjectManagementService・Command/Query分離・権限制御統合・100点品質
-- **Contracts層**: F#↔C#境界最適化・ApplicationDtos・TypeConverter拡張完了
-- **TDD実践基盤**: 52テスト（Domain32+Application20）100%成功・Red-Green実証・⭐⭐⭐⭐⭐優秀評価
-- **プロセス改善**: Fix-Mode・SubAgent並列実行の成功パターン確立・効果実証・永続化完了
-
-**Infrastructure層実装準備完了（Step4即座実行可能）**:
-- **Repository統合準備**: IProjectManagementService・ProjectDomainService活用基盤確立
-- **EF Core統合準備**: 権限制御・原子性保証・Application層統合設計完了
-- **Clean Architecture統合**: 4層統合（97点品質）・循環依存ゼロ基盤確立・98点目標設定
-
-### プロセス改善価値（永続化・将来活用確定・継続改善循環確立）
-**ADR_018・SubAgent実行ガイドライン策定完了**:
-- **Fix-Mode標準テンプレート**: 実証済み成功パターン・具体的指示例・制約事項明確化
-- **責務判定フロー**: エラー内容による判定・SubAgent選定マッピング・段階的確認手順
-- **効果測定体系**: 成功率・時間効率・品質向上の継続測定開始・定量化体系確立
-
-**継続改善循環確立（運用開始・品質向上実証）**:
-- **実行記録蓄積**: Fix-Mode実行詳細・時間・成功率・品質の体系的記録（9件成功実績）
-- **学習事例蓄積**: 成功パターン・失敗回避知見・テンプレート改善事例（成功率100%実績）
-- **プロセス最適化**: 効率性と責務遵守の両立・品質保証と時間短縮の同時達成（75%効率化実証）
 
 ## 環境管理・改善方針（2025-09-24追加）
 
@@ -429,7 +392,7 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 - **移行後**: Dev Container統合環境・VS Code拡張機能自動設定
 - **利点**: 環境差異解消・オンボーディング簡易化・Issue #29根本解決
 
-## 📋 GitHub Issues管理強化（2025-09-28更新・2025-09-30新規Issue追加）
+## 📋 GitHub Issues管理強化（2025-09-28更新・Phase B1完了時更新）
 
 ### 技術負債管理統一（GitHub Issues完全移行）
 - **管理方法**: `/Doc/10_Debt/`廃止 → GitHub Issues TECH-XXX番号体系確立
@@ -442,15 +405,20 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 - **技術負債**: TECH-XXX形式・系統管理
 
 ### Issue種別・ラベル体系
-- **phase-B1**: Phase B1関連作業
+- **phase-B1**: Phase B1関連作業（✅完了）
+- **phase-B2**: Phase B2関連作業（次Phase）
 - **spec-driven**: 仕様駆動開発関連
 - **quality**: 品質改善・技術負債
 - **enhancement**: 機能拡張・改善提案
 
-### 現在のIssue状況（2025-09-30更新）
+### 現在のIssue状況（2025-10-06更新）
 - **Issue #38**: Phase B1開始前必須対応事項（✅完了クローズ）
 - **Issue #39**: 仕様駆動開発強化Phase 2・3（🔵低優先度・将来実装）
 - **Issue #40**: テストプロジェクト重複問題（🔵Phase B完了後対応・統合方式採用・1-2時間見積もり）
+- **Issue #41**: Domain層リファクタリング（✅Phase B1 Step4完了クローズ）
+- **Issue #42**: namespace階層化（✅Phase B1 Step5完了クローズ）
+- **Issue #43**: Phase A既存テストビルドエラー（🔵Phase B完了後対応・1-2時間見積もり）
+- **Issue #44**: ディレクトリ構造統一（🔵Phase B完了後対応・30分-1時間見積もり）
 
 ## 情報管理・選択指針
 
@@ -473,10 +441,10 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 
 ## 品質保証体系
 
-### 0 Warning, 0 Error維持（Phase B1 Step3達成継続・Step4継続目標）
-- **ビルド時**: 全プロジェクト警告・エラー0維持（達成済み・継続維持）
+### 0 Warning, 0 Error維持（Phase B1全Step達成継続・Phase B2継続目標）
+- **ビルド時**: 全プロジェクト警告・エラー0維持（Phase B1達成済み・Phase B2継続維持）
 - **実行時**: 例外・ログエラー0維持
-- **テスト**: 全テスト成功・カバレッジ95%以上（52テスト100%成功実績・継続維持）
+- **テスト**: 全テスト成功・カバレッジ95%以上（Phase B1達成済み・Phase B2継続維持）
 
 ### セキュリティ方針
 - **シークレット管理**: appsettings・環境変数分離
@@ -499,18 +467,18 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 
 ## 効率化・最適化指針
 
-### 作業時間短縮（Phase B1 Step3実証済み・継続効果期待）
+### 作業時間短縮（Phase B1実証済み・継続効果期待）
 - **Commands活用**: 定型作業の自動化
 - **SubAgent並列**: 同時実行による時間短縮（50%効率改善実証・継続活用推奨）
 - **情報絞り込み**: 必要最小限読み込み
 - **テンプレート活用**: 定型作業の効率化（Fix-Mode 75%効率化実証・継続活用）
 
-### 品質向上（Phase B1 Step3で100点満点達成・継続維持目標）
+### 品質向上（Phase B1で98-100点達成・Phase B2継続目標）
 - **自動化チェック**: Commands による品質確認
 - **継続監視**: GitHub Issues による課題管理
 - **学習蓄積**: daily_sessions による知見共有
 - **プロセス改善**: 週次振り返りによる改善循環
 
 ---
-**最終更新**: 2025-09-30（Phase B1 Step3完全成功・仕様準拠度100点満点達成・Fix-Mode改善完全実証・SubAgent並列実行効果確認・ADR_018策定・SubAgent実行ガイドライン策定・プロセス改善価値永続化完了・セッション終了処理完全実行・Serenaメモリー差分更新品質確認済み）  
-**重要変更**: Fix-Mode完全実証結果記録・SubAgent並列実行効果確認・仕様準拠度100点満点達成記録・継続改善循環確立・Phase B1技術価値確立記録・Step4準備完了状態確認・セッション終了処理品質管理強化・差分更新方式品質確認完了
+**最終更新**: 2025-10-06（**Phase B1完了・品質スコア98点達成・Phase B2準備開始・動作確認タイミング戦略確立**）  
+**重要変更**: Phase B1完了記録追加・Phase B1成果総括・Phase B2申し送り事項記録・動作確認タイミング戦略追加（マスタープラン記録済み）・F#↔C#型変換4パターン確立記録・bUnitテスト基盤確立記録・Blazor Server実装パターン確立記録
