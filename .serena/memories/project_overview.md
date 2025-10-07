@@ -15,8 +15,8 @@
   - [x] B1-Step6: Infrastructure層実装完了 ✅
   - [x] **B1-Step7: Web層実装完了**（**Blazor Server 3コンポーネント・bUnitテスト基盤構築・品質98点達成**）✅
 - [ ] **Phase B-F1（テストアーキテクチャ基盤整備）**: **実施中** 🔄 **← 現在Phase**
-  - [ ] Step1: 技術調査・詳細分析（次回セッション実施予定）
-  - [ ] Step2: Issue #43完全解決
+  - [x] **Step1: 技術調査・詳細分析完了**（2025-10-08・1.5時間）✅
+  - [ ] Step2: Issue #43完全解決（次回セッション実施予定・45分-1時間）
   - [ ] Step3: Issue #40 Phase 1実装
   - [ ] Step4: Issue #40 Phase 2実装
   - [ ] Step5: Issue #40 Phase 3実装・ドキュメント整備
@@ -26,8 +26,8 @@
 
 ### 全体進捗率
 - **Phase完了**: 1.25/4+ (31.25%+) ※Phase A完了 + Phase B1完了 + Phase B-F1実施中
-- **Step完了**: 17/35+ (49%+) ※A9 + B1全7Step + Phase B-F1は5Step構成
-- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**テストアーキテクチャ基盤整備中**
+- **Step完了**: 18/35+ (51.4%+) ※A9 + B1全7Step + Phase B-F1 Step1完了（5Step中1完了）
+- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**テストアーキテクチャ基盤整備中**（Step1完了・Step2準備完了）
 
 ### Phase B-F1開始記念（2025-10-08）🔧
 
@@ -55,32 +55,35 @@
 
 ### 次回セッション実施計画
 
-#### Phase B-F1 Step1実施（次回セッション）
-**次回実施内容**: 技術調査・詳細分析（1-1.5時間）
+#### Phase B-F1 Step2実施（次回セッション）
+**次回実施内容**: Issue #43完全解決（45分-1時間）
 
 **実施内容**:
-1. **Issue #43詳細調査**（30分）
-   - Phase A既存テストファイルの正確な件数・配置確認
-   - ビルドエラー詳細分析（CS0246等）
-   - 修正対象using文パターン特定
+1. **using文一括修正**（30分）
+   - 17件ファイルを3パターンで修正
+   - パターン1: Authentication中心（12件）
+   - パターン2: Common中心（3件）
+   - パターン3: 複数境界文脈（2件）
 
-2. **Issue #40現状分析**（30分）
-   - 現在のテストプロジェクト構成の完全把握
-   - 各プロジェクトの参照関係分析
-   - 移行対象ファイル数の正確な把握
+2. **EnableDefaultCompileItems削除**（5分）
+   - tests/UbiquitousLanguageManager.Tests/UbiquitousLanguageManager.Tests.csproj修正
+   - Line 9, 31-36, 59-74の削除
 
-3. **移行リスク・影響範囲分析**（15分）
-   - テスト実行失敗リスク評価
-   - CI/CD破損リスク評価
-   - ロールバック手順確認
+3. **ビルド・テスト実行確認**（5分）
+   - dotnet build（0 Warning/0 Error確認）
+   - dotnet test（Phase Aテスト100%成功確認）
 
-4. **実装方針・SubAgent選定**（15分）
-   - Step2-5の詳細手順確定
-   - 各StepのSubAgent選定
+**SubAgent**: unit-test
 
-**SubAgent**: spec-analysis + dependency-analysis
+**成功基準**:
+- 17件全修正完了
+- ビルド成功（0 Warning/0 Error）
+- Phase Aテスト100%成功
 
-**成果物**: `Doc/08_Organization/Active/Phase_B-F1/Step01_技術調査結果.md`
+**必須参照**:
+- `Doc/08_Organization/Active/Phase_B-F1/Step01_技術調査結果.md`
+- `Doc/08_Organization/Active/Phase_B-F1/Research/Spec_Analysis_Issue43_40.md`
+- `Doc/08_Organization/Active/Phase_B-F1/次回セッション準備.md`
 
 ### 必須参照文書（Phase B-F1実施）
 - `Doc/08_Organization/Active/Phase_B-F1/Phase_Summary.md` - **Phase B-F1完全スコープ定義・次回セッション用情報完備**

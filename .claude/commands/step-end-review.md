@@ -43,6 +43,6 @@
 
 ## 関連プロセス
 - **SubAgent活用**: spec-compliance, unit-test, integration-test, code-review
-- **成果物確認**: /Doc/05_Research/Phase_XX/ 配下ファイル確認
+- **成果物確認**: /Doc/08_Organization/Active/Phase_XX/Research/ 配下ファイル確認
 - **記録更新**: /Doc/08_Organization/Active/Phase_XX/ 配下ファイル更新
 - **次プロセス連携**: Step完了後 → step-start Command実行 → 次Step組織設計・準備

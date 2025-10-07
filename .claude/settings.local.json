@@ -79,7 +79,9 @@
       "WebFetch(domain:docs.github.com)",
       "WebFetch(domain:devblogs.microsoft.com)",
       "WebFetch(domain:gor-grigoryan.medium.com)",
-      "Bash(if not exist \"C:\\Develop\\ubiquitous-lang-mng\\Doc\\05_Research\\Phase_B-F1\" mkdir \"C:\\Develop\\ubiquitous-lang-mng\\Doc\\05_Research\\Phase_B-F1\")"
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:www.datacamp.com)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": [],

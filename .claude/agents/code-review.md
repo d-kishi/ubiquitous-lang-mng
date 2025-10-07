@@ -106,13 +106,13 @@ public class UserApplicationService
 - **パフォーマンス**: [Good/Fair/Poor]
 
 ### Clean Architecture準拠度
-| 層 | 準拠度 | 問題点 | 改善提案 |
-|----|--------|--------|----------|
-| Domain | ✅/⚠️/❌ | [問題] | [改善案] |
-| Application | ✅/⚠️/❌ | [問題] | [改善案] |
-| Contracts | ✅/⚠️/❌ | [問題] | [改善案] |
-| Infrastructure | ✅/⚠️/❌ | [問題] | [改善案] |
-| Web | ✅/⚠️/❌ | [問題] | [改善案] |
+| 層             | 準拠度 | 問題点 | 改善提案 |
+| -------------- | ------ | ------ | -------- |
+| Domain         | ✅/⚠️/❌  | [問題] | [改善案] |
+| Application    | ✅/⚠️/❌  | [問題] | [改善案] |
+| Contracts      | ✅/⚠️/❌  | [問題] | [改善案] |
+| Infrastructure | ✅/⚠️/❌  | [問題] | [改善案] |
+| Web            | ✅/⚠️/❌  | [問題] | [改善案] |
 
 ### 主要な改善点
 1. **[問題分類]**: [具体的問題] → [改善提案]
@@ -184,7 +184,7 @@ public async IAsyncEnumerable<UserDto> GetAllUsersAsync()
 ```
 
 ## 調査分析成果物の参照
-**推奨参照情報（MainAgent経由で提供）**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）**（`/Doc/08_Organization/Active/Phase_XX/Research/`配下）：
 - **Tech_Research_Results.md**: コード品質基準・ベストプラクティス指針
 - **Design_Review_Results.md**: アーキテクチャ準拠・設計整合性基準
 - **Implementation_Requirements.md**: 各層のコード要件・制約
@@ -192,7 +192,7 @@ public async IAsyncEnumerable<UserDto> GetAllUsersAsync()
 
 
 ## 成果物活用
-- **成果物出力**: `/Doc/05_Research/Phase_XX/Code_Review_Results.md`
+- **成果物出力**: `/Doc/08_Organization/Active/Phase_XX/Research/Code_Review_Results.md`
 - **活用方法**: MainAgent経由で実装系Agentに提供され、コード品質改善・リファクタリング指針決定に活用
 
 ## F#コード特有レビュー観点

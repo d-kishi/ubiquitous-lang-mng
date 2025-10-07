@@ -201,17 +201,17 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 [監査した機能・仕様項番・実装範囲]
 
 ### 入力成果物参照
-- 仕様準拠マトリックス: /Doc/05_Research/Phase_XX/Spec_Compliance_Matrix.md
-- 実装要件リスト: /Doc/05_Research/Phase_XX/Implementation_Requirements.md
-- 仕様分析結果: /Doc/05_Research/Phase_XX/Spec_Analysis_Results.md
+- 仕様準拠マトリックス: /Doc/08_Organization/Active/Phase_XX/Research/Spec_Compliance_Matrix.md
+- 実装要件リスト: /Doc/08_Organization/Active/Phase_XX/Research/Implementation_Requirements.md
+- 仕様分析結果: /Doc/08_Organization/Active/Phase_XX/Research/Spec_Analysis_Results.md
 
 ### 仕様準拠マトリックス（spec-analysis作成版の検証結果）
-| 仕様項番 | 要求内容 | 実装状況 | 準拠度 | 証跡・備考 |
-|---------|---------|----------|--------|-----------|
-| 2.1.1-1 | ユーザー名バリデーション | 実装完了 | ✅ | CreateUserCommandValidator.cs:15-18 |
-| 2.1.1-2 | メール形式チェック | 実装完了 | ✅ | CreateUserCommandValidator.cs:20-22 |
-| 2.1.1-3 | パスワード強度チェック | 実装完了 | ✅ | CreateUserCommandValidator.cs:24-28 |
-| UI-001  | 登録画面レイアウト | 実装完了 | ✅ | Register.razor:5-15 |
+| 仕様項番 | 要求内容                 | 実装状況 | 準拠度 | 証跡・備考                          |
+| -------- | ------------------------ | -------- | ------ | ----------------------------------- |
+| 2.1.1-1  | ユーザー名バリデーション | 実装完了 | ✅      | CreateUserCommandValidator.cs:15-18 |
+| 2.1.1-2  | メール形式チェック       | 実装完了 | ✅      | CreateUserCommandValidator.cs:20-22 |
+| 2.1.1-3  | パスワード強度チェック   | 実装完了 | ✅      | CreateUserCommandValidator.cs:24-28 |
+| UI-001   | 登録画面レイアウト       | 実装完了 | ✅      | Register.razor:5-15                 |
 
 ### 重複実装検出結果（新規・重要）
 **重複実装チェック**:
@@ -311,7 +311,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 
 ## 成果物活用
-- **成果物出力**: `/Doc/05_Research/Phase_XX/Spec_Compliance_Results.md`
+- **成果物出力**: `/Doc/08_Organization/Active/Phase_XX/Research/Spec_Compliance_Results.md`
 - **活用方法**: MainAgent経由で実装系Agentに提供され、仕様準拠修正・改善指針決定に活用
 
 ## プロジェクト固有の知識（実証ベース強化）
