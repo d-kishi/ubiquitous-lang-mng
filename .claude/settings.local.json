@@ -75,7 +75,11 @@
       "WebFetch(domain:playwright.dev)",
       "WebFetch(domain:chrisdunderdale.medium.com)",
       "WebFetch(domain:gist.github.com)",
-      "SlashCommand(/:*)"
+      "SlashCommand(/:*)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:devblogs.microsoft.com)",
+      "WebFetch(domain:gor-grigoryan.medium.com)",
+      "Bash(if not exist \"C:\\Develop\\ubiquitous-lang-mng\\Doc\\05_Research\\Phase_B-F1\" mkdir \"C:\\Develop\\ubiquitous-lang-mng\\Doc\\05_Research\\Phase_B-F1\")"
     ],
     "deny": [],
     "ask": [],
