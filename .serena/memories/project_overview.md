@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-10-06（**Phase B1完了・Phase B2準備開始**）
+**最終更新**: 2025-10-08（**Phase B-F1開始・テストアーキテクチャ基盤整備Phase開始**）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -14,71 +14,81 @@
   - [x] B1-Step5: namespace階層化完了（ADR_019作成）✅
   - [x] B1-Step6: Infrastructure層実装完了 ✅
   - [x] **B1-Step7: Web層実装完了**（**Blazor Server 3コンポーネント・bUnitテスト基盤構築・品質98点達成**）✅
-- [ ] **Phase B2-B5（プロジェクト管理機能完成）**: 計画中 📋 **← 次Phase（Phase B2）**
+- [ ] **Phase B-F1（テストアーキテクチャ基盤整備）**: **実施中** 🔄 **← 現在Phase**
+  - [ ] Step1: 技術調査・詳細分析（次回セッション実施予定）
+  - [ ] Step2: Issue #43完全解決
+  - [ ] Step3: Issue #40 Phase 1実装
+  - [ ] Step4: Issue #40 Phase 2実装
+  - [ ] Step5: Issue #40 Phase 3実装・ドキュメント整備
+- [ ] **Phase B2-B5（プロジェクト管理機能完成）**: 計画中 📋 **← Phase B-F1完了後開始**
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
-- **Phase完了**: 1.25/4 (31.25%) ※Phase A完了 + Phase B1完了
-- **Step完了**: 17/30 (57%) ※A9 + B1全7Step完了
-- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）
+- **Phase完了**: 1.25/4+ (31.25%+) ※Phase A完了 + Phase B1完了 + Phase B-F1実施中
+- **Step完了**: 17/35+ (49%+) ※A9 + B1全7Step + Phase B-F1は5Step構成
+- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**テストアーキテクチャ基盤整備中**
 
-### Phase B1完了記念（2025-10-06）🎉
+### Phase B-F1開始記念（2025-10-08）🔧
 
-#### Phase B1総合評価: ✅ **完了承認**（品質スコア 98/100点・A+ Excellent）
+#### Phase B-F1概要: **テストアーキテクチャ基盤整備Phase**
 
-**実行期間**: 2025-09-25 ～ 2025-10-06（12日間・9セッション）
+**Phase種別**: 基盤整備Phase（Technical Foundation）
+**実施期間**: 2025-10-08 ～ 2025-10-09（推定・1-2セッション・6-8時間）
 
-**達成事項**:
-- ✅ **全7Step完了**: 100%完了
-- ✅ **機能要件**: プロジェクト基本CRUD完全実装（Phase B1範囲100%達成）
-- ✅ **品質要件**: 仕様準拠度98点・Clean Architecture 96点・テスト100%成功
-- ✅ **技術基盤**: F#/C# 4層統合・Bounded Context分離・namespace階層化完了
-- ✅ **技術パターン**: F#↔C#変換4パターン・bUnitテスト基盤・Blazor Server実装パターン確立
-- ✅ **プロセス改善**: Fix-Mode・SubAgent並列実行・ADR記録による知見永続化
+**対象Issue**:
+- ✅ **Issue #43**: Phase A既存テストビルドエラー修正（namespace階層化漏れ対応）
+- ✅ **Issue #40 Phase 1-3**: テストアーキテクチャ再構成（レイヤー×テストタイプ分離）
 
-**Phase B1の価値**:
-プロジェクト管理機能の完全な技術基盤確立 + Phase B2-B5実装最適基盤の構築
+**Phase目的**:
+- Phase B1完了後に顕在化したテストアーキテクチャ問題の根本解消
+- 業界標準（.NET Clean Architecture 2024）準拠のテスト構造確立
+- Phase B2以降の最適テスト基盤確立（E2E.Tests準備含む）
 
-**Phase B1完了文書**: `Doc/08_Organization/Completed/Phase_B1/Phase_Summary.md`
+**期待効果**:
+- ✅ テスト実行効率30%向上
+- ✅ 技術負債根本解消（F#/C#混在問題・EnableDefaultCompileItems削除）
+- ✅ 7プロジェクト構成確立（ADR_020準拠）
+- ✅ Phase B2のE2E基盤準備
+
+**Phase B-F1完了文書**: Phase完了後に`Doc/08_Organization/Completed/Phase_B-F1/Phase_Summary.md`作成予定
 
 ### 次回セッション実施計画
 
-#### GitHub Issue対応計画策定（最優先）
-**次回実施内容**: GitHub Issueから対応すべきものをピックアップ・優先順位付け・対応計画策定
+#### Phase B-F1 Step1実施（次回セッション）
+**次回実施内容**: 技術調査・詳細分析（1-1.5時間）
 
-**実施背景**:
-- Phase B1完了（2025-10-06）・次Phase着手前の準備期間
-- 技術負債・改善提案・懸念事項の整理・優先順位付けが必要
-- Phase B2着手前に対応すべきIssueの明確化
+**実施内容**:
+1. **Issue #43詳細調査**（30分）
+   - Phase A既存テストファイルの正確な件数・配置確認
+   - ビルドエラー詳細分析（CS0246等）
+   - 修正対象using文パターン特定
 
-**確認対象**:
-- `Doc/06_Issues/` 配下の全Issue
-- GitHub Issues（技術負債・アーキテクチャ改善・プロセス改善）
-- Issue #40（テストアーキテクチャ再構成）の優先度評価
+2. **Issue #40現状分析**（30分）
+   - 現在のテストプロジェクト構成の完全把握
+   - 各プロジェクトの参照関係分析
+   - 移行対象ファイル数の正確な把握
 
-**成果物**:
-- 対応すべきIssueリスト（優先順位付き）
-- Issue対応計画書（対応順序・所要時間見積もり・担当SubAgent）
-- Phase B2着手前に完了すべきIssueの明確化
+3. **移行リスク・影響範囲分析**（15分）
+   - テスト実行失敗リスク評価
+   - CI/CD破損リスク評価
+   - ロールバック手順確認
 
-#### Phase B2準備（Issue対応完了後に実施）
-**Phase B2スコープ**:
-- UserProjects多対多関連実装
-- DomainApprover/GeneralUser権限実装（10パターン追加）
-- プロジェクトメンバー管理UI実装
-- Phase B1技術負債4件解消（InputRadioGroup・フォーム送信詳細・Null警告）
+4. **実装方針・SubAgent選定**（15分）
+   - Step2-5の詳細手順確定
+   - 各StepのSubAgent選定
 
-**前提条件**:
-- ✅ Phase B1完了（プロジェクト基本CRUD完全実装）
-- ✅ Clean Architecture基盤確立（96-97点品質）
-- ✅ F#↔C# Type Conversion Patterns確立（4パターン）
-- ✅ bUnitテスト基盤構築（Phase B2で活用）
-- ⏳ GitHub Issue対応計画策定完了（次回セッション実施予定）
+**SubAgent**: spec-analysis + dependency-analysis
 
-**必須Command実行**: Issue対応完了後、phase-start Command実行によるPhase B2準備
+**成果物**: `Doc/08_Organization/Active/Phase_B-F1/Step01_技術調査結果.md`
 
-### 必須参照文書（Phase B2準備）
+### 必須参照文書（Phase B-F1実施）
+- `Doc/08_Organization/Active/Phase_B-F1/Phase_Summary.md` - **Phase B-F1完全スコープ定義・次回セッション用情報完備**
+- `Doc/08_Organization/Rules/縦方向スライス実装マスタープラン.md` - Phase B-F1記載確認
+- `Doc/07_Decisions/ADR_019_namespace設計規約.md` - Issue #43対応の根拠
+- `Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md` - Issue #40対応の根拠
+
+### 必須参照文書（Phase B2準備時に読込）
 - `Doc/08_Organization/Rules/縦方向スライス実装マスタープラン.md` - Phase B2スコープ確認
 - `Doc/08_Organization/Completed/Phase_B1/Phase_Summary.md` - Phase B1成果・申し送り事項
 - `Doc/08_Organization/Completed/Phase_B1/Step07_完了報告.md` - Phase B1 Step7成果詳細
@@ -110,7 +120,7 @@
 - **TypeConverter基盤**: F#↔C#境界最適化・4パターン確立（Result/Option/DU/Record）
 - **認証システム**: ASP.NET Core Identity統一・Phase B1範囲権限制御完全実装
 - **bUnitテスト基盤**: **BlazorComponentTestBase・FSharpTypeHelpers・MockBuilder構築**
-- **テストアーキテクチャ**: ADR_020決定・レイヤー×テストタイプ分離方式・Playwright推奨
+- **テストアーキテクチャ**: ADR_020決定・レイヤー×テストタイプ分離方式・**Phase B-F1で実装中**
 - **開発体制**: SubAgent責務境界確立・Fix-Mode改善実証・Commands自動化・TDD実践
 
 ### Phase B1で確立した技術パターン
@@ -144,20 +154,23 @@
 
 ## 📋 技術負債管理状況
 
+### Phase B-F1対応中技術負債（2件・Issue #43, #40）
+- **Issue #43**: Phase A既存テストビルドエラー修正（namespace階層化漏れ）- **Phase B-F1 Step2で対応予定**
+- **Issue #40 Phase 1-3**: テストアーキテクチャ再構成（レイヤー×テストタイプ分離）- **Phase B-F1 Step3-5で対応予定**
+
 ### Phase B2対応予定技術負債（Phase B1から引継ぎ・4件）
 - **InputRadioGroup制約**（2件）: Blazor Server/bUnit既知の制約・Phase B2実装パターン確立
 - **フォーム送信詳細テスト**（1件）: フォーム送信ロジック未トリガー・Phase B2対応
 - **Null参照警告**（1件）: ProjectManagementServiceMockBuilder.cs:206・Phase B2 Null安全性向上
 
 ### Phase B完了後対応予定（既存Issue）
-- **GitHub Issue #40**: テストアーキテクチャ移行（ADR_020準拠・6-9時間）
-- **GitHub Issue #43**: Phase A既存テストビルドエラー（namespace階層化漏れ修正・1-2時間）
-- **GitHub Issue #44**: ディレクトリ構造統一（`Pages/Admin/` → `Components/Pages/`・30分-1時間）
+- **GitHub Issue #44**: Web層ディレクトリ構造統一（`Pages/Admin/` → `Components/Pages/`・30分-1時間）
+- **GitHub Issue #37**: Dev Container環境移行（2-3時間・Phase B期間中並行実施可能）
 
 ### 現在の状況
-- **Phase B1技術負債**: Phase B2対応予定4件明確化・Phase B1完了報告書記録済み
-- **Phase B2準備**: Phase B1確立基盤活用準備完了
-- **アーキテクチャ整合性**: 完全達成（4境界文脈分離・namespace階層化・ADR_019準拠）
+- **Phase B-F1**: テストアーキテクチャ基盤整備中・Issue #43, #40 Phase 1-3対応
+- **Phase B2準備**: Phase B-F1完了後に最適なテスト基盤で開始可能
+- **アーキテクチャ整合性**: Phase B-F1完了後に完全達成予定（7プロジェクト構成・ADR_020準拠）
 
 ## 🔄 継続改善・効率化実績
 
@@ -189,10 +202,15 @@
 - **Domain+Application+Infrastructure+Web層基盤活用**: Phase B1確立基盤継続活用
 - **仕様準拠度**: 98-100点品質継続目標・Clean Architecture 96-97点維持
 
+### Phase B-F1固有の原則
+- **各Step完了後の確認**: 全テスト実行・ビルド成功・0 Warning/0 Error確認必須
+- **段階的移行**: プロジェクト単位での段階的移行・各Step完了後のチェックポイント設定
+- **ロールバック準備**: Step単位でのgit commit・問題発生時の即座ロールバック体制
+
 ### 動作確認タイミング戦略（マスタープラン記録済み）
 - **Phase B3完了後**: 中間確認（必須）- ビジネスロジック・機能完全性確認
 - **Phase B5完了後**: 本格確認（必須）- UI/UX・品質・パフォーマンス最終確認
-- **Phase B1-B2完了時**: 動作確認不実施（機能不完全のため非効率）
+- **Phase B-F1・B2完了時**: 動作確認不実施（機能不完全のため非効率）
 
 ### Fix-Mode標準適用
 - **標準テンプレート活用**: 実証済み成功パターン（100%成功率・15分/9件実績）
@@ -207,17 +225,23 @@
 
 ## 📈 期待効果・次期目標
 
-### Phase B2実施（次Phase）
+### Phase B-F1実施（現在Phase）
+- **テスト実行効率30%向上**: レイヤー別・テストタイプ別実行による時間短縮
+- **技術負債根本解消**: F#/C#混在問題・EnableDefaultCompileItems削除
+- **業界標準準拠**: .NET Clean Architecture 2024準拠・ADR_020完全実装
+- **Phase B2最適基盤確立**: E2E.Tests準備・Phase B2実装効率化
+
+### Phase B2実施（次Phase・Phase B-F1完了後）
 - **UserProjects多対多関連**: Phase B1基盤活用による効率的実装
 - **権限制御拡張**: 6→16パターンへの拡張（DomainApprover/GeneralUser追加）
 - **Phase B1技術負債解消**: InputRadioGroup・フォーム送信詳細・Null警告4件解消
 - **bUnitテスト基盤活用**: Phase B1確立基盤の継続活用
 
-### テストアーキテクチャ移行（Phase B完了後）
+### テストアーキテクチャ移行（Phase B-F1で実施中）
 - **ADR_020実施**: レイヤー×テストタイプ分離方式（7プロジェクト構成）
-- **段階的移行**: Phase 1-4実施（6-9時間）
+- **段階的移行**: Phase 1-3実施（4-6時間）- Phase B-F1 Step3-5
 - **CI/CD統合**: レイヤー別・テストタイプ別実行最適化
-- **E2Eフレームワーク導入**: Playwright for .NET（Phase B2向け）
+- **E2Eフレームワーク準備**: Playwright for .NET（Phase B2向け）
 
 ### 長期目標（Phase B完了）
 - **プロジェクト管理完全実装**: Phase B1-B5完全実装・UI/UX最適化・E2E検証
