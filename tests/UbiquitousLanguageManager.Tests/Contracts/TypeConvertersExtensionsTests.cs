@@ -1,6 +1,8 @@
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Contracts.Converters;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
+using UbiquitousLanguageManager.Domain.ProjectManagement;
 using Xunit;
 
 namespace UbiquitousLanguageManager.Tests.Contracts;

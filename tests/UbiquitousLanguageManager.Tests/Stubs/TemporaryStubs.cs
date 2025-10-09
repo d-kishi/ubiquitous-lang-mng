@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.FSharp.Core;
 using UbiquitousLanguageManager.Application;
 using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Tests.Stubs;
 
@@ -71,18 +73,18 @@ public static class AuthenticationServiceExtensions
         return Task.FromResult(FSharpResult<string, string>.NewError("機能不可"));
     }
 
-    public static Task<FSharpResult<UbiquitousLanguageManager.Domain.User, string>> ResetPasswordAsync(
+    public static Task<FSharpResult<User, string>> ResetPasswordAsync(
         this AuthenticationService service, Email email, string token, Password newPassword)
     {
         // テスト用スタブ実装
-        return Task.FromResult(FSharpResult<UbiquitousLanguageManager.Domain.User, string>.NewError("機能不可"));
+        return Task.FromResult(FSharpResult<User, string>.NewError("機能不可"));
     }
 
-    public static Task<FSharpResult<UbiquitousLanguageManager.Domain.User, string>> AutoLoginAfterPasswordResetAsync(
+    public static Task<FSharpResult<User, string>> AutoLoginAfterPasswordResetAsync(
         this AuthenticationService service, Email email)
     {
         // テスト用スタブ実装
-        return Task.FromResult(FSharpResult<UbiquitousLanguageManager.Domain.User, string>.NewError("機能不可"));
+        return Task.FromResult(FSharpResult<User, string>.NewError("機能不可"));
     }
 
     public static Task<FSharpResult<Microsoft.FSharp.Core.Unit, string>> RecordLoginAttemptAsync(

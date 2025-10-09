@@ -1,4 +1,4 @@
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
 using Xunit;
 
 namespace UbiquitousLanguageManager.Tests.Domain;

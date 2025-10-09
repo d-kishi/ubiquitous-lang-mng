@@ -5,8 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- Phase B1 Step6: Phase Aテスト一時除外のため、自動Compile無効化 -->
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,14 +25,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- F# Test Files（Phase B1で追加） -->
-    <!-- 注意: C#プロジェクトではF#ファイルをコンパイル対象から除外 -->
-    <Compile Remove="**\*.fs" />
-    <None Include="**\*.fs" />
-    <!-- TODO: Phase B完了後、F#テストを別プロジェクトに移動（GitHub Issue #40） -->
-  </ItemGroup>
-
   <!--
   【Phase B1 Step6実施時の一時的対応】
 
@@ -53,25 +43,8 @@
 
   【関連Issue】
   - GitHub Issue #40: テストプロジェクト重複問題（Phase B完了後対応）
-  - GitHub Issue #XX: Phase A既存テストビルドエラー修正（Phase B1完了後作成予定）
+  - GitHub Issue #43: Phase A既存テストビルドエラー修正（Phase B-F1 Step2で解決）
   -->
-
-  <!-- Phase B1テストのみ有効化（EnableDefaultCompileItems=false のため明示的Include必須） -->
-  <ItemGroup Label="Phase B1テスト（有効）">
-    <!-- Infrastructure層テスト（Phase B1 Step6新規作成） -->
-    <Compile Include="Infrastructure\ProjectRepositoryTests.cs" />
-
-    <!-- Integration層テスト（Phase B1 Step7新規作成） -->
-    <Compile Include="Integration\ProjectManagementIntegrationTests.cs" />
-
-    <!-- TestUtilities（共通ヘルパー） -->
-    <Compile Include="TestUtilities\TestWebApplicationFactory.cs" />
-
-    <!-- Fixtures（共通フィクスチャ） -->
-    <Compile Include="Fixtures\DatabaseFixture.cs" />
-
-    <!-- 必要に応じて他のPhase B1テストも追加 -->
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />

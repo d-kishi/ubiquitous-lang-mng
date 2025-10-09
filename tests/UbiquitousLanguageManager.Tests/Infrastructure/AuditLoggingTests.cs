@@ -6,7 +6,7 @@ using Microsoft.FSharp.Core;
 using Moq;
 using Xunit;
 using UbiquitousLanguageManager.Application;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 using UbiquitousLanguageManager.Infrastructure.Services;
 using UbiquitousLanguageManager.Tests.Stubs;

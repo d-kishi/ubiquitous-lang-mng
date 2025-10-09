@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
 using Moq;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 using UbiquitousLanguageManager.Infrastructure.Services;
 using Xunit;
 

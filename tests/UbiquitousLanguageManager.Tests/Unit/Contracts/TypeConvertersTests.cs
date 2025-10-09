@@ -3,6 +3,10 @@ using System;
 using UbiquitousLanguageManager.Contracts.Converters;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
+using UbiquitousLanguageManager.Domain.ProjectManagement;
+using UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement;
 using Xunit;
 
 namespace UbiquitousLanguageManager.Tests.Unit.Contracts
@@ -85,14 +89,14 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
         /// <summary>
         /// テスト用Domainエンティティ作成ヘルパー
         /// </summary>
-        private UbiquitousLanguageManager.Domain.Domain CreateTestDomain()
+        private Domain CreateTestDomain()
         {
             var projectId = ProjectId.create(1L);
             var name = JapaneseName.create("認証ドメイン").ResultValue;
             var description = Description.create("ユーザー認証に関するドメイン").ResultValue;
             var userId = UserId.create(1L);
 
-            return UbiquitousLanguageManager.Domain.Domain.create(projectId, name, description, userId);
+            return Domain.create(projectId, name, description, userId);
         }
 
         #endregion
@@ -336,7 +340,7 @@ namespace UbiquitousLanguageManager.Tests.Unit.Contracts
         public void ToDto_NullDomain_ThrowsArgumentNullException()
         {
             // Act & Assert - null入力でArgumentNullException発生確認
-            Assert.Throws<ArgumentNullException>(() => TypeConverters.ToDto((UbiquitousLanguageManager.Domain.Domain)null));
+            Assert.Throws<ArgumentNullException>(() => TypeConverters.ToDto((Domain)null));
         }
 
         [Fact]

@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 using UbiquitousLanguageManager.Application;
-using UbiquitousLanguageManager.Domain;
+using UbiquitousLanguageManager.Domain.Common;
+using UbiquitousLanguageManager.Domain.Authentication;
 using UbiquitousLanguageManager.Infrastructure.Repositories;
-using UbiquitousLanguageManager.Tests.Common;
 
 namespace UbiquitousLanguageManager.Tests.Integration;
 

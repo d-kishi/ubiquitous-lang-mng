@@ -81,7 +81,8 @@
       "WebFetch(domain:gor-grigoryan.medium.com)",
       "WebFetch(domain:www.anthropic.com)",
       "WebFetch(domain:www.datacamp.com)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(Select-Object -Last 50)"
     ],
     "deny": [],
     "ask": [],
