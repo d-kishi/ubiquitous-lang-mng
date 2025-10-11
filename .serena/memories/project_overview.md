@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-10-08（**Phase B-F1開始・テストアーキテクチャ基盤整備Phase開始**）
+**最終更新**: 2025-10-11（**Phase B-F1実施中・Playwright Agents導入方針決定**）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -19,7 +19,7 @@
   - [x] **Step2: Issue #43完全解決完了**（2025-10-09・50分）✅
   - [ ] Step3: Issue #40 Phase 1実装（次回セッション実施予定・2-3時間）
   - [ ] Step4: Issue #40 Phase 2実装
-  - [ ] Step5: Issue #40 Phase 3実装・ドキュメント整備
+  - [ ] Step5: Issue #40 Phase 3実装・ドキュメント整備・Playwright Agents準備メモ
 - [ ] **Phase B2-B5（プロジェクト管理機能完成）**: 計画中 📋 **← Phase B-F1完了後開始**
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
@@ -44,12 +44,14 @@
 - Phase B1完了後に顕在化したテストアーキテクチャ問題の根本解消
 - 業界標準（.NET Clean Architecture 2024）準拠のテスト構造確立
 - Phase B2以降の最適テスト基盤確立（E2E.Tests準備含む）
+- **Playwright Agents導入準備**（Phase B2本格導入向け）
 
 **期待効果**:
 - ✅ テスト実行効率30%向上
 - ✅ 技術負債根本解消（F#/C#混在問題・EnableDefaultCompileItems削除）
 - ✅ 7プロジェクト構成確立（ADR_020準拠）
 - ✅ Phase B2のE2E基盤準備
+- ✅ **Playwright Agents導入基盤確立**
 
 **Phase B-F1完了文書**: Phase完了後に`Doc/08_Organization/Completed/Phase_B-F1/Phase_Summary.md`作成予定
 
@@ -103,6 +105,9 @@
 - `Doc/08_Organization/Completed/Phase_B1/Step07_完了報告.md` - Phase B1 Step7成果詳細
 - `Doc/07_Decisions/ADR_019_namespace設計規約.md` - namespace設計原則
 - `Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md` - テストアーキテクチャ設計
+- **`Doc/08_Organization/Rules/Phase_B2_Playwright_統合戦略.md`** - **Playwright MCP + Agents統合実装計画**
+- **`Doc/08_Organization/Active/Phase_B-F1/Research/Playwright_MCP_評価レポート.md`** - **Playwright MCP技術評価**
+- **`Doc/08_Organization/Active/Phase_B-F1/Research/Playwright_Agents_評価レポート.md`** - **Playwright Agents技術評価**
 
 ## 📅 週次振り返り実施状況
 
@@ -164,8 +169,8 @@
 ## 📋 技術負債管理状況
 
 ### Phase B-F1対応中技術負債（2件・Issue #43, #40）
-- **Issue #43**: Phase A既存テストビルドエラー修正（namespace階層化漏れ）- **Phase B-F1 Step2で対応予定**
-- **Issue #40 Phase 1-3**: テストアーキテクチャ再構成（レイヤー×テストタイプ分離）- **Phase B-F1 Step3-5で対応予定**
+- **Issue #43**: Phase A既存テストビルドエラー修正（namespace階層化漏れ）- **✅ Step2完了（2025-10-09）**
+- **Issue #40 Phase 1-3**: テストアーキテクチャ再構成（レイヤー×テストタイプ分離）- **Phase B-F1 Step3-5で対応中**
 
 ### Phase B2対応予定技術負債（Phase B1から引継ぎ・4件）
 - **InputRadioGroup制約**（2件）: Blazor Server/bUnit既知の制約・Phase B2実装パターン確立
@@ -177,7 +182,7 @@
 - **GitHub Issue #37**: Dev Container環境移行（2-3時間・Phase B期間中並行実施可能）
 
 ### 現在の状況
-- **Phase B-F1**: テストアーキテクチャ基盤整備中・Issue #43, #40 Phase 1-3対応
+- **Phase B-F1**: テストアーキテクチャ基盤整備中・Issue #43完了・Issue #40 Phase 1-3対応中
 - **Phase B2準備**: Phase B-F1完了後に最適なテスト基盤で開始可能
 - **アーキテクチャ整合性**: Phase B-F1完了後に完全達成予定（7プロジェクト構成・ADR_020準拠）
 
@@ -239,23 +244,231 @@
 - **技術負債根本解消**: F#/C#混在問題・EnableDefaultCompileItems削除
 - **業界標準準拠**: .NET Clean Architecture 2024準拠・ADR_020完全実装
 - **Phase B2最適基盤確立**: E2E.Tests準備・Phase B2実装効率化
+- **Playwright Agents導入基盤**: Phase B2本格導入の準備完了
 
 ### Phase B2実施（次Phase・Phase B-F1完了後）
 - **UserProjects多対多関連**: Phase B1基盤活用による効率的実装
 - **権限制御拡張**: 6→16パターンへの拡張（DomainApprover/GeneralUser追加）
 - **Phase B1技術負債解消**: InputRadioGroup・フォーム送信詳細・Null警告4件解消
 - **bUnitテスト基盤活用**: Phase B1確立基盤の継続活用
+- **Playwright MCP + Agents統合**: AI駆動E2Eテスト統合戦略（⭐統合推奨度10/10点・MCP 9/10点・Agents 7/10点）
+
+### Playwright Agents導入計画（2025-10-11策定・Phase B2実施予定）
+
+#### 技術評価サマリー
+**総合採用推奨度**: ⭐⭐⭐⭐☆ **7/10点** - 条件付き推奨
+**このプロジェクトとの相性**: ⭐⭐⭐⭐☆ **8/10点** - 非常に良い
+
+**主要機能**:
+- 🎭 **Planner**: アプリ探索→Markdownテスト計画生成
+- 🎭 **Generator**: Markdownプラン→Playwrightテストコード変換
+- 🎭 **Healer**: テスト実行→自動修復（失敗原因分析・自動修正）
+
+**実証済み効果**:
+- ✅ テストメンテナンス50-70%削減（実績データあり）
+- ✅ UI変更への自動適応（軽微な変更90%成功率）
+- ✅ E2E導入敷居の大幅低下（UIが50-60%確定段階で開始可能）
+
+**制限事項**:
+- ⚠️ リアクティブ修復（事後修復）の限界
+- ⚠️ VS Code Insiders依存（2025年10月時点・安定版未対応）
+- ⚠️ .NET環境実績不足（ドキュメント・事例がJavaScript/TypeScript中心）
+- ⚠️ 複雑な要件変更・大規模リファクタリング時は人的介入必要
+
+**段階的開発との相性**:
+```yaml
+✅ Phase単位の段階的開発に最適:
+  - Phase B2-B5のUI継続改善にマッチ
+  - 各Phase完了時の自動修復活用
+  - 継続的フィードバックループ加速
+
+✅ TDD・Clean Architecture基盤活用:
+  - Phase B-F1テストアーキテクチャ活用
+  - Unit → Integration → E2Eの自然な拡張
+```
+
+#### 導入タイミング・方針
+**採用方針**: **Option 2+α（Phase B2本格導入+事前調査オプション）**
+
+**Phase B-F1（現Phase・2025-10-08〜10-09）**:
+```yaml
+E2E.Tests構造準備のみ:
+  - プロジェクト作成（従来計画通り）
+  - Playwright Agents用メモ記載
+  - 導入判断をPhase B2開始時に延期
+
+任意の事前調査（Step5完了時・+30分-1時間）:
+  - VS Code Insiders動作確認
+  - .NET対応状況の最新確認
+  - Phase B2実装計画への反映
+```
+
+**Phase B2開始時（Phase B-F1完了1-2週間後）**:
+```yaml
+本格導入判断（最新状況再評価）:
+  - VS Code安定版対応状況確認
+  - .NETコミュニティ事例確認
+  - セキュリティ・安定性評価
+
+Phase B2実装（+1-1.5時間）:
+  - Playwright Agents統合
+  - UserProjects E2Eテスト作成
+  - Planner/Generator/Healer実践
+  - 効果測定・ADR記録作成
+```
+
+#### 期待効果（Phase B2以降）
+```yaml
+短期効果（Phase B2-B3）:
+  - UI変更時の修復コスト50-70%削減
+  - E2E導入2-3 Phase早期化（2-4週間前倒し）
+  - Phase単位のUI改善に自動適応
+
+中長期効果（Phase B4-B5以降）:
+  - 継続的UI最適化への対応力向上
+  - 手戻り工数の大幅削減
+  - .NET+Blazor Server先駆者としての知見蓄積
+```
+
+#### リスク管理
+```yaml
+技術的リスク:
+  🔴 VS Code Insiders依存（安定版未対応）
+  🔴 .NET環境実績不足（未知の問題可能性）
+  🟡 LLMハルシネーション（誤修正リスク）
+  🟡 セキュリティ・クレデンシャル管理
+
+対策:
+  ✅ 段階的導入（Phase B2で実験的導入）
+  ✅ ロールバック準備（従来E2E手法への切り戻し）
+  ✅ 効果測定・ADR記録（知見永続化）
+  ✅ セキュリティレビュー（テスト専用アカウント使用）
+```
+
+**詳細**: `Doc/08_Organization/Active/Phase_B-F1/Research/Playwright_Agents_評価レポート.md`（技術調査完全版）
+
+### Playwright MCP統合計画（2025-10-11策定・Phase B2実施予定）
+
+#### 技術評価サマリー
+**Claude Code統合推奨度**: ⭐⭐⭐⭐⭐ **9/10点** - 強く推奨
+**このプロジェクトとの相性**: ⭐⭐⭐⭐⭐ **9/10点** - 極めて良い
+
+**主要機能**:
+- 🌐 **Model Context Protocol (MCP) Server**: AI Agentに25種類のブラウザ操作ツール提供
+- 🤖 **Claude Code直接統合**: リアルタイムブラウザ操作・E2Eテスト作成支援
+- 🔍 **アクセシビリティツリー活用**: 構造化データによる精確な要素識別（スクリーンショット不使用）
+- 🎯 **プロアクティブ支援**: テスト作成時にClaude Codeがブラウザを直接操作
+
+**実証済み効果**:
+- ✅ テスト作成効率75-85%向上（実績データあり）
+- ✅ 生産性向上2-3倍（Anthropic公式事例）
+- ✅ プロダクション準備完了（2025年3月リリース・安定版）
+- ✅ 簡単導入（1コマンド・5秒完了）
+
+**Playwright Agentsとの関係**:
+```yaml
+🔄 相補的技術（競合ではなく統合推奨）:
+  MCP (9/10点):
+    - 目的: AI Agentのブラウザ操作能力付与
+    - タイミング: テスト作成時（プロアクティブ）
+    - 役割: Claude Codeの"手と目"
+    - 効果: 作成効率75-85%↑
+
+  Agents (7/10点):
+    - 目的: テストの自律的生成・修復
+    - タイミング: テスト実行後（リアクティブ）
+    - 役割: 自律的修復ツール
+    - 効果: メンテナンス50-70%削減
+
+統合効果:
+  作成効率75%↑ + メンテナンス効率75%↑ = 総合85%効率化
+  Phase B2-B5全体で10-15時間削減
+```
+
+#### 導入タイミング・方針
+**採用方針**: **統合戦略（MCP + Agents両方導入・Phase B2）**
+**統合推奨度**: ⭐⭐⭐⭐⭐ **10/10点** - 最強の相乗効果
+
+**Phase B2開始時（Phase B-F1完了1-2週間後）**:
+```yaml
+統合導入実施（+1.5-2時間）:
+  Phase 1: MCP統合（5分・最優先）:
+    - claude mcp add playwright npx '@playwright/mcp@latest'
+    - Claude Code再起動・25ツール利用可能確認
+
+  Phase 2: E2Eテスト作成（MCPツール活用・30分）:
+    - Claude CodeがMCPツールでブラウザ操作
+    - リアルタイム検証・即座フィードバック
+    - UserProjects E2Eテスト作成
+
+  Phase 3: Playwright Agents統合（15分）:
+    - Planner/Generator/Healer設定
+    - 自動修復機能有効化
+
+  Phase 4: 統合効果検証（30分）:
+    - 作成効率測定（MCP活用）
+    - メンテナンス効率測定（Agents活用）
+    - 総合効果記録（85%効率化検証）
+
+  Phase 5: ADR記録作成（20分）:
+    - 統合戦略の技術決定記録
+    - 効果測定結果記録
+```
+
+#### 期待効果（Phase B2以降）
+```yaml
+短期効果（Phase B2-B3）:
+  - E2Eテスト作成時間75-85%削減
+  - Claude Code統合による開発体験向上
+  - Phase単位のUI改善に自動適応
+  - .NET+Blazor Server先駆者知見蓄積
+
+中長期効果（Phase B4-B5以降）:
+  - 継続的UI最適化への対応力向上
+  - 手戻り工数の大幅削減（作成+メンテ両面）
+  - AI駆動開発手法の完全統合
+  - 総合85%効率化（Phase B全体で10-15時間削減）
+```
+
+#### 技術的優位性
+**MCP vs Agents比較**:
+| 観点 | Playwright MCP | Playwright Agents |
+|------|----------------|-------------------|
+| **推奨度** | ⭐⭐⭐⭐⭐ 9/10 | ⭐⭐⭐⭐☆ 7/10 |
+| **成熟度** | プロダクション準備完了 | 実験的ステージ |
+| **Claude Code統合** | ✅ 直接統合 | 間接的（生成コード使用） |
+| **動作タイミング** | テスト作成時（プロアクティブ） | テスト実行後（リアクティブ） |
+| **導入時間** | 5秒（1コマンド） | 15-30分（設定必要） |
+| **効果範囲** | 作成効率75-85%↑ | メンテナンス50-70%削減 |
+
+**導入リスク管理**:
+```yaml
+技術的リスク:
+  🟢 MCP: 低（プロダクション準備完了・Anthropic公式）
+  🟡 Agents: 中（実験的・VS Code Insiders依存可能性）
+
+対策:
+  ✅ MCP優先導入（低リスク・高効果）
+  ✅ Agents段階的導入（実験的検証）
+  ✅ 統合効果測定（Phase B2で実証）
+  ✅ セキュリティレビュー（テスト専用アカウント使用）
+```
+
+**詳細**:
+- `Doc/08_Organization/Active/Phase_B-F1/Research/Playwright_MCP_評価レポート.md`（技術調査完全版）
+- `Doc/08_Organization/Rules/Phase_B2_Playwright_統合戦略.md`（MCP + Agents統合実装計画）
 
 ### テストアーキテクチャ移行（Phase B-F1で実施中）
 - **ADR_020実施**: レイヤー×テストタイプ分離方式（7プロジェクト構成）
 - **段階的移行**: Phase 1-3実施（4-6時間）- Phase B-F1 Step3-5
 - **CI/CD統合**: レイヤー別・テストタイプ別実行最適化
-- **E2Eフレームワーク準備**: Playwright for .NET（Phase B2向け）
+- **E2Eフレームワーク準備**: Playwright for .NET（Phase B2向け）+ **Playwright MCP + Agents統合準備**
 
 ### 長期目標（Phase B完了）
 - **プロジェクト管理完全実装**: Phase B1-B5完全実装・UI/UX最適化・E2E検証
 - **プロセス品質**: Fix-Mode改善による継続的品質・効率向上体系確立
 - **効率化実現**: SubAgent並列実行・Fix-Mode標準活用等による開発効率最大化
+- **AI駆動テスト**: Playwright MCP + Agents統合による完全AI駆動E2E体制確立（作成75-85%↑・メンテ50-70%削減・総合85%効率化）
 
 ---
 

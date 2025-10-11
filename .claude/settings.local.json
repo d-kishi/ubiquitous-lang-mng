@@ -82,7 +82,13 @@
       "WebFetch(domain:www.anthropic.com)",
       "WebFetch(domain:www.datacamp.com)",
       "Bash(python:*)",
-      "Bash(Select-Object -Last 50)"
+      "Bash(Select-Object -Last 50)",
+      "WebFetch(domain:developer.microsoft.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:www.ministryoftesting.com)",
+      "WebFetch(domain:bug0.com)",
+      "WebFetch(domain:til.simonwillison.net)",
+      "WebFetch(domain:www.checklyhq.com)"
     ],
     "deny": [],
     "ask": [],

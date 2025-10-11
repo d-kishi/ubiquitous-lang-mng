@@ -451,9 +451,9 @@ dotnet test
 
 ---
 
-### Step5: Issue #40 Phase 3実装・ドキュメント整備（1-1.5時間）
+### Step5: Issue #40 Phase 3実装・ドキュメント整備・Playwright MCP + Agents準備（1-1.5時間）
 
-**目的**: 旧プロジェクト削除・ドキュメント整備・Phase完了
+**目的**: 旧プロジェクト削除・ドキュメント整備・Playwright MCP + Agents統合準備メモ・Phase完了
 
 **実装内容**:
 
@@ -557,6 +557,43 @@ dotnet test --collect:"XPlat Code Coverage"
 - [ ] 次Phase向けテストアーキテクチャ改善提案
 ```
 
+##### 3.4 Playwright MCP + Agents統合準備メモ作成（5分）
+**ファイル**: `Doc/08_Organization/Active/Phase_B-F1/Phase_B2_申し送り事項.md`に追記
+
+**記載内容**:
+```markdown
+### Phase B2でのPlaywright MCP + Agents統合導入
+
+**統合方針**: MCP + Agents両方導入による最強相乗効果
+**統合推奨度**: ⭐⭐⭐⭐⭐ 10/10点（最適解）
+**技術評価**:
+  - Playwright MCP: 9/10点（強く推奨・プロダクション準備完了）
+  - Playwright Agents: 7/10点（条件付き推奨・実験的ステージ）
+
+**相補的関係**:
+  - MCP: テスト作成時のプロアクティブ支援（作成効率75-85%↑）
+  - Agents: テスト実行後のリアクティブ修復（メンテ効率50-70%削減）
+  - 統合効果: 総合85%効率化・Phase B2-B5で10-15時間削減
+
+**Phase B2開始時の確認事項**:
+- [ ] VS Code・Node.js・.NET SDK環境確認
+- [ ] Playwright MCP公式ドキュメント確認
+- [ ] Playwright Agents .NET対応状況確認
+- [ ] セキュリティ・クレデンシャル管理方針決定
+
+**導入予定作業（+1.5-2時間）**:
+- Phase 1: MCP統合（5分・最優先・1コマンド）
+- Phase 2: E2Eテスト作成（30分・MCPツール活用）
+- Phase 3: Agents統合（15分・Planner/Generator/Healer）
+- Phase 4: 統合効果検証（30分・85%効率化検証）
+- Phase 5: ADR記録作成（20分・統合戦略記録）
+
+**参照**:
+- `Doc/08_Organization/Active/Phase_B-F1/Research/Playwright_MCP_評価レポート.md`
+- `Doc/08_Organization/Active/Phase_B-F1/Research/Playwright_Agents_評価レポート.md`
+- `Doc/08_Organization/Rules/Phase_B2_Playwright_統合戦略.md`
+```
+
 **SubAgent**:
 - spec-compliance（品質確認・成功基準達成確認）
 - design-review（ドキュメントレビュー・整合性確認）
@@ -564,9 +601,11 @@ dotnet test --collect:"XPlat Code Coverage"
 **成果物**:
 - 旧プロジェクト削除完了
 - 3つの新規ドキュメント作成完了
+- Playwright MCP + Agents統合準備メモ作成完了
 - 全テスト実行成功確認記録
 - テストカバレッジ95%維持確認記録
 - `Doc/08_Organization/Active/Phase_B-F1/Step05_Phase3完了報告.md`
+- `Doc/08_Organization/Active/Phase_B-F1/Phase_B2_申し送り事項.md`（Playwright MCP + Agents統合導入準備）
 - `Doc/08_Organization/Completed/Phase_B-F1/Phase_Summary.md`（Phase完了総括・Active→Completedへ移動）
 
 ---
