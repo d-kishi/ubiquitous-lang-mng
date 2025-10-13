@@ -169,13 +169,13 @@
 5. **制約事項明確化**: ロジック変更禁止・構文規約遵守の明示的指示
 
 ### エラー修正責務判定（実証済みマッピング・効果測定済み・継続活用推奨）
-| エラー種別 | 対象SubAgent | 実証事例 | 修正時間 | 成功確認 |
-|----------|-------------|---------|----------|----------|
-| C#構文エラー（CS0246等） | contracts-bridge | Step3で6件修正成功 | 10分 | ✅ 100% |
-| using alias構文エラー（CS0305） | contracts-bridge | Step3で2件修正成功 | 3分 | ✅ 100% |
-| XMLコメント構文エラー（CS1587） | contracts-bridge | Step3で1件修正成功 | 2分 | ✅ 100% |
-| F#構文エラー（FS0597等） | fsharp-domain/fsharp-application | Phase B1 Step5-7で活用 | - | ✅ 100% |
-| テスト関連エラー | unit-test/integration-test | Phase B1 Step7で活用 | - | ✅ 100% |
+| エラー種別                      | 対象SubAgent                     | 実証事例               | 修正時間 | 成功確認 |
+| ------------------------------- | -------------------------------- | ---------------------- | -------- | -------- |
+| C#構文エラー（CS0246等）        | contracts-bridge                 | Step3で6件修正成功     | 10分     | ✅ 100%   |
+| using alias構文エラー（CS0305） | contracts-bridge                 | Step3で2件修正成功     | 3分      | ✅ 100%   |
+| XMLコメント構文エラー（CS1587） | contracts-bridge                 | Step3で1件修正成功     | 2分      | ✅ 100%   |
+| F#構文エラー（FS0597等）        | fsharp-domain/fsharp-application | Phase B1 Step5-7で活用 | -        | ✅ 100%   |
+| テスト関連エラー                | unit-test/integration-test       | Phase B1 Step7で活用   | -        | ✅ 100%   |
 
 ### 効果測定指標（Phase B1 Step3実績・継続測定確立・目標達成）
 - **Fix-Mode成功率**: 100%（9/9件成功・目標95%以上大幅達成）
@@ -264,8 +264,8 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 
 **参照マトリックス構造**:
 ```
-| Step | 作業内容 | 必須参照（Step1成果物） | 重点参照セクション | 活用目的 |
-|------|---------|----------------------|-------------------|---------|
+| Step  | 作業内容     | 必須参照（Step1成果物）       | 重点参照セクション              | 活用目的                 |
+| ----- | ------------ | ----------------------------- | ------------------------------- | ------------------------ |
 | Step2 | Domain層実装 | Technical_Research_Results.md | F# Railway-oriented Programming | ProjectDomainService実装 |
 ```
 
@@ -314,7 +314,7 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 - **セッション管理**: session-start.md / session-end.md（差分更新方式・品質確認済み）
 - **Phase管理**: phase-start.md / phase-end.md
 - **Step管理**: step-start.md（task-breakdown統合） / step-end-review Commands
-- **品質管理**: spec-validate・spec-compliance-check・tdd-practice-check
+- **品質管理**: spec-validate・spec-compliance-check
 
 ### セッション終了時必須更新（差分更新自動化・品質確認済み・破壊的変更防止）
 - **daily_sessions**: 30日保持・自動削除・重要情報構造化・既存履歴保持

@@ -71,7 +71,7 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 ### 自動実行Commands
 - **セッション開始/終了**: `.claude/commands/`配下のCommands自動実行
 - **SubAgent選択**: `subagent-selection` - 作業に最適なAgent組み合わせ選択
-- **品質チェック**: `spec-compliance-check`, `tdd-practice-check`, `step-end-review`
+- **品質チェック**: `spec-compliance-check`, `step-end-review`
 
 
 ## 実装指針
@@ -234,6 +234,43 @@ Doc/
 - **スクラム開発**: 1-2週間スプリント（ADR_011）
 - **SubAgentプール方式**: 並列実行による効率化（ADR_013）
 - **詳細**: `/Doc/08_Organization/Rules/`参照
+
+## Context管理・セッション継続判断（2025-10-13策定）
+
+### 🧠 AutoCompact buffer理解
+
+**AutoCompact buffer**: 45,000トークン（22.5%）の予約領域
+- **目的**: 応答生成余裕・自動圧縮ワーキングスペース・中断防止
+- **v2.0改善**: 重要情報の保持精度向上（コード変更・技術決定保持）
+- **既知問題**: `/context`表示のバッファ二重カウント（Issue #8479）
+
+### 📊 セッション継続判断（80%ルール）
+
+```yaml
+継続（AutoCompact活用）:
+  - Context使用率 < 80% (160k/200k未満)
+  - 実装作業中（Step実行中）
+  - 60分毎に /context 確認
+
+手動compact:
+  - 80% ≤ Context < 85%
+  - /compact コマンド実行
+
+終了（セッション分割）:
+  - Phase/Step境界
+  - 重要な技術決定直後
+  - Context使用率 ≥ 85%
+```
+
+### ⚠️ ADR_016整合性
+
+**AutoCompact使用時の必須確認**:
+- 🔴 SubAgent成果物の物理的存在確認（必須）
+- 🔴 プロセス遵守チェックリスト実行
+- ✅ 重要決定はADR/Phase_Summary.mdに文書化
+- ✅ CLAUDE.mdルールの定期的再確認
+
+**詳細**: `/Doc/08_Organization/Rules/組織管理運用マニュアル.md` - Context管理セクション
 
 ## 現在の技術負債
 

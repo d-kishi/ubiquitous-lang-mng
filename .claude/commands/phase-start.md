@@ -115,7 +115,7 @@
 
 ### 成果物出力場所
 ```
-/Doc/05_Research/Phase_XX/   # SubAgent分析結果出力場所（step-start実行時準備）
+/Doc/08_Organization/Active/Phase_XX/Research/   # SubAgent分析結果出力場所（step-start実行時準備）
 ```
 
 ## 実行トリガー

@@ -59,7 +59,7 @@
 - [ ] **改善提案**: 具体的・実行可能な改善提案・次期計画策定確認
 
 ### SubAgent関連Commands
-- [ ] **成果物出力**: `/Doc/05_Research/Phase_XX/` 配下への成果物出力確認
+- [ ] **成果物出力**: `/Doc/08_Organization/Active/Phase_XX/Research/` 配下への成果物出力確認
 - [ ] **品質確認**: SubAgent分析結果の具体性・実用性・完全性確認
 - [ ] **活用準備**: 分析結果の次Step活用準備・参照方法確認
 

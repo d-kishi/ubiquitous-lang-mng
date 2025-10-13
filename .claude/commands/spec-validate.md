@@ -159,9 +159,9 @@ echo "🔗 仕様間整合性の確認..."
 ### 自動生成レポートファイル
 ```yaml
 出力ファイル:
-  - /Doc/05_Research/Phase_XX/Spec_Validation_Report.md
-  - /Doc/05_Research/Phase_XX/Executable_Specs_Status.json
-  - /Doc/05_Research/Phase_XX/Improvement_Recommendations.md
+  - /Doc/08_Organization/Active/Phase_XX/Research/Spec_Validation_Report.md
+  - /Doc/08_Organization/Active/Phase_XX/Research/Executable_Specs_Status.json
+  - /Doc/08_Organization/Active/Phase_XX/Research/Improvement_Recommendations.md
 ```
 
 ### 検証スコアリング（100点満点）

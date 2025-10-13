@@ -15,7 +15,6 @@
 ### 2. Step終了時Command実行（Step完了時）
 - [ ] `step-end-review` Command: 包括的品質・進捗確認
 - [ ] `spec-compliance-check` Command: 仕様準拠監査（実装作業完了時）
-- [ ] `tdd-practice-check` Command: TDD実践確認（実装作業時）
 
 ### 3. 成果・実績記録
 - [ ] **主要成果整理**: 具体的な完了項目・作成ファイル・変更内容の詳細記録
@@ -159,7 +158,7 @@
 ⚠️ 未完了事項あり → 該当項目を次回最優先事項に設定
 
 ## 関連プロセス
-- SubAgent活用: step-end-review, spec-compliance-check, tdd-practice-check Commands
+- SubAgent活用: step-end-review, spec-compliance-check Commands
 - 記録テンプレート: `/Doc/04_Daily/セッション終了時記録テンプレート.md`
 - 管理更新: `/Doc/プロジェクト状況.md`
 

@@ -56,9 +56,9 @@ tools: mcp__serena__find_referencing_symbols, mcp__serena__find_symbol, Grep, Re
 ```
 
 ### 技術的依存関係
-| 依存元 | 依存先 | 依存種別 | 結合度 | リスク |
-|-------|-------|----------|--------|--------|
-| [コンポーネント] | [依存先] | [型] | [強/中/弱] | [リスク] |
+| 依存元           | 依存先   | 依存種別 | 結合度     | リスク   |
+| ---------------- | -------- | -------- | ---------- | -------- |
+| [コンポーネント] | [依存先] | [型]     | [強/中/弱] | [リスク] |
 
 ### 実装順序推奨
 1. **Phase 1**: [基盤コンポーネント]
@@ -80,7 +80,7 @@ tools: mcp__serena__find_referencing_symbols, mcp__serena__find_symbol, Grep, Re
 ```
 
 ## 成果物活用
-- **成果物出力**: `/Doc/05_Research/Phase_XX/Dependency_Analysis_Results.md`
+- **成果物出力**: `/Doc/08_Organization/Active/Phase_XX/Research/Dependency_Analysis_Results.md`
 - **活用方法**: MainAgent経由で実装系Agentに提供され、実装順序・依存関係制約を考慮した実装計画立案に活用
 
 ## プロジェクト固有の知識

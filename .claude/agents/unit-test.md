@@ -149,14 +149,14 @@ let userLogicTests =
 ```
 
 ## 調査分析成果物の参照
-**推奨参照情報（MainAgent経由で提供）**（`/Doc/05_Research/Phase_XX/`配下）：
+**推奨参照情報（MainAgent経由で提供）**（`/Doc/08_Organization/Active/Phase_XX/Research/`配下）：
 - **Spec_Analysis_Results.md**: 仕様ベーステストケース設計の基準
 - **Spec_Compliance_Matrix.md**: 仕様準拠テスト項目の詳細
 - **Implementation_Requirements.md**: 各層のテスト要件・制約
 - **Tech_Research_Results.md**: TDD・テストフレームワーク技術指針
 
 ## 成果物活用
-- **成果物出力**: `/Doc/05_Research/Phase_XX/Unit_Test_Results.md`
+- **成果物出力**: `/Doc/08_Organization/Active/Phase_XX/Research/Unit_Test_Results.md`
 - **活用方法**: MainAgent経由で実装系Agentに提供され、TDD実践・テストケース設計・テストファースト開発推進の指針として活用
 
 ## テストベストプラクティス

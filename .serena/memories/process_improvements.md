@@ -94,7 +94,7 @@
 
 ### 重要発見・ベストプラクティス
 
-#### 🔴 `/Doc/05_Research/` - 変更厳禁確認
+#### 🔴 `/Doc/08_Organization/Active/Phase_XX/Research/` - 変更厳禁確認
 - **重要性**: Command・SubAgentが参照する重要ディレクトリ
 - **用途**: 各Phase調査段階の出力先として継続利用
 - **教訓**: 番号変更・移動は厳禁（システム参照先のため）

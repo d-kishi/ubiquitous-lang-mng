@@ -33,7 +33,7 @@ echo "🔍 加重スコアリング仕様準拠マトリックス確認を開始
 ```
 
 **確認項目**:
-- [ ] `/Doc/05_Research/Phase_XX/Spec_Compliance_Matrix.md` の全項目チェック
+- [ ] `/Doc/08_Organization/Active/Phase_XX/Research/Spec_Compliance_Matrix.md` の全項目チェック
 - [ ] **新規**: 重要度による加重スコア計算（critical: x3, high: x2, medium: x1）
 - [ ] **新規**: 肯定的仕様・否定的仕様の分離評価
 - [ ] **新規**: リアルタイムスコア計算・表示
@@ -71,8 +71,8 @@ echo "📋 実装証跡の自動収集を開始..."
 - [ ] **実装行番号マッピング**: 仕様項番 ↔ ソースコード行番号対応表
 
 **出力ファイル**:
-- `/Doc/05_Research/Phase_XX/Spec_Compliance_Evidence.md` （新規自動生成）
-- `/Doc/05_Research/Phase_XX/Implementation_Mapping.json` （新規・構造化データ）
+- `/Doc/08_Organization/Active/Phase_XX/Research/Spec_Compliance_Evidence.md` （新規自動生成）
+- `/Doc/08_Organization/Active/Phase_XX/Research/Implementation_Mapping.json` （新規・構造化データ）
 
 **コード内仕様書項番コメント確認**:
 ```csharp

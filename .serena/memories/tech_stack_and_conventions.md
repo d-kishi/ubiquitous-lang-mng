@@ -581,7 +581,6 @@ public async Task CreateProject_ValidInput_CreatesProjectAndDomain()
 ### 品質管理Commands（強化版）
 - **spec-validate**: Phase/Step開始前事前検証（100点満点・3カテゴリ）
 - **spec-compliance-check**: 加重スコアリング仕様準拠監査（50/30/20点配分）
-- **tdd-practice-check**: TDD実践確認・テストカバレッジ
 - **command-quality-check**: Commands実行品質確認
 
 ### 新規Commands（2025-09-25追加）

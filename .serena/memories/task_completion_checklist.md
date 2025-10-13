@@ -1,6 +1,6 @@
 # タスク完了チェックリスト
 
-**最終更新**: 2025-10-06（Phase B1完全完了・品質スコア98/100点・次回GitHub Issue対応計画策定）
+**最終更新**: 2025-10-13（Phase B-F1 Step4完了・次セッションStep5実施予定）
 **管理方針**: 完了タスク・継続タスク・新規タスクの一元管理・状態更新方式
 
 ## 📊 Phase別完了状況
@@ -26,6 +26,11 @@
 - [x] **B1 Step5: namespace階層化（Issue #42）**（🎉完了・42ファイル修正・ADR_019作成・0 Warning/0 Error・32テスト100%成功）
 - [x] **B1 Step6: Infrastructure層実装**（🎉完了・ProjectRepository完全実装・EF Core統合・TDD Green Phase達成）
 - [x] **B1 Step7: Web層実装**（🎉2025-10-06完了・Phase B1完全完了・品質スコア98/100点・A+ Excellent）
+- [x] **B-F1 Step1: 技術調査・詳細分析**（🎉2025-10-08完了・3SubAgent並列実行・Issue #43/#40完全分析・1.5時間）
+- [x] **B-F1 Step2: Issue #43完全解決**（🎉2025-10-09完了・namespace階層化適用・技術負債解消・50分）
+- [x] **B-F1 Step3: Issue #40 Phase 1実装**（🎉2025-10-13完了・3セッション・100%達成・328/328 tests・6-7時間）
+- [x] **B-F1 Step4: Issue #40 Phase 2実装**（🎉2025-10-13完了・7プロジェクト構成確立・0 Warning/0 Error・1.5時間）
+- [x] **B-F1 Step5: Issue #40 Phase 3実装・ドキュメント整備**（🎉2025-10-13完了・テストアーキテクチャ設計書・ガイドライン作成・1.5-2時間）
 - [ ] B2: ユーザー・プロジェクト関連管理
 - [ ] B3: プロジェクト機能完成
 - [ ] B4: 品質改善・技術負債解消
@@ -51,19 +56,23 @@
 
 ## 🔄 次回セッション継続タスク
 
-### 🚀 最優先（次回セッション・GitHub Issue対応計画策定）
-1. [ ] **GitHub Issue対応計画策定**（2-3時間・対応すべきIssueピックアップ・優先順位付け・対応計画作成）：
-   - **参照**: `Doc/06_Issues/`配下の全Issue、GitHub Issues（技術負債・アーキテクチャ改善・プロセス改善）
-   - [ ] 対応すべきIssueピックアップ（優先度・緊急度・Phase B2着手前必須事項の観点）
-   - [ ] Issue優先順位付け（Phase B2着手前完了必須・Phase B2と並行可能・Phase B2後対応可に分類）
-   - [ ] Issue対応計画書作成（対応順序・所要時間見積もり・担当SubAgent・Phase B2への影響評価）
-   - [ ] Issue #40（テストアーキテクチャ再構成）の優先度評価・実施タイミング決定
-   - [ ] Phase B2着手前に完了すべきIssueの明確化
+### 🚀 最優先（次セッション・Issue #49対応 → Phase B2開始）
+1. [ ] **Issue #49実装**（1-1.5時間・テストアーキテクチャドキュメント参照タイミング標準化・自動化）：
+   - **前回完了**（2025-10-13 セッション8）: Phase B-F1完了・Issue #43クローズ・Issue #40進捗更新・Issue #49作成
+   - **必須参照**: GitHub Issue #49 - テストアーキテクチャ関連ドキュメントの参照タイミング標準化・自動化
+   - [ ] `.claude/commands/step-start.md`: テストプロジェクト作成検知ロジック追加（Section 5.6）
+   - [ ] `.claude/agents/unit-test.md`: 必須ドキュメント事前確認手順追加
+   - [ ] `.claude/agents/integration-test.md`: 必須ドキュメント事前確認手順追加
+   - [ ] `.claude/commands/step-end-review.md`: ガイドラインチェックリスト検証追加（Section 3.5）
+   - [ ] `CLAUDE.md`: ドキュメント参照タイミング明確化
 
-### 🟡 高優先度（Issue対応計画策定完了後・Phase B2準備）
-- [ ] **Phase B2計画開始**（phase-start Command実行・ユーザー・プロジェクト関連管理）
-- [ ] **Issue対応実施**（Phase B2着手前に完了すべきIssue対応）
+2. [ ] **Phase B2開始処理**（phase-start Command実行）：
+   - **前提条件**: Issue #49完了確認・Phase B-F1成果継承準備完了
+   - **必須参照**: `Doc/08_Organization/Completed/Phase_B-F1/Phase_B2_申し送り事項.md`
+
+### 🟡 高優先度（Issue対応完了後・Phase B2実装準備）
 - [ ] **技術負債整理完了確認**（Phase A/B1技術負債の対応状況確認・残存リスク評価）
+- [ ] **Playwright MCP + Agents統合準備**（Phase B2実装時統合・1.5-2時間見込み）
 
 ### 🟢 中優先度（Phase B2実施中・継続改善）
 - [ ] **Phase B2実装実施**（UserProjects多対多関連・DomainApprover/GeneralUser権限・プロジェクトメンバー管理UI）

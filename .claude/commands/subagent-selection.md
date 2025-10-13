@@ -134,7 +134,7 @@ echo "⚡ 並列実行計画を策定します..."
 
 **計画項目**:
 - [ ] 選択したSubAgentの並列実行順序決定
-- [ ] 各Agentの専門成果物確認（/Doc/05_Research/Phase_XX/配下）
+- [ ] 各Agentの専門成果物確認（/Doc/08_Organization/Active/Phase_XX/Research/配下）
 - [ ] Agent間の成果物継承関係確認
 - [ ] MainAgentでの統合・品質確認計画
 

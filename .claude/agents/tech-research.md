@@ -55,7 +55,7 @@ tools: Bash, WebSearch, WebFetch, Read, Grep, Glob
 
 
 ## 成果物活用
-- **成果物出力**: `/Doc/05_Research/Phase_XX/Tech_Research_Results.md`
+- **成果物出力**: `/Doc/08_Organization/Active/Phase_XX/Research/Tech_Research_Results.md`
 - **活用方法**: MainAgent経由で実装系Agentに提供され、技術選択・実装方針決定の指針として活用
 
 ## プロジェクト固有の知識
