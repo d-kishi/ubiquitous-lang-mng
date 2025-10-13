@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- ADR_020準拠: 明示的なnamespace/assembly指定 -->
+    <RootNamespace>UbiquitousLanguageManager.Web.UI.Tests</RootNamespace>
+    <AssemblyName>UbiquitousLanguageManager.Web.UI.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

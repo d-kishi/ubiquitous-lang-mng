@@ -409,112 +409,140 @@ dotnet test
 
 ---
 
-### Step4: Issue #40 Phase 2実装（1-2時間）
+### Step4: Issue #40 Phase 2実装（修正版・1.5時間）
 
 **目的**: テストタイプ別プロジェクト作成・リネーム
 
-**実装内容**:
+**⚠️ 計画変更点**:
+- **旧プロジェクト削除**: Step3で前倒し実施済み（Domain.Tests / Tests削除完了）
+- **Integration/ディレクトリ**: 空のため、Infrastructure.Integration.Testsは空プロジェクト作成に変更
+- **E2E.Tests作成**: Step4で実施（Phase B2準備）
+- **CI/CDパイプライン更新**: ファイル不在のためスキップ
 
-#### 1. Infrastructure.Integration.Tests作成（C#・45分）
-**プロジェクト作成**:
+**実施内容**:
+
+#### Stage 1: 現状確認・警告対応判断（20分）
+1. **Step3成果検証**（5分）
+   - 旧プロジェクト削除状況確認
+   - tests/Integration/ 状況確認（空であることの確認）
+   - ソリューションファイル整合性確認
+
+2. **警告78個の対応方針決定**（15分）
+   - null許容参照型警告の性質分析
+   - 対応方針決定：
+     - **Option A**: 即座対応（Step4で修正）
+     - **Option B**: 技術負債化（GitHub Issue作成・Phase B完了後対応）
+     - **Option C**: 許容範囲判定（テストコードの警告は許容）
+
+#### Stage 2: Web.UI.Testsリネーム（30分）
+**SubAgent**: csharp-web-ui Agent
+
+**リネーム手順**:
 ```bash
-dotnet new xunit -n UbiquitousLanguageManager.Infrastructure.Integration.Tests -o tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests
-```
-
-**移行対象**:
-- 既存 `UbiquitousLanguageManager.Tests/Integration` の全ファイル
-- WebApplicationFactory使用テスト
-- DB接続テスト
-
-**参照設定**:
-```xml
-<ItemGroup>
-  <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Infrastructure\UbiquitousLanguageManager.Infrastructure.csproj" />
-  <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Application\UbiquitousLanguageManager.Application.fsproj" />
-  <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />
-  <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Web\UbiquitousLanguageManager.Web.csproj" />
-</ItemGroup>
-```
-
-**NuGetパッケージ**:
-- Microsoft.AspNetCore.Mvc.Testing（WebApplicationFactory）
-- Microsoft.EntityFrameworkCore.InMemory
-- Testcontainers.PostgreSql
-
-#### 2. Web.UI.Testsリネーム（C#・30分）
-**リネーム**:
-```bash
-# プロジェクトディレクトリ名変更
+# 1. ディレクトリ名変更
 mv tests/UbiquitousLanguageManager.Web.Tests tests/UbiquitousLanguageManager.Web.UI.Tests
 
-# .csprojファイル名変更
-mv tests/UbiquitousLanguageManager.Web.UI.Tests/UbiquitousLanguageManager.Web.Tests.csproj tests/UbiquitousLanguageManager.Web.UI.Tests/UbiquitousLanguageManager.Web.UI.Tests.csproj
-```
+# 2. .csprojファイル名変更
+mv tests/UbiquitousLanguageManager.Web.UI.Tests/UbiquitousLanguageManager.Web.Tests.csproj \
+   tests/UbiquitousLanguageManager.Web.UI.Tests/UbiquitousLanguageManager.Web.UI.Tests.csproj
 
-**namespace更新**:
-- テストファイル内の`namespace UbiquitousLanguageManager.Web.Tests`を`namespace UbiquitousLanguageManager.Web.UI.Tests`に変更
+# 3. namespace更新（全.csファイル）
+# namespace UbiquitousLanguageManager.Web.Tests → namespace UbiquitousLanguageManager.Web.UI.Tests
 
-#### 3. CI/CDパイプライン更新（15分）
-**対象ファイル**: `.github/workflows/*.yml`（該当ファイルがあれば）
-
-**更新内容**:
-```yaml
-# 新規テストプロジェクト追加
-- name: Run Tests
-  run: |
-    dotnet test tests/UbiquitousLanguageManager.Domain.Unit.Tests
-    dotnet test tests/UbiquitousLanguageManager.Application.Unit.Tests
-    dotnet test tests/UbiquitousLanguageManager.Contracts.Unit.Tests
-    dotnet test tests/UbiquitousLanguageManager.Infrastructure.Unit.Tests
-    dotnet test tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests
-    dotnet test tests/UbiquitousLanguageManager.Web.UI.Tests
-```
-
-#### 4. ソリューションファイル更新（5分）
-```bash
-dotnet sln add tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests
+# 4. ソリューションファイル更新
 dotnet sln remove tests/UbiquitousLanguageManager.Web.Tests
 dotnet sln add tests/UbiquitousLanguageManager.Web.UI.Tests
 ```
 
-#### 5. 全テスト実行確認（10分）
+#### Stage 3: Infrastructure.Integration.Testsプロジェクト作成（20分）
+**SubAgent**: integration-test Agent
+
+**プロジェクト作成**（空の状態・Phase B2実装予定）:
 ```bash
-dotnet test
+# 1. プロジェクト作成
+dotnet new xunit -n UbiquitousLanguageManager.Infrastructure.Integration.Tests \
+  -o tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests
+
+# 2. 参照設定
+# - Infrastructure層、Application層、Domain層、Web層（WebApplicationFactory使用のため）
+
+# 3. NuGetパッケージ追加
+# - Microsoft.AspNetCore.Mvc.Testing（WebApplicationFactory）
+# - Microsoft.EntityFrameworkCore.InMemory
+# - Testcontainers.PostgreSql（Phase B2で使用予定）
+
+# 4. README.md作成（Phase B2実装予定の旨記載）
+
+# 5. ソリューションファイル更新
+dotnet sln add tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests
 ```
 
-**SubAgent**:
-- integration-test（統合テストプロジェクト作成）
-- csharp-web-ui（Web UIテストプロジェクトリネーム）
+#### Stage 4: E2E.Testsプロジェクト作成（Phase B2準備・15分）
+**SubAgent**: integration-test Agent
 
-**並列実行可能性**: integration-test + csharp-web-ui 並列実行可
+**プロジェクト作成**（空の状態・Phase B2実装予定）:
+```bash
+# 1. プロジェクト作成
+dotnet new xunit -n UbiquitousLanguageManager.E2E.Tests \
+  -o tests/UbiquitousLanguageManager.E2E.Tests
+
+# 2. 参照設定（全層参照可）
+
+# 3. NuGetパッケージ追加
+# - Microsoft.Playwright（Phase B2で統合予定）
+
+# 4. README.md作成
+# - Playwright MCP + Agents統合予定の旨記載
+# - Phase B2実装予定の旨記載
+
+# 5. ソリューションファイル更新
+dotnet sln add tests/UbiquitousLanguageManager.E2E.Tests
+```
+
+#### Stage 5: 最終確認（15分）
+1. **全体ビルド確認**（5分）
+   ```bash
+   dotnet build
+   # 期待結果: ビルド成功（警告対応方針に応じた警告数）
+   ```
+
+2. **全テスト実行確認**（5分）
+   ```bash
+   dotnet test
+   # 期待結果: 328/328 tests 全成功（100%維持）
+   ```
+
+3. **ADR_020準拠確認**（5分）
+   - 7プロジェクト構成確立確認
+   - 命名規則準拠確認
+   - 参照関係原則確認
+
+**SubAgent**:
+- csharp-web-ui（Web.UI.Testsリネーム）
+- integration-test（Infrastructure.Integration.Tests + E2E.Tests作成）
+
+**並列実行可能性**: csharp-web-ui + integration-test 並列実行可
 
 **成果物**:
-- 2つのテストプロジェクト整理完了
-- CI/CD設定更新完了（該当ファイルがあれば）
-- 全テスト実行成功確認
-- `Doc/08_Organization/Active/Phase_B-F1/Step04_Phase2完了報告.md`
+- Web.UI.Testsリネーム完了
+- Infrastructure.Integration.Testsプロジェクト作成完了（空プロジェクト）
+- E2E.Testsプロジェクト作成完了（空プロジェクト・Phase B2準備）
+- ソリューションファイル更新完了（7プロジェクト）
+- 全テスト328/328成功維持（100%）
+- `Doc/08_Organization/Active/Phase_B-F1/Step04_組織設計.md`
+- `Doc/08_Organization/Active/Phase_B-F1/Step04_完了報告.md`
 
 ---
 
 ### Step5: Issue #40 Phase 3実装・ドキュメント整備・Playwright MCP + Agents準備（1-1.5時間）
 
-**目的**: 旧プロジェクト削除・ドキュメント整備・Playwright MCP + Agents統合準備メモ・Phase完了
+**目的**: ドキュメント整備・Playwright MCP + Agents統合準備メモ・Phase完了
+
+**⚠️ 旧プロジェクト削除**: Step3で前倒し実施済み（Domain.Tests / Tests削除完了・本Stepでは不要）
 
 **実装内容**:
 
-#### 1. 旧プロジェクト削除（15分）
-**削除対象**:
-```bash
-# プロジェクトディレクトリ削除
-rm -rf tests/UbiquitousLanguageManager.Domain.Tests
-rm -rf tests/UbiquitousLanguageManager.Tests
-
-# ソリューションファイルから削除
-dotnet sln remove tests/UbiquitousLanguageManager.Domain.Tests
-dotnet sln remove tests/UbiquitousLanguageManager.Tests
-```
-
-#### 2. 最終確認（15分）
+#### 1. 最終確認（15分）
 **ビルド確認**:
 ```bash
 dotnet build

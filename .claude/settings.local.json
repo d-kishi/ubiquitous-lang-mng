@@ -88,7 +88,9 @@
       "WebFetch(domain:www.ministryoftesting.com)",
       "WebFetch(domain:bug0.com)",
       "WebFetch(domain:til.simonwillison.net)",
-      "WebFetch(domain:www.checklyhq.com)"
+      "WebFetch(domain:www.checklyhq.com)",
+      "WebFetch(domain:claudelog.com)",
+      "WebFetch(domain:medium.com)"
     ],
     "deny": [],
     "ask": [],
