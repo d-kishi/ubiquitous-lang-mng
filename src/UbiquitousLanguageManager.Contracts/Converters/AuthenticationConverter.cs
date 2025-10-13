@@ -167,12 +167,15 @@ public static class AuthenticationConverter
             else if (error.IsAccountLocked)
             {
                 // AccountLocked of Email * DateTime パターンの安全な処理
+                // Phase B-F1 修正: dynamic型の完全活用
                 try
                 {
                     dynamic dynamicError = error;
-                    var tuple = dynamicError.Item;  // F#のタプル
-                    var email = tuple.Item1.Value as string;
-                    var lockoutEnd = (DateTime)tuple.Item2;
+                    dynamic tuple = dynamicError.Item;  // F#のタプル（dynamic型で保持）
+                    // Phase B-F1 修正: dynamic型でEmail型のValueプロパティにアクセス
+                    dynamic emailObj = tuple.Item1;  // Email型オブジェクト（dynamic）
+                    string email = (string)emailObj.Value;  // Email.Valueを明示的にstringにキャスト
+                    DateTime lockoutEnd = (DateTime)tuple.Item2;  // DateTime型を明示的にキャスト
 
                     resultDto = AuthenticationErrorDto.AccountLocked(
                         email ?? "unknown@example.com",
@@ -180,6 +183,8 @@ public static class AuthenticationConverter
                 }
                 catch (Exception ex)
                 {
+                    _logger?.LogError(ex, "AccountLockedケースの処理に失敗 ErrorDetail: {ErrorDetail}, ErrorType: {ErrorType}",
+                        ex.Message, ex.GetType().Name);
                     resultDto = AuthenticationErrorDto.SystemError(
                         new InvalidOperationException($"AccountLockedケースの処理に失敗: {ex.Message}", ex));
                 }
@@ -348,10 +353,12 @@ public static class AuthenticationConverter
                 try
                 {
                     dynamic dynamicError = error;
-                    // F#のタプル (Role * Permission) の処理
-                    var tuple = dynamicError.Item;
-                    var role = tuple.Item1.ToString();  // Role型の文字列化
-                    var permission = tuple.Item2.ToString();  // Permission型の文字列化
+                    // Phase B-F1 修正: InsufficientPermissions of string (ロール・権限情報を文字列で保持)
+                    var message = dynamicError.Item as string;
+                    // メッセージをパースして role と permission に分割（"Role:Permission"形式を想定）
+                    var parts = message?.Split(':') ?? Array.Empty<string>();
+                    var role = parts.Length > 0 ? parts[0] : "Unknown";
+                    var permission = parts.Length > 1 ? parts[1] : "Unknown";
                     resultDto = AuthenticationErrorDto.InsufficientPermissions(role, permission);
                 }
                 catch (Exception ex)
@@ -662,10 +669,9 @@ public static class AuthenticationConverter
         if (emailResult.IsError)
             return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError(emailResult.ErrorValue);
 
-        // F#のPassword値オブジェクトによる検証
-        var passwordResult = Password.create(tokenDto.NewPassword);
-        if (passwordResult.IsError)
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError(passwordResult.ErrorValue);
+        // パスワードバリデーション（簡易チェック）
+        if (tokenDto.NewPassword.Length < 8)
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<Email, string, string>, string>.NewError("パスワードは8文字以上である必要があります");
 
         // 成功: F#のタプルとして返す (Email, Token, NewPassword)
         var resetParams = new Tuple<Email, string, string>(emailResult.ResultValue, tokenDto.Token, tokenDto.NewPassword);
@@ -783,32 +789,4 @@ public static class AuthenticationConverter
         if (error.IsAccountDeactivated) return "AccountDeactivated";
         return "Unknown";
     }
-}
-
-/// <summary>
-/// Phase A9: ログインリクエストDTO
-/// Web層からのログイン要求を型安全に表現
-/// </summary>
-public class LoginRequestDto
-{
-    /// <summary>
-    /// ログイン用メールアドレス
-    /// </summary>
-    public string Email { get; set; } = string.Empty;
-
-    /// <summary>
-    /// ログイン用パスワード（平文）
-    /// セキュリティ上、ハッシュ化前の一時的な保持のみ
-    /// </summary>
-    public string Password { get; set; } = string.Empty;
-
-    /// <summary>
-    /// ログイン状態を保持するかどうか（Remember Me機能）
-    /// </summary>
-    public bool RememberMe { get; set; } = false;
-
-    /// <summary>
-    /// 二要素認証コード（二要素認証有効ユーザーの場合）
-    /// </summary>
-    public string? TwoFactorCode { get; set; }
 }

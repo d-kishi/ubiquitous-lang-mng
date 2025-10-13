@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- F# Test Files - Phase B1 Project Tests -->
+    <Compile Include="ProjectTests.fs" />
+    <Compile Include="ProjectDomainServiceTests.fs" />
+    <Compile Include="ProjectErrorHandlingTests.fs" />
+
+    <!-- F# Test Files - Phase A User Tests (C#→F#変換完了) -->
+    <Compile Include="UserDomainServiceTests.fs" />
+    <Compile Include="ValueObjectsTests.fs" />
+    <Compile Include="UserProfileValueObjectTests.fs" />
+    <Compile Include="PasswordValueObjectTests.fs" />
+
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ADR_020準拠: Unit Tests原則 - テスト対象レイヤーのみ参照 -->
+    <ProjectReference Include="..\..\src\UbiquitousLanguageManager.Domain\UbiquitousLanguageManager.Domain.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="FsUnit.xUnit" Version="6.0.1" />
+  </ItemGroup>
+
+</Project>
