@@ -30,7 +30,7 @@
 - [x] **B-F1 Step2: Issue #43完全解決**（🎉2025-10-09完了・namespace階層化適用・技術負債解消・50分）
 - [x] **B-F1 Step3: Issue #40 Phase 1実装**（🎉2025-10-13完了・3セッション・100%達成・328/328 tests・6-7時間）
 - [x] **B-F1 Step4: Issue #40 Phase 2実装**（🎉2025-10-13完了・7プロジェクト構成確立・0 Warning/0 Error・1.5時間）
-- [ ] **B-F1 Step5: Issue #40 Phase 3実装・ドキュメント整備**（📋次セッション実施・1-1.5時間）
+- [x] **B-F1 Step5: Issue #40 Phase 3実装・ドキュメント整備**（🎉2025-10-13完了・テストアーキテクチャ設計書・ガイドライン作成・1.5-2時間）
 - [ ] B2: ユーザー・プロジェクト関連管理
 - [ ] B3: プロジェクト機能完成
 - [ ] B4: 品質改善・技術負債解消
@@ -56,17 +56,23 @@
 
 ## 🔄 次回セッション継続タスク
 
-### 🚀 最優先（次セッション・Phase B-F1 Step5実装）
-1. [ ] **Phase B-F1 Step5実装**（1-1.5時間・Issue #40 Phase 3実装・テストアーキテクチャ設計書・ガイドライン作成）：
-   - **前回完了**（2025-10-13 セッション6）: Step4完了・step-end-review実行・7プロジェクト構成確立・session-end実行
-   - **必須参照**: `Doc/08_Organization/Active/Phase_B-F1/Phase_Summary.md` Step5セクション
-   - [ ] Stage 1: テストアーキテクチャ設計書作成（40-60分）
-   - [ ] Stage 2: 新規テストプロジェクト作成ガイドライン作成（20-30分）
+### 🚀 最優先（次セッション・Issue #49対応 → Phase B2開始）
+1. [ ] **Issue #49実装**（1-1.5時間・テストアーキテクチャドキュメント参照タイミング標準化・自動化）：
+   - **前回完了**（2025-10-13 セッション8）: Phase B-F1完了・Issue #43クローズ・Issue #40進捗更新・Issue #49作成
+   - **必須参照**: GitHub Issue #49 - テストアーキテクチャ関連ドキュメントの参照タイミング標準化・自動化
+   - [ ] `.claude/commands/step-start.md`: テストプロジェクト作成検知ロジック追加（Section 5.6）
+   - [ ] `.claude/agents/unit-test.md`: 必須ドキュメント事前確認手順追加
+   - [ ] `.claude/agents/integration-test.md`: 必須ドキュメント事前確認手順追加
+   - [ ] `.claude/commands/step-end-review.md`: ガイドラインチェックリスト検証追加（Section 3.5）
+   - [ ] `CLAUDE.md`: ドキュメント参照タイミング明確化
 
-### 🟡 高優先度（Issue対応計画策定完了後・Phase B2準備）
-- [ ] **Phase B2計画開始**（phase-start Command実行・ユーザー・プロジェクト関連管理）
-- [ ] **Issue対応実施**（Phase B2着手前に完了すべきIssue対応）
+2. [ ] **Phase B2開始処理**（phase-start Command実行）：
+   - **前提条件**: Issue #49完了確認・Phase B-F1成果継承準備完了
+   - **必須参照**: `Doc/08_Organization/Completed/Phase_B-F1/Phase_B2_申し送り事項.md`
+
+### 🟡 高優先度（Issue対応完了後・Phase B2実装準備）
 - [ ] **技術負債整理完了確認**（Phase A/B1技術負債の対応状況確認・残存リスク評価）
+- [ ] **Playwright MCP + Agents統合準備**（Phase B2実装時統合・1.5-2時間見込み）
 
 ### 🟢 中優先度（Phase B2実施中・継続改善）
 - [ ] **Phase B2実装実施**（UserProjects多対多関連・DomainApprover/GeneralUser権限・プロジェクトメンバー管理UI）
