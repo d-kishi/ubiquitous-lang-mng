@@ -160,7 +160,7 @@ namespace UbiquitousLanguageManager.Infrastructure.Unit.Tests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task SendPasswordResetEmailAsync_無効なメールアドレスで失敗(string invalidEmail)
+        public async Task SendPasswordResetEmailAsync_無効なメールアドレスで失敗(string? invalidEmail)
         {
             // Arrange
             var resetToken = "test-token";

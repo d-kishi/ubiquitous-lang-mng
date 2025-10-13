@@ -245,7 +245,7 @@ public class TypeConvertersExtensionsTests
             }
             else
             {
-                Assert.True(false, "Some値が正しく変換されませんでした");
+                Assert.Fail("Some値が正しく変換されませんでした");
             }
         }
 

@@ -215,9 +215,9 @@ public class RememberMeFunctionalityTests
         // Act & Assert
         // 📅 Remember Me Cookie有効期限確認
         // ASP.NET Core Identityのデフォルト設定は14日間
-        
+
         // 📝 Note: 実際の期限設定は統合テストで確認
-        Assert.Equal(expectedExpiration.TotalDays, 14);
+        Assert.Equal(14, expectedExpiration.TotalDays);
     }
 
     #endregion

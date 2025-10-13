@@ -252,7 +252,7 @@ public class ChangePasswordResponseDtoTests
             }
             else
             {
-                Assert.True(false, "エラーレスポンスのErrorMessageが期待通りに設定されていません");
+                Assert.Fail("エラーレスポンスのErrorMessageが期待通りに設定されていません");
             }
         }
 
@@ -273,7 +273,7 @@ public class ChangePasswordResponseDtoTests
             }
             else
             {
-                Assert.True(false, "エラーレスポンスのMessageが期待通りに設定されていません");
+                Assert.Fail("エラーレスポンスのMessageが期待通りに設定されていません");
             }
         }
     }

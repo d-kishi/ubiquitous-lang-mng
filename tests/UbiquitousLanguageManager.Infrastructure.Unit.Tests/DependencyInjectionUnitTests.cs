@@ -108,7 +108,7 @@ public class DependencyInjectionUnitTests
     /// Phase A9修正: Identity設定を追加してAuthenticationServiceの依存関係を完全に解決
     /// </summary>
     [Fact]
-    public async Task UserApplicationService_Should_Be_Resolvable_With_All_Dependencies()
+    public void UserApplicationService_Should_Be_Resolvable_With_All_Dependencies()
     {
         // Arrange
         var services = new ServiceCollection();
