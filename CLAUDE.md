@@ -71,7 +71,7 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 ### 自動実行Commands
 - **セッション開始/終了**: `.claude/commands/`配下のCommands自動実行
 - **SubAgent選択**: `subagent-selection` - 作業に最適なAgent組み合わせ選択
-- **品質チェック**: `spec-compliance-check`, `tdd-practice-check`, `step-end-review`
+- **品質チェック**: `spec-compliance-check`, `step-end-review`
 
 
 ## 実装指針
