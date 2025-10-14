@@ -640,6 +640,110 @@
 - ⏭️ tech_stack_and_conventions.md: 変更なし（スキップ）
 - ⏭️ task_completion_checklist.md: 変更なし（スキップ）
 
+### セッション9: Issue #49完全対応・Issue #51作成（100%完了）
+
+**セッション種別**: ドキュメント修正・Issue管理・プロセス改善実装・GitHub Actions自動化提案
+**Phase状況**: Phase B-F1完了後・Phase B2開始準備完了
+**主要トピック**: Issue #49完全実装（5ファイル修正）・Issue #49クローズ・Issue #51作成（GitHub Actions自動化提案）・次回Phase B2開始予定
+
+#### 実施内容
+
+**1. Issue #49完全実装（5ファイル修正・コード不在作業）**
+- **ユーザー指示**: "組織管理運用マニュアルに従ってPhaseを切る事はしません"（ドキュメント修正のみ）
+- **修正ファイル**:
+  1. `.claude/commands/step-start.md`: セクション5.6追加（テストプロジェクト作成判定・ガイダンス）
+  2. `.claude/agents/unit-test.md`: 新規テストプロジェクト作成時の必須手順セクション追加（158行目以降）
+  3. `.claude/agents/integration-test.md`: 同上（命名規則・参照関係原則調整）
+  4. `.claude/commands/step-end-review.md`: セクション3.5追加（テストプロジェクト作成整合性確認）
+  5. `CLAUDE.md`: 確認タイミング明確化（3つのタイミング追加・122行目）
+- **修正サマリー**: +94行/-1行
+- **改善効果**:
+  - 3つのタイミングで自動検知・確認（step-start, SubAgent起動時, tests/配下作成前）
+  - Issue #40再発防止の構造的対策確立
+  - ドキュメント参照忘れの防止（自動指示組み込み）
+
+**2. Git commit作成・Issue #49クローズ**
+- **Git commit**: `536a95d` @ main branch
+- **コミットメッセージ**: "feat: テストアーキテクチャドキュメント参照タイミング標準化 (#49)"
+- **完了コメント追加**: 5ファイル修正詳細・改善効果・完全解決記録
+- **Issueクローズ**: `gh issue close 49 --reason completed`実行成功
+- **コメントURL**: https://github.com/d-kishi/ubiquitous-lang-mng/issues/49#issuecomment-3398653XXX
+
+**3. GitHub Actions自動化アイデアの具体化（Issue #51作成）**
+- **背景**: ユーザーの夜間作業のみ制約（日中は通常業務）・効率化ニーズ
+- **提案内容**: GitHub Actions + Claude Code統合による簡単なStep自動化
+- **懸念事項**:
+  1. 組織管理運用マニュアル準拠可否
+  2. 従量課金コスト管理
+- **調査実施**:
+  - Commands体系確認: 12 Commands分析
+  - 組織管理運用マニュアル確認: 519行詳細読み込み
+  - Claude API価格確認: $3/M input tokens, $15/M output tokens
+
+**4. Issue #51作成完了**
+- **タイトル**: GitHub Actions + Claude Code統合による夜間作業効率化（簡単なStep自動実行）
+- **包括的分析内容**:
+  1. **実現可能要素（6項目）**:
+     - Commands実行可能性（8/12 Commandsが自動化候補）
+     - Git管理・ブランチ操作可能
+     - ビルド・テスト実行可能
+     - ドキュメント生成可能
+     - 技術的前提条件確認可能
+     - 成果物チェック可能
+  2. **困難要素（4項目）**:
+     - ユーザー承認取得（Pull Request方式で代替提案）
+     - Serena MCP依存操作（MCP-free Commands優先提案）
+     - 並列SubAgent実行（Phase 2以降対応提案）
+     - 複雑なエラーハンドリング（Phase 2以降対応提案）
+  3. **コスト管理フレームワーク**:
+     - Claude API単価: 入力$3/M, 出力$15/M
+     - トークン推定ツール設計（Python疑似コード提供）
+     - コスト閾値定義: Low(<$1), Medium($1-3), High(>$3)
+     - 事前承認フロー設計
+     - 月間上限設定: Conservative($10), Standard($30), Aggressive($50)
+  4. **3-phase実装計画**:
+     - Phase 1: PoC（10-15h）- MCP-free Commands統合
+     - Phase 2: Pilot（15-20h）- 簡単なStep自動化
+     - Phase 3: Full deployment（20-30h）- 完全自動化
+- **IssueURL**: https://github.com/d-kishi/ubiquitous-lang-mng/issues/51
+- **ラベル**: organization（automationラベル不在のため代替）
+
+#### 成果物
+- ✅ **Issue #49完全解決**: 5ファイル修正（+94/-1行）・commit・close完了
+- ✅ **Git commit**: 536a95d @ main branch
+- ✅ **Issue #51作成**: 包括的GitHub Actions自動化提案（組織管理運用マニュアル準拠性分析・コスト管理フレームワーク・3-phase実装計画）
+- ✅ **コスト管理ツール設計**: トークン推定ツールPython疑似コード提供
+
+#### 技術的成果
+- **Issue #40再発防止の構造的対策**: 3タイミング自動検知機能実装
+- **プロセス改善の完成**: step-start → SubAgent → step-end-review の一貫した確認フロー
+- **GitHub Actions自動化の実現可能性確認**: 6つの実現可能要素・4つの困難要素を体系的分析
+- **コスト管理手法確立**: 事前推定・閾値判定・承認フローの完全設計
+
+#### 技術的知見
+- **ドキュメント参照タイミング標準化**: 自動化の重要性・人的判断依存度低減
+- **GitHub Actions + Claude Code統合**: Commands体系の自動化適合性（8/12 Commandsが候補）
+- **従量課金モデル対応**: トークン推定ツールによる事前コスト把握の必要性
+- **MCP依存度の課題**: Serena MCP依存操作の自動化困難性（MCP-free優先戦略）
+
+#### 問題解決記録
+- **Issue #49**: 完全解決・5ファイル修正・構造的対策実装・クローズ完了
+- **GitHub Actions自動化検討**: Issue #51として体系的提案完了・実現可能性確認
+- **コスト管理懸念**: トークン推定ツール設計により解決策提示
+
+#### 次回実施（Phase B2開始）
+- **実施内容**: Phase B2開始（phase-start Command実行）
+- **推定時間**: 2-3時間
+- **注目ポイント**: 縦方向スライス実装マスタープラン.md参照可能性（ユーザーがIDE表示中）
+- **期待成果**:
+  - Phase B2開始処理完了
+  - Step1実施準備完了
+  - Playwright MCP + E2E.Tests統合開始
+
+#### Serenaメモリー更新
+- ✅ daily_sessions.md: 本セッション記録追加（当項目）
+- ✅ project_overview.md: Issue #49完了・Issue #51追加・Phase B2開始推奨を反映予定
+
 ---
 
 ## 📅 2025-10-12
