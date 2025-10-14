@@ -119,6 +119,11 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ### 🧪 新規テストプロジェクト作成時の必須確認事項
 
+**確認タイミング**（以下のいずれか）:
+1. **unit-test/integration-test Agent選択時**（step-start Command実行時）
+2. **新規テストプロジェクト作成指示を受けた時**（MainAgent/SubAgent問わず）
+3. **tests/配下に新規ディレクトリ・プロジェクトファイル作成前**
+
 **新規テストプロジェクト作成前に以下を必ず確認すること**（GitHub Issue #40再発防止策）：
 
 1. **ADR_020**: テストアーキテクチャ決定
