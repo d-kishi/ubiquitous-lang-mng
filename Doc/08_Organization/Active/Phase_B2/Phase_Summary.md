@@ -4,11 +4,11 @@
 
 - **Phase名**: Phase B2 (ユーザー・プロジェクト関連管理)
 - **Phase規模**: 🟢中規模（マスタープランから自動取得）
-- **Phase段階数**: 5段階（B:5段階）
+- **Phase段階数**: 4段階（Step1, Step2, Step4, Step5）**※Step3スキップ決定**
 - **Phase特性**: 新機能実装（多対多関連・権限制御拡張）
-- **推定期間**: 5-7セッション
+- **推定期間**: 5セッション（Playwright統合効果: 12-15時間削減）
 - **開始予定日**: 2025-10-15
-- **完了予定日**: 2025-10-22（推定）
+- **完了予定日**: 2025-10-19（推定）
 
 ## 🎯 Phase成功基準
 
@@ -16,18 +16,19 @@
 - **品質要件**: 仕様準拠度95点以上維持・0 Warning/0 Error達成・テスト成功率100%達成
 - **技術基盤**: Clean Architecture 96-97点品質維持・Phase B1確立基盤活用・Playwright MCP + Agents統合
 
-## 📋 段階構成詳細（マスタープランから取得）
+## 📋 段階構成詳細（Step1分析結果反映版）
 
 ### 基本実装段階（1-2）
-- **段階1**: 要件詳細分析・技術調査（Playwright調査含む）
-- **段階2**: Playwright MCP + Agents統合実装（5 Stage構成）
+- **段階1 (Step1)**: 要件詳細分析・技術調査（Playwright調査含む）✅ 完了
+- **段階2 (Step2)**: Playwright MCP + Agents統合実装（5 Stage構成）
 
-### 機能実装段階（3-4）
-- **段階3**: Domain層拡張（UserProjects関連・権限制御マトリックス拡張）
-- **段階4**: Application層・Infrastructure層実装（多対多関連・EF Core Migration）
+### 機能実装段階（4）
+- **段階4 (Step4)**: Application層・Infrastructure層実装（多対多関連）
+  - **重要決定**: Step3（Domain層拡張）スキップ
+  - **理由**: UserProjectsテーブル既存完了（Phase A）・ドメインロジックなし
 
 ### 品質保証段階（5）
-- **段階5**: Web層実装・Phase B1技術負債解消・統合テスト
+- **段階5 (Step5)**: Web層実装・Phase B1技術負債解消・統合テスト
 
 ## 🏢 Phase組織設計方針
 
@@ -133,29 +134,25 @@
 
 ---
 
-### Step3: Domain層拡張（UserProjects関連）
-**推定時間**: 2-3時間
-
-**実施内容**:
-- UserProject集約実装
-- 権限制御マトリックス拡張（DomainApprover/GeneralUser追加）
-- Railway-oriented Programming適用
-- TDD Red Phase達成
-
-**SubAgent**: fsharp-domain + unit-test（並列実行）
-
----
-
-### Step4: Application層・Infrastructure層実装
+### Step4: Application層・Infrastructure層実装（Step3統合版）
 **推定時間**: 3-4時間
 
 **実施内容**:
-- IProjectManagementService拡張（メンバー管理機能）
-- ProjectRepository拡張（UserProjects多対多関連）
-- EF Core Migration作成
-- TDD Green Phase達成
+- **Infrastructure層実装**（1.5-2時間）
+  - ProjectRepository拡張（6メソッド追加）
+  - UserProjects多対多関連実装
+  - ❌ EF Core Migration作成不要（UserProjectsテーブル既存）
+- **Application層実装**（1.5-2時間）
+  - IProjectManagementService拡張（4メソッド追加 + 4メソッド修正）
+  - 権限制御マトリックス拡張（DomainApprover/GeneralUser追加）
+  - Railway-oriented Programming適用
+- **TDD Green Phase達成**
 
 **SubAgent**: fsharp-application + csharp-infrastructure + unit-test（並列実行）
+
+**重要決定**:
+- Step3（Domain層拡張）をスキップし、本Stepに統合
+- 理由: UserProjectsテーブル既存・ドメインロジックなし
 
 ---
 
@@ -169,6 +166,39 @@
 - 統合テスト・品質確認
 
 **SubAgent**: csharp-web-ui + integration-test + spec-compliance（並列実行）
+
+---
+
+## 📊 Step間成果物参照マトリックス
+
+### Step1成果物の後続Step活用計画
+| Step | 作業内容 | 必須参照（Step1成果物） | 重点参照セクション | 活用目的 |
+|------|---------|----------------------|-------------------|---------|
+| **Step2** | Playwright統合 | `Tech_Research_Playwright_2025-10.md` | 5-Stage構成・MCP統合手順 | Playwright MCP + Agents統合実装 |
+| **Step2** | E2Eテスト作成 | `Spec_Analysis_UserProjects.md` | UserProjects操作フロー（3.2節） | E2Eテストシナリオ作成 |
+| **Step2** | ADR_021作成 | `Tech_Research_Playwright_2025-10.md` | 技術決定根拠・効果測定 | 技術決定永続化 |
+| **Step4** | Infrastructure層実装 | `Dependency_Analysis_UserProjects.md` | ProjectRepository拡張（3.1節） | Repository実装指針 |
+| **Step4** | Infrastructure層実装 | `Spec_Analysis_UserProjects.md` | UserProjectsテーブル設計（1.1節） | テーブル構造・制約確認 |
+| **Step4** | Application層実装 | `Spec_Analysis_UserProjects.md` | 権限制御マトリックス拡張（2.2節） | 権限判定ロジック実装 |
+| **Step4** | Application層実装 | `Phase_B2_Implementation_Plan.md` | Step4実施内容詳細（3章） | 実装範囲・工数確認 |
+| **Step5** | Web層実装 | `Spec_Analysis_UserProjects.md` | プロジェクトメンバー管理UI仕様（3章） | UI実装指針 |
+| **Step5** | 技術負債解消 | `Spec_Analysis_UserProjects.md` | Phase B1技術負債解消計画（4章） | 技術負債対応方針 |
+| **Step5** | 技術負債解消 | `Tech_Research_Playwright_2025-10.md` | Playwright E2Eテスト活用 | フォーム送信詳細テスト |
+| **Step5** | 品質確認 | `Design_Review_PhaseB2.md` | Clean Architecture品質維持（1章） | 品質基準・評価指標 |
+| **全Step** | 全体計画参照 | `Phase_B2_Implementation_Plan.md` | リスク管理計画（4章） | リスク要因・対策確認 |
+
+### 成果物ファイル所在
+**出力ディレクトリ**: `/Doc/08_Organization/Active/Phase_B2/Research/`
+- `Spec_Analysis_UserProjects.md` - 要件・仕様詳細分析（UserProjects多対多関連）
+- `Tech_Research_Playwright_2025-10.md` - Playwright MCP + Agents技術調査（2025年10月版）
+- `Design_Review_PhaseB2.md` - 設計整合性レビュー（Clean Architecture品質維持）
+- `Dependency_Analysis_UserProjects.md` - 依存関係分析・実装順序計画
+- `Phase_B2_Implementation_Plan.md` - Phase B2全体実装計画（統合版）
+
+**Phase B-F1成果物**（Playwright統合計画）:
+- `/Doc/08_Organization/Completed/Phase_B-F1/Phase_B2_申し送り事項.md` - Step2実施時必須参照
+- `/Doc/08_Organization/Completed/Phase_B-F1/Research/Playwright_MCP_評価レポート.md` - MCP統合技術詳細
+- `/Doc/08_Organization/Completed/Phase_B-F1/Research/Playwright_Agents_評価レポート.md` - Agents統合技術詳細
 
 ---
 
