@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-10-15（**Phase B2 Step1完了・Step2準備完了**）
+**最終更新**: 2025-10-17（**Phase B2 Step2完了・Step6新設・Step4準備完了**）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -20,14 +20,14 @@
   - [x] **Step3: Issue #40 Phase 1実装完了**（2025-10-13・3セッション・**100%達成・328/328 tests**）✅ 🎉
   - [x] **Step4: Issue #40 Phase 2実装完了**（2025-10-13・1セッション・**7プロジェクト構成確立・0 Warning/0 Error**）✅ 🎉
   - [x] **Step5: Issue #40 Phase 3実装・ドキュメント整備完了**（2025-10-13・1.5-2時間・**335/338 tests**）✅ 🎉
-- [ ] **Phase B2-B5（プロジェクト管理機能完成）**: Phase B2 Step1完了 🚀 **← 現Phase・Step2準備完了**
+- [ ] **Phase B2-B5（プロジェクト管理機能完成）**: Phase B2 Step1-2完了 🚀 **← 現Phase・Step4準備完了**
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
 - **Phase完了**: 2/4+ (50%+) ※Phase A完了 + Phase B1完了 + **Phase B-F1完了** 🎉
-- **Step完了**: 26/35+ (74.3%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** 🎉
-- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）
+- **Step完了**: 27/36+ (75.0%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2 Step1-2完了** 🎉
+- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）、**Playwright MCP統合完了** 🎉
 
 ### Phase B-F1完了記念（2025-10-08～10-13）🎉
 
@@ -43,6 +43,7 @@
   - **Phase 4（E2E.Tests実装）**: Phase B2繰り延べ決定（2025-10-13）
 - ✅ **Issue #49**: テストアーキテクチャドキュメント参照タイミング標準化・自動化（2025-10-13作成→完了・5ファイル修正・commit・クローズ）
 - 🆕 **Issue #51**: GitHub Actions + Claude Code統合による夜間作業効率化（2025-10-13作成・組織管理運用マニュアル準拠性分析・コスト管理フレームワーク・3-phase実装計画）
+- 🆕 **Issue #52**: Phase A E2Eテスト実装（2025-10-17作成・認証9シナリオ・ユーザー管理10シナリオ・Phase B2-B5完了後実施）
 
 **Phase達成成果**:
 - ✅ テスト実行効率30%向上達成
@@ -78,19 +79,20 @@
   - プロジェクトメンバー管理UI実装
   - 0 Warning/0 Error・テスト100%成功維持
 
-**5Step構成**:
-1. Step1: 要件詳細分析・技術調査（4Agent並列実行・Playwright調査含む）
-2. Step2: Playwright MCP + Agents統合実装（5 Stage構成）
-3. Step3: Domain層拡張（UserProjects関連）
-4. Step4: Application層・Infrastructure層実装
-5. Step5: Web層実装・Phase B1技術負債解消（4件）
+**5段階構成**（Step3スキップ決定・Step6新設）:
+1. ✅ Step1: 要件詳細分析・技術調査（4Agent並列実行・Playwright調査含む）- **完了**
+2. ✅ Step2: Playwright MCP統合（Stage 1のみ・5分）- **完了**
+3. ~~Step3: Domain層拡張（UserProjects関連）~~ - **スキップ決定**（UserProjectsテーブル既存完了）
+4. Step4: Application層・Infrastructure層実装（Step3統合版・3-4時間）
+5. Step5: Web層実装・Phase B1技術負債解消・data-testid属性付与（4件）
+6. Step6: Playwright E2Eテスト実装・Agents統合・効果検証・ADR作成（1.5-2時間・**新設**）
 
 **次回セッション必須読み込みファイル**:
 - **最優先**: Phase_Summary.md・Phase_B2_申し送り事項.md・Phase B1 Phase_Summary.md
 - **重要**: SubAgent組み合わせパターン.md・ADR_019・ADR_020
 - **参考**: テストアーキテクチャ設計書.md・組織管理運用マニュアル.md・縦方向スライス実装マスタープラン.md
 
-**次回実施**: Phase B2 Step1実行（4Agent並列実行・推定2-3時間）
+**次回実施**: Phase B2 Step4実行（Application層・Infrastructure層実装・3-4時間）
 
 #### Phase B2 Step1完了成果（2025-10-15完了）🎉
 
@@ -115,13 +117,37 @@
 - `Phase_B2_Implementation_Plan.md` (統合版)
 
 **Phase B2への影響**:
-- **Phase段階数**: 5段階 → 4段階（Step1, Step2, Step4, Step5）
+- **Phase段階数**: 5段階（Step1, Step2, Step4, Step5, **Step6新設**）
 - **推定工数**: 10-13時間（Playwright統合効果: 12-15時間削減）
 - **完了予定日**: 2025-10-19（推定）
 
 **品質評価**: A+ Excellent（98/100点）
 
-**次回実施**: Phase B2 Step2実行（Playwright MCP + Agents統合実装・1.5-2時間）
+**次回実施**: ~~Phase B2 Step2実行~~ → **Phase B2 Step4実行**
+
+#### Phase B2 Step2完了成果（2025-10-17完了）🎉
+
+**Step2目的**: Playwright MCP統合・E2Eテスト基盤確立 → **Stage 1完了・重要な構成変更決定**
+
+**実施内容完了（Stage 1のみ・5分）**:
+1. ✅ **Playwright MCP統合完了**: `claude mcp add playwright npx @playwright/mcp@latest`
+2. ✅ **25ツール利用可能**: mcp__playwright__プレフィックスツール群
+3. ✅ **~/.claude.json設定完了**: MCP Server追加成功
+
+**重大な構成変更決定**:
+- **Stage 2-5をStep6に移動**: E2Eテスト実装にはUI実装完了（Step5）が前提条件
+- **E2Eテスト実装タイミング原則確立**: UI要素（data-testid属性等）実装後に実施
+- **新規Step6作成**: Playwright E2Eテスト実装・Agents統合・効果検証・ADR作成（1.5-2時間・4 Stage構成）
+
+**data-testid要件整理完了**:
+- **Phase B2新規画面**: メンバー管理画面（7要素）
+- **Phase A/B1実装済み画面**: E2Eテスト経路対応（Login画面3要素・Project一覧画面2要素）
+- **記録完了**: Phase_Summary.md・Spec_Analysis_UserProjects.md更新
+
+**GitHub Issue作成**:
+- ✅ **Issue #52**: Phase A E2Eテスト実装（認証9シナリオ・ユーザー管理10シナリオ・Phase B2-B5完了後実施）
+
+**次回実施**: Phase B2 Step4実行（Application層・Infrastructure層実装・3-4時間）
 
 ---
 

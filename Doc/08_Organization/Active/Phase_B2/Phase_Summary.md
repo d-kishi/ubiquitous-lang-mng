@@ -4,7 +4,7 @@
 
 - **Phase名**: Phase B2 (ユーザー・プロジェクト関連管理)
 - **Phase規模**: 🟢中規模（マスタープランから自動取得）
-- **Phase段階数**: 4段階（Step1, Step2, Step4, Step5）**※Step3スキップ決定**
+- **Phase段階数**: 5段階（Step1, Step2, Step4, Step5, Step6）**※Step3スキップ決定**
 - **Phase特性**: 新機能実装（多対多関連・権限制御拡張）
 - **推定期間**: 5セッション（Playwright統合効果: 12-15時間削減）
 - **開始予定日**: 2025-10-15
@@ -20,15 +20,17 @@
 
 ### 基本実装段階（1-2）
 - **段階1 (Step1)**: 要件詳細分析・技術調査（Playwright調査含む）✅ 完了
-- **段階2 (Step2)**: Playwright MCP + Agents統合実装（5 Stage構成）
+- **段階2 (Step2)**: Playwright MCP統合（1 Stage）✅ 完了
 
 ### 機能実装段階（4）
 - **段階4 (Step4)**: Application層・Infrastructure層実装（多対多関連）
   - **重要決定**: Step3（Domain層拡張）スキップ
   - **理由**: UserProjectsテーブル既存完了（Phase A）・ドメインロジックなし
 
-### 品質保証段階（5）
+### 品質保証段階（5-6）
 - **段階5 (Step5)**: Web層実装・Phase B1技術負債解消・統合テスト
+- **段階6 (Step6)**: Playwright E2Eテスト実装・統合効果検証（4 Stage構成）
+  - **前提条件**: Step5（UI実装）完了必須
 
 ## 🏢 Phase組織設計方針
 
@@ -98,39 +100,25 @@
 
 ---
 
-### Step2: Playwright MCP + Agents統合実装
-**推定時間**: 1.5-2時間（申し送り事項準拠）
+### Step2: Playwright MCP統合
+**推定時間**: 5分
+**実施内容**: Playwright MCP統合のみ（1 Stage）
+**完了状況**: ✅ 完了（2025-10-16）
 
-**実施内容**（5 Stage構成）:
-1. **Stage 1: Playwright MCP統合**（5分・最優先）
+**実施内容**:
+1. **Stage 1: Playwright MCP統合**（5分）
    - `claude mcp add playwright npx '@playwright/mcp@latest'`
    - Claude Code再起動・25ツール利用可能確認
 
-2. **Stage 2: E2Eテスト作成**（30分・MCPツール活用）
-   - E2E.Testsプロジェクトにテスト作成
-   - Claude CodeがMCPツールでブラウザ操作
-   - UserProjectsシナリオE2Eテスト作成
+**重要決定**: Stage 2-5（E2Eテスト作成・Agents統合・効果検証・ADR作成）は**Step6に移動**
+- **理由**: E2Eテスト実装にはUI実装完了（Step5）が前提条件
+- **移動先**: Phase B2 Step6（UI実装後に実施）
 
-3. **Stage 3: Playwright Agents統合**（15分）
-   - Planner/Generator/Healer設定
-   - 自動修復機能有効化
-
-4. **Stage 4: 統合効果検証**（30分）
-   - 作成効率測定（MCP使用 vs 従来手法）
-   - メンテナンス効率測定（Agents活用）
-   - 総合85%効率化検証
-
-5. **Stage 5: ADR記録作成**（20分）
-   - ADR_021: Playwright MCP + Agents統合戦略作成
-   - 技術決定の永続化
-
-**SubAgent**: integration-test + tech-research
+**SubAgent**: なし（MainAgentが直接実施）
 
 **成果物**:
-- Playwright MCP統合完了
-- E2E.Testsプロジェクト初期実装
-- ADR_021作成
-- 効果測定レポート
+- ✅ Playwright MCP統合完了（~/.claude.json設定）
+- ✅ 25ツール利用可能状態確立
 
 ---
 
@@ -161,6 +149,9 @@
 
 **実施内容**:
 - プロジェクトメンバー管理UI実装（Blazor Server）
+- **data-testid属性付与（E2Eテスト対応・Step6前提条件）**
+  - **Phase B2新規画面**: メンバー管理画面（7要素）
+  - **Phase A/B1実装済み画面**: E2Eテスト経路対応（Login画面3要素・Project一覧画面2要素）
 - Phase B1技術負債4件解消（InputRadioGroup制約・フォーム送信詳細・Null警告）
 - bUnitテスト追加（Phase B1基盤活用）
 - 統合テスト・品質確認
@@ -169,14 +160,49 @@
 
 ---
 
+### Step6: Playwright E2Eテスト実装・統合効果検証
+**推定時間**: 1.5-2時間
+**前提条件**: Step5（UI実装）完了必須
+
+**実施内容**（4 Stage構成）:
+1. **Stage 1: E2Eテスト作成**（30分・MCPツール活用）
+   - E2E.Testsプロジェクトにテスト作成
+   - Claude CodeがMCPツールでブラウザ操作
+   - UserProjectsシナリオE2Eテスト作成（3シナリオ）
+
+2. **Stage 2: Playwright Agents統合**（15分）
+   - Planner/Generator/Healer設定
+   - 自動修復機能有効化
+   - セキュリティ設定（.gitignore・テスト専用アカウント）
+
+3. **Stage 3: 統合効果検証**（30分）
+   - 作成効率測定（MCP使用 vs 従来手法）
+   - メンテナンス効率測定（Agents活用）
+   - 総合85%効率化検証
+
+4. **Stage 4: ADR記録作成**（20分）
+   - ADR_021: Playwright MCP + Agents統合戦略作成
+   - 技術決定の永続化
+
+**SubAgent**: integration-test + tech-research
+
+**成果物**:
+- E2E.Testsプロジェクト初期実装（3シナリオ）
+- Playwright Agents統合完了
+- ADR_021作成
+- 効果測定レポート
+
+---
+
 ## 📊 Step間成果物参照マトリックス
 
 ### Step1成果物の後続Step活用計画
 | Step | 作業内容 | 必須参照（Step1成果物） | 重点参照セクション | 活用目的 |
 |------|---------|----------------------|-------------------|---------|
-| **Step2** | Playwright統合 | `Tech_Research_Playwright_2025-10.md` | 5-Stage構成・MCP統合手順 | Playwright MCP + Agents統合実装 |
-| **Step2** | E2Eテスト作成 | `Spec_Analysis_UserProjects.md` | UserProjects操作フロー（3.2節） | E2Eテストシナリオ作成 |
-| **Step2** | ADR_021作成 | `Tech_Research_Playwright_2025-10.md` | 技術決定根拠・効果測定 | 技術決定永続化 |
+| **Step2** | Playwright MCP統合 | `Tech_Research_Playwright_2025-10.md` | MCP統合手順（2章） | Playwright MCP統合実装 |
+| **Step6** | E2Eテスト作成 | `Spec_Analysis_UserProjects.md` | UserProjects操作フロー（3.2節） | E2Eテストシナリオ作成 |
+| **Step6** | Playwright Agents統合 | `Tech_Research_Playwright_2025-10.md` | Agents統合手順（3章） | Playwright Agents統合実装 |
+| **Step6** | ADR_021作成 | `Tech_Research_Playwright_2025-10.md` | 技術決定根拠・効果測定 | 技術決定永続化 |
 | **Step4** | Infrastructure層実装 | `Dependency_Analysis_UserProjects.md` | ProjectRepository拡張（3.1節） | Repository実装指針 |
 | **Step4** | Infrastructure層実装 | `Spec_Analysis_UserProjects.md` | UserProjectsテーブル設計（1.1節） | テーブル構造・制約確認 |
 | **Step4** | Application層実装 | `Spec_Analysis_UserProjects.md` | 権限制御マトリックス拡張（2.2節） | 権限判定ロジック実装 |

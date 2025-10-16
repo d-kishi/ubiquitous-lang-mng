@@ -14,7 +14,8 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **Domain/Application**: F# 8.0 + 関数型プログラミング
 - **Database**: PostgreSQL 16 (Docker Container)
 - **認証**: ASP.NET Core Identity
-- **テスト**: xUnit + FsUnit + Moq + WebApplicationFactory
+- **テスト**: xUnit + FsUnit + Moq + WebApplicationFactory + bUnit (Blazor Component Testing)
+- **E2Eテスト**: Playwright for .NET + **Playwright MCP統合完了**（2025-10-17・Claude Code直接統合・25ツール利用可能）
 
 ## プロジェクト構成
 

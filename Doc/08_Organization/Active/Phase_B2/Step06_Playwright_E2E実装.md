@@ -1,65 +1,61 @@
-# Step 02 組織設計・実行記録
+# Step 06 組織設計・実行記録
 
-**Step名**: Step02 Playwright MCP + Agents統合実装
-**作業特性**: 技術統合・基盤構築・E2Eテスト初期実装
-**推定期間**: 1.5-2時間（5 Stage構成）
-**開始日**: 2025-10-16
+**Step名**: Step06 Playwright E2Eテスト実装・統合効果検証
+**作業特性**: E2Eテスト実装・Agents統合・効果測定・ADR作成
+**推定期間**: 1.5-2時間（4 Stage構成）
+**前提条件**: Step5（UI実装）完了必須
+**開始予定日**: Step5完了後
 
 ---
 
 ## 📋 Step概要
 
 ### Step目的
-- Playwright MCP統合によるE2Eテスト作成効率化（75-85%向上）
+- UserProjects機能E2Eテスト実装（UI実装完了後）
 - Playwright Agents統合によるテストメンテナンス効率化（50-70%削減）
-- UserProjects機能E2Eテスト基盤確立
+- 総合効果検証（作成効率 + メンテナンス効率）
 - ADR_021作成による技術決定永続化
 
 ### Step成功基準
-- ✅ Playwright MCP統合完了（25ツール利用可能・動作確認済み）
-- ✅ E2E.Tests初期実装完了（UserProjects 3シナリオ実装）
+- ✅ E2E.Tests実装完了（UserProjects 3シナリオ実装・実行成功）
 - ✅ Playwright Agents統合完了（VS Code 1.105安定版動作確認）
-- ✅ ADR_021作成完了（技術決定永続化・実測効果記録）
-- ✅ 総合85%効率化検証完了（Phase B2-B5予測効果更新）
+- ✅ 総合85%効率化検証完了（実測値記録）
+- ✅ ADR_021作成完了（技術決定永続化）
 
 ---
 
 ## 🏢 組織設計
 
 ### SubAgent構成
-- **integration-test Agent**: Stage 1-4担当（Playwright統合・E2Eテスト作成・効果検証）
-- **tech-research Agent**: Stage 5担当（ADR_021作成）
+- **integration-test Agent**: Stage 1-3担当（E2Eテスト作成・Agents統合・効果検証）
+- **tech-research Agent**: Stage 4担当（ADR_021作成）
 
 ### 並列実行計画
 ```yaml
 並列実行:
-  - integration-test: Stage 1-4（MCP統合→E2Eテスト作成→Agents統合→効果検証）
-  - tech-research: Stage 5（ADR_021作成）
+  - integration-test: Stage 1-3（E2Eテスト作成→Agents統合→効果検証）
+  - tech-research: Stage 4（ADR_021作成）
 
 実行タイミング:
-  - Stage 1-4: 順次実行（integration-test担当）
-  - Stage 5: Stage 4と並行可能（tech-research担当）
+  - Stage 1-3: 順次実行（integration-test担当）
+  - Stage 4: Stage 3と並行可能（tech-research担当）
 ```
 
 ---
 
-## 📚 Step1成果物必須参照
+## 📚 必須参照ファイル（Step間成果物参照マトリックス準拠）
 
-### 必須参照ファイル（Step間成果物参照マトリックス準拠）
-
-#### 1. Tech_Research_Playwright_2025-10.md
-**参照目的**: Playwright MCP + Agents統合実装手順
+### 1. Tech_Research_Playwright_2025-10.md
+**参照目的**: Playwright Agents統合実装手順
 **重点参照セクション**:
-- 2章: Playwright MCP最新状況（導入手順・.NET対応・既知の問題）
 - 3章: Playwright Agents最新状況（VS Code 1.105安定版対応）
 - 4章: セキュリティ・クレデンシャル管理方針
 
 **活用内容**:
-- Stage 1: MCP統合コマンド確認（行232-253）
-- Stage 3: Agents統合コマンド確認（行468-486）
+- Stage 2: Agents統合コマンド確認（行468-486）
 - セキュリティ設定: テスト専用アカウント方針（行492-538）
 
-#### 2. Spec_Analysis_UserProjects.md
+### 2. Spec_Analysis_UserProjects.md
 **参照目的**: E2Eテストシナリオ作成
 **重点参照セクション**:
 - 3.2節: ユーザー操作フロー（行172-195）
@@ -69,51 +65,32 @@
 - メンバー削除フロー（6ステップ・行183-189）
 - エラーハンドリング・バリデーション（3パターン・行191-194）
 
-#### 3. Phase_B2_Implementation_Plan.md
-**参照目的**: Step2詳細実装内容・リスク管理
+### 3. Phase_B2_Implementation_Plan.md
+**参照目的**: Step6詳細実装内容・リスク管理
 **重点参照セクション**:
-- 3章: Step2-5詳細作業内容（行124-164）
-- 4章: リスク管理計画（行273-303）
+- リスク管理計画（4章）
 
-#### 4. Phase_B2_申し送り事項.md
+### 4. Phase_B2_申し送り事項.md
 **参照目的**: Phase B-F1から引き継ぐPlaywright統合計画
 **重点参照セクション**:
-- Phase 1-5: Playwright統合予定作業（行93-217）
 - セキュリティ設定: テスト専用アカウント・.gitignore設定（行84-88）
 
 ---
 
-## 🎯 Step実行計画（5 Stage構成）
+## 🎯 Step実行計画（4 Stage構成）
 
-### Stage 1: Playwright MCP統合（5分・最優先）
+### Stage 1: E2Eテスト作成（30分・MCPツール活用）
 
-**実施内容**:
-```bash
-# 1コマンドでMCP統合
-claude mcp add playwright npx '@playwright/mcp@latest'
-
-# Claude Code再起動
-# 25ツール利用可能確認
-```
-
-**確認事項**:
-- [ ] ~/.claude.json設定生成確認
-- [ ] Claude Code再起動完了
-- [ ] 25ツール利用可能確認（mcp__playwright__プレフィックス）
-- [ ] playwright_navigate動作確認
-- [ ] playwright_snapshot動作確認
-
-**成果物**:
-- Playwright MCP統合完了状態
-
----
-
-### Stage 2: E2Eテスト作成（30分・MCPツール活用）⏳ **Step6で実施予定**
+**前提条件確認**:
+- [ ] Step5完了確認（UI実装完了）
+- [ ] data-testid属性実装確認（メンバー管理画面）
+- [ ] https://localhost:5001 アクセス可能確認
+- [ ] テスト専用アカウント準備確認
 
 **実施内容**:
 E2E.Testsプロジェクトに以下3シナリオのE2Eテスト作成
 
-#### 2-1. メンバー追加E2Eテスト（10分）
+#### 1-1. メンバー追加E2Eテスト（10分）
 **テストシナリオ**（Spec_Analysis 3.2節 行174-181準拠）:
 1. https://localhost:5001 にアクセス（playwright_navigate）
 2. ログイン（テスト専用アカウント）
@@ -124,7 +101,7 @@ E2E.Testsプロジェクトに以下3シナリオのE2Eテスト作成
 7. 成功メッセージ検証「{ユーザー名}をプロジェクトに追加しました」
 8. メンバー一覧自動更新確認
 
-#### 2-2. メンバー削除E2Eテスト（10分）
+#### 1-2. メンバー削除E2Eテスト（10分）
 **テストシナリオ**（Spec_Analysis 3.2節 行183-189準拠）:
 1. メンバー管理画面で「🗑️」ボタンをクリック（playwright_click）
 2. 削除確認ダイアログ検証（playwright_snapshot）
@@ -132,7 +109,7 @@ E2E.Testsプロジェクトに以下3シナリオのE2Eテスト作成
 4. 成功メッセージ検証
 5. メンバー一覧自動更新確認
 
-#### 2-3. エラーハンドリングE2Eテスト（10分）
+#### 1-3. エラーハンドリングE2Eテスト（10分）
 **テストシナリオ**（Spec_Analysis 3.2節 行191-194準拠）:
 1. 重複追加エラー検証「{ユーザー名}は既にこのプロジェクトのメンバーです」
 2. 最後の管理者削除エラー検証「プロジェクトには最低1名のプロジェクト管理者が必要です」
@@ -146,13 +123,18 @@ E2E.Testsプロジェクトに以下3シナリオのE2Eテスト作成
 - playwright_select: ドロップダウン選択
 - playwright_console_messages: エラーメッセージ検証
 
+**確認事項**:
+- [ ] 3シナリオ全テスト作成完了
+- [ ] テスト実行成功（3/3成功）
+- [ ] 0 Warning / 0 Error維持
+
 **成果物**:
 - tests/UbiquitousLanguageManager.E2E.Tests/UserProjectsTests.cs
 - テストコード: メンバー追加・削除・エラーハンドリング3シナリオ
 
 ---
 
-### Stage 3: Playwright Agents統合（15分）⏳ **Step6で実施予定**
+### Stage 2: Playwright Agents統合（15分）
 
 **実施内容**:
 ```bash
@@ -178,28 +160,29 @@ npx playwright init-agents --loop=vscode
 **成果物**:
 - Playwright Agents統合完了状態
 - .playwright/agents/設定ファイル
+- セキュリティ設定完了
 
 ---
 
-### Stage 4: 統合効果検証（30分）⏳ **Step6で実施予定**
+### Stage 3: 統合効果検証（30分）
 
 **実施内容**:
 
-#### 4-1. 作成効率測定（MCP使用 vs 従来手法）（15分）
+#### 3-1. 作成効率測定（MCP使用 vs 従来手法）（15分）
 **測定項目**:
 - 従来手法推定時間: 2-3時間（手動テストコード作成）
-- MCP活用実測時間: Stage 2実測時間記録
+- MCP活用実測時間: Stage 1実測時間記録
 - 削減率算出: ((従来 - MCP) / 従来) × 100%
 - 目標達成確認: 削減率 ≥ 75%
 
-#### 4-2. メンテナンス効率測定（Agents活用）（15分）
+#### 3-2. メンテナンス効率測定（Agents活用）（15分）
 **測定項目**:
 - UI変更シミュレーション実施
 - Healer自動修復動作確認
 - 修復成功率測定
 - 目標達成確認: メンテナンス効率 50-70%削減
 
-#### 4-3. 総合効果記録
+#### 3-3. 総合効果記録
 **記録項目**:
 - 作成効率測定結果
 - メンテナンス効率測定結果
@@ -211,7 +194,7 @@ npx playwright init-agents --loop=vscode
 
 ---
 
-### Stage 5: ADR記録作成（20分）⏳ **Step6で実施予定**
+### Stage 4: ADR記録作成（20分）
 
 **実施内容**:
 ADR_021: Playwright MCP + Agents統合戦略 作成
@@ -270,7 +253,7 @@ Playwright MCP + Agents統合により85%効率化の可能性。
 - Tech_Research_Playwright_2025-10.md
 
 ## Notes
-- 効果測定結果: [Stage 4実測値記録]
+- 効果測定結果: [Stage 3実測値記録]
 - Phase B2-B5予測効果: [更新]
 ```
 
@@ -281,77 +264,40 @@ Playwright MCP + Agents統合により85%効率化の可能性。
 
 ## 📊 Step実行記録（随時更新）
 
-### Stage 1実行記録 ✅ 完了（2025-10-16）
-
-**実施内容**:
-```bash
-claude mcp add playwright npx -- @playwright/mcp@latest
-```
-
-**実行結果**:
-- ✅ Playwright MCP統合コマンド実行成功
-- ✅ 設定ファイル更新完了: `C:\Users\ka837\.claude.json`
-- ✅ コマンド登録完了: `npx @playwright/mcp@latest`
-- ✅ MCP Server追加成功
-
-**確認事項**:
-- ✅ ~/.claude.json設定生成確認完了
-- ⏳ Claude Code再起動待ち（次セッションで実施）
-- ⏳ 25ツール利用可能確認待ち（再起動後）
-- ⏳ playwright_navigate動作確認待ち（再起動後）
-- ⏳ playwright_snapshot動作確認待ち（再起動後）
-
-**セッション分割判断**:
-- 🔴 Claude Code再起動が必須のため、ここでセッション終了
-- 📋 次セッションでStage 2から再開予定
-
-**所要時間**: 5分
-
----
+### Stage 1実行記録
+⏳ **未実施**（Step5完了後に実施）
 
 ### Stage 2実行記録
-⏳ **Step6で実施予定**（UI実装完了後）
+⏳ **未実施**（Step5完了後に実施）
 
 ### Stage 3実行記録
-⏳ **Step6で実施予定**（UI実装完了後）
+⏳ **未実施**（Step5完了後に実施）
 
 ### Stage 4実行記録
-⏳ **Step6で実施予定**（UI実装完了後）
-
-### Stage 5実行記録
-⏳ **Step6で実施予定**（UI実装完了後）
+⏳ **未実施**（Step5完了後に実施）
 
 ---
 
 ## ✅ Step終了時レビュー
 
 ### 成果物確認
-- ✅ Playwright MCP統合完了状態
-- ⏳ E2E.Testsプロジェクト初期実装（3シナリオ）→ **Step6に移動**
-- ⏳ Playwright Agents統合完了状態 → **Step6に移動**
-- ⏳ ADR_021作成完了 → **Step6に移動**
-- ⏳ 効果測定レポート完成 → **Step6に移動**
+- [ ] E2E.Testsプロジェクト初期実装（3シナリオ）
+- [ ] Playwright Agents統合完了状態
+- [ ] ADR_021作成完了
+- [ ] 効果測定レポート完成
 
 ### 品質確認
-- ✅ ビルド品質維持（0 Warning / 0 Error）
-- ⏳ E2Eテスト実行成功（3シナリオ全て成功）→ **Step6で実施**
-- ⏳ Playwright Agents動作確認（自動修復機能確認）→ **Step6で実施**
-- ⏳ セキュリティ設定完了（.gitignore・テスト専用アカウント）→ **Step6で実施**
+- [ ] E2Eテスト実行成功（3シナリオ全て成功）
+- [ ] Playwright Agents動作確認（自動修復機能確認）
+- [ ] ビルド品質維持（0 Warning / 0 Error）
+- [ ] セキュリティ設定完了（.gitignore・テスト専用アカウント）
 
 ### 次Step準備確認
-- ✅ Step4実施準備完了確認
-- ✅ Phase B2全体実装計画更新
-- ✅ Phase_Summary.md更新（Step2完了記録・Step6追加）
-
-### Step2完了判断
-**判断**: ✅ **完了**
-- **完了範囲**: Stage 1（Playwright MCP統合）のみ
-- **重要決定**: Stage 2-5を新規Step6（UI実装後）に移動
-- **理由**: E2Eテスト実装にはUI要素（data-testid属性等）が必須
-- **次Step**: Step4（Application層・Infrastructure層実装）
+- [ ] Phase B2完了確認
+- [ ] Phase_Summary.md更新（Step6完了記録）
 
 ---
 
-**Step作成日**: 2025-10-16
+**Step作成日**: 2025-10-17
 **Step責任者**: Claude Code
 **Step監督**: プロジェクトオーナー

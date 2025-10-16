@@ -35,6 +35,43 @@
 
 **詳細**: `/Doc/08_Organization/Rules/縦方向スライス実装マスタープラン.md`（動作確認戦略セクション）
 
+## 🧪 E2Eテスト実装タイミング原則（2025-10-17確立・Phase B2 Step2で発見）
+
+### 重要原則: UI実装完了後にE2Eテスト実装
+**策定根拠**: Phase B2 Step2で、UI要素実装前にE2Eテストを実装しようとして発見した重大な構成エラー
+
+#### 必須前提条件
+**E2Eテスト実装には以下が必須**:
+- ✅ **UI要素実装完了**: テスト対象画面の実装完了
+- ✅ **data-testid属性付与完了**: テストロケーター用属性の実装完了
+- ✅ **E2Eテスト経路全体のUI実装完了**: テスト経路に含まれる全画面の実装完了
+
+#### テスト経路 vs テスト対象の区別
+**E2Eテスト経路**: テストシナリオで経由する全画面
+- 例: Login画面（Phase A） → Project一覧画面（Phase B1） → メンバー管理画面（Phase B2）
+
+**テスト対象**: 実際にテストする機能
+- 例: メンバー管理機能（Phase B2）
+
+**重要**: テスト対象だけでなく、**テスト経路全体**にdata-testid属性が必要
+
+#### Phase B2での適用例
+**誤った計画**: Step2でUI実装前にE2Eテスト実装（Phase B2 Step2当初計画）
+**正しい計画**: Step5でUI実装完了後、Step6でE2Eテスト実装（Phase B2 Step2修正後計画）
+
+**修正内容**:
+- Step2 Stage 2-5（E2Eテスト作成・Agents統合・効果検証・ADR作成）を新規Step6に移動
+- Step5でdata-testid属性付与（Phase A/B1/B2全体）
+- Step6でE2Eテスト実装（UI実装完了後）
+
+#### 記録・文書化
+**Phase B2での記録**:
+- Phase_Summary.md: Step5にdata-testid属性付与明記・Step6新設
+- Spec_Analysis_UserProjects.md: data-testid属性設計セクション追加（Phase A/B1/B2）
+- GitHub Issue #52: Phase A E2Eテスト実装（認証9シナリオ・ユーザー管理10シナリオ）
+
+**詳細**: `/Doc/08_Organization/Active/Phase_B2/Step02_Playwright統合.md`（重大な構成変更決定セクション）
+
 ## 🔧 namespace設計原則（ADR_019準拠・2025-10-01確立）
 
 ### 必須遵守事項
@@ -480,5 +517,5 @@ Phase B1において、Step1分析成果を後続Step2-5で確実活用するた
 - **プロセス改善**: 週次振り返りによる改善循環
 
 ---
-**最終更新**: 2025-10-06（**Phase B1完了・品質スコア98点達成・Phase B2準備開始・動作確認タイミング戦略確立**）  
-**重要変更**: Phase B1完了記録追加・Phase B1成果総括・Phase B2申し送り事項記録・動作確認タイミング戦略追加（マスタープラン記録済み）・F#↔C#型変換4パターン確立記録・bUnitテスト基盤確立記録・Blazor Server実装パターン確立記録
+**最終更新**: 2025-10-17（**Phase B2 Step2完了・E2Eテスト実装タイミング原則確立・Playwright MCP統合完了**）
+**重要変更**: Phase B2 Step2完了記録追加・E2Eテスト実装タイミング原則追加（UI実装完了後の必須前提条件・テスト経路vs対象の区別）・Playwright MCP統合記録（25ツール利用可能）・GitHub Issue #52作成（Phase A E2E 19シナリオ）
