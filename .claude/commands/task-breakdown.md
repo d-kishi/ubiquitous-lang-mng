@@ -2,8 +2,7 @@
 
 **目的**: Phase/Step作業の自動分解とTodoList連携管理
 **対象**: Phase開始時・Step開始時・複雑作業時
-**実行タイミング**: 「タスク分解」「作業分解」「TodoList作成」宣言時
-**連携**: TodoWriteツール・GitHub Issues・仕様書・設計書
+**連携先**: TodoWriteツール・GitHub Issues・仕様書・設計書
 
 ## 🎯 Command機能概要
 

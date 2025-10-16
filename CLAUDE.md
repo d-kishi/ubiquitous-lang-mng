@@ -31,10 +31,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **セッション開始**: 「セッションを開始します」「セッション開始」 → **`.claude/commands/session-start.md`** 自動実行
 - **セッション終了**: 「セッション終了」「セッションを終了します」 → **`.claude/commands/session-end.md`** 自動実行
   - **🔴 必須**: 日次記録作成・プロジェクト状況更新・Serenaメモリー5種類更新の実行証跡確認必須
-- **週次振り返り**: 「週次振り返り」「振り返り実施」「今週の振り返り」 → **`.claude/commands/weekly-retrospective.md`** 自動実行
-- **Phase開始準備**: 「Phase開始準備」「新Phase準備」「PhaseXXの実行を開始してください」「PhaseXXを開始してください」 → **`.claude/commands/phase-start.md`** 自動実行
-- **Step開始準備**: 「Step開始」「次Step開始」「StepXX開始」「Step開始準備」「次のStep準備」 → **`.claude/commands/step-start.md`** 自動実行
-- **Phase終了処理**: 「Phase完了」「Phase終了」「フェーズ完了」「PhaseXX完了」「Phase総括実施」 → **`.claude/commands/phase-end.md`** 自動実行
+- **週次振り返り**: 「週次振り返り」「振り返り実施」「今週の振り返り」「振り返りを実施」 → **`.claude/commands/weekly-retrospective.md`** 自動実行
+- **Phase開始準備**: 「Phase開始準備」「新Phase準備」「PhaseXXの実行を開始してください」「PhaseXXを開始してください」「PhaseXX開始準備」「PhaseXXを準備」 → **`.claude/commands/phase-start.md`** 自動実行
+- **Step開始準備**: 「Step開始」「次Step開始」「StepXX開始」「Step開始準備」「次のStep準備」「PhaseXX StepYYを開始します」「PhaseXX StepYY開始」「StepYYを開始」「StepYY準備」 → **`.claude/commands/step-start.md`** 自動実行
+- **Step終了確認**: 「Step完了」「Step終了」「StepXX完了」「StepXX終了」「PhaseXX StepYY完了」「Step終了確認」 → **`.claude/commands/step-end-review.md`** 自動実行
+- **Phase終了処理**: 「Phase完了」「Phase終了」「フェーズ完了」「PhaseXX完了」「PhaseXX終了」「Phase総括実施」 → **`.claude/commands/phase-end.md`** 自動実行
+- **仕様準拠確認**: 「仕様準拠確認」「仕様チェック」「spec-compliance実行」 → **`.claude/commands/spec-compliance-check.md`** 自動実行
+- **SubAgent選択**: 「SubAgent選択」「Agent選択」「subagent-selection実行」 → **`.claude/commands/subagent-selection.md`** 自動実行
 
 **Serena MCP初期化**: セッション開始時は必ず `mcp__serena__check_onboarding_performed` を実行（ツール呼び出し）
 

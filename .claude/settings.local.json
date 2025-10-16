@@ -90,7 +90,8 @@
       "WebFetch(domain:til.simonwillison.net)",
       "WebFetch(domain:www.checklyhq.com)",
       "WebFetch(domain:claudelog.com)",
-      "WebFetch(domain:medium.com)"
+      "WebFetch(domain:medium.com)",
+      "Bash(claude mcp add:*)"
     ],
     "deny": [],
     "ask": [],

@@ -1,7 +1,7 @@
 # SubAgent選択Command
 
-**目的**: Phase・Step特性に応じた最適SubAgent組み合わせ選択  
-**対象**: Phase/Step開始時  
+**目的**: Phase・Step特性に応じた最適SubAgent組み合わせ選択
+**対象**: Phase/Step開始時
 **基準**: SubAgent組み合わせパターン.md準拠
 
 ## コマンド実行内容
