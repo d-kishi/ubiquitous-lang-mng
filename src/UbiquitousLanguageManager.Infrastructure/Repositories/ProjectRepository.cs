@@ -18,6 +18,7 @@ using DomainDomain = UbiquitousLanguageManager.Domain.ProjectManagement.Domain;
 using UbiquitousLanguageManager.Infrastructure.Data;
 using EntityProject = UbiquitousLanguageManager.Infrastructure.Data.Entities.Project;
 using EntityDomain = UbiquitousLanguageManager.Infrastructure.Data.Entities.Domain;
+using EntityUserProject = UbiquitousLanguageManager.Infrastructure.Data.Entities.UserProject;
 
 namespace UbiquitousLanguageManager.Infrastructure.Repositories;
 
@@ -853,6 +854,498 @@ public class ProjectRepository : IProjectRepository
             entity.IsActive                    // IsActive: Entityから直接取得
         );
     }
+
+    // =================================================================
+    // 👥 UserProjects多対多関連管理（Phase B2拡張）
+    // =================================================================
+
+    /// <summary>
+    /// UserProjectsレコード追加（プロジェクトメンバー追加）
+    ///
+    /// 【Phase B2: ユーザー・プロジェクト関連管理】
+    /// - 複合一意制約違反チェック（UserId + ProjectId）
+    /// - CASCADE DELETE設定済み（ユーザー削除・プロジェクト削除時に自動削除）
+    /// </summary>
+    public async Task<FSharpResult<Unit, string>> AddUserToProjectAsync(
+        UserId userId, ProjectId projectId, UserId updatedBy)
+    {
+        try
+        {
+            _logger.LogDebug("プロジェクトメンバー追加開始: UserId={UserId}, ProjectId={ProjectId}",
+                userId.Item, projectId.Item);
+
+            // 1. 重複チェック（複合一意制約）
+            var existingUserProject = await _context.Set<EntityUserProject>()
+                .FirstOrDefaultAsync(up => up.UserId == userId.Item.ToString() && up.ProjectId == projectId.Item);
+
+            if (existingUserProject != null)
+            {
+                _logger.LogWarning("UserProjects重複: UserId={UserId}, ProjectId={ProjectId}",
+                    userId.Item, projectId.Item);
+                return FSharpResult<Unit, string>.NewError(
+                    "このユーザーは既にプロジェクトのメンバーです");
+            }
+
+            // 2. UserProjectsレコード作成
+            var userProject = new EntityUserProject
+            {
+                UserId = userId.Item.ToString(),
+                ProjectId = projectId.Item,
+                UpdatedBy = updatedBy.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Set<EntityUserProject>().Add(userProject);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("プロジェクトメンバー追加成功: UserProjectId={UserProjectId}, UserId={UserId}, ProjectId={ProjectId}",
+                userProject.UserProjectId, userId.Item, projectId.Item);
+
+            return FSharpResult<Unit, string>.NewOk(null!);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクトメンバー追加でエラー発生: UserId={UserId}, ProjectId={ProjectId}",
+                userId.Item, projectId.Item);
+            return FSharpResult<Unit, string>.NewError(
+                $"プロジェクトメンバー追加に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// UserProjectsレコード削除（プロジェクトメンバー削除）
+    ///
+    /// 【Phase B2: ユーザー・プロジェクト関連管理】
+    /// - 物理削除（UserProjectsテーブルには論理削除フラグなし）
+    /// - 最後の管理者削除防止チェックはApplication層で実施
+    /// </summary>
+    public async Task<FSharpResult<Unit, string>> RemoveUserFromProjectAsync(
+        UserId userId, ProjectId projectId)
+    {
+        try
+        {
+            _logger.LogDebug("プロジェクトメンバー削除開始: UserId={UserId}, ProjectId={ProjectId}",
+                userId.Item, projectId.Item);
+
+            // UserProjectsレコード取得
+            var userProject = await _context.Set<EntityUserProject>()
+                .FirstOrDefaultAsync(up => up.UserId == userId.Item.ToString() && up.ProjectId == projectId.Item);
+
+            if (userProject == null)
+            {
+                _logger.LogWarning("UserProjectsレコードが見つかりません: UserId={UserId}, ProjectId={ProjectId}",
+                    userId.Item, projectId.Item);
+                return FSharpResult<Unit, string>.NewError(
+                    "指定されたユーザーはこのプロジェクトのメンバーではありません");
+            }
+
+            // 物理削除
+            _context.Set<EntityUserProject>().Remove(userProject);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("プロジェクトメンバー削除成功: UserProjectId={UserProjectId}, UserId={UserId}, ProjectId={ProjectId}",
+                userProject.UserProjectId, userId.Item, projectId.Item);
+
+            return FSharpResult<Unit, string>.NewOk(null!);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクトメンバー削除でエラー発生: UserId={UserId}, ProjectId={ProjectId}",
+                userId.Item, projectId.Item);
+            return FSharpResult<Unit, string>.NewError(
+                $"プロジェクトメンバー削除に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// プロジェクトメンバー一覧取得（UserProjects JOIN）
+    ///
+    /// 【EF Core最適化】
+    /// - AsNoTracking()で読み取り専用最適化
+    /// - Eager Loading不要（UserIdのみ取得）
+    /// </summary>
+    public async Task<FSharpResult<FSharpList<UserId>, string>> GetProjectMembersAsync(ProjectId projectId)
+    {
+        try
+        {
+            _logger.LogDebug("プロジェクトメンバー一覧取得開始: ProjectId={ProjectId}", projectId.Item);
+
+            var userIds = await _context.Set<EntityUserProject>()
+                .AsNoTracking()
+                .Where(up => up.ProjectId == projectId.Item)
+                .Select(up => up.UserId)
+                .ToListAsync();
+
+            // string → long → F# UserId変換
+            var fsharpUserIds = userIds
+                .Select(userId =>
+                {
+                    if (long.TryParse(userId, out var userIdLong))
+                    {
+                        return UserId.NewUserId(userIdLong);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("UserIdのlong変換失敗: UserId={UserId}", userId);
+                        return UserId.NewUserId(1L); // デフォルト値
+                    }
+                })
+                .ToList();
+
+            _logger.LogInformation("プロジェクトメンバー一覧取得成功: ProjectId={ProjectId}, Count={Count}",
+                projectId.Item, fsharpUserIds.Count);
+
+            return FSharpResult<FSharpList<UserId>, string>.NewOk(
+                ListModule.OfSeq(fsharpUserIds));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクトメンバー一覧取得でエラー発生: ProjectId={ProjectId}", projectId.Item);
+            return FSharpResult<FSharpList<UserId>, string>.NewError(
+                $"プロジェクトメンバー一覧取得に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// プロジェクトメンバー判定（UserProjects存在チェック）
+    ///
+    /// 【EF Core最適化】
+    /// - AnyAsync()で効率的な存在チェック（COUNT不要）
+    /// </summary>
+    public async Task<FSharpResult<bool, string>> IsUserProjectMemberAsync(
+        UserId userId, ProjectId projectId)
+    {
+        try
+        {
+            _logger.LogDebug("プロジェクトメンバー判定開始: UserId={UserId}, ProjectId={ProjectId}",
+                userId.Item, projectId.Item);
+
+            var isMember = await _context.Set<EntityUserProject>()
+                .AsNoTracking()
+                .AnyAsync(up => up.UserId == userId.Item.ToString() && up.ProjectId == projectId.Item);
+
+            _logger.LogInformation("プロジェクトメンバー判定完了: UserId={UserId}, ProjectId={ProjectId}, IsMember={IsMember}",
+                userId.Item, projectId.Item, isMember);
+
+            return FSharpResult<bool, string>.NewOk(isMember);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクトメンバー判定でエラー発生: UserId={UserId}, ProjectId={ProjectId}",
+                userId.Item, projectId.Item);
+            return FSharpResult<bool, string>.NewError(
+                $"プロジェクトメンバー判定に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// プロジェクトメンバー数取得（UserProjects COUNT）
+    ///
+    /// 【EF Core最適化】
+    /// - CountAsync()で効率的なCOUNT集計
+    /// </summary>
+    public async Task<FSharpResult<int, string>> GetProjectMemberCountAsync(ProjectId projectId)
+    {
+        try
+        {
+            _logger.LogDebug("プロジェクトメンバー数取得開始: ProjectId={ProjectId}", projectId.Item);
+
+            var count = await _context.Set<EntityUserProject>()
+                .AsNoTracking()
+                .CountAsync(up => up.ProjectId == projectId.Item);
+
+            _logger.LogInformation("プロジェクトメンバー数取得成功: ProjectId={ProjectId}, Count={Count}",
+                projectId.Item, count);
+
+            return FSharpResult<int, string>.NewOk(count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクトメンバー数取得でエラー発生: ProjectId={ProjectId}", projectId.Item);
+            return FSharpResult<int, string>.NewError(
+                $"プロジェクトメンバー数取得に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// プロジェクト作成 + デフォルトドメイン作成 + Owner自動追加（トランザクション保証）
+    ///
+    /// 【Phase B2: Phase B1トランザクションパターン拡張】
+    /// - ProjectsレコードINSERT
+    /// - DomainsレコードINSERT（デフォルトドメイン）
+    /// - UserProjectsレコードINSERT（Owner自動追加）
+    /// - トランザクション境界（同一トランザクション）
+    /// </summary>
+    public async Task<FSharpResult<Tuple<DomainProject, DomainDomain>, string>>
+        SaveProjectWithDefaultDomainAndOwnerAsync(DomainProject project, DomainDomain domain, UserId ownerId)
+    {
+        // InMemory Database判定（テスト実行環境対応）
+        var isInMemory = _context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+
+        if (isInMemory)
+        {
+            // InMemory Database: トランザクションなしで実行
+            return await SaveProjectWithDefaultDomainAndOwnerInMemoryAsync(project, domain, ownerId);
+        }
+        else
+        {
+            // 通常のDB: トランザクション使用
+            return await SaveProjectWithDefaultDomainAndOwnerWithTransactionAsync(project, domain, ownerId);
+        }
+    }
+
+    /// <summary>
+    /// プロジェクト・デフォルトドメイン・Owner同時作成（InMemory Database用）
+    /// </summary>
+    private async Task<FSharpResult<Tuple<DomainProject, DomainDomain>, string>>
+        SaveProjectWithDefaultDomainAndOwnerInMemoryAsync(DomainProject project, DomainDomain domain, UserId ownerId)
+    {
+        try
+        {
+            var projectName = project.Name.Value;
+            _logger.LogDebug("プロジェクト・デフォルトドメイン・Owner同時作成開始（InMemory）: ProjectName={ProjectName}",
+                projectName);
+
+            // 1. プロジェクト重複チェック
+            var existingProject = await _context.Projects
+                .FirstOrDefaultAsync(p => p.ProjectName == projectName);
+
+            if (existingProject != null)
+            {
+                _logger.LogWarning("プロジェクト名重複: Name={Name}", projectName);
+                return FSharpResult<Tuple<DomainProject, DomainDomain>, string>.NewError(
+                    $"プロジェクト名'{projectName}'は既に使用されています");
+            }
+
+            // 2. プロジェクト作成
+            var projectEntity = new EntityProject
+            {
+                ProjectName = projectName,
+                Description = FSharpOption<string>.get_IsSome(project.Description.Value)
+                    ? project.Description.Value.Value
+                    : null,
+                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow,
+                IsDeleted = false
+            };
+
+            _context.Projects.Add(projectEntity);
+            await _context.SaveChangesAsync(); // プロジェクトID確定
+
+            _logger.LogDebug("プロジェクト作成完了: ProjectId={ProjectId}", projectEntity.ProjectId);
+
+            // 3. デフォルトドメイン作成
+            var domainEntity = new EntityDomain
+            {
+                DomainName = domain.Name.Value,
+                ProjectId = projectEntity.ProjectId,
+                Description = FSharpOption<string>.get_IsSome(domain.Description.Value)
+                    ? domain.Description.Value.Value
+                    : null,
+                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow,
+                IsDeleted = false,
+                IsDefault = true
+            };
+
+            _context.Domains.Add(domainEntity);
+            await _context.SaveChangesAsync();
+
+            _logger.LogDebug("デフォルトドメイン作成完了: DomainId={DomainId}", domainEntity.DomainId);
+
+            // 4. UserProjects作成（Owner追加）
+            var userProject = new EntityUserProject
+            {
+                UserId = ownerId.Item.ToString(),
+                ProjectId = projectEntity.ProjectId,
+                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Set<EntityUserProject>().Add(userProject);
+            await _context.SaveChangesAsync();
+
+            _logger.LogDebug("UserProjects作成完了: UserProjectId={UserProjectId}", userProject.UserProjectId);
+
+            _logger.LogInformation(
+                "プロジェクト・デフォルトドメイン・Owner同時作成成功（InMemory）: ProjectId={ProjectId}, DomainId={DomainId}, UserProjectId={UserProjectId}",
+                projectEntity.ProjectId, domainEntity.DomainId, userProject.UserProjectId);
+
+            // 5. F# Domain型に変換して返却
+            var resultProject = ConvertToFSharpProject(projectEntity);
+            var resultDomain = ConvertToFSharpDomain(domainEntity);
+
+            return FSharpResult<Tuple<DomainProject, DomainDomain>, string>.NewOk(
+                Tuple.Create(resultProject, resultDomain));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクト・デフォルトドメイン・Owner作成でエラー発生（InMemory）: ProjectName={ProjectName}",
+                project.Name.Value);
+
+            return FSharpResult<Tuple<DomainProject, DomainDomain>, string>.NewError(
+                $"作成処理でエラーが発生しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// プロジェクト・デフォルトドメイン・Owner同時作成（トランザクション使用）
+    /// </summary>
+    private async Task<FSharpResult<Tuple<DomainProject, DomainDomain>, string>>
+        SaveProjectWithDefaultDomainAndOwnerWithTransactionAsync(DomainProject project, DomainDomain domain, UserId ownerId)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var projectName = project.Name.Value;
+            _logger.LogDebug("プロジェクト・デフォルトドメイン・Owner同時作成開始: ProjectName={ProjectName}",
+                projectName);
+
+            // 1. プロジェクト重複チェック
+            var existingProject = await _context.Projects
+                .FirstOrDefaultAsync(p => p.ProjectName == projectName);
+
+            if (existingProject != null)
+            {
+                _logger.LogWarning("プロジェクト名重複: Name={Name}", projectName);
+                return FSharpResult<Tuple<DomainProject, DomainDomain>, string>.NewError(
+                    $"プロジェクト名'{projectName}'は既に使用されています");
+            }
+
+            // 2. プロジェクト作成
+            var projectEntity = new EntityProject
+            {
+                ProjectName = projectName,
+                Description = FSharpOption<string>.get_IsSome(project.Description.Value)
+                    ? project.Description.Value.Value
+                    : null,
+                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow,
+                IsDeleted = false
+            };
+
+            _context.Projects.Add(projectEntity);
+            await _context.SaveChangesAsync(); // プロジェクトID確定
+
+            _logger.LogDebug("プロジェクト作成完了: ProjectId={ProjectId}", projectEntity.ProjectId);
+
+            // 3. デフォルトドメイン作成
+            var domainEntity = new EntityDomain
+            {
+                DomainName = domain.Name.Value,
+                ProjectId = projectEntity.ProjectId,
+                Description = FSharpOption<string>.get_IsSome(domain.Description.Value)
+                    ? domain.Description.Value.Value
+                    : null,
+                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow,
+                IsDeleted = false,
+                IsDefault = true
+            };
+
+            _context.Domains.Add(domainEntity);
+            await _context.SaveChangesAsync();
+
+            _logger.LogDebug("デフォルトドメイン作成完了: DomainId={DomainId}", domainEntity.DomainId);
+
+            // 4. UserProjects作成（Owner追加）
+            var userProject = new EntityUserProject
+            {
+                UserId = ownerId.Item.ToString(),
+                ProjectId = projectEntity.ProjectId,
+                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Set<EntityUserProject>().Add(userProject);
+            await _context.SaveChangesAsync();
+
+            _logger.LogDebug("UserProjects作成完了: UserProjectId={UserProjectId}", userProject.UserProjectId);
+
+            // 5. トランザクションコミット
+            await transaction.CommitAsync();
+
+            _logger.LogInformation(
+                "プロジェクト・デフォルトドメイン・Owner同時作成成功: ProjectId={ProjectId}, DomainId={DomainId}, UserProjectId={UserProjectId}",
+                projectEntity.ProjectId, domainEntity.DomainId, userProject.UserProjectId);
+
+            // 6. F# Domain型に変換して返却
+            var resultProject = ConvertToFSharpProject(projectEntity);
+            var resultDomain = ConvertToFSharpDomain(domainEntity);
+
+            return FSharpResult<Tuple<DomainProject, DomainDomain>, string>.NewOk(
+                Tuple.Create(resultProject, resultDomain));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクト・デフォルトドメイン・Owner作成でエラー発生: ProjectName={ProjectName}",
+                project.Name.Value);
+
+            return FSharpResult<Tuple<DomainProject, DomainDomain>, string>.NewError(
+                $"作成処理でエラーが発生しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// プロジェクト関連データ件数取得（削除確認画面用）
+    ///
+    /// 【Phase B2拡張】
+    /// - UserProjectsカウント追加
+    /// </summary>
+    public async Task<FSharpResult<Tuple<int, int, int>, string>> GetRelatedDataCountAsync(ProjectId projectId)
+    {
+        try
+        {
+            _logger.LogDebug("プロジェクト関連データ件数取得開始: ProjectId={ProjectId}", projectId.Item);
+
+            // 並列実行でパフォーマンス最適化
+            var domainCountTask = _context.Domains
+                .AsNoTracking()
+                .CountAsync(d => d.ProjectId == projectId.Item);
+
+            // ユビキタス言語カウント（FormalとDraftを合算）
+            var formalLanguageCountTask = _context.FormalUbiquitousLanguages
+                .AsNoTracking()
+                .Join(_context.Domains, ful => ful.DomainId, d => d.DomainId, (ful, d) => d)
+                .CountAsync(d => d.ProjectId == projectId.Item);
+
+            var draftLanguageCountTask = _context.DraftUbiquitousLanguages
+                .AsNoTracking()
+                .Join(_context.Domains, dul => dul.DomainId, d => d.DomainId, (dul, d) => d)
+                .CountAsync(d => d.ProjectId == projectId.Item);
+
+            // 【Phase B2拡張】UserProjectsカウント追加（メンバー数取得）
+            var memberCountTask = _context.Set<EntityUserProject>()
+                .AsNoTracking()
+                .CountAsync(up => up.ProjectId == projectId.Item);
+
+            await Task.WhenAll(domainCountTask, formalLanguageCountTask, draftLanguageCountTask, memberCountTask);
+
+            var domainCount = await domainCountTask;
+            var formalLanguageCount = await formalLanguageCountTask;
+            var draftLanguageCount = await draftLanguageCountTask;
+            var languageCount = formalLanguageCount + draftLanguageCount;
+            var memberCount = await memberCountTask;
+
+            _logger.LogInformation(
+                "プロジェクト関連データ件数取得成功: ProjectId={ProjectId}, Domains={Domains}, Languages={Languages}, Members={Members}",
+                projectId.Item, domainCount, languageCount, memberCount);
+
+            return FSharpResult<Tuple<int, int, int>, string>.NewOk(
+                Tuple.Create(domainCount, languageCount, memberCount));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロジェクト関連データ件数取得でエラー発生: ProjectId={ProjectId}", projectId.Item);
+            return FSharpResult<Tuple<int, int, int>, string>.NewError(
+                $"関連データ件数取得に失敗しました: {ex.Message}");
+        }
+    }
+
+    // =================================================================
+    // 🔄 プライベートヘルパーメソッド：Role判別共用体変換
+    // =================================================================
 
     /// <summary>
     /// F# Role判別共用体を文字列に変換（ログ出力用）

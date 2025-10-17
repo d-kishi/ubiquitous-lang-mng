@@ -129,6 +129,63 @@ type IProjectManagementService =
     /// <returns>統計情報またはエラーメッセージ</returns>
     abstract member GetProjectStatisticsAsync: query: GetProjectStatisticsQuery -> Task<ProjectStatisticsResult>
 
+    // 👥 Phase B2: UserProjects多対多関連管理メソッド
+
+    /// <summary>
+    /// プロジェクトメンバー追加
+    /// 【Phase B2: ユーザー・プロジェクト関連管理】
+    /// - UserProjectsレコードINSERT
+    /// - 重複追加チェック（複合一意制約）
+    /// - SuperUser/ProjectManager権限のみ実行可能
+    /// 【F#初学者向け解説】
+    /// Railway-oriented Programmingパターンで実装され、
+    /// 権限チェック→重複チェック→永続化の各ステップをResult型で連鎖処理します。
+    /// </summary>
+    /// <param name="command">メンバー追加Command</param>
+    /// <returns>成功時はunit、失敗時はエラーメッセージ</returns>
+    abstract member AddMemberToProjectAsync: command: AddMemberToProjectCommand -> Task<AddMemberCommandResult>
+
+    /// <summary>
+    /// プロジェクトメンバー削除
+    /// 【Phase B2: ユーザー・プロジェクト関連管理】
+    /// - UserProjectsレコードDELETE（物理削除）
+    /// - 最後の管理者削除防止チェック（AspNetUserRoles参照）
+    /// - SuperUser/ProjectManager権限のみ実行可能
+    /// 【F#初学者向け解説】
+    /// 最後のProjectManagerを削除しようとした場合はエラーを返します。
+    /// これにより、プロジェクトに必ず管理者が存在することを保証します。
+    /// </summary>
+    /// <param name="command">メンバー削除Command</param>
+    /// <returns>成功時はunit、失敗時はエラーメッセージ</returns>
+    abstract member RemoveMemberFromProjectAsync: command: RemoveMemberFromProjectCommand -> Task<RemoveMemberCommandResult>
+
+    /// <summary>
+    /// プロジェクトメンバー一覧取得
+    /// 【Phase B2: ユーザー・プロジェクト関連管理】
+    /// - UserProjectsテーブル経由でメンバー一覧取得
+    /// - 権限制御マトリックス準拠（SuperUser/ProjectManager/所属メンバーのみ表示可能）
+    /// 【F#初学者向け解説】
+    /// Infrastructure層GetProjectMembersAsync（UserIdのみ取得）を活用し、
+    /// UserIdリストを返却します。User詳細情報取得はWeb層で実施します。
+    /// </summary>
+    /// <param name="query">メンバー一覧取得Query</param>
+    /// <returns>UserIdリストまたはエラーメッセージ</returns>
+    abstract member GetProjectMembersAsync: query: GetProjectMembersQuery -> Task<ProjectMembersResult>
+
+    /// <summary>
+    /// プロジェクトメンバー判定
+    /// 【Phase B2: ユーザー・プロジェクト関連管理】
+    /// - UserProjectsテーブル存在チェック
+    /// - 権限制御マトリックス統合用のヘルパーメソッド
+    /// 【F#初学者向け解説】
+    /// 指定されたユーザーが指定されたプロジェクトのメンバーかどうかを判定します。
+    /// Infrastructure層IsUserProjectMemberAsync活用で効率的な存在チェックを実現します。
+    /// </summary>
+    /// <param name="userId">判定対象ユーザーID</param>
+    /// <param name="projectId">判定対象プロジェクトID</param>
+    /// <returns>メンバー判定結果（true/false）またはエラーメッセージ</returns>
+    abstract member IsUserProjectMemberAsync: userId: UserId * projectId: ProjectId -> Task<Result<bool, string>>
+
 // 🎯 プロジェクト管理Repository抽象化
 // 【F#初学者向け解説】
 // Infrastructure層への依存を抽象化するためのRepository契約です。
@@ -199,6 +256,57 @@ type IProjectRepository =
     /// <param name="searchQuery">検索条件</param>
     /// <returns>検索結果一覧</returns>
     abstract member SearchProjectsAsync: searchQuery: SearchProjectsQuery -> Task<Result<ProjectListResultDto, string>>
+
+    // 👥 Phase B2: UserProjects多対多関連管理Repository拡張
+
+    /// <summary>
+    /// UserProjectsレコード追加（プロジェクトメンバー追加）
+    /// </summary>
+    /// <param name="userId">追加するユーザーID</param>
+    /// <param name="projectId">対象プロジェクトID</param>
+    /// <param name="updatedBy">更新者ID</param>
+    /// <returns>成功時はunit、失敗時はエラーメッセージ</returns>
+    abstract member AddUserToProjectAsync: userId: UserId * projectId: ProjectId * updatedBy: UserId -> Task<Result<unit, string>>
+
+    /// <summary>
+    /// UserProjectsレコード削除（プロジェクトメンバー削除）
+    /// </summary>
+    /// <param name="userId">削除するユーザーID</param>
+    /// <param name="projectId">対象プロジェクトID</param>
+    /// <returns>成功時はunit、失敗時はエラーメッセージ</returns>
+    abstract member RemoveUserFromProjectAsync: userId: UserId * projectId: ProjectId -> Task<Result<unit, string>>
+
+    /// <summary>
+    /// プロジェクトメンバー一覧取得（UserProjects JOIN）
+    /// </summary>
+    /// <param name="projectId">対象プロジェクトID</param>
+    /// <returns>UserIdリストまたはエラーメッセージ</returns>
+    abstract member GetProjectMembersAsync: projectId: ProjectId -> Task<Result<UserId list, string>>
+
+    /// <summary>
+    /// プロジェクトメンバー判定（UserProjects存在チェック）
+    /// </summary>
+    /// <param name="userId">判定対象ユーザーID</param>
+    /// <param name="projectId">判定対象プロジェクトID</param>
+    /// <returns>メンバー判定結果（true/false）またはエラーメッセージ</returns>
+    abstract member IsUserProjectMemberAsync: userId: UserId * projectId: ProjectId -> Task<Result<bool, string>>
+
+    /// <summary>
+    /// プロジェクトメンバー数取得（UserProjects COUNT）
+    /// </summary>
+    /// <param name="projectId">対象プロジェクトID</param>
+    /// <returns>メンバー数またはエラーメッセージ</returns>
+    abstract member GetProjectMemberCountAsync: projectId: ProjectId -> Task<Result<int, string>>
+
+    /// <summary>
+    /// プロジェクト作成 + デフォルトドメイン作成 + Owner自動追加（トランザクション保証）
+    /// 【Phase B2: Phase B1トランザクションパターン拡張】
+    /// </summary>
+    /// <param name="project">保存するプロジェクト</param>
+    /// <param name="defaultDomain">自動作成されたデフォルトドメイン</param>
+    /// <param name="ownerId">Owner ID（UserProjects追加用）</param>
+    /// <returns>保存結果（両方）またはエラーメッセージ</returns>
+    abstract member SaveProjectWithDefaultDomainAndOwnerAsync: project: Project * defaultDomain: Domain * ownerId: UserId -> Task<Result<Project * Domain, string>>
 
 // 🏷️ ドメインRepository抽象化
 // デフォルトドメイン自動作成で必要

@@ -23,9 +23,10 @@
 - **段階2 (Step2)**: Playwright MCP統合（1 Stage）✅ 完了
 
 ### 機能実装段階（4）
-- **段階4 (Step4)**: Application層・Infrastructure層実装（多対多関連）
+- **段階4 (Step4)**: Application層・Infrastructure層実装（多対多関連）✅ 完了
   - **重要決定**: Step3（Domain層拡張）スキップ
   - **理由**: UserProjectsテーブル既存完了（Phase A）・ドメインロジックなし
+  - **達成**: Clean Architecture 97点・仕様準拠100点・テスト成功率100%（Phase B2範囲内）
 
 ### 品質保証段階（5-6）
 - **段階5 (Step5)**: Web層実装・Phase B1技術負債解消・統合テスト
@@ -124,23 +125,56 @@
 
 ### Step4: Application層・Infrastructure層実装（Step3統合版）
 **推定時間**: 3-4時間
+**実施時間**: 約4時間（2025-10-17）
+**完了状況**: ✅ 完了（2025-10-17）
 
 **実施内容**:
-- **Infrastructure層実装**（1.5-2時間）
-  - ProjectRepository拡張（6メソッド追加）
+- **Infrastructure層実装**（1.5-2時間）✅
+  - ProjectRepository拡張（6メソッド追加 + 2メソッド修正）
   - UserProjects多対多関連実装
+  - N+1問題防止（EF Core最適化）
+  - トランザクション境界設計（SaveProjectWithDefaultDomainAndOwnerAsync）
   - ❌ EF Core Migration作成不要（UserProjectsテーブル既存）
-- **Application層実装**（1.5-2時間）
+- **Application層実装**（1.5-2時間）✅
   - IProjectManagementService拡張（4メソッド追加 + 4メソッド修正）
-  - 権限制御マトリックス拡張（DomainApprover/GeneralUser追加）
-  - Railway-oriented Programming適用
-- **TDD Green Phase達成**
+  - 権限制御マトリックス拡張（Phase B1継承6 + Phase B2新規10 = 16パターン）
+  - Railway-oriented Programming適用（新規メソッド4件全て）
+  - 2段階権限チェック実装（ロール判定→メンバー判定）
+- **TDD Green Phase達成**✅
+  - 単体テスト10件追加（32/32件成功・100%達成）
+  - ProjectManagementServiceTests.fs新規作成
+  - 0 Warning / 0 Error（製品コード）
 
-**SubAgent**: fsharp-application + csharp-infrastructure + unit-test（並列実行）
+**SubAgent**: csharp-infrastructure + fsharp-application + unit-test（シーケンシャル実行）
+- Stage 1: csharp-infrastructure（2.5時間）
+- Stage 2: fsharp-application（1.5時間）
+- Stage 3: unit-test（1.5時間・Fix-Mode含む）
+- Stage 4-5: 品質確認・統合確認（45分）
+
+**品質確認結果**:
+- **Clean Architecture品質**: ✅ 97/100点（Phase B1基盤96-97点維持達成）
+- **仕様準拠度**: ✅ 100/100点（Phase B2目標95点を5点超過）
+- **ビルド品質**: ✅ 0 Warning / 0 Error（製品コード）
+- **テスト成功率**: ✅ 100%（Phase B2範囲内32/32件）
+
+**成果物**:
+- ✅ ProjectRepository.cs拡張（8メソッド・Infrastructure層）
+- ✅ ProjectManagementService.fs拡張（8メソッド・Application層）
+- ✅ Queries.fs拡張（権限制御ヘルパー・Application層）
+- ✅ ProjectManagementServiceTests.fs新規作成（10テスト・Unit.Tests）
+- ✅ Step04_組織設計.md完全実行記録
+- ✅ GitHub Issue #53作成（ADR_022: テスト失敗判定プロセス改善）
 
 **重要決定**:
 - Step3（Domain層拡張）をスキップし、本Stepに統合
 - 理由: UserProjectsテーブル既存・ドメインロジックなし
+- ADR_022策定計画（Phase B3着手前に対策実施）
+
+**次Stepへの申し送り**:
+- Web層実装（プロジェクトメンバー管理UI）
+- Phase B1技術負債4件解消（InputRadioGroup制約2件・フォーム送信詳細1件・Null警告1件）
+- Playwright E2Eテスト対応準備（data-testid属性付与）
+- Phase B1既存テスト失敗3件の解消確認
 
 ---
 

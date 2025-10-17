@@ -54,6 +54,18 @@ type GetProjectUsersQuery = {
     member this.toDomainTypes() : ProjectId * UserId * Role =
         (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.UserId.GetHashCode())), this.UserRole)
 
+// 👥 Phase B2: プロジェクトメンバー一覧取得Query
+// 【Phase B2: ユーザー・プロジェクト関連管理】
+// - UserProjectsテーブル経由でメンバー一覧取得
+// - 権限制御マトリックス準拠（SuperUser/ProjectManager/所属メンバーのみ表示可能）
+type GetProjectMembersQuery = {
+    ProjectId: Guid               // 対象プロジェクトID
+    UserId: Guid                 // 要求ユーザーID
+    UserRole: Role               // ユーザーロール（権限制御用）
+} with
+    member this.toDomainTypes() : ProjectId * UserId * Role =
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.UserId.GetHashCode())), this.UserRole)
+
 // 🏷️ プロジェクトドメイン一覧取得Query
 // プロジェクト内のドメイン一覧を取得
 type GetProjectDomainsQuery = {
@@ -162,6 +174,9 @@ type UserProjectsResult = QueryResult<Project list>
 type ProjectSearchResult = QueryResult<ProjectListResultDto>
 type ProjectStatisticsResult = QueryResult<ProjectStatisticsResultDto>
 
+// 👥 Phase B2: プロジェクトメンバー一覧結果型
+type ProjectMembersResult = QueryResult<UserId list>
+
 // 🔐 権限制御ヘルパーモジュール
 // 【F#初学者向け解説】
 // REQ-10.2.1の権限制御マトリックスを実装するヘルパーモジュールです。
@@ -169,20 +184,22 @@ type ProjectStatisticsResult = QueryResult<ProjectStatisticsResultDto>
 module ProjectQueryPermissions =
 
     // 📋 プロジェクト一覧表示権限チェック
+    // 【Phase B2拡張】DomainApprover/GeneralUserも所属プロジェクト表示可能
     let canViewProjectList (userRole: Role) : bool =
         match userRole with
-        | SuperUser | ProjectManager -> true  // 全プロジェクト表示可能
-        | DomainApprover | GeneralUser -> false  // プロジェクト一覧は非表示
+        | SuperUser | ProjectManager | DomainApprover | GeneralUser -> true  // 全ロールで表示可能（範囲は異なる）
 
     // 🔍 プロジェクト詳細表示権限チェック
-    let canViewProjectDetail (userRole: Role) (userId: UserId) (project: Project) : bool =
+    // 【Phase B2拡張】DomainApprover/GeneralUserも所属プロジェクト詳細表示可能
+    // isMember: UserProjectsテーブルでメンバー判定済みフラグ
+    let canViewProjectDetail (userRole: Role) (userId: UserId) (project: Project) (isMember: bool) : bool =
         match userRole with
         | SuperUser -> true  // スーパーユーザーは全プロジェクト表示可能
         | ProjectManager ->
             // プロジェクト管理者は担当プロジェクトのみ表示可能
             // 実際の実装では UserProjects テーブルをチェック
             project.OwnerId = userId  // 簡略化: 所有者のみチェック
-        | DomainApprover | GeneralUser -> false  // プロジェクト詳細は非表示
+        | DomainApprover | GeneralUser -> isMember  // 所属プロジェクトのみ表示可能
 
     // 📝 プロジェクト編集権限チェック
     let canEditProject (userRole: Role) (userId: UserId) (project: Project) : bool =
@@ -196,3 +213,41 @@ module ProjectQueryPermissions =
         match userRole with
         | SuperUser -> true  // スーパーユーザーのみ削除可能
         | ProjectManager | DomainApprover | GeneralUser -> false  // 削除権限なし
+
+    // 👥 Phase B2: プロジェクトメンバー管理権限チェック
+
+    // メンバー追加権限チェック（基本権限のみ）
+    // 【Phase B2: 権限制御マトリックス拡張】
+    // - SuperUser: 全プロジェクトに対してメンバー追加可能
+    // - ProjectManager: 担当プロジェクトのみメンバー追加可能（UserProjects判定は呼び出し側で実施）
+    // - DomainApprover/GeneralUser: メンバー追加権限なし
+    // 【F#初学者向け解説】
+    // この関数はロールベースの基本権限チェックのみを行います。
+    // ProjectManagerの場合、実際のメンバー判定はAddMemberToProjectAsyncで
+    // IsUserProjectMemberAsyncを呼び出して行います。
+    let canAddMember (userRole: Role) (userId: UserId) (project: Project) : bool =
+        match userRole with
+        | SuperUser -> true  // 全プロジェクトに追加可能
+        | ProjectManager -> true  // 基本権限OK（メンバー判定は呼び出し側で実施）
+        | DomainApprover | GeneralUser -> false  // 追加権限なし
+
+    // メンバー削除権限チェック（基本権限のみ）
+    // 【Phase B2: 権限制御マトリックス拡張】
+    // - SuperUser: 全プロジェクトからメンバー削除可能
+    // - ProjectManager: 担当プロジェクトのみメンバー削除可能（UserProjects判定は呼び出し側で実施）
+    // - DomainApprover/GeneralUser: メンバー削除権限なし
+    let canRemoveMember (userRole: Role) (userId: UserId) (project: Project) : bool =
+        match userRole with
+        | SuperUser -> true  // 全プロジェクトから削除可能
+        | ProjectManager -> true  // 基本権限OK（メンバー判定は呼び出し側で実施）
+        | DomainApprover | GeneralUser -> false  // 削除権限なし
+
+    // プロジェクトメンバー一覧表示権限チェック
+    // 【Phase B2: 権限制御マトリックス拡張】
+    // - SuperUser/ProjectManager: 全プロジェクトのメンバー一覧表示可能
+    // - DomainApprover/GeneralUser: 所属プロジェクトのみメンバー一覧表示可能
+    let canViewProjectMembers (userRole: Role) (userId: UserId) (project: Project) (isMember: bool) : bool =
+        match userRole with
+        | SuperUser -> true  // 全プロジェクトのメンバー表示可能
+        | ProjectManager -> project.OwnerId = userId  // 担当プロジェクトのみ表示可能
+        | DomainApprover | GeneralUser -> isMember  // 所属プロジェクトのみ表示可能
