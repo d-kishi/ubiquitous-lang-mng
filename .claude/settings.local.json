@@ -91,7 +91,9 @@
       "WebFetch(domain:www.checklyhq.com)",
       "WebFetch(domain:claudelog.com)",
       "WebFetch(domain:medium.com)",
-      "Bash(claude mcp add:*)"
+      "Bash(claude mcp add:*)",
+      "Bash(move Doc07_DecisionsADR_010_実装規約.md Doc07_Decisionsbackup )",
+      "Bash(move Doc07_DecisionsADR_019_namespace設計規約.md Doc07_Decisionsbackup)"
     ],
     "deny": [],
     "ask": [],
