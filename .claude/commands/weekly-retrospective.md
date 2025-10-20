@@ -109,13 +109,57 @@
   - 既存重要情報が維持されているか確認（破壊的変更なし）
   - 次回セッションで参照可能な状態か確認
 
-### 9. 振り返り品質確認
+### 9. daily_sessions統合・削除処理（必須）
+
+#### 🔴 重要：振り返り対象期間のセッション記録を統合後削除
+
+**目的**: daily_sessionsメモリーの肥大化防止・Context効率化
+
+**処理手順**:
+
+- [ ] **Step 1: 対象期間の日付セクション特定**
+  ```
+  Grep "^## 📅" で全日付セクション取得
+  振り返り対象期間の日付を特定（例: 2025-10-01 ～ 2025-10-07）
+  ```
+
+- [ ] **Step 2: 対象期間のセッション記録読み込み**
+  ```
+  Read .serena/memories/daily_sessions.md
+  対象: 振り返り対象期間の全日付セクション・全セッション記録
+  limit指定なし（完全読み込み）
+  ```
+
+- [ ] **Step 3: weekly_retrospectives.mdに統合**
+  ```
+  1. Read .serena/memories/weekly_retrospectives.md（先頭100行）
+  2. Edit weekly_retrospectives.mdに最新振り返りセクション作成:
+     - 対象期間のdaily_sessions記録から主要情報を抽出・要約
+     - 週のハイライト・主要成果・技術的学習・プロセス改善をまとめる
+     - 詳細文書へのリンク追加（週次総括文書）
+  3. 既存の「最新振り返り」を「過去の振り返り」に移動
+  ```
+
+- [ ] **Step 4: daily_sessionsから対象期間を削除**
+  ```
+  Edit .serena/memories/daily_sessions.md
+  削除対象: 振り返り対象期間の全日付セクション（## 📅 YYYY-MM-DD）
+  保持対象: 振り返り対象期間外の最新セッション記録のみ
+  ```
+
+**削除対象期間**: 振り返り対象期間全体（通常1週間）
+
+**保持期間**: 最新1週間分のみdaily_sessionsに保持
+
+**アーカイブ**: weekly_retrospectives.mdに要約統合・永続化
+
+### 10. 振り返り品質確認
 - [ ] 文書完成度確認（必要情報の網羅性・具体性・実用性）
 - [ ] 改善提案の実行可能性評価（具体性・優先度・期待効果）
 - [ ] 次期アクション明確性確認（実施内容・担当・期限・成功基準）
 - [ ] ユーザーへの振り返り結果報告・次期方針確認
 
-### 10. Command実行完了確認・継続判断
+### 11. Command実行完了確認・継続判断
 
 #### 🔴 必須実行確認（自己チェック）
 **実行証跡必須確認**:
@@ -133,6 +177,12 @@
   - [ ] development_guidelines差分追記実行済み（変更がある場合のみ・スキップ可）
   - [ ] tech_stack_and_conventions差分追記実行済み（変更がある場合のみ・スキップ可）
   - [ ] task_completion_checklist状態更新実行済み（週次完了マーク・次週継続タスク）
+
+- [ ] **daily_sessions統合・削除確認**: 振り返り対象期間のセッション記録をweekly_retrospectives.mdに統合後、daily_sessionsから削除実行済み
+  - [ ] Grep実行済み（対象期間日付セクション特定）
+  - [ ] Read実行済み（対象期間セッション記録全体読み込み・daily_sessions完全読み込み）
+  - [ ] weekly_retrospectives.md統合実行済み（Edit実行・最新振り返りセクション作成）
+  - [ ] daily_sessions削除実行済み（Edit実行・対象期間の全日付セクション削除）
 
 - [ ] **write_memory不使用確認**: weekly-retrospective時は`mcp__serena__write_memory`使用していないことを確認
 
