@@ -52,7 +52,7 @@
                 メールアドレス
               </label>
               <InputText id="email" @bind-Value="loginRequest.Email" class="form-control form-control-lg"
-                placeholder="example@company.com" disabled="@isSubmitting" />
+                placeholder="example@company.com" disabled="@isSubmitting" data-testid="username-input" />
               <ValidationMessage For="@(() => loginRequest.Email)" class="text-danger small" />
             </div>
 
@@ -63,7 +63,7 @@
                 パスワード
               </label>
               <InputText id="password" @bind-Value="loginRequest.Password" type="password"
-                class="form-control form-control-lg" placeholder="パスワードを入力してください" disabled="@isSubmitting" />
+                class="form-control form-control-lg" placeholder="パスワードを入力してください" disabled="@isSubmitting" data-testid="password-input" />
               <ValidationMessage For="@(() => loginRequest.Password)" class="text-danger small" />
             </div>
 
@@ -78,7 +78,7 @@
 
             <!-- ログインボタン -->
             <div class="d-grid">
-              <button type="submit" class="btn btn-primary btn-lg" disabled="@isSubmitting">
+              <button type="submit" class="btn btn-primary btn-lg" disabled="@isSubmitting" data-testid="login-button">
                 @if (isSubmitting)
                 {
                   <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

@@ -1,0 +1,164 @@
+@page "/projects/{ProjectId:guid}/edit"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using UbiquitousLanguageManager.Domain.Common
+@attribute [Authorize(Roles = "SuperUser,ProjectManager")]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>プロジェクト編集</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>プロジェクト編集</h1>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">基本情報</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">プロジェクト名</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="projectName"
+                            data-testid="project-name-input"
+                            placeholder="プロジェクト名を入力"
+                            readonly />
+                        <div class="form-text">プロジェクト名は変更できません。</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">プロジェクト説明</label>
+                        <textarea
+                            class="form-control"
+                            id="projectDescription"
+                            rows="3"
+                            data-testid="project-description-input"
+                            placeholder="プロジェクトの説明を入力"></textarea>
+                    </div>
+
+                    <button type="button" class="btn btn-primary">
+                        <i class="bi bi-save"></i> 保存
+                    </button>
+                </div>
+            </div>
+
+            @* メンバー管理へのリンク（権限制御） *@
+            @if (canManageMembers)
+            {
+                <div class="card mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-people"></i> メンバー管理</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            プロジェクトのメンバーを追加・削除できます。
+                        </p>
+                        <a
+                            href="/projects/@ProjectId/members"
+                            class="btn btn-info text-white"
+                            data-testid="member-management-link">
+                            <i class="bi bi-people-fill"></i> メンバー管理画面へ
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    // ================================================================================
+    // Parameters
+    // ================================================================================
+
+    /// <summary>
+    /// プロジェクトID（URLパラメータ）
+    /// </summary>
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    // ================================================================================
+    // Fields
+    // ================================================================================
+
+    /// <summary>
+    /// メンバー管理権限フラグ
+    /// 【権限制御パターン】
+    /// SuperUser/ProjectManagerロールの場合のみtrueとなり、メンバー管理画面へのリンクを表示します。
+    /// </summary>
+    private bool canManageMembers = false;
+
+    // ================================================================================
+    // Lifecycle Methods
+    // ================================================================================
+
+    /// <summary>
+    /// コンポーネント初期化処理
+    /// 【Blazor Server初学者向け解説】
+    /// 認証状態を確認し、メンバー管理権限の有無を判定します。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 現在のユーザー情報を取得
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            // メンバー管理権限判定
+            // 【権限制御マトリックス準拠】
+            // SuperUser: 全プロジェクトのメンバー管理可能
+            // ProjectManager: 担当プロジェクトのメンバー管理可能
+            canManageMembers = user.IsInRole("SuperUser") || user.IsInRole("ProjectManager");
+        }
+        catch (Exception ex)
+        {
+            // エラー時はログイン画面へリダイレクト
+            Console.Error.WriteLine($"初期化エラー: {ex.Message}");
+            Navigation.NavigateTo("/login");
+        }
+    }
+}
+
+@*
+【Blazor Server初学者向け総合解説】
+
+このProjectEdit.razorコンポーネントは、プロジェクトの編集機能を提供します。
+
+Phase B2 Step5での実装内容：
+- メンバー管理画面へのナビゲーションリンク追加
+- 権限制御（SuperUser/ProjectManager専用表示）
+- data-testid属性追加（project-name-input, project-description-input, member-management-link）
+
+主要な技術要素：
+1. **権限制御パターン**:
+   - [Authorize]属性: ページレベルの認証・認可
+   - @if (canManageMembers): UI要素の条件付き表示
+
+2. **data-testid属性**:
+   - project-name-input: プロジェクト名入力フィールド
+   - project-description-input: プロジェクト説明入力フィールド
+   - member-management-link: メンバー管理画面へのリンク
+
+3. **ナビゲーション**:
+   - URLパラメータ: {ProjectId:guid}によるプロジェクト特定
+   - href="/projects/@ProjectId/members": メンバー管理画面への遷移
+
+重要な実装パターン：
+- **プロジェクト名変更禁止**: readonly属性による仕様準拠
+- **権限別UI制御**: canManageMembersフラグによる表示切り替え
+- **Clean Architecture準拠**: UIロジックのみを担当
+
+このコンポーネントは、Phase B1で確立したBlazor Server実装パターンを継承し、
+Phase B2でメンバー管理機能統合を実現します。
+*@

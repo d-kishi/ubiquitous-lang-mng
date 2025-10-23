@@ -93,7 +93,11 @@
       "WebFetch(domain:medium.com)",
       "Bash(claude mcp add:*)",
       "Bash(move Doc07_DecisionsADR_010_実装規約.md Doc07_Decisionsbackup )",
-      "Bash(move Doc07_DecisionsADR_019_namespace設計規約.md Doc07_Decisionsbackup)"
+      "Bash(move Doc07_DecisionsADR_019_namespace設計規約.md Doc07_Decisionsbackup)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "Bash(netstat:*)",
+      "mcp__playwright__browser_close"
     ],
     "deny": [],
     "ask": [],
