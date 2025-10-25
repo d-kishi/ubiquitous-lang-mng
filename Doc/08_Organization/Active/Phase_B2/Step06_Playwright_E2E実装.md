@@ -15,12 +15,14 @@
 - Playwright Agents統合によるテストメンテナンス効率化（50-70%削減）
 - 総合効果検証（作成効率 + メンテナンス効率）
 - ADR_021作成による技術決定永続化
+- **GitHub Issue #56対応**: bUnit技術的課題8件のE2Eテスト代替実装
 
 ### Step成功基準
 - ✅ E2E.Tests実装完了（UserProjects 3シナリオ実装・実行成功）
 - ✅ Playwright Agents統合完了（VS Code 1.105安定版動作確認）
 - ✅ 総合85%効率化検証完了（実測値記録）
 - ✅ ADR_021作成完了（技術決定永続化）
+- ✅ GitHub Issue #56対応完了（bUnit困難範囲のE2E実証確認）
 
 ---
 
@@ -40,6 +42,19 @@
   - Stage 1-3: 順次実行（integration-test担当）
   - Stage 4: Stage 3と並行可能（tech-research担当）
 ```
+
+### 🤖 Agent Skills Phase 1効果測定（Session 3）
+
+**測定機会**: Step6はAgent Skills導入後の初E2Eテスト実装
+
+**測定項目**:
+- integration-test Agentでの自律的Skills使用確認
+  - clean-architecture-guardian: E2Eテスト実装時のCA品質自動チェック
+  - fsharp-csharp-bridge: F#型統合（該当時）
+- Playwright E2Eテスト実装時のエラー発生率記録
+- 作業効率記録（計画1.5-2時間 vs 実測時間）
+
+**記録先**: `Doc/08_Organization/Active/AgentSkills_Phase1_効果測定.md`
 
 ---
 
@@ -70,25 +85,81 @@
 **重点参照セクション**:
 - リスク管理計画（4章）
 
-### 4. Phase_B2_申し送り事項.md
-**参照目的**: Phase B-F1から引き継ぐPlaywright統合計画
+### 4. Phase_Summary.md
+**参照目的**: Phase B2全体計画・Step間引継ぎ事項
 **重点参照セクション**:
-- セキュリティ設定: テスト専用アカウント・.gitignore設定（行84-88）
+- Step5完了状況（E2Eテスト準備完了確認）
+- Step間成果物参照マトリックス
+- GitHub Issue #56（bUnit技術的課題）記録
 
 ---
 
-## 🎯 Step実行計画（4 Stage構成）
+## 🎯 Step実行計画（5 Stage構成：Stage 0追加）
+
+### Stage 0: セキュリティ準備（15分・Stage 1前に必須実施）
+
+**重要**: E2Eテスト実行前のセキュリティ設定必須
+
+**実施内容**:
+
+#### 0-1. .gitignore設定追加（5分）
+- [ ] .gitignore に以下を追加:
+  ```gitignore
+  # E2Eテスト・Playwright関連
+  .env.test
+  appsettings.Test.json
+  /playwright/.auth/
+  playwright-report/
+  test-results/
+
+  # Playwright Agents
+  .playwright/agents/*.log
+  .playwright/agents/cache/
+  ```
+
+#### 0-2. テスト専用アカウント作成（5分）
+- [ ] E2Eテスト用アカウント作成:
+  - Email: `e2e-test@ubiquitous-lang.local`
+  - Password: `E2ETest#2025!Secure`
+  - Role: SuperUser（全権限・テストデータ操作可）
+- [ ] Docker環境内でのみ使用・外部アクセス不可確認
+
+#### 0-3. 環境設定ファイル作成（5分）
+- [ ] `appsettings.Test.json` 作成（テストDB接続文字列）
+  - テストデータベース専用接続文字列設定
+  - 本番データとの完全分離確認
+- [ ] `.env.test` 作成（E2Eテストクレデンシャル）
+  - `E2E_TEST_EMAIL=e2e-test@ubiquitous-lang.local`
+  - `E2E_TEST_PASSWORD=E2ETest#2025!Secure`
+
+**セキュリティ確認**:
+- [ ] .gitignore設定完了（機密情報コミット防止）
+- [ ] テスト専用アカウント・本番データ分離確認
+- [ ] 環境変数管理方式確認
+
+---
 
 ### Stage 1: E2Eテスト作成（30分・MCPツール活用）
 
 **前提条件確認**:
-- [ ] Step5完了確認（UI実装完了）
-- [ ] data-testid属性実装確認（メンバー管理画面）
+- [ ] Stage 0完了確認（セキュリティ準備完了）
+- [ ] Step5完了確認（UI実装完了・2025-10-23完了）
+- [ ] data-testid属性実装確認（15要素実装済み）
+  - ProjectMembers.razor: 7要素
+  - ProjectMemberSelector.razor: 1要素
+  - ProjectMemberCard.razor: 3要素
+  - Login.razor: 3要素
+  - ProjectEdit.razor: 1要素
 - [ ] https://localhost:5001 アクセス可能確認
 - [ ] テスト専用アカウント準備確認
 
 **実施内容**:
 E2E.Testsプロジェクトに以下3シナリオのE2Eテスト作成
+
+**GitHub Issue #56対応**: 以下のbUnit困難範囲をE2Eテストで実証
+- フォーム送信ロジック（EditForm.Submit()問題回避）
+- 子コンポーネント連携（ProjectMemberCard/ProjectMemberSelector統合）
+- Blazor Server SignalR接続・StateHasChanged動作確認
 
 #### 1-1. メンバー追加E2Eテスト（10分）
 **テストシナリオ**（Spec_Analysis 3.2節 行174-181準拠）:
@@ -135,6 +206,11 @@ E2E.Testsプロジェクトに以下3シナリオのE2Eテスト作成
 ---
 
 ### Stage 2: Playwright Agents統合（15分）
+
+**重要**: VS Code 1.105安定版対応完了（2025-10-10リリース）
+- **推奨度**: **9/10点（強く推奨）** ← 従来7/10点から格上げ
+- **Insiders依存リスク**: 完全解消（安定版で完全動作）
+- **プロダクション環境対応**: 準備完了
 
 **実施内容**:
 ```bash
@@ -195,6 +271,11 @@ npx playwright init-agents --loop=vscode
 ---
 
 ### Stage 4: ADR記録作成（20分）
+
+**重要**: ADR_021（Playwright MCP + Agents統合戦略）新規作成
+- **現状**: 未作成（Step6で初めて作成）
+- **Status**: Accepted予定
+- **実測効果記録**: Stage 3効果測定結果を反映
 
 **実施内容**:
 ADR_021: Playwright MCP + Agents統合戦略 作成
