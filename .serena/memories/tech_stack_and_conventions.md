@@ -54,6 +54,60 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ---
 
+## PostgreSQL 識別子規約（2025-10-26確立・重要）
+
+### 🔴 必須ルール: 全識別子Quote必須
+
+**背景**: PostgreSQL識別子正規化動作（Unquoted識別子 → 小文字変換）
+
+**問題事例**（Phase B2で発見）:
+- `CREATE TABLE AspNetUsers` → `aspnetusers`テーブル作成（意図しない重複テーブル発生）
+- `INSERT INTO AspNetUsers` → `aspnetusers`テーブルへ挿入（既存`"AspNetUsers"`テーブルは未使用）
+- 結果: 27テーブル作成（15正常 + 12重複小文字）
+
+**解決策**: 全識別子を`""`でQuote
+
+```sql
+-- ❌ 誤り（小文字化される）
+CREATE TABLE AspNetUsers (
+    Id VARCHAR(450),
+    UserName VARCHAR(256)
+);
+
+-- ✅ 正しい（大文字小文字保持）
+CREATE TABLE "AspNetUsers" (
+    "Id" VARCHAR(450),
+    "UserName" VARCHAR(256)
+);
+```
+
+### 必須適用箇所
+
+1. **CREATE TABLE**: テーブル名・全列名
+2. **INSERT INTO**: テーブル名・全列名
+3. **FOREIGN KEY**: 参照テーブル名・参照列名
+4. **CREATE INDEX**: テーブル名・列名
+5. **COMMENT ON**: テーブル名・列名（`"TableName"."ColumnName"`形式）
+
+### COMMENT文の正しい形式
+
+```sql
+-- ❌ 誤り
+COMMENT ON TABLE AspNetUsers IS 'ユーザー情報';
+COMMENT ON COLUMN AspNetUsers.Id IS 'ユーザーID';
+
+-- ✅ 正しい
+COMMENT ON TABLE "AspNetUsers" IS 'ASP.NET Core Identity ユーザー情報';
+COMMENT ON COLUMN "AspNetUsers"."Id" IS 'ユーザーID（主キー、GUID形式）';
+```
+
+### 参考ファイル
+
+- `init/01_create_schema.sql` - 全識別子Quote済み（2025-10-26修正）
+- `init/02_initial_data.sql` - 全INSERT文Quote済み（2025-10-26修正）
+
+---
+
 ## F#↔C# 型変換パターン（Phase B1 Step7確立・2025-10-05）
 
 **重要**: 詳細は`.claude/skills/fsharp-csharp-bridge/`に移行（Phase 1・2025-10-21）

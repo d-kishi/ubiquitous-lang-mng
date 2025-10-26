@@ -97,7 +97,11 @@
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_snapshot",
       "Bash(netstat:*)",
-      "mcp__playwright__browser_close"
+      "mcp__playwright__browser_close",
+      "Bash(docker ps:*)",
+      "Bash(pwsh -Command:*)",
+      "Bash(npx playwright:*)",
+      "Bash(pwsh:*)"
     ],
     "deny": [],
     "ask": [],

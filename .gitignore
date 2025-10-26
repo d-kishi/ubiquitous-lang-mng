@@ -296,6 +296,17 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
+# E2Eテスト・Playwright関連
+.env.test
+appsettings.Test.json
+/playwright/.auth/
+playwright-report/
+test-results/
+
+# Playwright Agents
+.playwright/agents/*.log
+.playwright/agents/cache/
+
 # OpenCover UI analysis results
 OpenCover/
 CoverageReport/badge_branchcoverage.svg
