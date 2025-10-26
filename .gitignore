@@ -307,6 +307,10 @@ test-results/
 .playwright/agents/*.log
 .playwright/agents/cache/
 
+# Database backups
+init/backup/
+backup_database_*.sql
+
 # OpenCover UI analysis results
 OpenCover/
 CoverageReport/badge_branchcoverage.svg

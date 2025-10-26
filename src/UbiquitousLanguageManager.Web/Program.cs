@@ -299,6 +299,9 @@ public partial class Program
         // 🔧 初期データサービスの登録
         builder.Services.AddScoped<InitialDataService>();
 
+        // 🔧 データベース初期化サービスの登録（Phase B2 Step7）
+        builder.Services.AddScoped<DbInitializer>();
+
         // 🔐 Blazor認証サービスの登録（Phase A9 統一認証効果: Infrastructure層委譲・薄いラッパー層）
         builder.Services.AddScoped<UbiquitousLanguageManager.Web.Services.BlazorAuthenticationService>();
 
@@ -431,13 +434,26 @@ public partial class Program
             var services = scope.ServiceProvider;
             try
             {
-                // 📊 データベース自動マイグレーション実行
-                var context = services.GetRequiredService<UbiquitousLanguageDbContext>();
-                await context.Database.EnsureCreatedAsync();
+                // 🔧 データベース初期化処理（Phase B2 Step7: 開発環境のみ - InitialDataServiceより先に実行）
+                // 【開発環境限定処理・実行順序重要】
+                // DbInitializer は開発環境でのみ実行され、既存データの検証後にユーザー・ロール・プロジェクト・ドメインの初期データを投入します。
+                // 注意: DbInitializerはInitialDataServiceより先に実行する必要があります（ユーザー存在チェックのため）。
+                // 本番環境では、InitialDataServiceによるスーパーユーザー作成のみが実行されます。
+                if (app.Environment.IsDevelopment())
+                {
+                    var dbInitializer = services.GetRequiredService<DbInitializer>();
+                    await dbInitializer.InitializeAsync();
+                }
+                else
+                {
+                    // 本番環境では手動マイグレーション適用を推奨しますが、自動適用も可能
+                    var context = services.GetRequiredService<UbiquitousLanguageDbContext>();
+                    await context.Database.EnsureCreatedAsync();
 
-                // 👤 初期スーパーユーザー作成処理
-                var initialDataService = services.GetRequiredService<InitialDataService>();
-                await initialDataService.SeedInitialDataAsync();
+                    // 👤 初期スーパーユーザー作成処理（本番環境のみ）
+                    var initialDataService = services.GetRequiredService<InitialDataService>();
+                    await initialDataService.SeedInitialDataAsync();
+                }
 
                 app.Logger.LogInformation("✅ 初期データ投入が完了しました StartupTime: {StartupTime}", DateTime.UtcNow);
             }

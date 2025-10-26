@@ -46,6 +46,26 @@
 
 **期待効果**: 作業効率20-25分/セッション削減、品質向上（ADR遵守率90%→98%）
 
+#### 3. db-schema-management（2025-10-27新設・Phase B2 Step7）
+
+**目的**: EF Core Migrationsによるスキーマ変更ガイドライン・パターン提供
+
+**使用タイミング**:
+- スキーマ変更時（テーブル・列追加、制約追加等）
+- CHECK制約・COMMENT文追加時
+- データベース設計書更新時
+- Phase B3以降のスキーマ変更全般
+
+**提供パターン**: 5種類
+- ef-migrations-workflow.md: 5段階スキーマ変更ワークフロー
+- check-constraint-pattern.md: CHECK制約実装パターン
+- manual-sql-pattern.md: GIN/BRIN/COMMENT手動SQLパターン
+- db-doc-sync-checklist.md: DB設計書同期チェックリスト
+
+**詳細**: `.claude/skills/db-schema-management/SKILL.md`
+
+**Phase B2 Step7成果**: GitHub Issue #58完全解決・ADR_023作成・EF Migrations主体方式確立
+
 ---
 
 ## 📋 ADR vs Agent Skills 判断基準（2025-10-26新設・30秒チェック）
