@@ -76,6 +76,36 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **SubAgent選択**: `subagent-selection` - 作業に最適なAgent組み合わせ選択
 - **品質チェック**: `spec-compliance-check`, `step-end-review`
 
+---
+
+## 🤖 Agent Skills
+
+**目的**: プロジェクト固有の知見・パターン・判断基準をモジュール化し、Claudeが自律的に適用
+
+**配置**: `.claude/skills/`
+
+**Phase 1導入完了**（2025-10-21）:
+- **fsharp-csharp-bridge**: F#↔C#型変換パターンの自律的適用
+- **clean-architecture-guardian**: Clean Architecture準拠性の自動チェック
+- **playwright-e2e-patterns**: Playwright MCP活用によるE2Eテスト作成パターン
+
+### Skills作成判断基準
+
+ADRとAgent Skillsの使い分けについては、以下のガイドラインを参照：
+
+**詳細**: `Doc/08_Organization/Rules/ADRとAgent_Skills判断ガイドライン.md`
+
+**簡潔な判断フロー**（30秒チェック）:
+1. **歴史的記録が必要か？**（なぜこの決定をしたか） → ADR作成
+2. **Claudeが自律的に適用すべきか？**（実装時に自動適用） → Skills作成
+3. **技術選定の根拠か？**（代替案との比較・リスク評価） → ADR作成
+4. **実装パターン・チェックリストか？**（繰り返し使うパターン） → Skills作成
+
+**関連ドキュメント**:
+- Skills一覧: `.claude/skills/README.md`
+- 効果測定: `Doc/08_Organization/Active/AgentSkills_Phase1_効果測定.md`
+
+---
 
 ## 実装指針
 
