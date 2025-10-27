@@ -33,6 +33,7 @@ public class DbInitializer
     private const string ProjectManagerUserId = "pm-001";
     private const string DomainApproverUserId = "da-001";
     private const string GeneralUserId = "gu-001";
+    private const string E2eTestUserId = "e2e-test@ubiquitous-lang.local";
 
     /// <summary>
     /// コンストラクタ: 依存関係の注入
@@ -150,6 +151,17 @@ public class DbInitializer
         // 6. DomainApprovers設定
         await SeedDomainApproversAsync();
 
+        // 7. E2Eテストドラフト用語作成（個別チェック）
+        // Note: グローバルクエリフィルタを無視して全データ確認
+        if (!await _context.DraftUbiquitousLanguages.IgnoreQueryFilters().AnyAsync(d => d.JapaneseName == "テスト用語"))
+        {
+            await SeedDraftUbiquitousLanguagesAsync();
+        }
+        else
+        {
+            _logger.LogInformation("E2Eテストドラフト用語が既に存在するため、投入をスキップします");
+        }
+
         await _context.SaveChangesAsync();
         _logger.LogInformation("初期データ投入が完了しました");
         LogInitialDataSummary();
@@ -199,20 +211,20 @@ public class DbInitializer
     }
 
     /// <summary>
-    /// ユーザー初期データ投入（4件）
+    /// ユーザー初期データ投入（5件）
     /// 全ユーザーの初期パスワード: "su"
+    /// E2Eテストユーザー: "E2eTest#2025!"
     /// </summary>
     private async Task SeedUsersAsync()
     {
         var users = new[]
         {
-            new { Id = "admin-001", Email = "admin@ubiquitous-lang.com", Name = "システム管理者", Role = "super-user" },
-            new { Id = "pm-001", Email = "project.manager@ubiquitous-lang.com", Name = "プロジェクト管理者", Role = "project-manager" },
-            new { Id = "da-001", Email = "domain.approver@ubiquitous-lang.com", Name = "ドメイン承認者", Role = "domain-approver" },
-            new { Id = "gu-001", Email = "general.user@ubiquitous-lang.com", Name = "一般ユーザー", Role = "general-user" }
+            new { Id = "admin-001", Email = "admin@ubiquitous-lang.com", Name = "システム管理者", Role = "super-user", Password = "su", IsFirstLogin = true },
+            new { Id = "pm-001", Email = "project.manager@ubiquitous-lang.com", Name = "プロジェクト管理者", Role = "project-manager", Password = "su", IsFirstLogin = true },
+            new { Id = "da-001", Email = "domain.approver@ubiquitous-lang.com", Name = "ドメイン承認者", Role = "domain-approver", Password = "su", IsFirstLogin = true },
+            new { Id = "gu-001", Email = "general.user@ubiquitous-lang.com", Name = "一般ユーザー", Role = "general-user", Password = "su", IsFirstLogin = true },
+            new { Id = E2eTestUserId, Email = E2eTestUserId, Name = "E2Eテストユーザー", Role = "super-user", Password = "E2eTest#2025!", IsFirstLogin = false }
         };
-
-        const string initialPassword = "su"; // 機能仕様書2.0.1準拠：固定初期パスワード
 
         foreach (var userData in users)
         {
@@ -223,25 +235,25 @@ public class DbInitializer
                 Email = userData.Email,
                 EmailConfirmed = true,
                 Name = userData.Name,
-                IsFirstLogin = true, // 全ユーザー初回ログイン前
-                InitialPassword = initialPassword, // 機能仕様書2.2.1準拠：平文管理
+                IsFirstLogin = userData.IsFirstLogin, // E2Eテストユーザーは初回ログイン済み
+                InitialPassword = userData.Password, // 機能仕様書2.2.1準拠：平文管理
                 UpdatedBy = "admin-001",
                 UpdatedAt = DateTime.UtcNow
             };
 
             // ASP.NET Core Identity PasswordHasher でハッシュ化
-            user.PasswordHash = _passwordHasher.HashPassword(user, initialPassword);
+            user.PasswordHash = _passwordHasher.HashPassword(user, userData.Password);
 
             await _userManager.CreateAsync(user);
             await _userManager.AddToRoleAsync(user, userData.Role);
 
-            _logger.LogInformation("ユーザー作成: {Email} (Role: {Role})", user.Email, userData.Role);
+            _logger.LogInformation("ユーザー作成: {Email} (Role: {Role}, IsFirstLogin: {IsFirstLogin})", user.Email, userData.Role, userData.IsFirstLogin);
         }
     }
 
     /// <summary>
-    /// プロジェクト初期データ投入（2件）
-    /// バックアップSQL準拠: ECサイト構築プロジェクト、顧客管理システム
+    /// プロジェクト初期データ投入（3件）
+    /// バックアップSQL準拠: ECサイト構築プロジェクト、顧客管理システム、E2Eテストプロジェクト
     /// </summary>
     /// <remarks>
     /// Phase B2暫定仕様: OwnerIdは仮値（1）を設定
@@ -273,6 +285,16 @@ public class DbInitializer
                 UpdatedBy = AdminUserId,
                 UpdatedAt = DateTime.UtcNow,
                 IsActive = true
+            },
+            new Project
+            {
+                ProjectName = "E2Eテストプロジェクト",
+                Description = "Playwright E2Eテスト専用プロジェクト",
+                OwnerId = temporaryOwnerId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedBy = E2eTestUserId,
+                UpdatedAt = DateTime.UtcNow,
+                IsActive = true
             }
         };
 
@@ -281,8 +303,8 @@ public class DbInitializer
     }
 
     /// <summary>
-    /// ドメイン初期データ投入（3件）
-    /// バックアップSQL準拠: 商品管理、注文管理、顧客情報管理
+    /// ドメイン初期データ投入（4件）
+    /// バックアップSQL準拠: 商品管理、注文管理、顧客情報管理、E2Eテストドメイン
     /// </summary>
     /// <remarks>
     /// Phase B2暫定仕様: OwnerIdは仮値（1）を設定
@@ -293,14 +315,14 @@ public class DbInitializer
     {
         const long temporaryOwnerId = 1; // Phase B2暫定仕様: 仮のOwnerID
 
-        // プロジェクトIDを取得（バックアップSQL: ProjectId 1, 2に対応）
+        // プロジェクトIDを取得（バックアップSQL: ProjectId 1, 2, 3に対応）
         var projects = await _context.Projects
             .OrderBy(p => p.ProjectId)
             .ToListAsync();
 
-        if (projects.Count < 2)
+        if (projects.Count < 3)
         {
-            _logger.LogError("プロジェクトが2件未満です。ドメイン投入をスキップします。");
+            _logger.LogError("プロジェクトが3件未満です。E2Eテストドメイン投入をスキップします。");
             return;
         }
 
@@ -341,6 +363,18 @@ public class DbInitializer
                 UpdatedBy = AdminUserId,
                 UpdatedAt = DateTime.UtcNow,
                 IsActive = true
+            },
+            new DomainEntity
+            {
+                ProjectId = projects[2].ProjectId, // E2Eテストプロジェクト
+                DomainName = "E2Eテストドメイン",
+                Description = "Playwright E2Eテスト専用ドメイン",
+                OwnerId = temporaryOwnerId,
+                IsDefault = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedBy = E2eTestUserId,
+                UpdatedAt = DateTime.UtcNow,
+                IsActive = true
             }
         };
 
@@ -351,6 +385,7 @@ public class DbInitializer
     /// <summary>
     /// UserProjects関連設定
     /// pm-001, da-001, gu-001をプロジェクト1, 2に割り当て
+    /// e2e-test@ubiquitous-lang.localをE2Eテストプロジェクトに割り当て
     /// </summary>
     private async Task SeedUserProjectsAsync()
     {
@@ -359,9 +394,9 @@ public class DbInitializer
             .OrderBy(p => p.ProjectId)
             .ToListAsync();
 
-        if (projects.Count < 2)
+        if (projects.Count < 3)
         {
-            _logger.LogError("プロジェクトが2件未満です。UserProjects投入をスキップします。");
+            _logger.LogError("プロジェクトが3件未満です。E2EテストUserProjects投入をスキップします。");
             return;
         }
 
@@ -415,6 +450,15 @@ public class DbInitializer
             UpdatedAt = DateTime.UtcNow
         });
 
+        // E2EテストユーザーをE2Eテストプロジェクトに割り当て
+        userProjects.Add(new UserProject
+        {
+            UserId = E2eTestUserId,
+            ProjectId = projects[2].ProjectId,
+            UpdatedBy = E2eTestUserId,
+            UpdatedAt = DateTime.UtcNow
+        });
+
         await _context.UserProjects.AddRangeAsync(userProjects);
         _logger.LogInformation("UserProjects関連設定完了: {Count}件", userProjects.Count);
     }
@@ -431,18 +475,61 @@ public class DbInitializer
     }
 
     /// <summary>
+    /// E2Eテストドラフトユビキタス言語作成
+    /// Playwright E2Eテスト専用のサンプルドラフト用語を作成
+    /// </summary>
+    /// <remarks>
+    /// IgnoreQueryFilters使用: グローバルクエリフィルタ（IsDeleted）を無視してドメイン検索
+    /// 理由: 初期データ投入時はIsDeletedフラグがfalseのデータのみ対象だが、明示的に全データを検索するため
+    /// </remarks>
+    private async Task SeedDraftUbiquitousLanguagesAsync()
+    {
+        // E2Eテストドメインを取得（グローバルクエリフィルタを無視）
+        var e2eTestDomain = await _context.Domains
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.DomainName == "E2Eテストドメイン");
+
+        if (e2eTestDomain == null)
+        {
+            _logger.LogError("E2Eテストドメインが見つかりません。ドラフト用語投入をスキップします。");
+            return;
+        }
+
+        var draftTerms = new[]
+        {
+            new DraftUbiquitousLang
+            {
+                DomainId = e2eTestDomain.DomainId,
+                JapaneseName = "テスト用語",
+                EnglishName = "TestTerm",
+                Description = "E2Eテスト用のサンプル用語",
+                OccurrenceContext = "テストシナリオ実行時",
+                Remarks = "Playwright E2Eテスト専用データ",
+                Status = "Draft",
+                UpdatedBy = E2eTestUserId,
+                UpdatedAt = DateTime.UtcNow
+            }
+        };
+
+        await _context.DraftUbiquitousLanguages.AddRangeAsync(draftTerms);
+        _logger.LogInformation("E2Eテストドラフト用語投入完了: {Count}件", draftTerms.Length);
+    }
+
+    /// <summary>
     /// 初期データ投入結果サマリーをログ出力
     /// </summary>
     private void LogInitialDataSummary()
     {
         _logger.LogInformation("===== 初期データ投入完了サマリー =====");
-        _logger.LogInformation("作成ユーザー数: 4");
+        _logger.LogInformation("作成ユーザー数: 5（開発用4件 + E2Eテスト用1件）");
         _logger.LogInformation("作成ロール数: 4");
-        _logger.LogInformation("作成プロジェクト数: 2");
-        _logger.LogInformation("作成ドメイン数: 3");
-        _logger.LogInformation("UserProjects関連設定: 6件");
+        _logger.LogInformation("作成プロジェクト数: 3（開発用2件 + E2Eテスト用1件）");
+        _logger.LogInformation("作成ドメイン数: 4（開発用3件 + E2Eテスト用1件）");
+        _logger.LogInformation("UserProjects関連設定: 7件（開発用6件 + E2Eテスト用1件）");
         _logger.LogInformation("DomainApprovers設定: 後続Stepで実装予定");
+        _logger.LogInformation("E2Eテストドラフト用語: 1件");
         _logger.LogInformation("デフォルトパスワード: su（機能仕様書2.0.1準拠）");
+        _logger.LogInformation("E2Eテストパスワード: E2eTest#2025!（IsFirstLogin=false）");
         _logger.LogInformation("認証システム: ASP.NET Core Identity");
         _logger.LogInformation("用語統一: ADR_003準拠（UbiquitousLang表記）");
         _logger.LogInformation("初期パスワード管理: US-005準拠（InitialPassword保存）");

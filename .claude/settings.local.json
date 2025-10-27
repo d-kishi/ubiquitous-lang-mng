@@ -102,7 +102,7 @@
       "Bash(pwsh -Command:*)",
       "Bash(npx playwright:*)",
       "Bash(pwsh:*)",
-      "Bash(Select-String -SimpleMatch -Pattern \"データベース初期化\",\"ロール作成\",\"ユーザー作成\",\"プロジェクト\",\"ドメイン\",\"UserProjects\",\"Application started\")"
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": [],
