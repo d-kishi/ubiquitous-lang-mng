@@ -1,5 +1,6 @@
 using Moq;
 using Microsoft.FSharp.Core;
+using Microsoft.FSharp.Collections;
 using UbiquitousLanguageManager.Contracts.DTOs;
 // Application層のF# Record型をエイリアスで使用
 using AppProjectListResult = UbiquitousLanguageManager.Application.ProjectManagement.ProjectListResultDto;
@@ -197,12 +198,17 @@ public class ProjectManagementServiceMockBuilder
     ///
     /// 【戻り値】
     /// FSharpResult&lt;Unit, string&gt;.NewOk（F# Unit型）
+    ///
+    /// 【修正内容】
+    /// F# Unit型はstruct（値型）のため、Unit?（Nullable&lt;Unit&gt;）ではなくUnit型を直接使用します。
+    /// default(Unit)は常に有効な値（空のstruct）を返すため、Null警告は発生しません。
     /// </summary>
     public ProjectManagementServiceMockBuilder SetupDeleteProjectSuccess()
     {
-        // F# Unit型はstruct（値型）のため、default(Unit)で生成
-        // 【注意】Unit.Defaultは存在しません（F# 8.0仕様）
-        var unitValue = default(Microsoft.FSharp.Core.Unit);
+        // F# Unit型はstruct（値型）のため、default(Unit)で有効な値を生成
+        // Unit型は値型なので、Unit?（Nullable<Unit>）ではなくUnit型を直接使用
+        // これによりNull警告を完全に回避
+        Unit unitValue = default(Unit);
         var fsharpResult = FSharpResult<Unit, string>.NewOk(unitValue);
 
         _mockService
@@ -270,6 +276,117 @@ public class ProjectManagementServiceMockBuilder
         _mockService
             .Setup(s => s.GetProjectDetailAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.GetProjectDetailQuery>()))
             .Returns(Task.FromResult(fsharpResult));
+
+        return this;
+    }
+
+    #endregion
+
+    #region GetProjectMembers / AddMember / RemoveMember モックセットアップ
+
+    /// <summary>
+    /// GetProjectMembersAsync成功モックセットアップ
+    ///
+    /// 【引数】
+    /// - memberIds: 返却するメンバーIDリスト（F# UserId list）
+    ///
+    /// 【戻り値】
+    /// FSharpResult&lt;UserId list, string&gt;.NewOk
+    ///
+    /// 【使用例】
+    /// var members = new List&lt;UserId&gt; { UserId.create(1), UserId.create(2) };
+    /// builder.SetupGetProjectMembersSuccess(members);
+    /// </summary>
+    public ProjectManagementServiceMockBuilder SetupGetProjectMembersSuccess(List<UserId> memberIds)
+    {
+        // C# List<UserId> → F# list<UserId> への変換
+        var fsharpMemberList = Microsoft.FSharp.Collections.ListModule.OfSeq(memberIds);
+
+        var fsharpResult = FSharpResult<FSharpList<UserId>, string>.NewOk(fsharpMemberList);
+
+        _mockService
+            .Setup(s => s.GetProjectMembersAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.GetProjectMembersQuery>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// GetProjectMembersAsync失敗モックセットアップ
+    /// </summary>
+    public ProjectManagementServiceMockBuilder SetupGetProjectMembersFailure(string errorMessage)
+    {
+        var fsharpResult = FSharpResult<FSharpList<UserId>, string>.NewError(errorMessage);
+
+        _mockService
+            .Setup(s => s.GetProjectMembersAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.GetProjectMembersQuery>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// AddMemberToProjectAsync成功モックセットアップ
+    ///
+    /// 【戻り値】
+    /// FSharpResult&lt;Unit, string&gt;.NewOk（F# Unit型）
+    /// </summary>
+    public ProjectManagementServiceMockBuilder SetupAddMemberSuccess()
+    {
+        // F# Unit型はstruct（値型）のため、default(Unit)で有効な値を生成
+        Unit unitValue = default(Unit);
+        var fsharpResult = FSharpResult<Unit, string>.NewOk(unitValue);
+
+        _mockService
+            .Setup(s => s.AddMemberToProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.AddMemberToProjectCommand>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// AddMemberToProjectAsync失敗モックセットアップ
+    /// </summary>
+    public ProjectManagementServiceMockBuilder SetupAddMemberFailure(string errorMessage)
+    {
+        var fsharpResult = FSharpResult<Unit, string>.NewError(errorMessage);
+
+        _mockService
+            .Setup(s => s.AddMemberToProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.AddMemberToProjectCommand>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// RemoveMemberFromProjectAsync成功モックセットアップ
+    ///
+    /// 【戻り値】
+    /// FSharpResult&lt;Unit, string&gt;.NewOk（F# Unit型）
+    /// </summary>
+    public ProjectManagementServiceMockBuilder SetupRemoveMemberSuccess()
+    {
+        // F# Unit型はstruct（値型）のため、default(Unit)で有効な値を生成
+        Unit unitValue = default(Unit);
+        var fsharpResult = FSharpResult<Unit, string>.NewOk(unitValue);
+
+        _mockService
+            .Setup(s => s.RemoveMemberFromProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.RemoveMemberFromProjectCommand>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// RemoveMemberFromProjectAsync失敗モックセットアップ
+    /// </summary>
+    public ProjectManagementServiceMockBuilder SetupRemoveMemberFailure(string errorMessage)
+    {
+        var fsharpResult = FSharpResult<Unit, string>.NewError(errorMessage);
+
+        _mockService
+            .Setup(s => s.RemoveMemberFromProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.RemoveMemberFromProjectCommand>()))
+            .ReturnsAsync(fsharpResult);
 
         return this;
     }

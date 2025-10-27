@@ -2,8 +2,7 @@
 
 **目的**: 実装の仕様準拠を95点以上の高精度でチェック
 **対象**: 全実装作業完了時
-**連携**: spec-analysis, spec-compliance SubAgent
-**強化内容**: SpecKit概念統合・加重スコアリング・自動証跡記録
+**使用するSubAgent**: spec-analysis, spec-compliance
 
 ## 🎯 強化版スコアリング体系（100点満点）
 

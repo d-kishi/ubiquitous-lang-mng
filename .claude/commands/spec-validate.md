@@ -1,10 +1,8 @@
 # 仕様完全性検証Command
 
 **目的**: 仕様の完全性・実行可能性・整合性を事前検証
-**対象**: 仕様書作成・更新時
-**実行タイミング**: Phase開始前・仕様変更時・実装前検証
-**連携**: spec-analysis SubAgent
-**特徴**: SpecKit inspired - 実行可能仕様（Executable Specifications）検証
+**対象**: 仕様書作成・更新時（Phase開始前・仕様変更時・実装前検証）
+**使用するSubAgent**: spec-analysis
 
 ## 🎯 検証体系（独自拡張機能）
 

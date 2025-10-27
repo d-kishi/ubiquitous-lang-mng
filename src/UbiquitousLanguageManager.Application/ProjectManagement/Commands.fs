@@ -116,3 +116,48 @@ type GetProjectStatisticsCommand = {
 } with
     member this.toDomainTypes() : UserId =
         UserId(int64(this.OperatorUserId.GetHashCode()))
+
+// 👥 Phase B2: UserProjects多対多関連管理Command
+
+// プロジェクトメンバー追加Command
+// 【Phase B2: ユーザー・プロジェクト関連管理】
+// - UserProjectsレコードINSERT
+// - 重複追加チェック（複合一意制約）
+// - SuperUser/ProjectManager権限のみ実行可能
+type AddMemberToProjectCommand = {
+    ProjectId: Guid               // 対象プロジェクトID
+    UserId: Guid                 // 追加するユーザーID
+    OperatorUserId: Guid         // 操作実行者ID（権限チェック用）
+    OperatorRole: Role           // 操作実行者ロール（権限チェック用）
+} with
+    // 🔧 Domain型変換
+    // 【F#初学者向け解説】
+    // Command レコードの生値（Guid型）をF# Domain層の型に変換します。
+    // Result型により、変換エラーを安全に処理します。
+    member this.toDomainTypes() : Result<ProjectId * UserId * UserId * Role, string> =
+        let projectId = ProjectId(int64(this.ProjectId.GetHashCode()))
+        let userId = UserId(int64(this.UserId.GetHashCode()))
+        let operatorId = UserId(int64(this.OperatorUserId.GetHashCode()))
+        Ok (projectId, userId, operatorId, this.OperatorRole)
+
+// プロジェクトメンバー削除Command
+// 【Phase B2: ユーザー・プロジェクト関連管理】
+// - UserProjectsレコードDELETE（物理削除）
+// - 最後の管理者削除防止チェック（Application層で実施）
+// - SuperUser/ProjectManager権限のみ実行可能
+type RemoveMemberFromProjectCommand = {
+    ProjectId: Guid               // 対象プロジェクトID
+    UserId: Guid                 // 削除するユーザーID
+    OperatorUserId: Guid         // 操作実行者ID（権限チェック用）
+    OperatorRole: Role           // 操作実行者ロール（権限チェック用）
+} with
+    // 🔧 Domain型変換
+    member this.toDomainTypes() : Result<ProjectId * UserId * UserId * Role, string> =
+        let projectId = ProjectId(int64(this.ProjectId.GetHashCode()))
+        let userId = UserId(int64(this.UserId.GetHashCode()))
+        let operatorId = UserId(int64(this.OperatorUserId.GetHashCode()))
+        Ok (projectId, userId, operatorId, this.OperatorRole)
+
+// 🎯 Command結果型追加
+type AddMemberCommandResult = CommandResult<unit>
+type RemoveMemberCommandResult = CommandResult<unit>

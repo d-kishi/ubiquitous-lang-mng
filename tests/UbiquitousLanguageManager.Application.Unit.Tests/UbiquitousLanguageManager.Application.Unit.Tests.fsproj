@@ -10,6 +10,7 @@
     <Compile Include="EmailSenderTests.fs" />
     <Compile Include="ApplicationServiceTests.fs" />
     <Compile Include="PasswordResetServiceTests.fs" />
+    <Compile Include="ProjectManagementServiceTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

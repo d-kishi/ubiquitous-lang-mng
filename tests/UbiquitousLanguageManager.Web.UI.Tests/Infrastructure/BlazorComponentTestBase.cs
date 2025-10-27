@@ -2,9 +2,13 @@ using Bunit;
 using Bunit.TestDoubles;
 using Moq;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using AppIProjectManagementService = UbiquitousLanguageManager.Application.ProjectManagement.IProjectManagementService;
 using UbiquitousLanguageManager.Domain.Common;
 using UbiquitousLanguageManager.Contracts.DTOs;
+using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 // F# Domain型をエイリアスで使用
 using FSharpDomainProject = UbiquitousLanguageManager.Domain.ProjectManagement.Project;
 using FSharpDomainDomain = UbiquitousLanguageManager.Domain.ProjectManagement.Domain;
@@ -57,7 +61,8 @@ public abstract class BlazorComponentTestBase : TestContext
     /// 1. 認証コンテキスト作成（デフォルト: 未認証）
     /// 2. IProjectManagementServiceモック作成・DI登録
     /// 3. JSRuntimeモック設定（Toast表示等のJavaScript相互運用対応）
-    /// 4. その他必要なサービスのモック登録
+    /// 4. UserManagerモック設定（プロジェクトメンバー管理対応）
+    /// 5. その他必要なサービスのモック登録
     /// </summary>
     protected BlazorComponentTestBase()
     {
@@ -68,6 +73,30 @@ public abstract class BlazorComponentTestBase : TestContext
         MockProjectService = new Mock<AppIProjectManagementService>();
         Services.AddSingleton(MockProjectService.Object);
 
+        // UserManagerモック作成・登録
+        // 【ASP.NET Core Identity初学者向け解説】
+        // UserManager<ApplicationUser>は、ASP.NET Core Identityのユーザー管理クラスです。
+        // bUnitテストでは、UserManagerの依存関係が複雑なため、モックを作成して登録します。
+        var userStoreMock = new Mock<IUserStore<ApplicationUser>>();
+        var userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            userStoreMock.Object,
+            Mock.Of<IOptions<IdentityOptions>>(),
+            Mock.Of<IPasswordHasher<ApplicationUser>>(),
+            new IUserValidator<ApplicationUser>[0],
+            new IPasswordValidator<ApplicationUser>[0],
+            Mock.Of<ILookupNormalizer>(),
+            Mock.Of<IdentityErrorDescriber>(),
+            Mock.Of<IServiceProvider>(),
+            Mock.Of<ILogger<UserManager<ApplicationUser>>>()
+        );
+
+        // UserManager.Users プロパティのモック設定（空のクエリ）
+        // 【重要】ProjectMemberSelectorコンポーネントは、UserManager.Usersを使用してユーザー一覧を取得します
+        userManagerMock.Setup(m => m.Users)
+            .Returns(new List<ApplicationUser>().AsQueryable());
+
+        Services.AddSingleton(userManagerMock.Object);
+
         // NavigationManager（bUnit標準FakeNavigationManager自動登録済み）
 
         // JSRuntimeモック設定（Toast表示対応）
@@ -77,6 +106,8 @@ public abstract class BlazorComponentTestBase : TestContext
         // "showToast": JavaScript関数名（ProjectList.razor/ProjectCreate.razorで使用）
         // _ => true: すべての引数パターンを受け入れる（引数検証不要）
         JSInterop.SetupVoid("showToast", _ => true).SetVoidResult();
+        // confirm dialog モック（ProjectMembers.razorのメンバー削除確認用）
+        JSInterop.Setup<bool>("confirm", _ => true).SetResult(true);
     }
 
     #region 権限別ユーザー設定ヘルパー

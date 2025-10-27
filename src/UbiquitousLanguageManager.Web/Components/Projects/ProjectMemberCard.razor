@@ -1,0 +1,129 @@
+@using UbiquitousLanguageManager.Domain.Common
+
+<div class="card h-100" data-testid="member-card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-1" data-testid="member-name">
+                    <i class="bi bi-person-circle"></i> @Member.UserName
+                </h5>
+                <p class="card-text text-muted small mb-2">
+                    <i class="bi bi-envelope"></i> @Member.Email
+                </p>
+                <p class="card-text">
+                    <span class="badge bg-secondary" data-testid="member-role">
+                        <i class="bi bi-shield-check"></i> @Member.RoleName
+                    </span>
+                </p>
+            </div>
+            <div>
+                <button
+                    class="btn btn-sm btn-outline-danger"
+                    @onclick="HandleRemove"
+                    disabled="@IsProcessing"
+                    data-testid="member-delete-button"
+                    title="このメンバーを削除">
+                    @if (IsProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-trash"></i>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // ================================================================================
+    // Parameters
+    // ================================================================================
+
+    /// <summary>
+    /// メンバー情報
+    /// 【Blazor Server初学者向け解説】
+    /// 親コンポーネント（ProjectMembers.razor）から渡される、表示対象のメンバー情報です。
+    /// dynamic型を使用することで、親コンポーネント側で定義された任意の型を受け入れることができます。
+    /// </summary>
+    [Parameter]
+    public dynamic Member { get; set; } = default!;
+
+    /// <summary>
+    /// メンバー削除時のコールバック
+    /// 【Blazor Server初学者向け解説】
+    /// EventCallback型により、削除ボタンクリック時に親コンポーネントへUserId型で通知します。
+    /// F# Domain層のUserId型をそのまま使用することで、型安全性を保ちます。
+    /// </summary>
+    [Parameter]
+    public EventCallback<UserId> OnRemove { get; set; }
+
+    /// <summary>
+    /// 処理中フラグ
+    /// 【UI制御パターン】
+    /// 親コンポーネントで処理中の場合、削除ボタンを無効化します。
+    /// これにより、重複した削除操作を防ぎます。
+    /// </summary>
+    [Parameter]
+    public bool IsProcessing { get; set; }
+
+    // ================================================================================
+    // Event Handlers
+    // ================================================================================
+
+    /// <summary>
+    /// 削除ボタンクリック時の処理
+    /// 【イベント駆動パターン】
+    /// 削除ボタンがクリックされた際に、親コンポーネントのイベントハンドラーを呼び出します。
+    /// </summary>
+    private async Task HandleRemove()
+    {
+        // 【F#型統合パターン】
+        // Member.UserIdはF# Domain層のUserId型です。
+        // EventCallbackを通じて、型安全に親コンポーネントに渡されます。
+        await OnRemove.InvokeAsync(Member.UserId);
+    }
+}
+
+@*
+【Blazor Server初学者向け総合解説】
+
+このProjectMemberCard.razorコンポーネントは、プロジェクトメンバー1人分の
+情報を表示するカードUIを提供します。
+
+主要な技術要素：
+1. **Blazor Serverコンポーネント再利用性**:
+   - 単一責任原則: メンバー1人の表示に特化
+   - パラメータ駆動: 親から渡されたデータで表示を制御
+   - イベント駆動: 削除操作を親に委譲
+
+2. **Bootstrap活用**:
+   - card: Material Designライクなカードレイアウト
+   - badge: ロール表示用のバッジ
+   - btn-outline-danger: 削除ボタンのスタイリング
+
+3. **アクセシビリティ対応**:
+   - title属性: ツールチップによる説明
+   - role属性: スクリーンリーダー対応
+   - disabled属性: 処理中の操作防止
+
+4. **data-testid属性**:
+   - member-card: カード全体の識別
+   - member-name: メンバー名の識別
+   - member-role: ロールの識別
+   - member-delete-button: 削除ボタンの識別
+
+重要な実装パターン：
+- **プレゼンテーションコンポーネント**: ロジックを持たず、表示のみに特化
+- **イベント委譲**: 削除処理は親コンポーネントに委譲
+- **状態管理**: IsProcessingによる適切なUI制御
+
+このコンポーネントは、ProjectMembers.razorで複数回使用され、
+メンバー一覧の各カードを生成します。
+
+F#型統合:
+- UserId型: F# Domain層の型をC# UIレイヤーで直接使用
+- EventCallback<UserId>: 型安全なイベント通知
+*@

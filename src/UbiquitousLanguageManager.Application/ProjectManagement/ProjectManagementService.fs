@@ -79,7 +79,13 @@ type ProjectManagementService(
                                 | Ok (project, domain) ->
 
                                     // Step 5: 原子性保証による永続化（REQ-3.1.2-2準拠）
-                                    let! saveResult = projectRepository.SaveProjectWithDefaultDomainAsync(project, domain)
+                                    // 【Phase B2拡張】Owner自動UserProjects追加統合
+                                    // SaveProjectWithDefaultDomainAndOwnerAsync:
+                                    //   - ProjectsレコードINSERT
+                                    //   - DomainsレコードINSERT（デフォルトドメイン）
+                                    //   - UserProjectsレコードINSERT（Owner自動追加）
+                                    //   - トランザクション境界（同一トランザクション）
+                                    let! saveResult = projectRepository.SaveProjectWithDefaultDomainAndOwnerAsync(project, domain, ownerId)
                                     match saveResult with
                                     | Error err -> return Error err
                                     | Ok (savedProject, savedDomain) ->
@@ -288,6 +294,7 @@ type ProjectManagementService(
             }
 
         // 🔍 プロジェクト詳細取得（権限チェック統合）
+        // 【Phase B2拡張】UserCount実装・メンバー判定追加
         member this.GetProjectDetailAsync(query: GetProjectDetailQuery) =
             task {
                 let (projectId, userId, userRole) = query.toDomainTypes()
@@ -301,33 +308,40 @@ type ProjectManagementService(
                     | None -> return Error "指定されたプロジェクトが見つかりません"
                     | Some project ->
 
-                        // Step 2: 権限チェック
-                        if not (ProjectQueryPermissions.canViewProjectDetail userRole userId project) then
-                            return Error "プロジェクト詳細の表示権限がありません"
-                        else
+                        // Step 2: メンバー判定（Phase B2拡張: DomainApprover/GeneralUser権限チェック用）
+                        let! isMemberResult = projectRepository.IsUserProjectMemberAsync(userId, projectId)
+                        match isMemberResult with
+                        | Error err -> return Error err
+                        | Ok isMember ->
 
-                            // Step 3: 関連データ数取得
-                            let! relatedDataResult = projectRepository.GetRelatedDataCountAsync(projectId)
-                            let! domainsResult = domainRepository.GetByProjectIdAsync(projectId)
+                            // Step 3: 権限チェック（Phase B2拡張: メンバー判定統合）
+                            if not (ProjectQueryPermissions.canViewProjectDetail userRole userId project isMember) then
+                                return Error "プロジェクト詳細の表示権限がありません"
+                            else
 
-                            match relatedDataResult, domainsResult with
-                            | Error err, _ | _, Error err -> return Error err
-                            | Ok relatedCount, Ok domains ->
+                                // Step 4: 関連データ数取得（Phase B2拡張: UserCount追加）
+                                let! relatedDataResult = projectRepository.GetRelatedDataCountAsync(projectId)
+                                let! domainsResult = domainRepository.GetByProjectIdAsync(projectId)
+                                let! memberCountResult = projectRepository.GetProjectMemberCountAsync(projectId)
 
-                                // Step 4: 権限フラグ設定
-                                let canEdit = ProjectQueryPermissions.canEditProject userRole userId project
-                                let canDelete = ProjectQueryPermissions.canDeleteProject userRole
+                                match relatedDataResult, domainsResult, memberCountResult with
+                                | Error err, _, _ | _, Error err, _ | _, _, Error err -> return Error err
+                                | Ok relatedCount, Ok domains, Ok memberCount ->
 
-                                // Step 5: 詳細結果DTO作成
-                                let detailResult = {
-                                    Project = project
-                                    UserCount = 0  // 実装簡略化
-                                    DomainCount = List.length domains
-                                    UbiquitousLanguageCount = relatedCount
-                                    CanEdit = canEdit
-                                    CanDelete = canDelete
-                                }
-                                return Ok detailResult
+                                    // Step 5: 権限フラグ設定
+                                    let canEdit = ProjectQueryPermissions.canEditProject userRole userId project
+                                    let canDelete = ProjectQueryPermissions.canDeleteProject userRole
+
+                                    // Step 6: 詳細結果DTO作成（Phase B2拡張: UserCount実装）
+                                    let detailResult = {
+                                        Project = project
+                                        UserCount = memberCount  // Phase B2拡張: GetProjectMemberCountAsync統合
+                                        DomainCount = List.length domains
+                                        UbiquitousLanguageCount = relatedCount
+                                        CanEdit = canEdit
+                                        CanDelete = canDelete
+                                    }
+                                    return Ok detailResult
             }
 
         // 👥 プロジェクトユーザー一覧取得（実装簡略化）
@@ -337,11 +351,12 @@ type ProjectManagementService(
             }
 
         // 🏷️ プロジェクトドメイン一覧取得
+        // 【Phase B2拡張】メンバー判定追加
         member this.GetProjectDomainsAsync(query: GetProjectDomainsQuery) =
             task {
                 let (projectId, userId, userRole) = query.toDomainTypes()
 
-                // Step 1: プロジェクト存在確認・権限チェック
+                // Step 1: プロジェクト存在確認
                 let! projectResult = projectRepository.GetByIdAsync(projectId)
                 match projectResult with
                 | Error err -> return Error err
@@ -350,20 +365,27 @@ type ProjectManagementService(
                     | None -> return Error "指定されたプロジェクトが見つかりません"
                     | Some project ->
 
-                        if not (ProjectQueryPermissions.canViewProjectDetail userRole userId project) then
-                            return Error "プロジェクトドメイン一覧の表示権限がありません"
-                        else
+                        // Step 2: メンバー判定（Phase B2拡張: DomainApprover/GeneralUser権限チェック用）
+                        let! isMemberResult = projectRepository.IsUserProjectMemberAsync(userId, projectId)
+                        match isMemberResult with
+                        | Error err -> return Error err
+                        | Ok isMember ->
 
-                            // Step 2: ドメイン一覧取得
-                            let! domainsResult = domainRepository.GetByProjectIdAsync(projectId)
-                            match domainsResult with
-                            | Error err -> return Error err
-                            | Ok domains ->
-                                // アクティブドメインのみフィルタリング（必要に応じて）
-                                let filteredDomains =
-                                    if query.IncludeInactive then domains
-                                    else domains |> List.filter (fun d -> d.IsActive)
-                                return Ok filteredDomains
+                            // Step 3: 権限チェック（Phase B2拡張: メンバー判定統合）
+                            if not (ProjectQueryPermissions.canViewProjectDetail userRole userId project isMember) then
+                                return Error "プロジェクトドメイン一覧の表示権限がありません"
+                            else
+
+                                // Step 4: ドメイン一覧取得
+                                let! domainsResult = domainRepository.GetByProjectIdAsync(projectId)
+                                match domainsResult with
+                                | Error err -> return Error err
+                                | Ok domains ->
+                                    // アクティブドメインのみフィルタリング（必要に応じて）
+                                    let filteredDomains =
+                                        if query.IncludeInactive then domains
+                                        else domains |> List.filter (fun d -> d.IsActive)
+                                    return Ok filteredDomains
             }
 
         // 📊 ユーザー別プロジェクト一覧取得（実装簡略化）
@@ -434,4 +456,193 @@ type ProjectManagementService(
                                 ProjectsByOwner = []          // 実装簡略化
                             }
                             return Ok statisticsDto
+            }
+
+        // 👥 Phase B2: UserProjects多対多関連管理メソッド実装
+
+        // メンバー追加: Railway-oriented Programming適用・権限制御・重複チェック統合
+        member this.AddMemberToProjectAsync(command: AddMemberToProjectCommand) =
+            task {
+                // Step 1: Command値のDomain型変換
+                match command.toDomainTypes() with
+                | Error err -> return Error err
+                | Ok (projectId, userId, operatorId, operatorRole) ->
+
+                    // Step 2: プロジェクト取得（権限チェック用）
+                    let! projectResult = projectRepository.GetByIdAsync(projectId)
+                    match projectResult with
+                    | Error err -> return Error err
+                    | Ok projectOpt ->
+                        match projectOpt with
+                        | None -> return Error "指定されたプロジェクトが見つかりません"
+                        | Some project ->
+
+                            // Step 3: 権限チェック（権限制御マトリックス適用）
+                            // 【F#初学者向け解説】
+                            // Phase B2権限制御マトリックス拡張:
+                            // - SuperUser: 全プロジェクトに対してメンバー追加可能
+                            // - ProjectManager: 担当プロジェクトのみメンバー追加可能（UserProjects判定必須）
+                            // - DomainApprover/GeneralUser: メンバー追加権限なし
+
+                            // Step 3-1: 基本権限チェック（ロールベース）
+                            if not (ProjectQueryPermissions.canAddMember operatorRole operatorId project) then
+                                return Error "プロジェクトメンバー追加の権限がありません"
+                            else
+                                // Step 3-2: ProjectManager権限の場合、メンバー判定追加
+                                // 【Phase B2拡張】ProjectManagerは担当プロジェクト（UserProjectsメンバー）のみ操作可能
+                                let! hasPermission =
+                                    task {
+                                        match operatorRole with
+                                        | ProjectManager ->
+                                            // UserProjectsテーブルでメンバー判定
+                                            let! isMemberResult = projectRepository.IsUserProjectMemberAsync(operatorId, projectId)
+                                            match isMemberResult with
+                                            | Error err -> return Error err
+                                            | Ok isMember -> return Ok isMember
+                                        | SuperUser -> return Ok true  // SuperUserは全プロジェクト操作可能
+                                        | _ -> return Ok false  // その他ロールは権限なし
+                                    }
+
+                                match hasPermission with
+                                | Error err -> return Error err
+                                | Ok false -> return Error "プロジェクトメンバー追加の権限がありません"
+                                | Ok true ->
+
+                                    // Step 4: 追加対象ユーザー存在確認
+                                    let! userResult = userRepository.GetByIdAsync(userId)
+                                    match userResult with
+                                    | Error err -> return Error err
+                                    | Ok userOpt ->
+                                        match userOpt with
+                                        | None -> return Error "追加対象のユーザーが見つかりません"
+                                        | Some _user ->
+
+                                            // Step 5: Repository委譲（重複チェック・永続化）
+                                            // 【F#初学者向け解説】
+                                            // Infrastructure層AddUserToProjectAsyncで重複チェック・
+                                            // 複合一意制約違反エラーハンドリングを実施済み
+                                            let! addResult = projectRepository.AddUserToProjectAsync(userId, projectId, operatorId)
+                                            return addResult
+            }
+
+        // メンバー削除: Railway-oriented Programming適用・最後の管理者削除防止チェック
+        member this.RemoveMemberFromProjectAsync(command: RemoveMemberFromProjectCommand) =
+            task {
+                // Step 1: Command値のDomain型変換
+                match command.toDomainTypes() with
+                | Error err -> return Error err
+                | Ok (projectId, userId, operatorId, operatorRole) ->
+
+                    // Step 2: プロジェクト取得（権限チェック用）
+                    let! projectResult = projectRepository.GetByIdAsync(projectId)
+                    match projectResult with
+                    | Error err -> return Error err
+                    | Ok projectOpt ->
+                        match projectOpt with
+                        | None -> return Error "指定されたプロジェクトが見つかりません"
+                        | Some project ->
+
+                            // Step 3: 権限チェック（権限制御マトリックス適用）
+                            // Step 3-1: 基本権限チェック（ロールベース）
+                            if not (ProjectQueryPermissions.canRemoveMember operatorRole operatorId project) then
+                                return Error "プロジェクトメンバー削除の権限がありません"
+                            else
+                                // Step 3-2: ProjectManager権限の場合、メンバー判定追加
+                                // 【Phase B2拡張】ProjectManagerは担当プロジェクト（UserProjectsメンバー）のみ操作可能
+                                let! hasPermission =
+                                    task {
+                                        match operatorRole with
+                                        | ProjectManager ->
+                                            // UserProjectsテーブルでメンバー判定
+                                            let! isMemberResult = projectRepository.IsUserProjectMemberAsync(operatorId, projectId)
+                                            match isMemberResult with
+                                            | Error err -> return Error err
+                                            | Ok isMember -> return Ok isMember
+                                        | SuperUser -> return Ok true  // SuperUserは全プロジェクト操作可能
+                                        | _ -> return Ok false  // その他ロールは権限なし
+                                    }
+
+                                match hasPermission with
+                                | Error err -> return Error err
+                                | Ok false -> return Error "プロジェクトメンバー削除の権限がありません"
+                                | Ok true ->
+
+                                    // Step 4: 削除対象ユーザー存在確認
+                                    let! userResult = userRepository.GetByIdAsync(userId)
+                                    match userResult with
+                                    | Error err -> return Error err
+                                    | Ok userOpt ->
+                                        match userOpt with
+                                        | None -> return Error "削除対象のユーザーが見つかりません"
+                                        | Some targetUser ->
+
+                                            // Step 5: 最後の管理者削除防止チェック
+                                            // 【F#初学者向け解説】
+                                            // Infrastructure層申し送り事項:
+                                            // AspNetUserRoles参照でProjectManager判定
+                                            // （Infrastructure層実装により、ここではロールチェックを簡略化）
+                                            // 実装簡略化: 削除対象ユーザーがProjectManagerの場合のみチェック
+                                            if targetUser.Role = ProjectManager then
+                                                // プロジェクトメンバー一覧取得
+                                                let! membersResult = projectRepository.GetProjectMembersAsync(projectId)
+                                                match membersResult with
+                                                | Error err -> return Error err
+                                                | Ok members ->
+                                                    // メンバー数が1名の場合は削除禁止
+                                                    if List.length members = 1 then
+                                                        return Error "プロジェクトには最低1名のプロジェクト管理者が必要です"
+                                                    else
+                                                        // Step 6: Repository委譲（永続化）
+                                                        let! removeResult = projectRepository.RemoveUserFromProjectAsync(userId, projectId)
+                                                        return removeResult
+                                            else
+                                                // Step 6: Repository委譲（永続化）
+                                                let! removeResult = projectRepository.RemoveUserFromProjectAsync(userId, projectId)
+                                                return removeResult
+            }
+
+        // プロジェクトメンバー一覧取得: 権限制御マトリックス統合
+        member this.GetProjectMembersAsync(query: GetProjectMembersQuery) =
+            task {
+                let (projectId, userId, userRole) = query.toDomainTypes()
+
+                // Step 1: プロジェクト存在確認
+                let! projectResult = projectRepository.GetByIdAsync(projectId)
+                match projectResult with
+                | Error err -> return Error err
+                | Ok projectOpt ->
+                    match projectOpt with
+                    | None -> return Error "指定されたプロジェクトが見つかりません"
+                    | Some project ->
+
+                        // Step 2: メンバー判定（権限チェック用）
+                        let! isMemberResult = projectRepository.IsUserProjectMemberAsync(userId, projectId)
+                        match isMemberResult with
+                        | Error err -> return Error err
+                        | Ok isMember ->
+
+                            // Step 3: 権限チェック（Phase B2拡張: DomainApprover/GeneralUser対応）
+                            // 【F#初学者向け解説】
+                            // 権限制御マトリックス:
+                            // - SuperUser: 全プロジェクトのメンバー一覧表示可能
+                            // - ProjectManager: 担当プロジェクトのみメンバー一覧表示可能
+                            // - DomainApprover/GeneralUser: 所属プロジェクトのみメンバー一覧表示可能
+                            if not (ProjectQueryPermissions.canViewProjectMembers userRole userId project isMember) then
+                                return Error "プロジェクトメンバー一覧の表示権限がありません"
+                            else
+
+                                // Step 4: Repository委譲（メンバー一覧取得）
+                                let! membersResult = projectRepository.GetProjectMembersAsync(projectId)
+                                return membersResult
+            }
+
+        // プロジェクトメンバー判定: Infrastructure層委譲
+        member this.IsUserProjectMemberAsync(userId: UserId, projectId: ProjectId) =
+            task {
+                // Infrastructure層IsUserProjectMemberAsync直接委譲
+                // 【F#初学者向け解説】
+                // 権限制御マトリックス統合用のヘルパーメソッドです。
+                // GetProjectsAsync・GetProjectDetailAsyncなどでメンバー判定が必要な場合に活用します。
+                let! result = projectRepository.IsUserProjectMemberAsync(userId, projectId)
+                return result
             }

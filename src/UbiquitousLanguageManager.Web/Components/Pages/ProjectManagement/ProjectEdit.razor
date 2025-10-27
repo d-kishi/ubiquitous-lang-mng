@@ -2,6 +2,7 @@
 @using UbiquitousLanguageManager.Contracts.DTOs
 @using UbiquitousLanguageManager.Application.ProjectManagement
 @using UbiquitousLanguageManager.Domain.Common
+@using UbiquitousLanguageManager.Web.Components.Common
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.FSharp.Core
@@ -134,35 +135,14 @@
                                 </label>
                                 <div class="card p-3 bg-light">
                                     @* 【Blazor Server初学者向け解説】
-                                        InputRadioGroup + InputRadio: Blazor標準のラジオボタングループ
-                                        InputRadioGroup: @bind-Valueでbool型プロパティとバインド
-                                        InputRadio: Value属性でtrueまたはfalseを設定
-                                        TValue="bool"を明示的に指定することで型安全性を確保
+                                        CustomRadioGroup: bUnit完全対応のカスタムラジオボタンコンポーネント
+                                        InputRadioGroupと異なり、bUnitテストで安定動作します。
+                                        @bind-Valueでbool型プロパティとバインド
+                                        Optionsでラジオボタンの選択肢を定義
                                     *@
-                                    <InputRadioGroup @bind-Value="model.IsActive">
-                                        <div class="form-check form-check-inline">
-                                            <InputRadio Name="isActive"
-                                                       TValue="bool"
-                                                       Value="true"
-                                                       class="form-check-input"
-                                                       id="statusActive" />
-                                            <label class="form-check-label" for="statusActive">
-                                                <i class="fas fa-check-circle text-success me-1"></i>
-                                                アクティブ
-                                            </label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <InputRadio Name="isActive"
-                                                       TValue="bool"
-                                                       Value="false"
-                                                       class="form-check-input"
-                                                       id="statusInactive" />
-                                            <label class="form-check-label" for="statusInactive">
-                                                <i class="fas fa-ban text-secondary me-1"></i>
-                                                非アクティブ
-                                            </label>
-                                        </div>
-                                    </InputRadioGroup>
+                                    <CustomRadioGroup @bind-Value="model.IsActive"
+                                                     Name="isActive"
+                                                     Options="@statusOptions" />
                                 </div>
                                 <small class="form-text text-muted">
                                     非アクティブにすると、このプロジェクトは一覧から非表示になります。
@@ -264,6 +244,20 @@
     /// 現在のユーザーロール
     /// </summary>
     private Role currentUserRole = Role.GeneralUser;  // デフォルト値設定
+
+    /// <summary>
+    /// ステータス選択肢（CustomRadioGroup用）
+    /// 【Blazor Server初学者向け解説】
+    /// RadioOption型（bool型）: ラジオボタンの選択肢を定義
+    /// Value: 実際の値（true/false）
+    /// Label: 表示文字列
+    /// Icon: Font Awesomeアイコンクラス
+    /// </summary>
+    private List<RadioOption<bool>> statusOptions = new()
+    {
+        new RadioOption<bool> { Value = true, Label = "アクティブ", Icon = "fas fa-check-circle text-success" },
+        new RadioOption<bool> { Value = false, Label = "非アクティブ", Icon = "fas fa-ban text-secondary" }
+    };
 
     /// <summary>
     /// コンポーネント初期化

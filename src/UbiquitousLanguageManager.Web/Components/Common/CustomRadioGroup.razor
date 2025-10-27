@@ -1,0 +1,147 @@
+@* 【Blazor Server初学者向け解説】
+    CustomRadioGroup: bUnit完全対応のカスタムラジオボタンコンポーネント
+
+    InputRadioGroupとの違い:
+    - bUnitテストで正常動作（InputRadioGroupはbUnitで動作不安定）
+    - オプションリスト方式で柔軟な構成が可能
+    - Bootstrap 5スタイリング統合
+    - @bind-Value双方向バインディング完全対応
+
+    使用例:
+    <CustomRadioGroup @bind-Value="model.IsActive"
+                      Name="isActive"
+                      Options="@statusOptions" />
+
+    @code {
+        private List<RadioOption<bool>> statusOptions = new()
+        {
+            new() { Value = true, Label = "アクティブ", Icon = "fas fa-check-circle text-success" },
+            new() { Value = false, Label = "非アクティブ", Icon = "fas fa-ban text-secondary" }
+        };
+    }
+*@
+@typeparam TValue
+@namespace UbiquitousLanguageManager.Web.Components.Common
+
+<div class="@CssClass">
+    @foreach (var option in Options)
+    {
+        <div class="form-check @(IsInline ? "form-check-inline" : "")">
+            @* 【Blazor Server初学者向け解説】
+                input type="radio": HTML標準のラジオボタン
+                checked属性: 現在の値と一致する場合にtrueを設定（選択状態）
+                @onchange: ラジオボタン変更時にサーバー側メソッドを呼び出し
+                           Blazor ServerではSignalR経由でサーバーに通知
+            *@
+            <input type="radio"
+                   class="form-check-input"
+                   id="@($"{Name}_{GetOptionId(option.Value)}")"
+                   name="@Name"
+                   value="@option.Value"
+                   checked="@IsSelected(option.Value)"
+                   @onchange="@(() => OnValueChanged(option.Value))" />
+            <label class="form-check-label" for="@($"{Name}_{GetOptionId(option.Value)}")">
+                @if (!string.IsNullOrEmpty(option.Icon))
+                {
+                    <i class="@option.Icon me-1"></i>
+                }
+                @option.Label
+            </label>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// 現在選択されている値
+    /// 【Blazor Server初学者向け解説】
+    /// @bind-Valueによる双方向バインディングに対応
+    /// ValueとValueChangedの組み合わせで実現
+    /// </summary>
+    [Parameter]
+    public TValue Value { get; set; } = default!;
+
+    /// <summary>
+    /// 値変更時のイベントコールバック
+    /// 【Blazor Server初学者向け解説】
+    /// EventCallback: Blazor Serverでのイベント通知機構
+    /// SignalR経由でクライアント→サーバーへの値変更を通知
+    /// </summary>
+    [Parameter]
+    public EventCallback<TValue> ValueChanged { get; set; }
+
+    /// <summary>
+    /// ラジオボタングループの名前（HTML name属性）
+    /// 【Blazor Server初学者向け解説】
+    /// name属性: 同じname属性を持つラジオボタンがグループ化される
+    ///          グループ内で1つだけ選択可能になる
+    /// </summary>
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// オプションリスト
+    /// 【Blazor Server初学者向け解説】
+    /// RadioOption型（TValue型パラメータ）: 各ラジオボタンの値・ラベル・アイコンを定義
+    /// </summary>
+    [Parameter]
+    public List<RadioOption<TValue>> Options { get; set; } = new();
+
+    /// <summary>
+    /// CSSクラス（追加スタイル用）
+    /// </summary>
+    [Parameter]
+    public string CssClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// インライン表示フラグ（デフォルト: true）
+    /// trueの場合、ラジオボタンが横並びで表示される
+    /// </summary>
+    [Parameter]
+    public bool IsInline { get; set; } = true;
+
+    /// <summary>
+    /// 値が選択されているか判定
+    /// 【Blazor Server初学者向け解説】
+    /// EqualityComparer: 型に応じた適切な比較を実施
+    ///                  bool型の場合: true/falseの直接比較
+    ///                  enum型の場合: 値の比較
+    ///                  参照型の場合: Equals()による比較
+    /// </summary>
+    private bool IsSelected(TValue optionValue)
+    {
+        if (Value == null && optionValue == null)
+            return true;
+        if (Value == null || optionValue == null)
+            return false;
+
+        return EqualityComparer<TValue>.Default.Equals(Value, optionValue);
+    }
+
+    /// <summary>
+    /// 値変更ハンドラー
+    /// 【Blazor Server初学者向け解説】
+    /// async Task: 非同期処理（Blazor Serverでは必須パターン）
+    /// InvokeAsync(): EventCallbackを非同期実行
+    ///               親コンポーネントの@bind-Valueに値を通知
+    ///               SignalR経由でサーバー側の状態を更新
+    /// </summary>
+    private async Task OnValueChanged(TValue newValue)
+    {
+        Value = newValue;
+        await ValueChanged.InvokeAsync(newValue);
+    }
+
+    /// <summary>
+    /// オプション値からID文字列を生成
+    /// 【Blazor Server初学者向け解説】
+    /// ToString()?.Replace(): Null許容演算子
+    ///                       値がnullでない場合のみReplace()実行
+    ///                       ?? "null": nullの場合のデフォルト値
+    /// HTML id属性用に空白を_に変換（HTML標準準拠）
+    /// </summary>
+    private string GetOptionId(TValue value)
+    {
+        return value?.ToString()?.Replace(" ", "_") ?? "null";
+    }
+}
