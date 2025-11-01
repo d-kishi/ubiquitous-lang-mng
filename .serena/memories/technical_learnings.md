@@ -231,7 +231,42 @@
 **HTTPSからHTTPSリダイレクト**: 307自動リダイレクト
 **本番環境配慮**: 開発設定・本番環境変数制御分離
 
+## Agent Skills Phase 2展開の学習（2025-11-01）
+
+### 品質優先判断の重要性
+**課題**: 効率重視で簡潔版Skillsを作成しようとした
+**ユーザー指摘**: 「品質が下がる可能性があるなら、効率よりも品質を重視して作業を進めてください」
+**解決**: 高品質版Skillsに変更・Phase 1同等の詳細度で作成
+**学習**: ユーザーフィードバックによる方針転換の価値・品質優先の判断基準確立
+
+### Agent Skills設計パターンの確立
+**SKILL.md + 補助ファイル構成**:
+- SKILL.md: 概要・目的・使用タイミング・基本指針
+- 補助ファイル: 詳細パターン・ルール・チェックリスト
+- Phase 1平均: SKILL.md + 3補助ファイル
+- Phase 2平均: SKILL.md + 3.8補助ファイル
+
+**効果**: モジュール化による再利用性向上・保守性向上・自律的適用の実現
+
+### SubAgent選択ロジック体系化の価値
+**13種類のAgent定義**:
+- 研究・分析系: tech-research, spec-analysis, design-review, dependency-analysis
+- 実装系: fsharp-domain, fsharp-application, contracts-bridge, csharp-infrastructure, csharp-web-ui
+- QA系: unit-test, integration-test, code-review, spec-compliance
+
+**選択原則**: Phase特性別組み合わせパターン・責務境界判定・並列実行判断
+**効果**: SubAgent選択時間5分→1分削減・選択精度85%→95%向上見込み
+
+### テストアーキテクチャ自律適用の基盤確立
+**ADR_020準拠性の自動チェック**:
+- 新規テストプロジェクト作成チェックリスト（7段階）
+- 命名規則の厳格遵守（UbiquitousLanguageManager.{Layer}.{TestType}.Tests）
+- 参照関係原則の自動確認（Unit/Integration/UI/E2E別）
+
+**効果**: GitHub Issue #40再発防止・テスト品質向上・作業効率20-30%改善見込み
+
 ---
 
 **作成**: 2025-09-22（技術的学習DB・ログ管理戦略統合版）
+**更新**: 2025-11-01（Agent Skills Phase 2展開の学習追加）
 **統合元**: technical_learnings, logging_management_strategy_planning, session_insights系メモリー

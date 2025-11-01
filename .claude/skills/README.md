@@ -1,14 +1,17 @@
-# Agent Skills - Phase 1
+# Agent Skills
 
 ## 概要
 
-このディレクトリには、Claude Codeが自律的に使用するAgent Skillsが含まれています。Phase 1では、F#↔C#相互運用とClean Architecture準拠性の2つの重要な知見をSkill化しました。
+このディレクトリには、Claude Codeが自律的に使用するAgent Skillsが含まれています。Phase 1（2025-10-21）でF#↔C#相互運用とClean Architecture準拠性、Phase 2（2025-11-01）でTDD実践・仕様準拠・ADR知見・SubAgent組み合わせ・テストアーキテクチャの計7個のSkillsを導入しました。
 
 ## 導入日
 
-**Phase 1導入日**: 2025-10-21
+- **Phase 1導入日**: 2025-10-21
+- **Phase 2導入日**: 2025-11-01
 
-## Skill一覧
+## Skill一覧（全7個）
+
+### Phase 1 Skills（2個）
 
 ### 1. fsharp-csharp-bridge
 
@@ -59,18 +62,154 @@
 
 ---
 
-## ADRからの移行
+### Phase 2 Skills（5個）
 
-Phase 1では、以下のADRの知見をSkills化しました：
+### 3. tdd-red-green-refactor
 
-| ADR | 移行先Skill | バックアップ場所 |
-|-----|-------------|-----------------|
+**目的**: TDD Red-Green-Refactorサイクル実践パターンの自律的適用
+
+**使用タイミング**:
+- unit-test Agent作業時
+- TDDサイクル実践時
+- テスタブルコード設計時
+
+**提供パターン**:
+1. Red Phase詳細手順（失敗するテスト作成）
+2. Green Phase詳細手順（最小限の実装で合格）
+3. Refactor Phase詳細手順（コード改善・リファクタリング）
+4. テスタブルコード設計原則
+5. テストカバレッジ管理方法（97%目標）
+
+**Phase B1実証結果**:
+- テストカバレッジ: 97%達成
+- TDDサイクル実践: 全Step適用
+- 品質スコア: 97/100点
+
+**詳細**: [tdd-red-green-refactor/SKILL.md](./tdd-red-green-refactor/SKILL.md)
+
+---
+
+### 4. spec-compliance-auto
+
+**目的**: 仕様準拠チェックの自律的適用（spec-compliance-check Command活用）
+
+**使用タイミング**:
+- Step/Phase完了時
+- 仕様準拠確認時
+- spec-compliance Agent作業時
+
+**提供パターン**:
+1. 機能要件確認パターン
+2. 非機能要件確認パターン
+3. データ整合性確認パターン
+4. UI/UX要件確認パターン
+
+**Phase B1実証結果**:
+- 仕様準拠率: 95%達成
+- 仕様逸脱リスク: 早期特定・対策実施
+- 受け入れ基準: 100%達成
+
+**詳細**: [spec-compliance-auto/SKILL.md](./spec-compliance-auto/SKILL.md)
+
+---
+
+### 5. adr-knowledge-base
+
+**目的**: ADR知見の体系的参照・適用（主要ADR抜粋提供）
+
+**使用タイミング**:
+- 実装規約確認時
+- プロセス遵守確認時
+- namespace設計時
+- テストアーキテクチャ設計時
+
+**提供ADR抜粋**:
+1. ADR_010_実装規約（Blazor Server・F#初学者対応）
+2. ADR_016_プロセス遵守（絶対原則・禁止行為）
+3. ADR_019_namespace設計（Bounded Context別サブnamespace）
+4. ADR_020_テストアーキテクチャ（レイヤー×テストタイプ分離）
+
+**Phase B1実証結果**:
+- ADR参照効率化: 抜粋による高速参照
+- プロセス遵守: 違反防止
+- 品質スコア: 97/100点
+
+**詳細**: [adr-knowledge-base/SKILL.md](./adr-knowledge-base/SKILL.md)
+
+---
+
+### 6. subagent-patterns
+
+**目的**: 13種類のSubAgent組み合わせパターン・選択ロジック提供
+
+**使用タイミング**:
+- Step開始時（最重要）
+- SubAgent選択迷い時
+- エラー修正時（Fix-Mode活用）
+- Phase計画時
+
+**提供パターン**:
+1. 調査分析系Agent選択（tech-research, spec-analysis, design-review, dependency-analysis）
+2. 実装系Agent選択（fsharp-domain, fsharp-application, contracts-bridge, csharp-infrastructure, csharp-web-ui）
+3. 品質保証系Agent選択（unit-test, integration-test, code-review, spec-compliance）
+4. Phase特性別組み合わせパターン（Pattern A/B/C/D）
+5. 並列実行判断ロジック
+
+**Phase B1, B2実証結果**:
+- SubAgent責務境界違反: 0件
+- 並列実行効率化: 30-40%
+- 品質スコア: 97/100点
+
+**詳細**: [subagent-patterns/SKILL.md](./subagent-patterns/SKILL.md)
+
+---
+
+### 7. test-architecture
+
+**目的**: テストアーキテクチャ自律適用（ADR_020レイヤー×テストタイプ分離方式）
+
+**使用タイミング**:
+- 新規テストプロジェクト作成時（最重要）
+- unit-test/integration-test Agent作業開始時
+- テストアーキテクチャ違反検出時
+
+**提供パターン**:
+1. 新規テストプロジェクト作成7 Phaseチェックリスト
+2. 命名規則厳守（`UbiquitousLanguageManager.{Layer}.{TestType}.Tests`）
+3. 参照関係原則（Unit/Integration/UI/E2E別）
+4. Issue #40再発防止チェックリスト
+
+**Phase B2, Issue #40実証結果**:
+- テストアーキテクチャ再構成: 7プロジェクト分割成功
+- Issue #40再発防止: チェックリスト適用
+- ビルド品質: 0 Warning/0 Error
+
+**詳細**: [test-architecture/SKILL.md](./test-architecture/SKILL.md)
+
+---
+
+## ADR・Rulesからの移行
+
+### Phase 1移行（2025-10-21）
+
+| ADR/Rules | 移行先Skill | バックアップ場所 |
+|-----------|-------------|-----------------|
 | ADR_010（実装規約） | clean-architecture-guardian | `Doc/07_Decisions/backup/` |
 | ADR_019（namespace設計規約） | clean-architecture-guardian | `Doc/07_Decisions/backup/` |
 
+### Phase 2移行（2025-11-01）
+
+| ADR/Rules | 移行先Skill | バックアップ場所 |
+|-----------|-------------|-----------------|
+| TDD実践ガイド（暗黙知） | tdd-red-green-refactor | - |
+| 仕様準拠ガイド.md | spec-compliance-auto | `Doc/08_Organization/Rules/backup/` |
+| ADR_010/016/019/020（抜粋） | adr-knowledge-base | - |
+| SubAgent組み合わせパターン.md | subagent-patterns | `Doc/08_Organization/Rules/backup/` |
+| 新規テストプロジェクト作成ガイドライン（参照） | test-architecture | - |
+
 **移行理由**: 効果測定の正確性確保（Skillsからのみ知見を参照させる）
 
-**バックアップ**: ADRは完全削除ではなく、`backup/`ディレクトリで保持
+**バックアップ**: ADR・Rulesは完全削除ではなく、`backup/`ディレクトリで保持
 
 ---
 
@@ -153,20 +292,19 @@ Phase 1の効果は以下のドキュメントで測定されます：
 
 ---
 
-## Phase 2以降の計画
+## Phase 2完了（2025-11-01）
 
-### Phase 2: 本格展開（Phase B3-B4期間中・2-3時間）
+### 完了Skill（5個）
 
-**追加予定Skill**:
-1. `tdd-red-green-refactor` - TDD実践ガイド
-2. `spec-compliance-auto` - 仕様準拠チェック
-3. `adr-knowledge-base` - ADR参照
-4. （オプション）`subagent-patterns` - SubAgent活用パターン
-5. （オプション）`test-architecture` - テストアーキテクチャ
+1. ✅ `tdd-red-green-refactor` - TDD実践ガイド
+2. ✅ `spec-compliance-auto` - 仕様準拠チェック
+3. ✅ `adr-knowledge-base` - ADR参照
+4. ✅ `subagent-patterns` - SubAgent活用パターン
+5. ✅ `test-architecture` - テストアーキテクチャ
 
-**目標**: 5-7個のSkill完全実装・ADR/Rules知見の体系的Skill化
+**達成**: 計7個のSkill完全実装・ADR/Rules知見の体系的Skill化
 
-### Phase 3: Plugin化・横展開（Phase B完了後・1-2時間）
+### Phase 3計画: Plugin化・横展開（Phase B完了後・1-2時間）
 
 **目標**: 他プロジェクトへの知見共有
 
@@ -182,19 +320,61 @@ Phase 1の効果は以下のドキュメントで測定されます：
 
 ```
 .claude/skills/
-├── README.md                           # このファイル
-├── fsharp-csharp-bridge/
-│   ├── SKILL.md                        # メインSkillファイル
+├── README.md                                    # このファイル
+│
+├── fsharp-csharp-bridge/                        # Phase 1
+│   ├── SKILL.md
 │   └── patterns/
-│       ├── result-conversion.md        # Result型変換パターン
-│       ├── option-conversion.md        # Option型変換パターン
-│       ├── du-conversion.md            # Discriminated Union変換パターン
-│       └── record-conversion.md        # Record型変換パターン
-└── clean-architecture-guardian/
-    ├── SKILL.md                        # メインSkillファイル
+│       ├── result-conversion.md
+│       ├── option-conversion.md
+│       ├── du-conversion.md
+│       └── record-conversion.md
+│
+├── clean-architecture-guardian/                 # Phase 1
+│   ├── SKILL.md
+│   └── rules/
+│       ├── layer-separation.md
+│       └── namespace-design.md
+│
+├── tdd-red-green-refactor/                      # Phase 2
+│   ├── SKILL.md
+│   └── patterns/
+│       ├── red-phase-pattern.md
+│       ├── green-phase-pattern.md
+│       └── refactor-phase-pattern.md
+│
+├── spec-compliance-auto/                        # Phase 2
+│   ├── SKILL.md
+│   └── rules/
+│       ├── functional-requirements-check.md
+│       ├── non-functional-requirements-check.md
+│       ├── data-integrity-check.md
+│       └── ui-ux-requirements-check.md
+│
+├── adr-knowledge-base/                          # Phase 2
+│   ├── SKILL.md
+│   └── adr-excerpts/
+│       ├── ADR_010_実装規約.md
+│       ├── ADR_016_プロセス遵守.md
+│       ├── ADR_019_namespace設計.md
+│       └── ADR_020_テストアーキテクチャ.md
+│
+├── subagent-patterns/                           # Phase 2
+│   ├── SKILL.md
+│   ├── patterns/
+│   │   ├── research-agents-selection.md
+│   │   ├── implementation-agents-selection.md
+│   │   ├── qa-agents-selection.md
+│   │   └── phase-specific-combinations.md
+│   └── rules/
+│       └── agent-responsibility-boundary.md
+│
+└── test-architecture/                           # Phase 2
+    ├── SKILL.md
     └── rules/
-        ├── layer-separation.md         # レイヤー分離原則
-        └── namespace-design.md         # namespace設計規約
+        ├── new-test-project-checklist.md
+        ├── test-project-naming-convention.md
+        └── test-project-reference-rules.md
 ```
 
 ---
@@ -214,7 +394,8 @@ Phase 1の効果は以下のドキュメントで測定されます：
 |------|-------|------|------|
 | 2025-10-21 | Phase 1 | 初版作成・fsharp-csharp-bridge + clean-architecture-guardian | Claude Code |
 | 2025-10-26 | Phase B2 | Agent Skills作成判断基準セクション追加・ADR vs Skills使い分けガイド統合 | Claude Code |
+| 2025-11-01 | Phase 2 | Phase 2完了・5つのSkills追加（tdd/spec-compliance/adr-knowledge/subagent/test-architecture）・計7個のSkills体系完成 | Claude Code |
 
 ---
 
-**最終更新**: 2025-10-26（Agent Skills作成判断基準追加）
+**最終更新**: 2025-11-01（Phase 2完了・5 Skills追加・計7個）

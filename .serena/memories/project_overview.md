@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-10-29（**Phase B-F2 Step1完了・Agent SDK再調査完了・Go判断変更（No-Go → Go）・7ファイル更新完了**）
+**最終更新**: 2025-11-01（**Phase B-F2 Step2完了（Stage 1-11）・Agent Skills Phase 2展開完了・7 Skills体系完成・次回Step3実施**）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -21,15 +21,15 @@
   - [x] **Step4: Issue #40 Phase 2実装完了**（2025-10-13・1セッション・**7プロジェクト構成確立・0 Warning/0 Error**）✅ 🎉
   - [x] **Step5: Issue #40 Phase 3実装・ドキュメント整備完了**（2025-10-13・1.5-2時間・**335/338 tests**）✅ 🎉
 - [x] **Phase B2（ユーザー・プロジェクト関連管理）**: **完了**（2025-10-27完了）✅ **93/100点** 🎉 **CA 97点・仕様準拠97点達成・Playwright統合93.3%効率化達成・技術負債あり（GitHub Issue #59）**
-- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step1完了**（2025-10-29 Step1完了）📋 **← Agent SDK再調査完了・Go判断変更（No-Go → Go）・次回Step2開始**
+- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step2完了（Stage 1-11）**（2025-11-01 Step2完了）📋 **← Agent Skills Phase 2展開完了・7 Skills体系完成・次回Step3実施**
 - [ ] **Phase B3-B5（プロジェクト管理機能完成）**: Phase B3-B5計画中 📋
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
 - **Phase完了**: 3/4+ (75%+) ※Phase A完了 + Phase B1完了 + **Phase B-F1完了** + **Phase B2完了** 🎉
-- **Step完了**: 34/42+ (81.0%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** 🎉
-- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**UserProjects多対多関連完了**（権限制御16パターン）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）、**Playwright MCP統合完了** 🎉、**Agent Skills Phase 1導入完了** 🎉
+- **Step完了**: 35/42+ (83.3%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** + **Phase B-F2 Step2完了** 🎉
+- **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**UserProjects多対多関連完了**（権限制御16パターン）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）、**Playwright MCP統合完了** 🎉、**Agent Skills Phase 1導入完了** 🎉、**Agent Skills Phase 2展開完了** 🎉
 
 ### 🎊 Phase B2完了（2025-10-27）✅ - 品質スコア 93/100
 
@@ -71,14 +71,17 @@
 - 📋 **次Phase推奨**: Phase B-F2（技術負債解決・E2Eテスト基盤強化）- Issue #57/#53/#59解決
 - 📋 **推定期間**: 3-4セッション
 
-### 🤖 Agent Skills Phase 1導入完了（2025-10-21）🎉
+### 🤖 Agent Skills Phase 2展開完了（2025-11-01）🎉
 
-#### 導入概要
-**目的**: ADR/Rulesの知見をモジュール化し、Claudeが自律的に適用する仕組み導入
-**実施時間**: 1.5-2時間（計画通り）
+#### 展開概要
+**目的**: ADR/Rulesの知見をSkills化し、Claudeが自律的に適用する7 Skills体系完成
+**Phase 1実施時間**: 1.5-2時間（2025-10-21完了）
+**Phase 2実施時間**: 2.5-3時間（2025-11-01完了）
 **導入推奨度**: ⭐⭐⭐⭐⭐ 9/10点（強く推奨）
 
-#### 作成したSkills（2個）
+#### 作成したSkills（7個体系）
+
+**Phase 1 Skills（2個）**:
 
 1. **fsharp-csharp-bridge**
    - **目的**: F# Domain/Application層とC# Infrastructure/Web層の型変換パターンを自律的に適用
@@ -92,21 +95,74 @@
    - **Phase B1品質基準**: 97/100点
    - **ファイル構成**: SKILL.md + 2ルールファイル
 
-#### ADRからの移行
+**Phase 2 Skills（5個・2025-11-01完了）**:
 
-**バックアップディレクトリ**: `Doc/07_Decisions/backup/`
+3. **tdd-red-green-refactor**
+   - **目的**: TDD Red-Green-Refactorサイクル実践ガイド
+   - **提供パターン**: 3つ（red-phase.md, green-phase.md, refactor-phase.md）
+   - **ファイル構成**: SKILL.md + 3パターンファイル
 
-**移行したADR**:
+4. **spec-compliance-auto**
+   - **目的**: 仕様準拠確認の自律的適用
+   - **提供ルール**: 4つ（原典仕様書参照、仕様準拠マトリックス、スコアリング、重複実装検出）
+   - **ファイル構成**: SKILL.md + 4ルールファイル
+
+5. **adr-knowledge-base**
+   - **目的**: ADR知見抜粋による技術決定理由提供
+   - **提供ADR抜粋**: 4つ（ADR_016, ADR_018, ADR_020, ADR_023）
+   - **ファイル構成**: SKILL.md + 4 ADR抜粋ファイル
+
+6. **subagent-patterns**
+   - **目的**: SubAgent選択・組み合わせパターンの自律的適用
+   - **提供パターン**: 13種類のAgent定義・選択原則・組み合わせパターン・責務境界判定
+   - **ファイル構成**: SKILL.md + 5パターン/ルールファイル
+
+7. **test-architecture**
+   - **目的**: テストアーキテクチャ自律適用（ADR_020準拠）
+   - **提供ルール**: 3つ（新規テストプロジェクト作成チェックリスト、命名規則、参照関係原則）
+   - **ファイル構成**: SKILL.md + 3ルールファイル
+
+#### Phase 2展開実績（2025-11-01）
+
+**実施時間**: 約2.5-3時間（推定期間内）
+**実施セッション**: 1セッション
+**成果物**:
+- ✅ 5個のSkills作成完了（19個の補助ファイル）
+- ✅ 2ファイルbackup移動完了
+- ✅ README.md更新完了（計7個のSkills体系）
+- ✅ 効果測定ドキュメント更新完了
+
+**品質基準**:
+- ✅ Skills品質: 既存Skills（Phase 1）と同等の品質・構成維持
+- ✅ 補助ファイル充実: 各Skillに3-5個の補助ファイルを作成・実用性向上
+
+**次Stepへの申し送り**:
+- subagent-patterns Skills更新必須（Step3）：Playwright実装責任を担う新規SubAgent定義追加（13種類→14種類）
+- ADR作成方針（Step3）：判断根拠のみ・簡潔版（詳細はSkillsに記載）
+
+#### ADR・RulesからのSkills化完了
+
+**バックアップディレクトリ**:
+- `Doc/07_Decisions/backup/`（Phase 1移行ADR）
+- `Doc/08_Organization/Rules/backup/`（Phase 2移行Rules）
+
+**Phase 1移行（2025-10-21）**:
 - ADR_010_実装規約.md → clean-architecture-guardian
 - ADR_019_namespace設計規約.md → clean-architecture-guardian
 
-**移行理由**: 効果測定の正確性確保（Skillsからのみ知見を参照）
+**Phase 2移行（2025-11-01）**:
+- 仕様準拠ガイド.md → spec-compliance-auto
+- SubAgent組み合わせパターン.md → subagent-patterns
+
+**移行理由**: 効果測定の正確性確保（Skillsからのみ知見を参照）+ 自律的適用の実現
 
 #### 効果測定準備完了
 
 **測定ドキュメント**: `Doc/08_Organization/Active/AgentSkills_Phase1_効果測定.md`
 
-**測定期間**: Phase B2 Step5 ～ Phase B3完了（推定2-3週間）
+**Phase 1測定期間**: Phase B2 Step5 ～ Phase B3完了（推定2-3週間）
+
+**Phase 2測定期間**: Phase B-F2 Step3以降 ～ Phase B-F2完了（推定1-2週間）
 
 **測定項目**:
 1. Claudeの自律的Skill使用頻度（目標60%以上）
@@ -115,20 +171,21 @@
 
 #### 期待効果
 
-**短期効果（Phase B2-B3）**:
+**短期効果（Phase B-F2以降）**:
 - ADR参照時間: 5分 → 0分（自動適用）
 - Clean Architecture確認: 10分 → 2分（自動判定）
-- 合計削減: 約20-25分/セッション
+- SubAgent選択時間: 5分 → 1分（自律的選択）
+- 仕様準拠確認時間: 15分 → 3分（自動マトリックス作成）
+- TDD実践効率: 20%向上（Red-Green-Refactorガイド）
+- 合計削減: 約30-40分/セッション
 
 **品質向上**:
 - ADR遵守率: 90% → 98%（自動適用）
 - Clean Architecture品質: 97点維持 → 98-99点（自動監視）
+- 仕様準拠率: 95% → 98%（自動確認）
+- SubAgent選択精度: 85% → 95%（パターン適用）
 
 #### 次のステップ
-
-**Phase 2（Phase B3-B4期間中・2-3時間）**:
-- 5-7個のSkill完全実装（tdd-red-green-refactor、spec-compliance-auto、adr-knowledge-base等）
-- ADR/Rules知見の体系的Skill化
 
 **Phase 3（Phase B完了後・1-2時間）**:
 - Plugin化・横展開
@@ -137,9 +194,43 @@
 
 ---
 
-（以下、既存の project_overview 内容を維持）
-
 ### Phase B完了記念（2025-10-06完了）🎉
-...
-（既存内容省略）
-...
+
+**開始日**: 2025-09-23
+**完了日**: 2025-10-06
+**実行期間**: 13日間（予定14日間、-1日）
+**総合品質スコア**: 97/100（Phase B1平均品質）
+
+#### Phase B1主要成果（全7Step完了）
+
+**新規実装機能**:
+1. **プロジェクト基本CRUD**: Domain+Application+Infrastructure+Web層完全実装
+2. **4つの境界文脈**: User, Project, Context, UbiquitousLanguage
+3. **F#↔C# Type Conversion**: 4パターン確立（Result/Option/DU/Record）
+4. **Blazor Server UI**: 3コンポーネント完成（ProjectList/ProjectCreate/ProjectEdit）
+
+**技術基盤確立**:
+1. **Clean Architecture 97点品質**: レイヤー分離・依存関係制約厳守
+2. **namespace階層化**: ADR_019確立（BC/Layer/Feature構造）
+3. **bUnitテスト基盤**: Blazor Serverコンポーネントテスト環境整備
+4. **F# Compilation Order**: 36ファイル適切配置・循環依存解消
+
+**品質基盤強化**:
+1. **0 Warning / 0 Error状態**: 全Step維持
+2. **仕様準拠率98%**: 機能仕様書との完全一致
+3. **テストカバレッジ80%以上**: Domain/Application層完全カバー
+4. **技術負債4件記録**: Phase B2で計画的解決
+
+---
+
+## プロジェクト基本情報
+
+**プロジェクト名**: ユビキタス言語管理システム  
+**技術スタック**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）  
+**開発方法**: スクラム開発（1-2週間スプリント）・TDD実践・SubAgentプール方式  
+**現在Phase**: Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）  
+**次回予定**: Phase B-F2 Step3実施（Playwright統合基盤刷新）
+
+---
+
+**最終更新**: 2025-11-01
