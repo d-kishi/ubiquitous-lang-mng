@@ -159,7 +159,76 @@
 - [ ] 次期アクション明確性確認（実施内容・担当・期限・成功基準）
 - [ ] ユーザーへの振り返り結果報告・次期方針確認
 
-### 11. Command実行完了確認・継続判断
+### 11. MCP更新確認（自動レポート）
+
+#### 🔴 目的：MCPツール変更の見逃し防止・SubAgent定義の陳腐化防止
+
+**実行内容**:
+
+- [ ] **Playwright MCP更新確認**:
+  ```bash
+  # 1. 現在のバージョン確認
+  npx @playwright/mcp@latest --version
+
+  # 2. npm最新版確認
+  npm view @playwright/mcp version
+
+  # 3. 直近1週間のリリース取得（GitHub API）
+  gh api repos/microsoft/playwright-mcp/releases?per_page=5 \
+    | grep -E '"tag_name"|"created_at"|"body"'
+
+  # 4. 現在利用可能なツール一覧取得（JSON-RPC）
+  echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
+    | npx @playwright/mcp@latest \
+    | jq '.result.tools[].name'
+  ```
+
+- [ ] **Serena MCP更新確認**:
+  ```bash
+  # 1. 最新リリース確認（GitHub API）
+  gh api repos/oraios/serena/releases/latest
+
+  # 2. 直近1週間のリリース取得
+  gh api repos/oraios/serena/releases?per_page=5 \
+    | grep -E '"tag_name"|"created_at"|"body"'
+  ```
+
+- [ ] **変更レポート作成**:
+  - 新規バージョンがある場合: リリースノートのツール変更箇所を抽出
+  - ツール追加: `.claude/agents/e2e-test.md`への追加推奨
+  - ツール廃止: 影響範囲の調査（SubAgent定義で使用中か確認）
+  - ツール非推奨: 代替手段の検討・移行計画策定
+
+- [ ] **SubAgent定義更新判断**:
+  - ユーザーにレポート提示
+  - 更新が必要な場合: `.claude/agents/e2e-test.md`手動編集
+  - 更新不要の場合: スキップ
+
+**出力例**:
+```markdown
+## MCP更新レポート（YYYY-MM-DD）
+
+### Playwright MCP
+- **現在のバージョン**: v0.0.45
+- **最新バージョン**: v0.0.45（最新）
+- **直近1週間の変更**: なし
+
+### Serena MCP
+- **現在のバージョン**: v0.1.4
+- **最新バージョン**: v0.1.4（最新）
+- **直近1週間の変更**: なし
+
+### 推奨アクション
+- ✅ 現在最新版を使用中 - 対応不要
+```
+
+**メンテナンス詳細参照**:
+- **ADR_024**: MCPツール更新時のメンテナンス手順（完全版）
+- **期待運用コスト**: 5-10分/週（レポート確認・判断）
+
+---
+
+### 12. Command実行完了確認・継続判断
 
 #### 🔴 必須実行確認（自己チェック）
 **実行証跡必須確認**:

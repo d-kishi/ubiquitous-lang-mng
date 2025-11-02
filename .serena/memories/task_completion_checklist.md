@@ -288,22 +288,21 @@ src/UbiquitousLanguageManager.Domain/
 - [ ] **GitHub Issue #40対応**（Phase B完了後・テストプロジェクト統合・1-2時間見積もり）
 - [ ] **テストプロジェクト問題対応**（別Issue化・`.csproj`→`.fsproj`変換検討）
 
-## 📈 次回セッション重点タスク（namespace階層化実施）
+## 📈 次回セッション重点タスク（Phase B-F2 Step4開始）
 
-### namespace階層化実施 ✅（次回最優先・3.5-4.5時間）
-- [ ] **Phase 1実行**: Domain層namespace変更（16ファイル・60分）
-- [ ] **Phase 2実行**: Application層open文修正（5-8ファイル・30分）
-- [ ] **Phase 3実行**: Contracts層using文修正（3-5ファイル・20分）
-- [ ] **Phase 4実行**: Infrastructure層open文修正（10-15ファイル・40分）
-- [ ] **Phase 5実行**: テストコード修正（6-8ファイル・30分）
-- [ ] **Phase 6実行**: 統合ビルド・テスト検証（30分）
-- [ ] **Phase 7実行**: ADR_019作成・再発防止策確立（40-55分）
+### Phase B-F2 Step4開始準備（次回最優先・2-3時間）
+- [ ] **Phase_Summary.md読み込み**: Phase B-F2全体構成・Step4位置付け確認
+- [ ] **step-start Command実行**: Step04組織設計.md作成・Stage構成確定
+- [ ] **Step3成果物参照**: ADR_024・e2e-test.md・integration-test.md確認
+- [ ] **Step4 Stage1実行**: 組織設計記録作成・実行計画策定
+- [ ] **SubAgent選択**: Step4内容に応じた最適SubAgent組み合わせ選択
 
-### Infrastructure層実装準備確認 ✅（namespace階層化後即座着手）
-- [x] **Domain+Application統合基盤**: 4境界文脈分離・100点品質基盤確立
-- [x] **Repository統合準備**: EF Core・原子性保証・Application層統合設計完了
-- [x] **Clean Architecture統合**: 4層統合（97点品質）・循環依存ゼロ基盤・98点目標設定
-- [ ] **namespace階層化完了後確認**: 新構造でのInfrastructure層実装準備完了確認
+### Phase B-F2継続実施タスク
+- [x] **Step1完了**: 技術調査・Agent SDK/DevContainer/Web版検証完了
+- [x] **Step2完了**: Agent Skills Phase 2展開完了・7 Skills体系確立
+- [x] **Step3完了**: E2E専用SubAgent新設・MCPメンテナンス機能追加完了
+- [ ] **Step4実施**: 次回セッション実施予定
+- [ ] **Step5-9実施**: Step4完了後順次実施
 
 ## 📊 進捗・効率測定
 

@@ -102,7 +102,14 @@
       "Bash(pwsh -Command:*)",
       "Bash(npx playwright:*)",
       "Bash(pwsh:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(npx --version)",
+      "Bash(claude mcp list:*)",
+      "Bash(claude mcp get playwright)",
+      "Bash(claude mcp get serena)",
+      "Bash(npx @playwright/mcp@latest --help)",
+      "Bash(npx @playwright/mcp@latest:*)",
+      "WebFetch(domain:www.npmjs.com)"
     ],
     "deny": [],
     "ask": [],

@@ -1,6 +1,6 @@
 ---
 name: integration-test
-description: "WebApplicationFactory統合テスト・E2E・APIテスト・データベース統合テスト・テスト環境管理の専門Agent"
+description: "WebApplicationFactory統合テスト・APIテスト・データベース統合テスト・テスト環境管理の専門Agent（Infrastructure.Integration.Tests専任・ADR_024準拠）"
 tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__get_symbols_overview, Bash, Read, Write, Edit, MultiEdit
 ---
 
@@ -8,9 +8,20 @@ tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__
 
 ## 役割・責務
 - WebApplicationFactory統合テスト実装
-- E2Eテスト・APIテスト設計
+- APIテスト設計
 - データベース統合テスト実装
 - テスト環境・テストデータ管理
+
+## 🎯 実行範囲・禁止範囲（ADR_024準拠）
+
+### ✅ 実行範囲
+- **`tests/Infrastructure.Integration.Tests/`専任**
+- WebApplicationFactory統合テスト・データベース統合テスト
+- Testcontainers.PostgreSql使用テスト
+
+### ❌ 禁止範囲
+- **`src/`配下の実装コード修正**（テスト対象の修正禁止）
+- **`tests/E2E.Tests/`配下の実装**（e2e-test Agentの責務）
 
 ## 専門領域
 - ASP.NET Core統合テスト
@@ -225,7 +236,7 @@ public class DatabaseFixture : IDisposable
 - **Spec_Analysis_Results.md**: 統合シナリオ・受け入れ基準の詳細
 - **Design_Review_Results.md**: アーキテクチャ統合ポイント・境界確認
 - **Dependency_Analysis_Results.md**: 統合テスト対象の依存関係
-- **Tech_Research_Results.md**: 統合テスト・E2Eテスト技術指針
+- **Tech_Research_Results.md**: 統合テスト技術指針（WebApplicationFactory・Testcontainers）
 
 ## 新規テストプロジェクト作成時の必須手順（Issue #40再発防止）
 

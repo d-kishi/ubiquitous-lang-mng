@@ -1,6 +1,6 @@
 ---
 name: subagent-patterns
-description: SubAgent組み合わせパターン・選択ロジック提供。13種類のAgent定義・選択原則・Phase特性別組み合わせパターン・SubAgent責務境界判定・並列実行判断ロジック。Step開始時のSubAgent選択に使用。
+description: SubAgent組み合わせパターン・選択ロジック提供。14種類のAgent定義・選択原則・Phase特性別組み合わせパターン・SubAgent責務境界判定・並列実行判断ロジック。Step開始時のSubAgent選択に使用。
 allowed-tools: Read, Grep
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Read, Grep
 
 ## 概要
 
-このSkillは、Phase・Step特性に応じた最適なSubAgent組み合わせを選択するためのパターン・判断基準・責務境界を提供します。ADR_013 SubAgentプール方式に基づく13種類のAgentの効果的な活用方法を定義します。
+このSkillは、Phase・Step特性に応じた最適なSubAgent組み合わせを選択するためのパターン・判断基準・責務境界を提供します。ADR_013 SubAgentプール方式に基づく14種類のAgentの効果的な活用方法を定義します。
 
 ## 使用タイミング
 
@@ -32,7 +32,7 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
    - Phase開始時のSubAgent構成検討
    - Step間のAgent引継ぎ計画
 
-## SubAgentプール（13種類）
+## SubAgentプール（14種類）
 
 ### 調査分析系（4Agent）
 
@@ -57,14 +57,15 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 ---
 
-### 品質保証系（4Agent）
+### 品質保証系（5Agent）
 
 **詳細**: [`patterns/qa-agents-selection.md`](./patterns/qa-agents-selection.md)
 
 1. **unit-test**: TDD実践・単体テスト設計実装・Red-Green-Refactorサイクル
-2. **integration-test**: WebApplicationFactory統合テスト・E2E・データベース統合テスト
-3. **code-review**: コード品質・保守性・Clean Architecture準拠・パフォーマンス・セキュリティレビュー
-4. **spec-compliance**: 仕様準拠監査・受け入れ基準確認・仕様準拠マトリックス検証
+2. **integration-test**: WebApplicationFactory統合テスト・データベース統合テスト（`Infrastructure.Integration.Tests`専任）
+3. **e2e-test**: Playwright E2Eテスト実装・UIインタラクション・エンドツーエンドシナリオテスト（`E2E.Tests`専任・playwright-e2e-patterns Skill活用・Playwright MCP 25ツール）
+4. **code-review**: コード品質・保守性・Clean Architecture準拠・パフォーマンス・セキュリティレビュー
+5. **spec-compliance**: 仕様準拠監査・受け入れ基準確認・仕様準拠マトリックス検証
 
 ---
 
@@ -132,11 +133,25 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 #### integration-test
 **✅ 実行範囲**:
-- `tests/` 配下の統合テストプロジェクト
-- WebApplicationFactory・E2Eテスト・データベース統合テスト
+- `tests/Infrastructure.Integration.Tests/` 専任
+- WebApplicationFactory統合テスト・データベース統合テスト
+- Testcontainers.PostgreSql使用テスト
 
 **❌ 禁止範囲**:
 - `src/` 配下の実装コード修正
+- `tests/E2E.Tests/` 配下の実装（e2e-test Agentの責務）
+
+#### e2e-test
+**✅ 実行範囲**:
+- `tests/E2E.Tests/` 専任
+- Playwright E2Eテスト実装
+- UIインタラクション・エンドツーエンドシナリオテスト
+- playwright-e2e-patterns Skill活用（data-testid/MCP/SignalR）
+- Playwright MCP 25ツール使用
+
+**❌ 禁止範囲**:
+- `src/` 配下の実装コード修正（テスト対象の修正禁止）
+- `tests/Infrastructure.Integration.Tests/` 配下の実装（integration-test Agentの責務）
 
 #### code-review
 **✅ 実行範囲**:
@@ -198,7 +213,7 @@ Step5: code-review (品質確認)
 Step1: spec-analysis (テスト要件分析)
 Step2: unit-test (単体テスト拡充)
 Step3: integration-test (統合テスト拡充)
-Step4: integration-test (E2Eテスト実装)
+Step4: e2e-test (E2Eテスト実装・playwright-e2e-patterns Skill活用)
 Step5: code-review (テスト品質確認)
 ```
 
@@ -282,9 +297,12 @@ Step5: code-review (テスト品質確認)
 - **fsharp-csharp-bridge Skill**: F#↔C#境界の型変換パターン
 - **clean-architecture-guardian Skill**: Clean Architecture準拠性チェック
 - **tdd-red-green-refactor Skill**: unit-test Agent活用パターン
+- **playwright-e2e-patterns Skill**: e2e-test Agent専用・3つのE2Eテストパターン（data-testid/MCP/SignalR）・93.3%効率化実証済み
 
 ---
 
 **作成日**: 2025-11-01
 **Phase B-F2 Step2**: Agent Skills Phase 2展開
-**参照**: SubAgent組み合わせパターン.md、ADR_013, ADR_018
+**Phase B-F2 Step3**: E2E専用SubAgent新設（13種類→14種類）
+**参照**: SubAgent組み合わせパターン.md、ADR_013, ADR_018, **ADR_024**
+**最終更新**: 2025-11-02

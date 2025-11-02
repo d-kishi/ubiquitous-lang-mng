@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-01（**Phase B-F2 Step2完了（Stage 1-11）・Agent Skills Phase 2展開完了・7 Skills体系完成・次回Step3実施**）
+**最終更新**: 2025-11-02（**Phase B-F2 Step3完了（全8 Stage）・E2E専用SubAgent新設・SubAgent 13種類→14種類拡張・MCPメンテナンス機能追加・次回Step4実施**）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -21,14 +21,14 @@
   - [x] **Step4: Issue #40 Phase 2実装完了**（2025-10-13・1セッション・**7プロジェクト構成確立・0 Warning/0 Error**）✅ 🎉
   - [x] **Step5: Issue #40 Phase 3実装・ドキュメント整備完了**（2025-10-13・1.5-2時間・**335/338 tests**）✅ 🎉
 - [x] **Phase B2（ユーザー・プロジェクト関連管理）**: **完了**（2025-10-27完了）✅ **93/100点** 🎉 **CA 97点・仕様準拠97点達成・Playwright統合93.3%効率化達成・技術負債あり（GitHub Issue #59）**
-- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step2完了（Stage 1-11）**（2025-11-01 Step2完了）📋 **← Agent Skills Phase 2展開完了・7 Skills体系完成・次回Step3実施**
+- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step3完了（全8 Stage）**（2025-11-02 Step3完了）📋 **← E2E専用SubAgent新設・SubAgent 14種類体系完成・MCPメンテナンス機能追加・次回Step4実施**
 - [ ] **Phase B3-B5（プロジェクト管理機能完成）**: Phase B3-B5計画中 📋
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
 - **Phase完了**: 3/4+ (75%+) ※Phase A完了 + Phase B1完了 + **Phase B-F1完了** + **Phase B2完了** 🎉
-- **Step完了**: 35/42+ (83.3%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** + **Phase B-F2 Step2完了** 🎉
+- **Step完了**: 36/42+ (85.7%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** + **Phase B-F2 Step1-3完了** 🎉
 - **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**UserProjects多対多関連完了**（権限制御16パターン）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）、**Playwright MCP統合完了** 🎉、**Agent Skills Phase 1導入完了** 🎉、**Agent Skills Phase 2展開完了** 🎉
 
 ### 🎊 Phase B2完了（2025-10-27）✅ - 品質スコア 93/100
@@ -225,12 +225,51 @@
 
 ## プロジェクト基本情報
 
-**プロジェクト名**: ユビキタス言語管理システム  
-**技術スタック**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）  
-**開発方法**: スクラム開発（1-2週間スプリント）・TDD実践・SubAgentプール方式  
-**現在Phase**: Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）  
-**次回予定**: Phase B-F2 Step3実施（Playwright統合基盤刷新）
+**プロジェクト名**: ユビキタス言語管理システム
+**技術スタック**: Clean Architecture（F# Domain/Application + C# Infrastructure/Web + Contracts層）
+**開発方法**: スクラム開発（1-2週間スプリント）・TDD実践・SubAgentプール方式
+**現在Phase**: Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）
+**現在Step**: Step3完了（E2E専用SubAgent新設・MCPメンテナンス機能追加）
+**次回予定**: Phase B-F2 Step4実施
 
 ---
 
-**最終更新**: 2025-11-01
+## 📋 次回セッション読み込みファイル（必須）
+
+### Phase B-F2 Step4開始準備（次回セッション）
+
+**必須読み込みファイル**:
+1. `Doc/08_Organization/Active/Phase_B-F2/Phase_Summary.md`
+   - **目的**: Phase B-F2全体構成・全Step計画確認
+   - **活用**: Step4の位置付け・前後Stepとの関連性確認
+
+2. `Doc/08_Organization/Active/Phase_B-F2/Step04_[タイトル].md`（次回作成予定）
+   - **目的**: Step4組織設計・実行計画確認
+   - **活用**: Step4のStage構成・成果物・実施内容確認
+   - **注意**: 次回セッション開始時に step-start Command で作成
+
+3. **Step3成果物参照**（ADR_024関連）:
+   - `Doc/07_Decisions/ADR_024_E2E専用SubAgent新設決定.md`
+   - **目的**: E2E専用SubAgent新設決定の背景・判断根拠確認
+   - **活用**: Step4以降のE2Eテスト実装時の参照
+
+4. **Step3成果物参照**（SubAgent定義）:
+   - `.claude/agents/e2e-test.md`（E2E専用Agent定義）
+   - `.claude/agents/integration-test.md`（責務再定義版）
+   - **目的**: E2E/Integration Test SubAgentの責務境界確認
+   - **活用**: Step4以降のテスト実装時のSubAgent選択判断
+
+**記録理由**:
+- Phase B-F2 Step4開始には、Phase全体構成とStep4詳細計画の確認が必須
+- Step3で確立したE2E専用SubAgent定義を理解し、適切に活用するため
+- ADR_024で確立した判断根拠（5点）を参照し、一貫性を保つため
+
+**次回セッション開始時の流れ**:
+1. Phase_Summary.md読み込み → Phase B-F2全体把握
+2. step-start Command実行 → Step04組織設計.md作成
+3. ADR_024・e2e-test.md参照 → 前Step成果物の理解
+4. Step4 Stage1実行開始
+
+---
+
+**最終更新**: 2025-11-02（Phase B-F2 Step3完了・次回Step4実施準備完了）
