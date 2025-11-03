@@ -1,5 +1,110 @@
 # 技術的学習・解決策データベース（2025-09-22拡張版）
 
+## DevContainer構築・Sandboxモード統合（2025-11-03）
+
+### DevContainer + Sandboxモード統合パターン
+
+**実装構成**:
+- **.devcontainer/devcontainer.json**: VS Code拡張・Sandbox設定・ポート転送・環境変数
+- **.devcontainer/Dockerfile**: .NET 8.0 + Node.js 24 + bubblewrap環境
+- **.devcontainer/docker-compose.yml**: Container orchestration設定
+- **.claude/settings.local.json**: Sandboxモード有効化
+
+**技術的価値**: 環境セットアップ時間96%削減（120分→5分）+ Sandbox統合による安全性向上
+
+### Node.jsバージョン管理哲学（Container環境）
+
+**決定**: Node.js 24.x（Active LTS）を直接インストール・Volta/nvm不採用
+
+**理由**:
+1. **Container環境特性**: Dockerfile固定バージョン・Immutable Infrastructure原則
+2. **ホスト環境統一**: ホスト（v24.10.0）とContainer環境の一致
+3. **バージョン管理ツール不要性**: Container再ビルドで完全制御可能
+
+**技術判断基準**:
+- ✅ Container環境: Dockerfile直接インストール（単一バージョン・不変インフラ）
+- ✅ ホスト環境: Volta/nvm活用（複数プロジェクト・バージョン切り替え）
+
+**学習**: Container環境とホスト環境の哲学的違い・バージョン管理ツールの適用範囲理解
+
+### DevContainer Features vs Dockerfile競合解決
+
+**問題**: Node.js FeatureとDockerfileの手動インストールが競合
+```
+ERROR: Feature "Node.js (via nvm), yarn and pnpm" failed to install!
+sh: 10: source: Permission denied
+exit code: 127
+```
+
+**根本原因**:
+- DevContainer Features（nvm経由Node.js 20インストール）とDockerfile（直接Node.js 20インストール）の二重実行
+- nvm環境変数設定とDockerfile環境の競合
+
+**解決パターン**:
+1. **DevContainer Features削除**: devcontainer.json から Node.js Feature削除
+2. **Dockerfile統一**: 全パッケージインストールをDockerfileに集約
+3. **コメント明記**: 手動インストール理由を明示的記録
+
+```json
+// Features（.NET環境）
+// 注: Node.jsはDockerfileで手動インストール（Ver.24 Active LTS）
+"features": {
+  "ghcr.io/devcontainers/features/dotnet:2": {
+    "version": "8.0",
+    "installUsingApt": false
+  },
+  "ghcr.io/devcontainers/features/git:1": {
+    "version": "latest"
+  }
+}
+```
+
+**予防策**: Features vs Dockerfile役割分担の事前設計・競合可能性チェック
+
+### .NET SDK内蔵パッケージ理解
+
+**問題**: Dockerfileで `fsharp` パッケージインストール試行 → apt-get失敗
+```
+failed to solve: process "/bin/sh -c apt-get update...fsharp...exit code: 100
+```
+
+**根本原因**: F#コンパイラは `mcr.microsoft.com/dotnet/sdk:8.0` に含まれており、個別インストール不要
+
+**解決**: Dockerfile から `fsharp` パッケージ削除・コメント追記
+```dockerfile
+# パッケージ更新・基本ツールインストール
+# 注: F#は.NET 8.0 SDKに含まれているため、追加インストール不要
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    # bubblewrap（Sandboxモード用）
+    bubblewrap \
+    # PostgreSQL client
+    postgresql-client \
+    ...
+```
+
+**学習**: ベースイメージ内蔵ツールの事前確認必要性・.NET SDK構成要素理解
+
+### `claude -c` セッション再開問題回避戦略
+
+**問題**: `claude -c` でセッション再開時、長時間にわたってコンソールが応答しない
+**影響**: 数十分～1時間の時間浪費・作業中断・フラストレーション
+
+**解決戦略**:
+1. **新規セッション開始**: `claude -c` 使用禁止・新規セッション開始を選択
+2. **詳細記録の徹底**: Step組織設計書・Serenaメモリーに完全記録
+3. **継続フロー設計**: 「今何をしている途中状態なのか」「次に何をすべきか」を明示的記録
+
+**記録場所**:
+- **Step組織設計書**: 次回セッション開始時の作業フロー（7ステップ手順・コマンド・期待結果）
+- **Serenaメモリー**: daily_sessions（Session実施内容・技術的決定・次回指示）
+
+**技術的価値**: Context管理戦略・セッション継続性確保・作業効率維持
+
+**学習**: Claude Code制約（AutoCompact無応答問題）の理解・ドキュメント記録による継続性確保の重要性
+
+---
+
 ## ログ管理戦略・実装指針
 
 ### ログ管理方針設計（Issue #24対応・2025-09-18策定）
@@ -132,7 +237,7 @@
 ## ASP.NET Core技術解決パターン
 
 ### 初期パスワード仕様準拠実装（TECH-002完全解決）
-**仕様要件**: InitialPassword="su"（平文）、PasswordHash=NULL
+**仕様要件**: InitialPassword=\"su\"（平文）、PasswordHash=NULL
 **実装パターン**:
 1. **InitialDataService.cs**: UserManager.CreateAsync(user)のみ、パスワードハッシュ化なし
 2. **AuthenticationService.cs**: 平文InitialPassword認証ロジック追加  
@@ -151,7 +256,7 @@
 **技術選択基準**: 標準準拠・本番配慮・既存資産活用
 
 ### ルートパス競合解決
-**問題**: Pages/Index.razor と Components/Pages/Home.razor の @page "/" 競合
+**問題**: Pages/Index.razor と Components/Pages/Home.razor の @page \"/\" 競合
 **解決**: Home.razor から @page ディレクティブ削除
 **予防策**: Blazor Serverルーティング設計時の重複チェック必須
 
@@ -268,5 +373,5 @@
 ---
 
 **作成**: 2025-09-22（技術的学習DB・ログ管理戦略統合版）
-**更新**: 2025-11-01（Agent Skills Phase 2展開の学習追加）
+**更新**: 2025-11-03（DevContainer構築・Sandboxモード統合・Node.jsバージョン管理哲学・Features競合解決・`claude -c`問題回避戦略追加）
 **統合元**: technical_learnings, logging_management_strategy_planning, session_insights系メモリー

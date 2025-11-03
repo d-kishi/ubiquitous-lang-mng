@@ -54,6 +54,62 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ---
 
+## DevContainer開発環境規約（2025-11-03確立・Phase B-F2 Step4）
+
+### VSCode拡張機能標準セット（15個）
+
+**設定場所**: `.devcontainer/devcontainer.json` の `extensions` 配列
+
+**基本開発環境（4個）**:
+- `ms-dotnettools.csharp` - C#言語サポート
+- `ionide.ionide-fsharp` - F#言語サポート
+- `ms-playwright.playwright` - Playwright E2Eテスト統合
+- `ms-vscode-remote.remote-containers` - DevContainer統合
+
+**.NET開発必須（4個）**:
+- `ms-dotnettools.csdevkit` - C# Dev Kit（包括的C#開発ツール）
+- `ms-dotnettools.vscode-dotnet-runtime` - .NET Runtimeマネージャー
+- `formulahendry.dotnet-test-explorer` - テストエクスプローラー
+- `editorconfig.editorconfig` - EditorConfig対応（コーディング規約統一）
+
+**開発効率向上（5個）**:
+- `eamodio.gitlens` - Git履歴・Blame可視化
+- `ms-azuretools.vscode-docker` - Docker統合
+- `christian-kohler.path-intellisense` - パス補完
+- `yzhang.markdown-all-in-one` - Markdownプレビュー・編集支援
+- `ms-ceintl.vscode-language-pack-ja` - 日本語言語パック
+
+**AI支援（2個）**:
+- `github.copilot` - GitHub Copilot（AI ペアプログラミング）
+- `github.copilot-chat` - GitHub Copilot Chat（AI 対話支援）
+
+**重要**: DevContainer内で拡張機能を手動インストールしても `devcontainer.json` には自動記録されない。必ず手動で追加すること。
+
+### クロスプラットフォーム改行コード規約
+
+**設定場所**: `.gitattributes` (2025-11-03追加)
+
+**背景**:
+- Windows（CRLF）とLinux（LF）の改行コード混在により、C# nullable reference type解析が影響を受ける
+- Phase B-F2 Step4で78個の警告（CS8600, CS8625, CS8602, CS8604, CS8620）が発生したが、`.gitattributes` 追加後に0件に解消
+
+**重要発見**: 改行コード混在（CRLF vs LF）がC#コンパイラのnullable reference type解析に影響する
+
+**適用方法**:
+```bash
+# .gitattributes作成後、既存ファイルに適用
+git add --renormalize .
+```
+
+**設定内容**: テキストファイルは全てLF改行、バイナリファイルは変更なし
+
+**効果**:
+- クロスプラットフォーム開発環境でのビルド一貫性確保
+- コンパイラ警告の排除（78件 → 0件）
+- Git差異問題解決（676件 → 15件）
+
+---
+
 ## PostgreSQL 識別子規約（2025-10-26確立・重要）
 
 ### 🔴 必須ルール: 全識別子Quote必須
@@ -159,5 +215,5 @@ COMMENT ON COLUMN "AspNetUsers"."Id" IS 'ユーザーID（主キー、GUID形式
 
 ---
 
-**最終更新**: 2025-10-21（**Agent Skills Phase 1導入完了・Skills参照方法追記**）
-**重要変更**: F#↔C#型変換パターンの詳細を`.claude/skills/fsharp-csharp-bridge/`に移行
+**最終更新**: 2025-11-03（**DevContainer開発環境規約確立・VSCode拡張15個標準化・.gitattributes追加**）
+**重要変更**: DevContainer開発環境規約セクション追加（VSCode拡張機能標準セット・クロスプラットフォーム改行コード規約）

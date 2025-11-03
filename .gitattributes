@@ -1,0 +1,47 @@
+# クロスプラットフォーム開発のための改行コード統一設定
+# Repository: リポジトリ内はLFで統一
+# Working Directory: 各OS標準に自動変換（Windows=CRLF, Linux/Mac=LF）
+
+# デフォルト: すべてのテキストファイルは自動変換
+* text=auto
+
+# ソースコード: 明示的にtext指定
+*.cs     text diff=csharp
+*.fs     text diff=fsharp
+*.fsx    text diff=fsharp
+*.fsproj text
+*.csproj text
+*.sln    text
+*.md     text
+*.yml    text
+*.yaml   text
+*.json   text
+*.xml    text
+*.config text
+*.props  text
+*.targets text
+
+# シェルスクリプト: LF固定（Linux/Mac互換性）
+*.sh     text eol=lf
+*.bash   text eol=lf
+
+# Windows固定ファイル: CRLF固定
+*.cmd    text eol=crlf
+*.bat    text eol=crlf
+*.ps1    text eol=crlf
+
+# バイナリファイル: 変換しない
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.pdf    binary
+*.dll    binary
+*.exe    binary
+*.zip    binary
+*.7z     binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.eot    binary

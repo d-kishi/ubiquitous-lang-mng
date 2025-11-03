@@ -109,7 +109,10 @@
       "Bash(claude mcp get serena)",
       "Bash(npx @playwright/mcp@latest --help)",
       "Bash(npx @playwright/mcp@latest:*)",
-      "WebFetch(domain:www.npmjs.com)"
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(Measure-Object -Line)",
+      "Bash(Select-Object -ExpandProperty Lines)",
+      "Bash(code --list-extensions:*)"
     ],
     "deny": [],
     "ask": [],
@@ -117,5 +120,16 @@
     "additionalDirectories": [
       "C:\\Develop"
     ]
+  },
+  "sandbox": {
+    "network": {
+      "allowUnixSockets": [
+        "/var/run/docker.sock"
+      ],
+      "allowLocalBinding": true
+    },
+    "excludedCommands": [],
+    "autoAllowBashIfSandboxed": true,
+    "enabled": true
   }
 }

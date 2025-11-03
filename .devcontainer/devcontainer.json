@@ -1,0 +1,113 @@
+{
+  "name": "Ubiquitous Language Manager",
+  "dockerComposeFile": [
+    "docker-compose.yml",
+    "../docker-compose.yml"
+  ],
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+
+  // VS Code拡張機能の自動インストール
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // 基本開発環境（4個）
+        "ms-dotnettools.csharp",
+        "ionide.ionide-fsharp",
+        "ms-playwright.playwright",
+        "ms-vscode-remote.remote-containers",
+
+        // .NET開発必須（4個）
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "formulahendry.dotnet-test-explorer",
+        "editorconfig.editorconfig",
+
+        // 開発効率向上（5個）
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker",
+        "christian-kohler.path-intellisense",
+        "yzhang.markdown-all-in-one",
+        "ms-ceintl.vscode-language-pack-ja",
+
+        // AI支援（2個）
+        "github.copilot",
+        "github.copilot-chat"
+      ],
+      "settings": {
+        // Sandboxモード有効化（Claude Code統合）
+        "claude.sandboxing.enabled": true,
+
+        // .NET設定
+        "dotnet.defaultSolution": "/workspace/UbiquitousLanguageManager.sln",
+        "omnisharp.enableRoslynAnalyzers": true,
+        "omnisharp.enableEditorConfigSupport": true,
+
+        // F#設定
+        "FSharp.enableTreeView": true,
+        "FSharp.fsiExtraParameters": [],
+
+        // Playwright設定
+        "playwright.reuseBrowser": true
+      }
+    }
+  },
+
+  // コンテナ起動後の初期化コマンド
+  "postCreateCommand": "dotnet restore",
+
+  // ポートフォワーディング設定
+  "forwardPorts": [
+    5001,  // アプリケーション（HTTPS）
+    5000,  // アプリケーション（HTTP）
+    5432,  // PostgreSQL
+    8080,  // PgAdmin
+    5080,  // Smtp4dev
+    2525   // SMTP
+  ],
+
+  // ポート表示設定
+  "portsAttributes": {
+    "5001": {
+      "label": "Application (HTTPS)",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    },
+    "8080": {
+      "label": "PgAdmin",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // 環境変数設定（DevContainer内）
+  "remoteEnv": {
+    // PostgreSQL接続文字列（docker-compose service名参照）
+    "ConnectionStrings__DefaultConnection": "Host=postgres;Port=5432;Database=ubiquitous_lang_db;Username=ubiquitous_lang_user;Password=ubiquitous_lang_password",
+
+    // SMTP設定
+    "EmailSettings__SmtpServer": "smtp4dev",
+    "EmailSettings__SmtpPort": "25",
+
+    // ASP.NET Core設定
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "ASPNETCORE_URLS": "https://+:5001;http://+:5000"
+  },
+
+  // コンテナ実行ユーザー設定
+  "remoteUser": "vscode",
+
+  // Features（.NET環境）
+  // 注: Node.jsはDockerfileで手動インストール（Ver.24 Active LTS）
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "8.0",
+      "installUsingApt": false
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    }
+  }
+}
