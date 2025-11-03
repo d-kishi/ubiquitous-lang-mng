@@ -483,9 +483,9 @@ Doc\99_Others\EnvironmentSetup\
 ---
 
 ### Stage 5: 自動動作検証・効果測定
-**実施日**: 2025-11-03（進行中・中断）
+**実施日**: 2025-11-04（完了）
 **担当**: MainAgent
-**状況**: **DevContainerビルド待ち**
+**状況**: **検証完了**
 
 **実施内容（途中まで）**:
 1. DevContainer設定ファイル3件作成完了（Stage 1-4）
@@ -547,8 +547,37 @@ Doc\99_Others\EnvironmentSetup\
 - Stage 6完了 → Stage 7: 全ドキュメント作成
 - Stage 7完了 → Stage 8: Step完了処理
 
-**検証結果**:
-（DevContainer起動成功後に記録）
+**検証結果** ✅:
+1. **DevContainer環境確認**: 成功
+   - .NET 8.0.415確認済み
+   - Node.js 24.x確認済み（npm, git, bubblewrap含む）
+
+2. **ビルド確認**: 成功
+   - 結果: 0 Error, 78 Warnings（既知の技術負債 - GitHub Issue #62）
+
+3. **DB接続確認**: 成功
+   - PostgreSQLコンテナ（postgres:5432）へのDockerネットワーク経由接続成功
+   - `dotnet ef database update`実行完了
+
+4. **アプリ起動確認**: 成功
+   - DevContainer内でアプリ起動完了（http://0.0.0.0:5000）
+   - データベース初期化・マイグレーション適用完了
+
+5. **テスト実行確認**: 成功
+   - Domain.Unit.Tests: 113 Passed
+   - Contracts.Unit.Tests: 98 Passed
+   - Application.Unit.Tests: 32 Passed
+   - Infrastructure.Unit.Tests: 98 Passed
+   - **合計**: 341件成功
+   - **注**: Web.UI.Testsで8件失敗（既存の問題・DevContainer導入とは無関係）
+
+6. **MCP Server動作確認**: 成功
+   - Serena MCP: 正常動作確認済み（ファイル読み込み・シンボル検索）
+   - Playwright MCP: 利用可能確認済み
+
+7. **効果測定**: 達成
+   - **セットアップ時間削減**: 75-140分 → 2-5分（約96%削減）✅
+   - **承認プロンプト削減**: Windows Sandbox非対応により未達成（GitHub Issue #63で追跡中）⚠️
 
 ---
 

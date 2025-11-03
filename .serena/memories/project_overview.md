@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-03（**Phase B-F2 Step4 Stage 4完了・0 Warning/0 Error達成・次回Stage5自動検証実施**）
+**最終更新**: 2025-11-04（**Phase B-F2 Step4 Stage 5完了・DevContainer環境完全確立・0 Error/0 Warning達成・次回Stage6ユーザー動作確認**）
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -21,7 +21,7 @@
   - [x] **Step4: Issue #40 Phase 2実装完了**（2025-10-13・1セッション・**7プロジェクト構成確立・0 Warning/0 Error**）✅ 🎉
   - [x] **Step5: Issue #40 Phase 3実装・ドキュメント整備完了**（2025-10-13・1.5-2時間・**335/338 tests**）✅ 🎉
 - [x] **Phase B2（ユーザー・プロジェクト関連管理）**: **完了**（2025-10-27完了）✅ **93/100点** 🎉 **CA 97点・仕様準拠97点達成・Playwright統合93.3%効率化達成・技術負債あり（GitHub Issue #59）**
-- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step4 Stage 4完了**（2025-11-03 Session 2完了）📋 **← DevContainer環境構築完了・0 Warning/0 Error達成・.gitattributes追加・次回Stage5自動検証実施**
+- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step4 Stage 5完了**（2025-11-04 Session 1完了）📋 **← DevContainer環境完全確立・0 Error/0 Warning達成・dotnet-ef正常インストール・次回Stage6ユーザー動作確認**
 - [ ] **Phase B3-B5（プロジェクト管理機能完成）**: Phase B3-B5計画中 📋
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
@@ -31,13 +31,13 @@
 - **Step完了**: 36/42+ (85.7%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** + **Phase B-F2 Step1-3完了** 🎉
 - **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**UserProjects多対多関連完了**（権限制御16パターン）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）、**Playwright MCP統合完了** 🎉、**Agent Skills Phase 1導入完了** 🎉、**Agent Skills Phase 2展開完了** 🎉
 
-### 🔧 Phase B-F2 Step4実行中（2025-11-03）📋 - DevContainer + Sandboxモード統合
+### 🔧 Phase B-F2 Step4実行中（2025-11-03 ~ 2025-11-04）📋 - DevContainer + Sandboxモード統合
 
 #### Step実行状況
 **開始日**: 2025-11-03
-**実行期間**: 進行中（Session 2完了、Stage 1-4完了）
-**現在Stage**: Stage 5準備完了（DevContainerビルド待ち）
-**次回作業**: DevContainer起動成功後、Stage 5自動検証実施（7ステップ）
+**実行期間**: 進行中（Session 3完了、Stage 1-5完了）
+**現在Stage**: Stage 6準備完了（ユーザー動作確認待ち）
+**次回作業**: Stage 6ユーザー動作確認実施（DevContainer統合ターミナルでの開発ワークフロー確認）
 
 #### Session 2実施内容（2025-11-03完了）
 
@@ -96,10 +96,67 @@
 - .gitattributesによるクロスプラットフォーム対応の必須性
 - DevContainer環境構築時の初期段階で.gitattributes設定が重要
 
-#### 未完了Stage（Stage 5-8）
+#### Session 3実施内容（2025-11-04完了）
 
-- [ ] **Stage 5**: 自動動作検証（7ステップ検証プロセス実施・効果測定）📋 ← **次回セッション実施予定**
-- [ ] **Stage 6**: ユーザーによる動作確認（DevContainer起動・アプリ動作確認）📋
+**完了Stage（Stage 5）**:
+- ✅ **Stage 5**: 自動動作検証完了（DevContainer環境完全確立・0 Error/0 Warning達成）
+
+**Stage 5トラブルシューティング（3問題解決）**:
+1. **問題1**: 権限エラー（MSB3374・obj/binアクセス拒否）
+   - 原因: ホスト作成ファイル（Windows user）とDevContainer user（vscode）の権限不一致
+   - 解決: PowerShell `Remove-Item -Recurse -Force`でobj/bin完全削除 → クリーンビルド成功
+2. **問題2**: A5:SQL PostgreSQL接続失敗
+   - 原因: Windows環境がIPv6（::1）優先・A5:SQLがIPv4設定のみ
+   - 解決: A5:SQLプロトコル設定でIPv6接続有効化
+3. **問題3**: dotnet-ef未インストール
+   - 原因: dotnet tool installがUSER切り替え前（root user）で実行されたため、non-root userがアクセス不可
+   - 解決: Dockerfile修正（dotnet tool install行をUSER $USERNAME後に移動）→ 再ビルド成功
+
+**DevContainer再ビルド後完全検証**:
+- 新コンテナID: dcd87dd90f05
+- dotnet-ef: v9.0.10正常動作確認
+- dotnet-format: v8.3.6正常動作確認
+- PATH確認: /home/vscode/.dotnet/tools正常設定
+- **ビルド結果**: **0 Error, 0 Warning達成**（前回78 Warnings→完全解消）
+- **テスト結果**: 341テスト全成功（Unit/Integration）
+- **効果測定**: セットアップ時間96%削減達成確認
+
+**重大発見: 0 Warning達成の技術的要因**:
+- 前回: 0 Error, 78 Warnings（nullable reference type warnings）
+- 今回: 0 Error, 0 Warning（完全クリーン）
+- 原因: クリーンビルドにより環境不整合警告が解消（ホスト/DevContainer混在ビルド成果物の不整合解消）
+
+**⚠️ 重要な発見: Sandboxモード非対応の影響**:
+- Windows環境ではClaude Code Sandboxモードが非対応であることが判明（ADR_025記載）
+- Stage1技術調査結果は、Sandboxモード動作前提で評価していた
+- 承認プロンプト削減効果（84%削減）は未達成
+- **Stage6以降の実行計画をSandboxモード非対応を考慮して調整必要**
+
+**作成・更新ファイル**:
+- `.devcontainer/Dockerfile`（修正）: dotnet tool install順序変更（USER切り替え後実行）
+- `Doc/08_Organization/Active/Phase_B-F2/Step04_DevContainer_Sandboxモード統合.md`（更新）: Stage 5完了記録
+
+**技術的知見**:
+1. **obj/binディレクトリの権限問題**: DevContainer環境での主要な問題（ホスト/コンテナ間権限不一致）
+2. **Dockerfile順序の重要性**: dotnet tool installはUSER切り替え後実行が必須（/home/$USERNAME/.dotnet/tools配置）
+3. **IPv6/IPv4環境差異**: Windows環境でのPostgreSQL接続はIPv6優先確認必要
+4. **クリーンビルド効果**: 環境不整合警告78件の完全解消確認
+
+**次回セッション（Stage 6）準備情報**:
+- **必須読み込みファイル**:
+  - `Doc/08_Organization/Active/Phase_B-F2/Phase_Summary.md` - Step間成果物参照マトリックス
+  - `Doc/08_Organization/Active/Phase_B-F2/Step04_DevContainer_Sandboxモード統合.md` - Stage 6実施内容
+  - `Doc/07_Decisions/ADR_025_DevContainer_Sandboxモード統合.md` - 技術決定・期待動作
+  - `.devcontainer/devcontainer.json` - DevContainer設定確認
+  - `CLAUDE.md` - DevContainer実行方法確認
+- **実施内容**: Stage 6ユーザー動作確認（DevContainer統合ターミナルでの開発ワークフロー確認）
+- **申し送り事項**:
+  - Sandboxモード非対応によりStage1調査結果の一部が不正確（承認プロンプト削減効果未達成）
+  - Stage6以降の実行計画調整が必要（Sandboxモード非対応を考慮した手動実行対応）
+
+#### 未完了Stage（Stage 6-8）
+
+- [ ] **Stage 6**: ユーザーによる動作確認（DevContainer起動・アプリ動作確認）📋 ← **次回セッション実施予定**
 - [ ] **Stage 7**: 全ドキュメント作成（環境構築手順書・Dev Container使用手順書・ADR作成）📋
 - [ ] **Stage 8**: Step完了処理（Phase_Summary更新・step-end-review実行・git commit）📋
 

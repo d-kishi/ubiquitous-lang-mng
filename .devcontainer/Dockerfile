@@ -46,13 +46,6 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# .NET Global Toolsインストール（開発ツール）
-RUN dotnet tool install -g dotnet-ef \
-    && dotnet tool install -g dotnet-format
-
-# .NET Global Toolsのパス追加
-ENV PATH="${PATH}:/root/.dotnet/tools"
-
 # クリーンアップ（イメージサイズ削減）
 RUN apt-get autoremove -y \
     && apt-get clean -y \
@@ -66,6 +59,11 @@ USER $USERNAME
 
 # .NET Global ToolsのPATH追加（非rootユーザー用）
 ENV PATH="${PATH}:/home/${USERNAME}/.dotnet/tools"
+
+# .NET Global Toolsインストール（開発ツール）
+# 注: USER $USERNAME の後に実行することで、非rootユーザーのホームディレクトリにインストール
+RUN dotnet tool install -g dotnet-ef \
+    && dotnet tool install -g dotnet-format
 
 # コンテナ起動時のデフォルトコマンド
 CMD ["/bin/bash"]

@@ -114,7 +114,8 @@
       "Bash(Select-Object -ExpandProperty Lines)",
       "Bash(code --list-extensions:*)",
       "Bash(node --version:*)",
-      "Bash(docker --version:*)"
+      "Bash(docker --version:*)",
+      "Bash(docker logs:*)"
     ],
     "deny": [],
     "ask": [],
