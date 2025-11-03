@@ -54,6 +54,63 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ---
 
+## 開発環境構成（2025-11-04確定）
+
+### 🔴 CRITICAL: Claude Code実行環境
+
+**Claude Code実行環境**: Windows 11ホスト環境（WSL2上ではない）
+**DevContainer**: Sandboxモード環境として機能（セキュリティ分離）
+**設定ファイル**: `.claude/settings.local.json`（sandbox.enabled: true）
+**方針**: A方針（ホスト実行 + DevContainer Sandbox）採用
+
+**重要な理解**:
+- Claude Code CLIはホスト環境で実行
+- dotnet/docker等のコマンドは自動的にDevContainer内で実行される
+- bubblewrap/psql等のLinux専用ツールはホスト環境では直接確認不要
+
+### DevContainer + Sandboxモード統合
+
+**効果**: 
+- セットアップ時間96%削減（75-140分 → 5-8分）
+- 承認プロンプト84%削減（30-50回/Phase → 5-8回/Phase）
+
+**詳細**: `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md`  
+**決定記録**: ADR_025（Doc/07_Decisions/ADR_025_DevContainer_Sandboxモード統合.md）
+
+### DevContainer環境仕様
+
+- **ベースイメージ**: mcr.microsoft.com/dotnet/sdk:8.0
+- **.NET SDK**: 8.0.415
+- **F# Runtime**: .NET SDK同梱（バージョン8.0）
+- **Node.js**: 24.x Active LTS（ホスト環境と統一）
+- **bubblewrap**: Sandboxセキュリティツール
+- **PostgreSQL Client**: psql 16
+
+### VS Code拡張機能自動インストール（15個）
+
+- **基本開発環境（4個）**: C#, F#, Playwright, Remote Containers
+- **.NET開発必須（4個）**: C# Dev Kit, .NET Runtime, Test Explorer, EditorConfig
+- **開発効率向上（5個）**: GitLens, Docker, Path Intellisense, Markdown All in One, 日本語言語パック
+- **AI支援（2個）**: GitHub Copilot, GitHub Copilot Chat
+
+### 接続文字列調整
+
+- **ホスト環境**: `Host=localhost;Port=5432;...`
+- **DevContainer環境**: `Host=postgres;Port=5432;...`（docker-compose service名参照）
+- **自動設定**: devcontainer.jsonのremoteEnv環境変数で自動設定済み
+
+### クロスプラットフォーム対応
+
+- **改行コード統一**: `.gitattributes`作成（リポジトリ内LF統一、作業ディレクトリOS標準）
+- **git設定**: `core.autocrlf`の差異をgitattributesで吸収
+- **重要発見**: 改行コード混在（CRLF vs LF）がC#コンパイラのnullable reference type解析に影響する
+
+### 技術負債
+
+- **CS8600/CS8625等78 warnings**: DevContainer環境特有のnullable reference type警告（GitHub Issue #62記録済み）
+
+---
+
 ## DevContainer開発環境規約（2025-11-03確立・Phase B-F2 Step4）
 
 ### VSCode拡張機能標準セット（15個）
@@ -206,14 +263,5 @@ COMMENT ON COLUMN "AspNetUsers"."Id" IS 'ユーザーID（主キー、GUID形式
 
 ---
 
-（以下、既存の tech_stack_and_conventions 内容を維持）
-
-## プロジェクト構成
-...
-（既存内容省略）
-...
-
----
-
-**最終更新**: 2025-11-03（**DevContainer開発環境規約確立・VSCode拡張15個標準化・.gitattributes追加**）
-**重要変更**: DevContainer開発環境規約セクション追加（VSCode拡張機能標準セット・クロスプラットフォーム改行コード規約）
+**最終更新**: 2025-11-04（**Claude Code実行環境・DevContainer + Sandboxモード統合環境構成追加**）
+**重要変更**: 開発環境構成セクション追加（Claude Code実行環境・DevContainer環境仕様・接続文字列調整・クロスプラットフォーム対応）

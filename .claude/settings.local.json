@@ -112,7 +112,9 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(Measure-Object -Line)",
       "Bash(Select-Object -ExpandProperty Lines)",
-      "Bash(code --list-extensions:*)"
+      "Bash(code --list-extensions:*)",
+      "Bash(node --version:*)",
+      "Bash(docker --version:*)"
     ],
     "deny": [],
     "ask": [],

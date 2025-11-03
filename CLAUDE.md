@@ -180,47 +180,81 @@ ADRとAgent Skillsの使い分けについては、以下のガイドライン�
 - **Integration Tests**: 必要な依存層のみ参照
 - **E2E Tests**: 全層参照可
 
-## 開発コマンド
+## 開発コマンド（DevContainer環境）
 
-### ビルド・実行
+**🔴 重要**: 本プロジェクトはDevContainer環境で開発します。以下のコマンドは全てDevContainer内で実行してください。
+
+### コマンド実行方法
+
+#### 方法A: VS Code統合ターミナル（推奨）
+
+VS CodeでDevContainerを開いた状態で、統合ターミナル（Ctrl+`）から直接実行：
+
 ```bash
 # ビルド
-dotnet build                                           # 全体ビルド
-dotnet build src/UbiquitousLanguageManager.Web        # Web層のみ
+dotnet build
+dotnet build src/UbiquitousLanguageManager.Web
 
 # 実行
-dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動（https://localhost:5001）
+dotnet run --project src/UbiquitousLanguageManager.Web
 
-# Docker環境
-docker-compose up -d                                   # PostgreSQL/PgAdmin/Smtp4dev起動
-docker-compose down                                    # 停止
-```
+# テスト
+dotnet test
+dotnet test --filter "FullyQualifiedName~UserTests"
 
-### テスト
-```bash
-# テスト実行
-dotnet test                                            # 全テスト
-dotnet test --filter "FullyQualifiedName~UserTests"   # 特定テストのみ
-dotnet test --logger "console;verbosity=detailed"     # 詳細出力
-
-# カバレッジ測定
-dotnet test --collect:"XPlat Code Coverage"
-```
-
-### データベース
-```bash
-# Entity Framework
+# データベース
 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
+```
 
-# PostgreSQL接続
-psql -h localhost -U ubiquitous_lang_user -d ubiquitous_lang_db
+#### 方法B: ホスト環境から明示的実行（Claude Code用）
+
+**暫定対応**: Windows環境ではClaude Code Sandboxモードが非対応のため、以下の形式でDevContainer内実行を明示：
+
+```bash
+# ビルド
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet build
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet build src/UbiquitousLanguageManager.Web
+
+# 実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet run --project src/UbiquitousLanguageManager.Web
+
+# テスト
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test --filter "FullyQualifiedName~UserTests"
+
+# データベース
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
+```
+
+### Docker環境管理
+
+```bash
+# PostgreSQL/PgAdmin/Smtp4dev起動（ホスト環境で実行）
+docker-compose up -d
+
+# 停止
+docker-compose down
+
+# DevContainer確認
+docker ps --filter "name=devcontainer"
 ```
 
 ### 開発ツールURL
 - **アプリ**: https://localhost:5001
 - **PgAdmin**: http://localhost:8080 (admin@ubiquitous-lang.com / admin123)
 - **Smtp4dev**: http://localhost:5080
+
+### 暫定対応について
+
+**注意**: 現在、Windows環境ではClaude Code Sandboxモードが非対応のため、方法Bを使用しています。
+
+将来Sandboxモードが対応された際は、`docker exec`プレフィックスを省略して直接実行可能になります。
+
+**関連情報**:
+- GitHub Issue #63「Windows環境でのClaude Code Sandboxモード非対応に伴うDevContainer手動実行対応」
+- ADR_025「DevContainer + Sandboxモード統合採用」
 
 ## プロジェクト構成
 
@@ -272,6 +306,54 @@ Doc/
 - **スクラム開発**: 1-2週間スプリント（ADR_011）
 - **SubAgentプール方式**: 並列実行による効率化（ADR_013）
 - **詳細**: `/Doc/08_Organization/Rules/`参照
+
+## Claude Code実行環境・Sandboxモード統合（2025-11-03確定）
+
+### 🔴 CRITICAL: Claude Code実行場所の理解
+
+**標準構成（A方針・本プロジェクト採用）**: Claude Codeはホスト環境で実行
+- **Claude Code CLI**: Windows 11ホスト環境で起動（WSL2上ではない）
+- **DevContainer**: Sandboxモード環境として機能（セキュリティ分離）
+- **Sandboxモード**: Claude Codeがコマンド実行時にDevContainer内で安全に実行
+- **設定ファイル**: `.claude/settings.local.json`でSandbox有効化済み
+
+### Sandboxモード動作フロー
+```
+1. ユーザーがホスト環境でClaude Code CLIを起動
+2. `.claude/settings.local.json`の`sandbox.enabled: true`を読み込み
+3. dotnet/docker等のコマンド実行時、DevContainer内で自動実行
+4. ファイル操作・ビルド・テスト実行は全てSandbox環境で分離実行
+```
+
+### 非標準構成（B方針・非推奨）
+DevContainer内でClaude Code CLIを実行する構成は技術的に可能だが：
+- ❌ 複雑性増加（MCP Server設定・権限管理）
+- ❌ Sandbox二重化（意味なし）
+- ❌ Windows環境では非標準・サポート不足
+- ⚠️ **本プロジェクトでは採用しない**
+
+### 環境確認方法
+```bash
+# ホスト環境で実施（Windows PowerShell/Git Bash）
+dotnet --version       # .NET SDK確認
+docker --version       # Docker Desktop確認
+node --version         # Node.js確認
+
+# DevContainer内で実施（VS Code Terminal）
+# "Reopen in Container"後に実行
+dotnet --version       # .NET SDK 8.0.415確認
+dotnet build           # ビルド確認（Sandbox環境）
+dotnet test            # テスト実行（Sandbox環境）
+```
+
+### ロールバック手順
+DevContainer導入前の環境に戻す場合：
+1. VS Code左下の緑色ボタン「><」をクリック
+2. 「Reopen Folder Locally」を選択
+3. ホスト環境に復帰（30分以内）
+
+**詳細技術解説**: `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md`
+**決定記録**: ADR_025（Doc/07_Decisions/ADR_025_DevContainer_Sandboxモード統合.md）
 
 ## Context管理・セッション継続判断（2025-10-13策定）
 
