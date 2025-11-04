@@ -115,7 +115,9 @@
       "Bash(code --list-extensions:*)",
       "Bash(node --version:*)",
       "Bash(docker --version:*)",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "WebFetch(domain:www.marcusturewicz.com)",
+      "Bash(chmod +x \"C:\\Develop\\ubiquitous-lang-mng\\.devcontainer\\scripts\\setup-https.sh\")"
     ],
     "deny": [],
     "ask": [],

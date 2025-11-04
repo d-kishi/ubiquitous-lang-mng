@@ -120,6 +120,199 @@ docker exec [postgres_container] psql -U ubiquitous_user -d ubiquitous_db -c "SE
 docker exec [postgres_container] psql -U ubiquitous_user -d ubiquitous_db -c "REINDEX DATABASE ubiquitous_db;"
 ```
 
+### DevContainer・開発環境問題
+
+**対象**: Phase B-F2以降（DevContainer環境）
+**関連**: ADR_026（DevContainer HTTPS証明書管理方針）、`Doc/99_Others/DevContainer使用ガイド.md`
+
+#### 「HTTPS証明書エラー」
+**症状**: アプリ起動時にHTTPS証明書エラー
+```
+System.InvalidOperationException: 'Unable to configure HTTPS endpoint. No server certificate was specified, and the default developer certificate could not be found or is out of date.'
+```
+
+**診断手順**:
+```bash
+# 1. setup-https.shログ確認（DevContainer起動ログ）
+# ⚠️  ERROR: HTTPS certificate not found! というメッセージを探す
+
+# 2. ホスト環境で証明書存在確認
+ls -lh $USERPROFILE/.aspnet/https/aspnetapp.pfx  # Windows
+ls -lh ~/.aspnet/https/aspnetapp.pfx              # macOS/Linux
+```
+
+**解決手順**:
+```bash
+# 手順1: ホスト環境で証明書生成
+# Windows（PowerShellまたはGit Bash）
+mkdir -p $USERPROFILE/.aspnet/https
+dotnet dev-certs https --clean
+dotnet dev-certs https -ep $USERPROFILE/.aspnet/https/aspnetapp.pfx -p DevPassword123
+dotnet dev-certs https --trust
+
+# macOS/Linux
+mkdir -p ~/.aspnet/https
+dotnet dev-certs https --clean
+dotnet dev-certs https -ep ~/.aspnet/https/aspnetapp.pfx -p DevPassword123
+dotnet dev-certs https --trust  # Linuxでは非対応
+
+# 手順2: DevContainer再構築
+# VS Code: Ctrl+Shift+P → "Dev Containers: Rebuild Container"
+
+# 手順3: setup-https.sh成功メッセージ確認
+# ✅ HTTPS certificate found: /home/vscode/.aspnet/https/aspnetapp.pfx
+```
+
+**エスカレーション基準**: 証明書生成コマンドがエラーの場合
+
+---
+
+#### 「setup-https.shスクリプトエラー」
+**症状**: DevContainer起動時にスクリプト実行エラー
+```
+: invalid optionripts/setup-https.sh: line 2: set: -
+.devcontainer/scripts/setup-https.sh: line 3: \r': command not found
+```
+
+**原因**: スクリプトがCRLF改行コード（Windows）になっている
+
+**解決手順**:
+```bash
+# 手順1: Git再正規化（ホスト環境）
+git add --renormalize .
+git status
+# setup-https.shが変更されていることを確認
+git commit -m "Fix: Normalize line endings for setup-https.sh"
+
+# 手順2: DevContainer再構築
+# VS Code: Ctrl+Shift+P → "Dev Containers: Rebuild Container"
+```
+
+**代替手順**（Git再正規化で解決しない場合）:
+```bash
+# DevContainer内でスクリプト再作成
+cat > .devcontainer/scripts/setup-https.sh <<'EOF'
+#!/bin/bash
+set -e
+（スクリプト内容をコピー）
+EOF
+
+chmod +x .devcontainer/scripts/setup-https.sh
+```
+
+**エスカレーション基準**: Git再正規化でも解決しない場合
+
+---
+
+#### 「ブラウザ証明書警告」
+**症状**: https://localhost:5001 にアクセス時、「この接続ではプライバシーが保護されません」警告表示
+
+**原因**: ホスト環境で証明書の信頼設定未実施
+
+**解決手順**:
+```bash
+# ホスト環境で実行
+dotnet dev-certs https --trust
+
+# ブラウザ再起動
+# https://localhost:5001 に再アクセス
+```
+
+**手動承認**（Linux環境のみ）:
+- ブラウザで「詳細設定」→「localhost にアクセスする（安全ではありません）」をクリック
+- 開発環境専用証明書のため、セキュリティリスクなし
+
+---
+
+#### 「DevContainer起動失敗」
+**症状**: DevContainer起動時にエラーメッセージ表示・起動中断
+
+**診断手順**:
+```bash
+# 1. Docker Desktop状態確認（ホスト環境）
+docker ps
+# 期待値: DOCKERコンテナ一覧表示
+
+# 2. Docker Desktop起動確認
+# Docker Desktop右下が緑色（Running）であることを確認
+
+# 3. Dockerディスク容量確認
+# Docker Desktop → Settings → Resources → Disk image location
+```
+
+**解決手順**:
+```bash
+# 手順1: Docker Desktop再起動
+# Docker Desktop → Quit Docker Desktop → 再起動
+
+# 手順2: 不要なDockerイメージ削除（ディスク容量不足の場合）
+docker system prune -a
+# 警告: 全ての停止中コンテナ・未使用イメージが削除されます
+
+# 手順3: DevContainer再構築
+# VS Code: Ctrl+Shift+P → "Dev Containers: Rebuild Container"
+```
+
+**エスカレーション基準**: Docker Desktop設定正常でも起動失敗の場合
+
+---
+
+#### 「PostgreSQL接続エラー（DevContainer環境）」
+**症状**: DevContainer内からPostgreSQLに接続できない
+```
+Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+```
+
+**原因**: 接続文字列が`Host=localhost`になっている（DevContainer環境では不適切）
+
+**解決手順**:
+```bash
+# 手順1: appsettings.Development.json確認
+cat src/UbiquitousLanguageManager.Web/appsettings.Development.json
+# "ConnectionStrings" → "DefaultConnection" → "Host=" の値を確認
+
+# 手順2: 接続文字列修正
+# Host=localhost → Host=postgres に変更
+# （postgresはDocker Composeサービス名）
+
+# 修正例:
+"ConnectionStrings": {
+  "DefaultConnection": "Host=postgres;Port=5432;Database=ubiquitous_lang_db;Username=ubiquitous_lang_user;Password=ubiquitous_lang_password"
+}
+
+# 手順3: アプリ再起動
+dotnet run --project src/UbiquitousLanguageManager.Web
+```
+
+**理由**: DevContainerからPostgreSQLコンテナへの接続は、Docker Composeサービス名（`postgres`）を使用
+
+---
+
+#### 「証明書有効期限切れ」
+**症状**: アプリ起動時に証明書期限切れエラー（証明書生成から1年後）
+```
+System.InvalidOperationException: 'Unable to configure HTTPS endpoint. The certificate is expired.'
+```
+
+**解決手順**:
+```bash
+# 手順1: ホスト環境で証明書再生成（2-3分）
+dotnet dev-certs https --clean
+dotnet dev-certs https -ep $USERPROFILE/.aspnet/https/aspnetapp.pfx -p DevPassword123  # Windows
+dotnet dev-certs https -ep ~/.aspnet/https/aspnetapp.pfx -p DevPassword123              # macOS/Linux
+dotnet dev-certs https --trust
+
+# 手順2: DevContainer内でアプリ再起動
+# 再構築は不要（証明書がボリュームマウントで共有されているため）
+dotnet run --project src/UbiquitousLanguageManager.Web
+```
+
+**予防**: 証明書生成から11ヶ月後に更新（余裕を持って）
+
+**詳細**: `Doc/99_Others/DevContainer使用ガイド.md` → [6. トラブルシューティング](DevContainer使用ガイド.md#6-トラブルシューティング)
+
+---
+
 ### パフォーマンス問題
 
 #### 「ユーザー一覧表示が遅い」

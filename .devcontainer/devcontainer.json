@@ -7,6 +7,11 @@
   "service": "devcontainer",
   "workspaceFolder": "/workspace",
 
+  // HTTPS証明書ボリュームマウント（ホスト環境の証明書をコンテナにマウント）
+  "mounts": [
+    "source=${localEnv:USERPROFILE}${localEnv:HOME}/.aspnet/https,target=/home/vscode/.aspnet/https,readonly,type=bind"
+  ],
+
   // VS Code拡張機能の自動インストール
   "customizations": {
     "vscode": {
@@ -54,7 +59,7 @@
   },
 
   // コンテナ起動後の初期化コマンド
-  "postCreateCommand": "dotnet restore",
+  "postCreateCommand": "bash .devcontainer/scripts/setup-https.sh && dotnet restore",
 
   // ポートフォワーディング設定
   "forwardPorts": [
@@ -93,7 +98,11 @@
 
     // ASP.NET Core設定
     "ASPNETCORE_ENVIRONMENT": "Development",
-    "ASPNETCORE_URLS": "https://+:5001;http://+:5000"
+    "ASPNETCORE_URLS": "https://+:5001;http://+:5000",
+
+    // HTTPS証明書設定（開発用）
+    "ASPNETCORE_Kestrel__Certificates__Default__Password": "DevPassword123",
+    "ASPNETCORE_Kestrel__Certificates__Default__Path": "/home/vscode/.aspnet/https/aspnetapp.pfx"
   },
 
   // コンテナ実行ユーザー設定
