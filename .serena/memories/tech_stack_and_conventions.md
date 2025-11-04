@@ -263,5 +263,153 @@ COMMENT ON COLUMN "AspNetUsers"."Id" IS 'ユーザーID（主キー、GUID形式
 
 ---
 
-**最終更新**: 2025-11-04（**Claude Code実行環境・DevContainer + Sandboxモード統合環境構成追加**）
-**重要変更**: 開発環境構成セクション追加（Claude Code実行環境・DevContainer環境仕様・接続文字列調整・クロスプラットフォーム対応）
+## MCP（Model Context Protocol）仕様・メンテナンスパターン（2025-11-02確立）
+
+**確立日**: 2025-11-02（Phase B-F2 Step3 MCPメンテナンス機能追加時）
+
+### MCP仕様理解
+
+#### JSON-RPC活用（ツール一覧取得）
+
+**ツール一覧取得方法**:
+```bash
+# Playwright MCP
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
+  | npx @playwright/mcp@latest \
+  | jq '.result.tools[].name'
+```
+
+**目的**:
+- MCPツール数の正確な確認
+- ツール追加/廃止の検出
+- SubAgent定義の正確性維持
+
+**実績**:
+- Phase B-F2 Step3で Playwright MCP 21ツール確認（当初25ツール想定→21ツールに修正）
+- e2e-test Agent定義の完全版実装
+
+#### Claude SubAgent仕様（ワイルドカード非対応）
+
+**仕様**:
+- SubAgent定義の`tools`セクションでワイルドカード非対応
+- 全ツールを明示的に列挙する必要あり
+
+**影響**:
+- e2e-test Agent定義: 9ツール記載 → 21ツール完全版に修正
+- integration-test Agent定義: 同様の対応必要
+
+**推奨対応**:
+- `tools/list`メソッドで全ツール取得
+- SubAgent定義に完全版リスト記載
+- 週次振り返り時にツール変更確認
+
+### MCPメンテナンスパターン（半自動推奨）
+
+#### 完全自動 vs 半自動の判断
+
+| 方式 | メリット | デメリット | 推奨 |
+|------|---------|-----------|------|
+| **完全自動** | 運用負荷ゼロ | 破壊的変更リスク・意図しない変更 | ❌ 非推奨 |
+| **半自動** | 安全性確保・意図的更新 | 5-10分/週の運用負荷 | ✅ 推奨 |
+| **手動** | 完全なコントロール | 見逃しリスク・運用負荷大 | ❌ 非推奨 |
+
+**半自動方式の詳細**: `.claude/commands/weekly-retrospective.md` - Section 11（MCP更新確認）
+
+#### 週次メンテナンスフロー
+
+**実施タイミング**: 週次振り返り時（weekly-retrospective Command実行時）
+
+**手順**:
+1. **バージョン確認**:
+   ```bash
+   # Playwright MCP
+   npx @playwright/mcp@latest --version
+   npm view @playwright/mcp version
+
+   # Serena MCP
+   gh api repos/oraios/serena/releases/latest
+   ```
+
+2. **ツール変更検出**:
+   ```bash
+   # Playwright MCP tools/list実行
+   echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
+     | npx @playwright/mcp@latest \
+     | jq '.result.tools[].name'
+   ```
+
+3. **変更レポート作成**:
+   - 新規バージョンの有無
+   - ツール追加/廃止/非推奨の検出
+   - 影響範囲の評価（SubAgent定義への影響）
+
+4. **SubAgent定義更新判断**:
+   - ユーザーにレポート提示
+   - 更新が必要な場合: 手動編集実施
+   - 更新不要の場合: スキップ
+
+**期待運用コスト**: 5-10分/週
+
+### ADR_024参照
+
+**MCPメンテナンス手順の完全版**: `Doc/07_Decisions/ADR_024_Playwright専用SubAgent新設決定.md`
+
+**内容**:
+- 5段階手順（バージョン確認・リリースノート確認・ツール変更検出・SubAgent定義更新判断・動作検証）
+- 週次振り返り連携方法
+- トラブルシューティング（ツール廃止時・新規ツール追加時）
+
+---
+
+## ADR vs Skills判断基準の実証（2025-11-02確立）
+
+**確立日**: 2025-11-02（Phase B-F2 Step2-3実施時）
+
+### 判断基準（30秒チェック）
+
+**詳細**: `.serena/memories/development_guidelines.md` - Section「ADR vs Agent Skills 判断基準」
+
+**簡潔版**:
+1. **歴史的記録が必要か？**（なぜこの決定をしたか） → ADR作成
+2. **Claudeが自律的に適用すべきか？**（実装時に自動適用） → Skills作成
+3. **技術選定の根拠か？**（代替案との比較・リスク評価） → ADR作成
+4. **実装パターン・チェックリストか？**（繰り返し使うパターン） → Skills作成
+
+### Phase B-F2実証事例
+
+#### Step2: ADR/Rules → Skills migration
+
+**移行ファイル**:
+1. `仕様準拠ガイド.md` → `spec-compliance-auto` Skill
+2. `SubAgent組み合わせパターン.md` → `subagent-patterns` Skill
+
+**評価結果**:
+- ✅ 適切な判断（ADR vs Skills判断基準に準拠）
+- ✅ "why"（判断根拠）はADR、"how"（適用方法）はSkillsの分離原則確認
+
+#### Step3: ADR_024作成（簡潔版）
+
+**作成方針**:
+- **判断根拠のみ記載**（簡潔版）
+- **詳細はSkillsに記載**（playwright-e2e-patterns, subagent-patterns）
+
+**ADR_024内容**:
+- E2E専用SubAgent新設決定
+- 5点の判断根拠（ADR_020整合性・レイヤー分離・技術スタック・Skill参照・MCP連携）
+- 詳細実装パターンはSkillsに記載
+
+**効果**:
+- ADR肥大化防止（簡潔版ADR）
+- Skills自律適用の実現（詳細パターン）
+- 重複記載の削減
+
+### 期待効果
+
+- ✅ **明確な役割分担**: ADR（判断根拠）vs Skills（適用方法）の分離
+- ✅ **ADR肥大化防止**: 判断根拠のみ記載・詳細はSkills
+- ✅ **Skills自律適用**: Claudeが詳細パターンを自動適用
+
+---
+
+**最終更新**: 2025-11-04（**Week 44週次振り返り完了・MCP仕様/ADR vs Skills判断基準追加**）
+**重要変更**: MCP仕様・メンテナンスパターン追加（JSON-RPC活用・半自動メンテナンス・ADR_024参照）、ADR vs Skills判断基準実証追加（Phase B-F2実証事例）
