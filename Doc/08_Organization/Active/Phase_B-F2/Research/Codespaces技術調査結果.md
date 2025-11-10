@@ -42,9 +42,13 @@
 
 ### 調査項目1: Codespaces環境構築（30分）
 
+**実施日**: 2025-11-11
+**実施者**: Claude Code (Local環境)
+
 **実施内容**:
 - GitHub Codespacesでリポジトリを開く
 - DevContainer自動構築確認（`.devcontainer/devcontainer.json`適用）
+- Claude Code CLI インストール対応（Dockerfile修正）
 - タイムアウト設定確認（デフォルト30分→4時間に延長）
 - 基本ツール確認（dotnet, docker, gh）
 
@@ -59,20 +63,59 @@ docker --version
 gh --version
 node --version
 
+# Claude Code CLI確認（DevContainer再ビルド後）
+claude --version
+
 # タイムアウト設定確認
 # Settings → Codespaces → Default timeout 確認
 ```
 
 **結果**:
-- [ ] DevContainerが正常に構築された（所要時間: XX分）
-- [ ] .NET 8.0 SDKが利用可能（バージョン: X.X.XXX）
-- [ ] Docker、GitHub CLIが利用可能
-- [ ] タイムアウト設定確認完了（現在: XX分 → 変更後: 240分）
+- [x] **Dockerfile修正完了**: Claude Code CLIインストール処理を追加
+- [x] **構築手順ドキュメント作成**: `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md`（約450行）
+- [ ] **DevContainer再ビルド**: ユーザー操作が必要（次の手順で実施）
+- [ ] **環境変数設定**: GitHub Secrets設定が必要（ユーザー操作）
+- [ ] **動作確認**: DevContainer再ビルド後に実施
+
+**Dockerfile修正内容**:
+```dockerfile
+# Claude Code CLIインストール（GitHub Codespaces統合）
+ARG CLAUDE_CODE_VERSION=latest
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+```
+
+**追加箇所**: `.devcontainer/Dockerfile` 38-40行目（Playwrightインストール直後）
 
 **制約事項・問題点**:
-（ここに記録）
+- ⚠️ **DevContainer再ビルド必要**: 初回のみ3-5分かかる
+- ⚠️ **GitHub Secrets設定必要**: `ANTHROPIC_API_KEY`環境変数をGitHub Secretsで設定
+- ⚠️ **ユーザー操作必須**: DevContainer再ビルド・環境変数設定はユーザーが実施
 
-**評価**: ⭐⭐⭐⭐⭐ / ❌ 失敗
+**次のステップ（ユーザー操作）**:
+1. **GitHub Secrets設定**
+   - リポジトリ Settings → Secrets and variables → Codespaces
+   - `ANTHROPIC_API_KEY` を追加
+
+2. **Codespaces削除→再作成** または **既存Codespaces再ビルド**
+   - 新規作成推奨: 「Code」→「Codespaces」→「Create codespace on feature/PhaseB-F2」
+   - 再ビルド: `Ctrl+Shift+P` → "Codespaces: Rebuild Container"
+
+3. **動作確認**
+   ```bash
+   claude --version
+   echo $ANTHROPIC_API_KEY
+   claude
+   ```
+
+**ローカルDevContainer検証結果**（2025-11-11追加）:
+- ✅ **ローカルDevContainerリビルド成功**（所要時間: 3-5分）
+- ✅ **Claude Code CLIインストール成功**: `claude --version` 正常動作確認
+- ✅ **Dockerfile修正の妥当性確認**: ローカル環境で問題なし
+- 📋 **次ステップ**: Codespaces環境での検証（GitHub Secrets設定 + 再ビルド）
+
+**評価**: ⭐⭐⭐⭐⭐ **成功（準備完了・ローカル検証済み）**
+
+**詳細ドキュメント**: `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md`
 
 ---
 

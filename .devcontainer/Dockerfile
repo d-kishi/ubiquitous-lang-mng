@@ -35,6 +35,10 @@ RUN npm install -g \
     @playwright/test \
     playwright
 
+# Claude Code CLIインストール（GitHub Codespaces統合）
+ARG CLAUDE_CODE_VERSION=latest
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+
 # Playwrightブラウザインストール（オプション・E2Eテスト用）
 RUN npx playwright install --with-deps chromium
 
