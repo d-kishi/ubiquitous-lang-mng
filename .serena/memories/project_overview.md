@@ -1,6 +1,21 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-07（**Phase B-F2 Step5開始・Stage 1, 2失敗・再発防止策確立・次回Stage1再実施**）
+**最終更新**: 2025-11-10（**メモリー記録誤り修正・Phase B-F2 Step5実施中（Stage1完了・Stage2-4未実施）・次回Step5 Stage2-4再試行**）
+
+## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
+
+**目的**: Step進捗の誤認を防止するため、Step状態を明確に分類
+
+- **Step実施中（Stage N/M完了）**: N < M の状態、未実施Stageあり、Step継続中
+- **Step完了**: すべてのStageが完了した状態、次Stepへ移行可能
+- **Step中止**: ユーザー指示による明示的な中止、記録必須
+- **Step実施方法変更**: 元のStage計画を別の方法で実施、Step継続
+
+**重要**: 「Step実施方法変更」は「Step放棄」ではない。Step目的は同一、実施方法のみ変更。
+
+**背景**: 2025-11-08に「Claude Code on the Webが.NET開発に不向き」という判明により、Step5の実施方法をGitHub Codespacesに変更したが、誤って「Step5完了→Step6開始」と記録してしまった。これを防止するため、本定義を確立。
+
+---
 
 ## 📊 プロジェクト進捗管理（視覚化）
 
@@ -21,24 +36,56 @@
   - [x] **Step4: Issue #40 Phase 2実装完了**（2025-10-13・1セッション・**7プロジェクト構成確立・0 Warning/0 Error**）✅ 🎉
   - [x] **Step5: Issue #40 Phase 3実装・ドキュメント整備完了**（2025-10-13・1.5-2時間・**335/338 tests**）✅ 🎉
 - [x] **Phase B2（ユーザー・プロジェクト関連管理）**: **完了**（2025-10-27完了）✅ **93/100点** 🎉 **CA 97点・仕様準拠97点達成・Playwright統合93.3%効率化達成・技術負債あり（GitHub Issue #59）**
-- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step5実施中**（2025-11-07開始）🔄 **← Claude Code on the Web検証・Stage 1, 2失敗→再発防止策確立・次回Stage1再実施**
+- [ ] **Phase B-F2（技術負債解決・E2Eテスト基盤強化・技術基盤刷新）**: **Step5実施中**（Stage1完了・Stage2-4未実施）⚙️ **← Claude Code on the Web検証完了・Issue #51 Phase1記録・次回Step5 Stage2-4再試行（GitHub Codespacesで実施）**
 - [ ] **Phase B3-B5（プロジェクト管理機能完成）**: Phase B3-B5計画中 📋
 - [ ] **Phase C（ドメイン管理機能）**: C1-C6計画中 📋
 - [ ] **Phase D（ユビキタス言語管理機能）**: D1-D8計画中 📋
 
 ### 全体進捗率
 - **Phase完了**: 3/4+ (75%+) ※Phase A完了 + Phase B1完了 + **Phase B-F1完了** + **Phase B2完了** 🎉
-- **Step完了**: 37/42+ (88.1%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** + **Phase B-F2 Step1-4完了** 🎉
+- **Step完了**: 37/42+ (88.1%+) ※A9 + B1全7Step + **Phase B-F1全5Step完了** + **Phase B2全8Step完了（Step3スキップ）** + **Phase B-F2 Step1-4完了・Step5実施中（Stage1完了）** ⚙️
 - **機能実装**: 認証・ユーザー管理完了、**プロジェクト基本CRUD完了**（Domain+Application+Infrastructure+Web層完全実装）、**UserProjects多対多関連完了**（権限制御16パターン）、**テストアーキテクチャ基盤整備完了（100%）** 🎉（**7プロジェクト構成確立・ADR_020完全準拠・0 Warning/0 Error・335/338 tests**）、**Playwright MCP統合完了** 🎉、**Agent Skills Phase 1導入完了** 🎉、**Agent Skills Phase 2展開完了** 🎉、**DevContainer環境完全確立** 🎉
 
-### 🔄 Phase B-F2 Step5実施中（2025-11-07開始） - Claude Code on the Web検証・並列タスク実行
+### ⚙️ Phase B-F2 Step5実施中（2025-11-07開始）- Claude Code on the Web検証・Issue #51 Phase1記録
 
-#### Step実行状況
+#### Step実行状況（継続中）
 **開始日**: 2025-11-07
-**実施期間**: 1日間（1セッション、Stage 1, 2失敗→再実施待ち）
-**最終Stage**: Stage 1, 2失敗・成果物削除・再発防止策確立完了
-**総実施時間**: 約2時間
-**次回作業**: Stage 1再実施（Claude Code on the Web基本動作確認）
+**現在状況**: Stage1完了・Stage2-4未実施（実施方法変更によりGitHub Codespacesで再試行予定）
+**実施期間**: 2日間（2セッション、Stage1のみ完了）
+**完了Stage**: Stage 1（Claude Code on the Web基本動作確認）✅
+**未実施Stage**: Stage 2-4（並列タスク実行検証・Teleport機能検証・効果測定）
+**総実施時間**: 約4時間（セッション1: 2時間、セッション2: 2時間）
+**成果物**: Issue #51 Phase1検証結果記録・Claude Code on the Web制約事項文書化
+
+**重要な方針転換**:
+- 2025-11-08に「Claude Code on the Webは.NET開発に不向き」と判明
+- Stage2-4の実施方法をGitHub Codespacesに変更決定
+- **これは「Step5放棄」ではなく「Step5実施方法変更」である**
+- 次回セッションでStep5 Stage2-4をGitHub Codespacesで再試行予定
+
+#### 主要成果
+**Stage 1完了**:
+- ✅ Claude Code on the Web基本動作確認完了（対話形式検証）
+- ✅ Claude Code on the Web制約事項5点発見・文書化
+- ✅ Issue #51 Phase1検証結果記録完了（`Doc/99_Others/Issue_51_Phase1_検証結果.md`）
+- ✅ GitHub Issue #51への報告コメント追加
+- ✅ Step6組織設計書作成完了（`Doc/08_Organization/Active/Phase_B-F2/Step06_GitHub_Codespaces検証.md`）
+- ✅ 方針転換決定（Claude Code on the Web → GitHub Codespaces）
+
+**Claude Code on the Web制約事項（5点）**:
+1. DevContainer環境起動不可（Sandbox環境のため）
+2. .NET SDK実行不可（dotnetコマンド未インストール）
+3. MCP Server接続不可（DevContainer環境が必要）
+4. GitHub CLI実行不可（gh pr create権限制約）
+5. ブランチ命名規則制約（claude/[session-id]形式のみ）
+
+**技術的知見**:
+- Claude Code on the Webは.NETプロジェクトの開発作業には不向き
+- ドキュメント作業・PRレビュー・設計検討には最適
+- 非同期実行機能（Fire-and-forget）は正常動作確認
+- ハイブリッド開発アプローチの可能性（Web版 + ローカル/Codespaces）
+
+**次回作業**: Step5 Stage2-4再試行（GitHub Codespacesで実施）
 
 #### Stage 1, 2失敗の教訓
 **失敗内容**:
@@ -464,46 +511,56 @@
 
 ## 📋 次回セッション読み込みファイル（必須）
 
-### Phase B-F2 Step5開始準備（次回セッション）
+### Phase B-F2 Step5 Stage2-4再試行準備（次回セッション）
 
-**Step4完了**: 2025-11-04完了（全8 Stage完了）✅
-**次回作業**: Phase B-F2 Step5開始
+**Step5現状**: Stage1完了（2025-11-08）・Stage2-4未実施
+**次回作業**: Phase B-F2 Step5 Stage2-4再試行（GitHub Codespacesで実施）
+
+**🔴 重要な申し送り事項**:
+- ⚠️ **Step5は「完全完了」ではなく「Stage2-4が未実施」状態**
+- ⚠️ **GitHub Codespacesへの方針転換は「Step5放棄」ではなく「実施方法変更」**
+- ⚠️ **誤って「Step5完了→Step6開始」と記録していたが、2025-11-10に修正完了**
+- 📋 **Stage2-4ではGitHub Codespaces環境での定型Command実行・並列タスク実行を検証予定**
 
 **必須読み込みファイル**:
-1. `Doc/08_Organization/Active/Phase_B-F2/Phase_Summary.md`
-   - **目的**: Step5実施内容・完了条件・Step間成果物参照マトリックス確認
-   - **活用**: Step5作業範囲・前Step成果物参照・次Step準備
-   - **重点セクション**: 「Step 5: [Step5名称]」セクション全体
+1. `Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md`
+   - **目的**: Step5全体計画・Stage2-4実施内容確認
+   - **活用**: Stage2-4の完了条件・検証項目・成果物要件の理解
+   - **重点セクション**: Stage 2-4の実施内容セクション
 
-2. `.serena/memories/project_overview.md`（本ファイル）
-   - **目的**: Step4完了内容・技術的知見・申し送り事項確認
-   - **活用**: DevContainer環境完全確立・HTTPS証明書管理方針・Sandboxモード非対応の理解
-   - **重点セクション**: 「Phase B-F2 Step4完了」セクション全体
+2. `Doc/99_Others/Issue_51_Phase1_検証結果.md`
+   - **目的**: Claude Code on the Web検証結果（Stage1成果）の確認
+   - **活用**: Stage2-4でGitHub Codespacesで再試行すべき項目の理解
+   - **重点セクション**: 制約事項5点・3大特徴検証結果
 
-3. `.serena/memories/daily_sessions.md`
-   - **目的**: Step4実施内容（Session 1-4）の詳細履歴確認
-   - **活用**: トラブルシューティング履歴・技術的決定事項の理解
+3. `Doc/08_Organization/Active/Phase_B-F2/Step06_GitHub_Codespaces検証.md`（参考）
+   - **目的**: GitHub Codespaces環境構築手順の参照
+   - **活用**: Step5 Stage2-4実施時の環境準備
+   - **重点セクション**: Stage1環境構築手順
 
-**Step4からの申し送り事項**:
-- ✅ DevContainer環境完全確立（0 Error/0 Warning達成）
-- ✅ HTTPS証明書恒久的対応完了（ボリュームマウント + 環境変数方式）
-- ✅ ADR_026作成完了（Microsoft公式推奨アプローチ採用）
-- ✅ 全ドキュメント作成完了（4ファイル作成・更新）
-- ⚠️ Sandboxモード非対応によりStage1調査結果の一部が不正確（承認プロンプト削減効果未達成）
-- 📝 GitHub Issue #63（Windows Sandbox非対応）は技術負債として記録済み
-- 📝 GitHub Issue #62（証明書管理永続化）はStep4で解決・クローズ可能
+4. `.serena/memories/project_overview.md`（本ファイル）
+   - **目的**: Step5 Stage1完了内容・方針転換の理由確認
+   - **活用**: なぜGitHub Codespacesに変更したか、Step5の目的は何かの理解
+   - **重点セクション**: 「Phase B-F2 Step5実施中」セクション全体
+
+**Step5 Stage1からの申し送り事項**:
+- ✅ Claude Code on the Web基本動作確認完了（対話形式検証）
+- ✅ Claude Code on the Web制約事項5点発見・文書化
+- ✅ Issue #51 Phase1検証結果記録完了
+- ❌ Stage2-4未実施（実施方法変更によりGitHub Codespacesで再試行予定）
+- 📋 次回: GitHub Codespaces環境でのStage2-4実施（並列タスク実行検証・Teleport機能検証・効果測定）
 
 **次回セッション開始時の流れ**:
 1. **session-start Command実行**: Serena MCP初期化・メモリー読み込み
-2. **Phase_Summary.md読み込み**: Step5実施内容・完了条件確認
-3. **step-start Command実行**: Step5組織設計書作成・Stage構成計画
-4. **Step5 Stage 1開始**: 作業開始
+2. **Step05_Web版検証・並列タスク実行.md読み込み**: Stage2-4実施内容確認
+3. **GitHub Codespaces環境準備**: Step6組織設計書を参考に環境構築
+4. **Step5 Stage2開始**: 並列タスク実行検証開始
 
 **注意事項**:
-- ✅ **Step4完了**: ユーザー承認取得済み
-- 📋 **Step5計画**: Phase_Summary.mdに記載、詳細は次回セッションで確認
-- 🔴 **重要**: git commitは次回セッションで必要に応じて実施（ユーザー指示待ち）
+- 🔴 **重要**: Step5は継続中、Step6ではない
+- 🔴 **重要**: 「方針転換」＝「実施方法変更」であり「Step放棄」ではない
+- 📋 **Step6は参考資料**: Step5完了後の次段階として参照可能
 
 ---
 
-**最終更新**: 2025-11-04（Phase B-F2 Step4完了・全8 Stage完了・次回Step5開始準備完了）
+**最終更新**: 2025-11-10（メモリー記録誤り修正完了・次回Step5 Stage2-4再試行準備完了）

@@ -1,6 +1,6 @@
 # タスク完了チェックリスト
 
-**最終更新**: 2025-11-03（**Phase B-F2 Step4 Stage 1-4完了・DevContainer環境構築完了・0 Warning/0 Error達成**）
+**最終更新**: 2025-11-08（**Phase B-F2 Step5完了・Claude Code on the Web検証完了・Issue #51 Phase1検証結果記録・Step6計画作成完了**）
 **管理方針**: 完了タスク・継続タスク・新規タスクの一元管理・状態更新方式
 
 ## 📊 Phase別完了状況
@@ -39,14 +39,13 @@
 - [x] **B2 Step7: DB初期化方針決定**（🎉2025-10-27完了・ADR_023/EF Migrations主体方式確立・GitHub Issue #58解決）
 - [x] **B2 Step8: E2Eテスト実行環境整備**（⚠️2025-10-27部分完了・E2Eテストユーザ・データ作成完了・E2Eテスト実装延期→Issue #59）
 - [x] **Phase B2完了**（🎉2025-10-27完了・品質スコア93/100点・技術負債あり→Phase B-F2で解決）
-- [ ] **Phase B-F2: 技術負債解決・E2Eテスト基盤強化**（🚀実行中・Step4 Stage 4完了・DevContainer環境構築完了・0 Warning/0 Error達成）
+- [ ] **Phase B-F2: 技術負債解決・E2Eテスト基盤強化**（🚀実行中・Step5完了・Claude Code on the Web検証完了・Issue #51 Phase1記録完了）
   - [x] **Step1: 技術調査**（✅2025-10-29完了・Agent SDK/DevContainer/Web版調査・再調査実施・Go判断変更・7ファイル更新）
   - [x] **Step2: Agent Skills Phase 2展開**（✅2025-11-01完了・5 Skills作成・CLAUDE.mdルール強化・2時間）
   - [x] **Step3: Playwright統合基盤刷新**（✅2025-11-02完了・E2E専用SubAgent新設・7 Stage実施・GitHub Issue #57解決・2.5時間）
-  - [ ] **Step4: DevContainer + Sandboxモード統合**（🚀実行中・Stage 1-4完了・Stage 5準備完了・5問題解決・0 Warning/0 Error達成）
-    - [x] **Stage 1-3**: 環境設計・設定ファイル作成（Session 1完了）
-    - [x] **Stage 4**: Sandboxモード統合・トラブルシューティング完了（Session 2完了・5問題解決・78 warnings → 0解決）
-    - [ ] **Stage 5**: 自動動作検証（次セッション実施予定）
+  - [x] **Step4: DevContainer + Sandboxモード統合**（✅2025-11-04完了・全8 Stage完了・HTTPS証明書恒久的対応・ADR_026作成・全ドキュメント作成・約7.5時間）
+  - [x] **Step5: Claude Code on the Web検証**（✅2025-11-08完了・Stage1完了・制約事項5点発見・Issue #51 Phase1記録・Step6計画作成・約4時間）
+  - [ ] **Step6: GitHub Codespaces検証**（次セッション実施予定・環境構築・定型Command実行・並列タスク実行・Go/No-Go判断）
 - [ ] B3: プロジェクト機能完成
 - [ ] B4: 品質改善・技術負債解消
 - [ ] B5: UI/UX最適化・統合テスト
@@ -71,20 +70,21 @@
 
 ## 🔄 次回セッション継続タスク
 
-### 🚀 最優先（次セッション・Phase B-F2 Step5開始）
-1. [ ] **Phase B-F2 Step5開始**（次セッション最優先・技術負債解決・Issue Close・2-3時間）：
-   - **実施内容**: Issue #52・#54 Phase1解決・技術負債3-5件解決
+### 🚀 最優先（次セッション・Phase B-F2 Step6開始）
+1. [ ] **Phase B-F2 Step6開始**（次セッション最優先・GitHub Codespaces検証・Issue #51 Phase2実施・6-9時間）：
+   - **実施内容**: GitHub Codespaces環境構築・定型Command実行検証・並列タスク実行検証・Go/No-Go判断
    - **主要タスク**:
-     - ① Issue #52実装（プロジェクト削除機能・論理削除 or 物理削除判断）
-     - ② Issue #54 Phase1実装（ユーザープロフィール編集UI・Application層実装）
-     - ③ Phase B1-B2技術負債解決（Issue #59準備含む）
-   - **推定時間**: 2-3時間
-   - **前提条件**: Phase B-F2 Step4完了（✅2025-11-04・全8 Stage完了）
+     - ① Stage1: GitHub Codespaces環境構築・基本動作確認（2-3時間）
+     - ② Stage2: 定型Command実行検証・非同期実行確認（2-3時間）
+     - ③ Stage3: 並列タスク実行検証・効果測定・Go/No-Go判断（2-3時間）
+   - **推定時間**: 6-9時間
+   - **前提条件**: Phase B-F2 Step5完了（✅2025-11-08・Stage1完了・Issue #51 Phase1記録完了）
    - **必須読み込みファイル**:
-     - `Doc/08_Organization/Active/Phase_B-F2/Phase_Summary.md`（Step5実施内容・完了条件確認）
-     - `.serena/memories/project_overview.md`（Step4完了内容・申し送り事項確認）
-   - **成功基準**: 0 Error / 0 Warning維持・仕様準拠率98%維持・テスト成功率100%維持
-   - **次Step**: Step6（E2Eテスト基盤強化・Issue #59解決）
+     - `Doc/99_Others/Issue_51_Phase1_検証結果.md`（Phase1検証結果・制約事項5点）
+     - `Doc/08_Organization/Active/Phase_B-F2/Step06_GitHub_Codespaces検証.md`（Step6組織設計書）
+     - `Doc/08_Organization/Active/Phase_B-F2/Research/Web_Version_Verification_Report.md`（Web版詳細レポート）
+   - **成功基準**: 時間削減効果50%以上・品質維持（0 Error/0 Warning）・コスト許容範囲内・MCP Server動作確認
+   - **次Step**: Issue #51 Phase2実施判断（Go: 本格運用開始 / No-Go: 代替手段選定）
 
 ### 🔄 完了済み（Phase B2・Phase B-F2進捗）
 - [x] **Issue #49実装**（✅2025-10-13完了・テストアーキテクチャドキュメント参照タイミング標準化）
@@ -103,6 +103,7 @@
 - [x] **Phase B-F2 Step2完了**（✅2025-11-01完了・Agent Skills Phase 2展開・5 Skills作成・CLAUDE.mdルール強化・2時間）
 - [x] **Phase B-F2 Step3完了**（✅2025-11-02完了・Playwright統合基盤刷新・E2E専用SubAgent新設・GitHub Issue #57解決・2.5時間）
 - [x] **Phase B-F2 Step4完了**（✅2025-11-04完了・DevContainer + Sandboxモード統合・全8 Stage完了・HTTPS証明書恒久的対応・ADR_026作成・全ドキュメント作成・Session 1-4実施・約7.5時間）
+- [x] **Phase B-F2 Step5完了**（✅2025-11-08完了・Claude Code on the Web検証・Stage1完了・制約事項5点発見・Issue #51 Phase1記録・Step6計画作成・Session 1-2実施・約4時間）
 - [x] **週次振り返り実施（Week 44）**（✅2025-11-04完了・10/29-11/02対象・週次総括文書作成・Serenaメモリー4種類更新・daily_sessions統合削除完了）
 
 ### 🟡 高優先度（Issue対応完了後・Phase B2実装準備）
