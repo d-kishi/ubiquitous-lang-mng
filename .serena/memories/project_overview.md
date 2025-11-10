@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-10（**Phase B-F2 Step5 Stage2完了・GitHub Codespaces技術調査準備完了・次回Stage3実施**）
+**最終更新**: 2025-11-11（**Phase B-F2 Step5 Stage3調査項目1完了・次回Codespaces環境で調査項目2-5実施**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -50,18 +50,22 @@
 
 #### Step実行状況（継続中）
 **開始日**: 2025-11-07
-**現在状況**: Stage1-2完了・Stage3以降未実施（次回GitHub Codespaces環境でStage3実施）
-**実施期間**: 4日間（3セッション、Stage1-2完了）
+**現在状況**: Stage3実施中（調査項目1完了・調査項目2-5未実施）
+**実施期間**: 5日間（4セッション、調査項目1完了）
 **完了Stage**:
 - Stage 1（Claude Code on the Web基本動作確認）✅
 - Stage 2（GitHub Codespaces技術調査準備）✅
-**未実施Stage**: Stage 3-5（GitHub Codespaces技術調査・定型Command実行検証・効果測定）
-**総実施時間**: 約6時間（セッション1: 2時間、セッション2: 2時間、セッション3: 2時間）
+- Stage 3（一部・調査項目1のみ完了）⚙️
+**未実施Stage**: Stage 3（調査項目2-5）、Stage 4-5
+**総実施時間**: 約8時間（セッション1: 2時間、セッション2: 2時間、セッション3: 2時間、セッション4: 2時間）
 **成果物**:
 - Issue #51 Phase1検証結果記録
 - Claude Code on the Web制約事項文書化
 - GitHub Codespaces技術調査計画書テンプレート
 - 次回セッション実施手順書
+- DevContainer + Claude Code CLI統合完了（調査項目1）
+  - `.devcontainer/Dockerfile` 修正
+  - `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md` 作成（450行）
 
 **重要な方針転換**:
 - 2025-11-08に「Claude Code on the Webは.NET開発に不向き」と判明
@@ -84,6 +88,25 @@
 - ✅ Step05組織設計ファイル更新完了（方針転換記録・Stage3詳細追加）
 - ✅ Phase_Summary.md更新完了（Step5状況反映）
 
+**Stage 3（一部）完了**（2025-11-11）:
+**調査項目1: Codespaces環境構築・Claude Code CLI統合 - 完了** ✅
+- ✅ `.devcontainer/Dockerfile` 修正（Claude Code CLI インストール3行追加）
+- ✅ 構築手順ドキュメント作成完了（`Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md`・450行）
+- ✅ ローカルDevContainer検証成功（Claude Code CLI動作確認）
+- ✅ GitHub Secrets設定（ANTHROPIC_API_KEY）
+- ✅ Codespaces再ビルド・動作確認成功
+- ✅ Git commit/push完了（commit: 46c5e62）
+- ✅ 技術調査レポート更新（調査項目1結果記録）
+- ✅ Step実施手順書更新（進捗反映）
+
+**技術的知見**:
+- DevContainerへのClaude Code CLI統合方法確立（Dockerfileでのグローバルnpmインストール）
+- GitHub Secrets経由での環境変数設定方法（ANTHROPIC_API_KEY）
+- ローカル検証→Codespaces検証の2段階検証手法の有効性
+- DevContainer再ビルド時のClaude Code CLI自動インストール確認
+
+**次回作業**: 調査項目2-5実施（Codespaces環境のClaude Code CLIセッション内で実施）
+
 **Claude Code on the Web制約事項（5点）**:
 1. DevContainer環境起動不可（Sandbox環境のため）
 2. .NET SDK実行不可（dotnetコマンド未インストール）
@@ -96,8 +119,6 @@
 - ドキュメント作業・PRレビュー・設計検討には最適
 - 非同期実行機能（Fire-and-forget）は正常動作確認
 - ハイブリッド開発アプローチの可能性（Web版 + ローカル/Codespaces）
-
-**次回作業**: Step5 Stage3実施（GitHub Codespaces技術調査・5調査項目・2-3時間）
 
 #### Stage 1, 2失敗の教訓
 **失敗内容**:
@@ -525,69 +546,70 @@
 
 ### Phase B-F2 Step5 Stage3実施（次回セッション）
 
-**Step5現状**: Stage1-2完了（Stage1: Claude Code on the Web検証、Stage2: 技術調査準備）
-**次回作業**: Phase B-F2 Step5 Stage3（GitHub Codespaces技術調査）
+**Step5現状**: 調査項目1完了（Codespaces環境構築・Claude CLI統合）
+**次回作業**: Phase B-F2 Step5 Stage3（調査項目2-5実施）
 
 **🔴 重要な申し送り事項**:
-- ✅ **Stage1完了**: Claude Code on the Web検証完了・制約事項5点発見・Issue #51 Phase1記録完了
-- ✅ **Stage2完了**: GitHub Codespaces技術調査準備完了（テンプレート・実施手順書作成）
-- 📋 **Stage3実施**: GitHub Codespaces環境で5項目の技術調査を実施
+- ✅ **調査項目1完了**: Codespaces環境構築・Claude Code CLI統合完了
+- ✅ **Codespaces環境準備完了**: 再ビルド完了・動作確認済み
+- 📋 **調査項目2-5実施**: MCP Server接続・dotnet build/test・Command実行・バックグラウンド実行
 - 📋 **Go/No-Go判断**: 5項目すべて成功でGo判断
 
 **必須読み込みファイル**:
-1. `Doc/08_Organization/Active/Phase_B-F2/Step05_次回セッション実施手順.md`（🔴最優先）
+1. `Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`（🔴最優先）
+   - **目的**: 調査項目2-5の実施内容・記録テンプレート確認
+   - **活用**: 各調査項目の結果をこのテンプレートに記録
+   - **重点セクション**: 調査項目2-5セクション・Go/No-Go判断セクション
+
+2. `Doc/08_Organization/Active/Phase_B-F2/Step05_次回セッション実施手順.md`（🔴最優先）
    - **目的**: 次回セッション実施手順の完全ガイド
    - **活用**: Codespaces起動・Claude Code CLI起動・技術調査開始指示をそのまま実行
-   - **重点セクション**: 全セクション（Step-by-step手順書）
+   - **重点セクション**: 次回セッション開始手順（Step 1-3）
 
-2. `Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`（🔴最優先）
-   - **目的**: 技術調査結果記録テンプレート
-   - **活用**: 5調査項目の結果をこのテンプレートに記録
-   - **重点セクション**: 調査項目1-5セクション・Go/No-Go判断セクション
+3. `Doc/08_Organization/Active/Phase_B-F2/Phase_Summary.md`
+   - **目的**: Phase B-F2全体の進捗状況・Step5位置づけ確認
+   - **活用**: Phase全体のコンテキスト理解
+   - **重点セクション**: Step5実施記録セクション
 
-3. `Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md`
+4. `Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md`
    - **目的**: Step5全体計画・Stage3実施内容確認
    - **活用**: Stage3の完了条件・検証項目・成果物要件の理解
-   - **重点セクション**: Stage3（GitHub Codespaces技術調査）セクション
+   - **重点セクション**: Stage3（調査項目2-5）セクション
 
-4. `Doc/99_Others/Issue_51_Phase1_検証結果.md`
-   - **目的**: Claude Code on the Web検証結果（参考情報）
-   - **活用**: なぜGitHub Codespacesに変更したか、何を検証すべきかの理解
-   - **重点セクション**: 制約事項5点・GitHub Codespaces検証計画
+**Stage3実施内容（調査項目2-5・2-3時間）**:
+1. **調査項目2**: MCP Server接続確認（30分）
+2. **調査項目3**: 開発環境動作確認（dotnet build/test）（30分）
+3. **調査項目4**: 基本Command実行確認（30分）
+4. **調査項目5**: バックグラウンド実行検証（30分）
+5. **Go/No-Go判断**: 全項目成功評価・Issue #51更新（30分）
 
-5. `.serena/memories/project_overview.md`（本ファイル）
-   - **目的**: Step5の経緯・方針転換の理由確認
-   - **活用**: プロジェクト全体状況・Step5の位置づけの理解
-   - **重点セクション**: 「Phase B-F2 Step5実施中」セクション
-
-**Stage3実施内容（5調査項目・2-3時間）**:
-1. **調査項目1**: Codespaces環境構築（30分）
-2. **調査項目2**: MCP Server接続確認（30分）
-3. **調査項目3**: 開発環境動作確認（30分）
-4. **調査項目4**: 基本Command実行確認（30分）
-5. **調査項目5**: バックグラウンド実行検証（30分）
-
-**次回セッション開始時の流れ**:
+**次回セッション開始時の流れ**（Codespaces環境）:
 1. **GitHub Codespaces起動**（ユーザー操作）
 2. **Claude Code CLI起動**（ユーザー操作: `claude`）
 3. **session-start実行**: "セッションを開始します"
 4. **技術調査開始指示**（ユーザー操作）:
    ```
-   Step5 Stage3（GitHub Codespaces技術調査）を開始してください。
+   Step5 Stage3（GitHub Codespaces技術調査）の調査項目2から開始してください。
+
+   調査項目1（Codespaces環境構築・Claude CLI動作確認）は前回セッションで完了済みです。
 
    以下のファイルを参照してください：
-   - Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md（Stage3セクション）
-   - Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md（テンプレート）
+   - Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md
 
-   5項目の調査を順番に実施し、結果をテンプレートに記録してください。
+   調査項目2: MCP Server接続確認
+   調査項目3: 開発環境動作確認（dotnet build/test）
+   調査項目4: 基本Command実行確認
+   調査項目5: バックグラウンド実行検証
+
+   各項目の結果を技術調査レポートに記録してください。
    ```
 
 **注意事項**:
-- 🔴 **重要**: GitHub Codespaces環境で実施必須（DevContainer環境ではない）
+- 🔴 **重要**: Codespaces環境のClaude Code CLIセッション内で実施必須
 - 🔴 **重要**: 5項目すべて成功でGo判断・1項目でも失敗でNo-Go判断
 - 📋 **Go判断時**: Issue #51更新・Stage4以降詳細化
 - 📋 **No-Go判断時**: 代替案検討（Self-hosted Runner等）
 
 ---
 
-**最終更新**: 2025-11-10（Stage2完了・GitHub Codespaces技術調査準備完了・次回Stage3実施）
+**最終更新**: 2025-11-11（調査項目1完了・次回Codespaces環境で調査項目2-5実施）

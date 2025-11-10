@@ -12,33 +12,49 @@
 
 ---
 
-## 📋 事前準備（このセッション終了前）
+## 📋 事前準備（2025-11-11完了）
 
 - [x] 技術調査計画書テンプレート作成完了（`Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`）
 - [x] 次回セッション実施手順書作成完了（本ファイル）
-- [ ] セッション終了処理実施（`/session-end`）
+- [x] **Dockerfile修正完了**（Claude Code CLIインストール追加）
+- [x] **構築手順ドキュメント作成完了**（`Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md`）
+- [x] **ローカルDevContainer検証完了**（Claude Code CLI動作確認済み）
+- [x] **GitHub Secrets設定完了**（`ANTHROPIC_API_KEY`）
+- [x] **Codespaces再ビルド・動作確認完了**
+- [x] Git commit/push完了（commit: 46c5e62）
+- [x] セッション終了処理実施（`/session-end`）
+
+**重要な追加作業**:
+- 当初想定していなかったClaude Code CLI統合作業を実施
+- ローカル検証 → Codespaces検証の2段階検証を完了
+- 調査項目1の一部（Claude CLI動作確認）を完了
 
 ---
 
-## 🚀 次回セッション開始手順
+## 🚀 次回セッション開始手順（Codespaces環境）
 
-### Step 1: GitHub Codespacesを起動
+### 前提条件（✅ 完了済み）
+
+- ✅ Dockerfile修正済み（Claude Code CLIインストール）
+- ✅ GitHub Secrets設定済み（ANTHROPIC_API_KEY）
+- ✅ Codespaces環境構築済み（再ビルド完了）
+- ✅ Claude Code CLI動作確認済み
+
+### Step 1: 既存Codespacesを開く
 
 **ユーザー操作**:
 
-1. **ブラウザでGitHub.comにアクセス**
+1. **GitHubリポジトリにアクセス**
    ```
-   https://github.com/[your-username]/ubiquitous-lang-mng
+   https://github.com/d-kishi/ubiquitous-lang-mng
    ```
 
-2. **Codespacesを起動**
-   - 「Code」ボタンをクリック
-   - 「Codespaces」タブを選択
-   - 「Create codespace on feature/PhaseB-F2」をクリック
-   - または既存のCodespaceがあれば選択
+2. **既存Codespacesを開く**
+   - 「Code」ボタン → 「Codespaces」タブ
+   - 既存のCodespace（feature/PhaseB-F2）を選択
+   - クリックして起動
 
-3. **Codespaces環境が起動**（5-10分）
-   - DevContainer自動構築
+3. **Codespaces環境が起動**（30秒～1分）
    - VS Code Web版が開く
 
 ### Step 2: Codespaces内でClaude Code CLIを起動
@@ -59,34 +75,44 @@
    ```
    - これにより`/session-start` Commandが自動実行されます
 
-### Step 3: 技術調査開始を指示
+### Step 3: 技術調査継続を指示
 
 **ユーザー指示（そのまま貼り付け可能）**:
 
 ```
-Step5 Stage3（GitHub Codespaces技術調査）を開始してください。
+Step5 Stage3（GitHub Codespaces技術調査）の調査項目2から開始してください。
+
+調査項目1（Codespaces環境構築・Claude CLI動作確認）は前回セッションで完了済みです。
 
 以下のファイルを参照してください：
-- Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md（Stage3セクション）
-- Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md（テンプレート）
+- Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md
 
-5項目の調査を順番に実施し、結果をテンプレートに記録してください。
+調査項目2: MCP Server接続確認
+調査項目3: 開発環境動作確認（dotnet build/test）
+調査項目4: 基本Command実行確認
+調査項目5: バックグラウンド実行検証
+
+各項目の結果を技術調査レポートに記録してください。
 ```
 
 ---
 
 ## 📝 技術調査の実施順序（Claude Code実施）
 
-### 調査項目1: Codespaces環境構築（30分）
+### 調査項目1: Codespaces環境構築（✅ 完了）
+
+**実施日**: 2025-11-11（前回セッション）
 
 **実施内容**:
-1. DevContainer構築確認
-2. 基本ツール確認（dotnet, docker, gh, node）
-3. タイムアウト設定確認・変更（Settings → Codespaces → Default timeout: 30分 → 240分）
+- ✅ Dockerfile修正（Claude Code CLIインストール）
+- ✅ ローカルDevContainer検証成功
+- ✅ GitHub Secrets設定（ANTHROPIC_API_KEY）
+- ✅ Codespaces再ビルド成功
+- ✅ Claude Code CLI動作確認成功
 
-**記録先**: `Codespaces技術調査結果.md` - 調査項目1セクション
+**記録先**: `Codespaces技術調査結果.md` - 調査項目1セクション（記録済み）
 
-### 調査項目2: MCP Server接続確認（30分）
+### 調査項目2: MCP Server接続確認（30分）⚙️ 次回実施
 
 **実施内容**:
 1. `claude mcp list` 実行
@@ -94,6 +120,8 @@ Step5 Stage3（GitHub Codespaces技術調査）を開始してください。
 3. Serenaメモリー読み込みテスト（project_overview）
 
 **記録先**: `Codespaces技術調査結果.md` - 調査項目2セクション
+
+**次回セッション開始位置**: ここから開始
 
 ### 調査項目3: 開発環境動作確認（30分）
 
