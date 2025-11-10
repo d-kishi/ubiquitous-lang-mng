@@ -225,28 +225,55 @@
 
 ---
 
-### Step 5: Claude Code on the Web 検証・並列タスク実行（5-10時間）
+### Step 5: Claude Code on the Web 検証・並列タスク実行（8-11時間）⚙️ **実施中**
 **対応Issue**: #51 Phase1
+**開始日**: 2025-11-07
+**現在ステータス**: Stage 3以降実施予定
 
-**実施内容**:
+**実施状況**:
 
-**Phase 1: Claude Code on the Web 検証（5-10時間）**:
-- Claude Code on the Web 基本動作確認（2-3時間）
-- 並列タスク実行検証（2-3時間）
-- Teleport機能検証（1-2時間）
-- 効果測定（1-2時間）
+#### ✅ Stage 1完了（2025-11-08）
+- Claude Code on the Web 基本動作確認完了（約2時間）
+- 判明した制約事項（5項目）：
+  1. DevContainer環境起動不可
+  2. .NET SDK実行不可
+  3. MCP Server接続不可（Serena/Playwright）
+  4. GitHub CLI実行不可
+  5. ブランチ命名規則制約（claude/[session-id]のみ）
+- **結論**: .NETプロジェクトの開発作業には不向き
 
-**成果物**:
-- Claude Code on the Web 検証レポート
-- 効果測定結果（時間削減率・品質・コスト）
-- Phase 2実施判断材料
-- ADR_0XX作成（Claude Code on the Web 統合決定）
+#### ✅ Stage 2: 未実施のまま中止（2025-11-08）
+- Claude Code on the Web制約により実施不可
+
+#### 🔄 方針転換（2025-11-10）
+- **従来方針**: Claude Code on the Webで夜間作業自動化
+- **新方針**: **GitHub Codespaces**で夜間作業自動化
+- **転換理由**: 必須要件充足度85%、MCP Server完全対応、DevContainer完全対応、低コスト（月$0-5）
+
+#### ⚙️ Stage 3以降予定（GitHub Codespaces）
+- **Stage 3**: GitHub Codespaces技術調査（2-3時間）
+  - 5項目の調査：環境構築、MCP接続、dotnet動作、Command実行、バックグラウンド実行
+  - 成果物：技術調査レポート（`Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`）
+  - Go/No-Go判断
+- **Stage 4**: 定型Command実行検証（2-3時間）
+  - Stage 3完了後に詳細計画確定
+- **Stage 5**: 効果測定・Phase2判断（2-3時間）
+  - Stage 4完了後に詳細計画確定
+
+**成果物**（予定）:
+- ✅ Claude Code on the Web 検証レポート（Stage 1完了）
+- ⏳ GitHub Codespaces技術調査レポート（Stage 3）
+- ⏳ 効果測定結果（Stage 5）
+- ⏳ Phase 2実施判断材料（Stage 5）
 
 **完了条件**:
-- 時間削減効果50%以上
-- 品質問題なし（0 Warning/0 Error維持）
-- PR確認フロー実用性確認
-- 並列タスク実行成功
+- ✅ Stage 1完了（Claude Code on the Web基本動作確認）
+- ✅ Stage 2: 未実施のまま中止
+- ⏳ Stage 3完了（GitHub Codespaces技術調査）
+- ⏳ Stage 4完了（定型Command実行検証）
+- ⏳ Stage 5完了（効果測定・Phase2判断）
+- ⏳ 全成果物作成完了
+- ⏳ ユーザー承認取得
 
 ---
 

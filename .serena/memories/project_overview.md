@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-10（**メモリー記録誤り修正・Phase B-F2 Step5実施中（Stage1完了・Stage2-4未実施）・次回Step5 Stage2-4再試行**）
+**最終更新**: 2025-11-10（**Phase B-F2 Step5 Stage2完了・GitHub Codespaces技術調査準備完了・次回Stage3実施**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -50,27 +50,39 @@
 
 #### Step実行状況（継続中）
 **開始日**: 2025-11-07
-**現在状況**: Stage1完了・Stage2-4未実施（実施方法変更によりGitHub Codespacesで再試行予定）
-**実施期間**: 2日間（2セッション、Stage1のみ完了）
-**完了Stage**: Stage 1（Claude Code on the Web基本動作確認）✅
-**未実施Stage**: Stage 2-4（並列タスク実行検証・Teleport機能検証・効果測定）
-**総実施時間**: 約4時間（セッション1: 2時間、セッション2: 2時間）
-**成果物**: Issue #51 Phase1検証結果記録・Claude Code on the Web制約事項文書化
+**現在状況**: Stage1-2完了・Stage3以降未実施（次回GitHub Codespaces環境でStage3実施）
+**実施期間**: 4日間（3セッション、Stage1-2完了）
+**完了Stage**:
+- Stage 1（Claude Code on the Web基本動作確認）✅
+- Stage 2（GitHub Codespaces技術調査準備）✅
+**未実施Stage**: Stage 3-5（GitHub Codespaces技術調査・定型Command実行検証・効果測定）
+**総実施時間**: 約6時間（セッション1: 2時間、セッション2: 2時間、セッション3: 2時間）
+**成果物**:
+- Issue #51 Phase1検証結果記録
+- Claude Code on the Web制約事項文書化
+- GitHub Codespaces技術調査計画書テンプレート
+- 次回セッション実施手順書
 
 **重要な方針転換**:
 - 2025-11-08に「Claude Code on the Webは.NET開発に不向き」と判明
-- Stage2-4の実施方法をGitHub Codespacesに変更決定
+- Stage3以降の実施方法をGitHub Codespacesに変更決定
 - **これは「Step5放棄」ではなく「Step5実施方法変更」である**
-- 次回セッションでStep5 Stage2-4をGitHub Codespacesで再試行予定
+- 次回セッションでStep5 Stage3（GitHub Codespaces技術調査）を実施
 
 #### 主要成果
-**Stage 1完了**:
+**Stage 1完了**（2025-11-08）:
 - ✅ Claude Code on the Web基本動作確認完了（対話形式検証）
 - ✅ Claude Code on the Web制約事項5点発見・文書化
 - ✅ Issue #51 Phase1検証結果記録完了（`Doc/99_Others/Issue_51_Phase1_検証結果.md`）
 - ✅ GitHub Issue #51への報告コメント追加
 - ✅ Step6組織設計書作成完了（`Doc/08_Organization/Active/Phase_B-F2/Step06_GitHub_Codespaces検証.md`）
 - ✅ 方針転換決定（Claude Code on the Web → GitHub Codespaces）
+
+**Stage 2完了**（2025-11-10）:
+- ✅ GitHub Codespaces技術調査計画書テンプレート作成完了（`Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`・385行）
+- ✅ 次回セッション実施手順書作成完了（`Doc/08_Organization/Active/Phase_B-F2/Step05_次回セッション実施手順.md`・285行）
+- ✅ Step05組織設計ファイル更新完了（方針転換記録・Stage3詳細追加）
+- ✅ Phase_Summary.md更新完了（Step5状況反映）
 
 **Claude Code on the Web制約事項（5点）**:
 1. DevContainer環境起動不可（Sandbox環境のため）
@@ -85,7 +97,7 @@
 - 非同期実行機能（Fire-and-forget）は正常動作確認
 - ハイブリッド開発アプローチの可能性（Web版 + ローカル/Codespaces）
 
-**次回作業**: Step5 Stage2-4再試行（GitHub Codespacesで実施）
+**次回作業**: Step5 Stage3実施（GitHub Codespaces技術調査・5調査項目・2-3時間）
 
 #### Stage 1, 2失敗の教訓
 **失敗内容**:
@@ -511,56 +523,71 @@
 
 ## 📋 次回セッション読み込みファイル（必須）
 
-### Phase B-F2 Step5 Stage2-4再試行準備（次回セッション）
+### Phase B-F2 Step5 Stage3実施（次回セッション）
 
-**Step5現状**: Stage1完了（2025-11-08）・Stage2-4未実施
-**次回作業**: Phase B-F2 Step5 Stage2-4再試行（GitHub Codespacesで実施）
+**Step5現状**: Stage1-2完了（Stage1: Claude Code on the Web検証、Stage2: 技術調査準備）
+**次回作業**: Phase B-F2 Step5 Stage3（GitHub Codespaces技術調査）
 
 **🔴 重要な申し送り事項**:
-- ⚠️ **Step5は「完全完了」ではなく「Stage2-4が未実施」状態**
-- ⚠️ **GitHub Codespacesへの方針転換は「Step5放棄」ではなく「実施方法変更」**
-- ⚠️ **誤って「Step5完了→Step6開始」と記録していたが、2025-11-10に修正完了**
-- 📋 **Stage2-4ではGitHub Codespaces環境での定型Command実行・並列タスク実行を検証予定**
+- ✅ **Stage1完了**: Claude Code on the Web検証完了・制約事項5点発見・Issue #51 Phase1記録完了
+- ✅ **Stage2完了**: GitHub Codespaces技術調査準備完了（テンプレート・実施手順書作成）
+- 📋 **Stage3実施**: GitHub Codespaces環境で5項目の技術調査を実施
+- 📋 **Go/No-Go判断**: 5項目すべて成功でGo判断
 
 **必須読み込みファイル**:
-1. `Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md`
-   - **目的**: Step5全体計画・Stage2-4実施内容確認
-   - **活用**: Stage2-4の完了条件・検証項目・成果物要件の理解
-   - **重点セクション**: Stage 2-4の実施内容セクション
+1. `Doc/08_Organization/Active/Phase_B-F2/Step05_次回セッション実施手順.md`（🔴最優先）
+   - **目的**: 次回セッション実施手順の完全ガイド
+   - **活用**: Codespaces起動・Claude Code CLI起動・技術調査開始指示をそのまま実行
+   - **重点セクション**: 全セクション（Step-by-step手順書）
 
-2. `Doc/99_Others/Issue_51_Phase1_検証結果.md`
-   - **目的**: Claude Code on the Web検証結果（Stage1成果）の確認
-   - **活用**: Stage2-4でGitHub Codespacesで再試行すべき項目の理解
-   - **重点セクション**: 制約事項5点・3大特徴検証結果
+2. `Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`（🔴最優先）
+   - **目的**: 技術調査結果記録テンプレート
+   - **活用**: 5調査項目の結果をこのテンプレートに記録
+   - **重点セクション**: 調査項目1-5セクション・Go/No-Go判断セクション
 
-3. `Doc/08_Organization/Active/Phase_B-F2/Step06_GitHub_Codespaces検証.md`（参考）
-   - **目的**: GitHub Codespaces環境構築手順の参照
-   - **活用**: Step5 Stage2-4実施時の環境準備
-   - **重点セクション**: Stage1環境構築手順
+3. `Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md`
+   - **目的**: Step5全体計画・Stage3実施内容確認
+   - **活用**: Stage3の完了条件・検証項目・成果物要件の理解
+   - **重点セクション**: Stage3（GitHub Codespaces技術調査）セクション
 
-4. `.serena/memories/project_overview.md`（本ファイル）
-   - **目的**: Step5 Stage1完了内容・方針転換の理由確認
-   - **活用**: なぜGitHub Codespacesに変更したか、Step5の目的は何かの理解
-   - **重点セクション**: 「Phase B-F2 Step5実施中」セクション全体
+4. `Doc/99_Others/Issue_51_Phase1_検証結果.md`
+   - **目的**: Claude Code on the Web検証結果（参考情報）
+   - **活用**: なぜGitHub Codespacesに変更したか、何を検証すべきかの理解
+   - **重点セクション**: 制約事項5点・GitHub Codespaces検証計画
 
-**Step5 Stage1からの申し送り事項**:
-- ✅ Claude Code on the Web基本動作確認完了（対話形式検証）
-- ✅ Claude Code on the Web制約事項5点発見・文書化
-- ✅ Issue #51 Phase1検証結果記録完了
-- ❌ Stage2-4未実施（実施方法変更によりGitHub Codespacesで再試行予定）
-- 📋 次回: GitHub Codespaces環境でのStage2-4実施（並列タスク実行検証・Teleport機能検証・効果測定）
+5. `.serena/memories/project_overview.md`（本ファイル）
+   - **目的**: Step5の経緯・方針転換の理由確認
+   - **活用**: プロジェクト全体状況・Step5の位置づけの理解
+   - **重点セクション**: 「Phase B-F2 Step5実施中」セクション
+
+**Stage3実施内容（5調査項目・2-3時間）**:
+1. **調査項目1**: Codespaces環境構築（30分）
+2. **調査項目2**: MCP Server接続確認（30分）
+3. **調査項目3**: 開発環境動作確認（30分）
+4. **調査項目4**: 基本Command実行確認（30分）
+5. **調査項目5**: バックグラウンド実行検証（30分）
 
 **次回セッション開始時の流れ**:
-1. **session-start Command実行**: Serena MCP初期化・メモリー読み込み
-2. **Step05_Web版検証・並列タスク実行.md読み込み**: Stage2-4実施内容確認
-3. **GitHub Codespaces環境準備**: Step6組織設計書を参考に環境構築
-4. **Step5 Stage2開始**: 並列タスク実行検証開始
+1. **GitHub Codespaces起動**（ユーザー操作）
+2. **Claude Code CLI起動**（ユーザー操作: `claude`）
+3. **session-start実行**: "セッションを開始します"
+4. **技術調査開始指示**（ユーザー操作）:
+   ```
+   Step5 Stage3（GitHub Codespaces技術調査）を開始してください。
+
+   以下のファイルを参照してください：
+   - Doc/08_Organization/Active/Phase_B-F2/Step05_Web版検証・並列タスク実行.md（Stage3セクション）
+   - Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md（テンプレート）
+
+   5項目の調査を順番に実施し、結果をテンプレートに記録してください。
+   ```
 
 **注意事項**:
-- 🔴 **重要**: Step5は継続中、Step6ではない
-- 🔴 **重要**: 「方針転換」＝「実施方法変更」であり「Step放棄」ではない
-- 📋 **Step6は参考資料**: Step5完了後の次段階として参照可能
+- 🔴 **重要**: GitHub Codespaces環境で実施必須（DevContainer環境ではない）
+- 🔴 **重要**: 5項目すべて成功でGo判断・1項目でも失敗でNo-Go判断
+- 📋 **Go判断時**: Issue #51更新・Stage4以降詳細化
+- 📋 **No-Go判断時**: 代替案検討（Self-hosted Runner等）
 
 ---
 
-**最終更新**: 2025-11-10（メモリー記録誤り修正完了・次回Step5 Stage2-4再試行準備完了）
+**最終更新**: 2025-11-10（Stage2完了・GitHub Codespaces技術調査準備完了・次回Stage3実施）

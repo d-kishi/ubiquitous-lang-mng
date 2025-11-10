@@ -255,77 +255,178 @@
 
 ---
 
-### Stage 3: Teleport機能検証（1-2時間）
+### 🔄 方針転換の記録（2025-11-10）
 
-**❗ 検証目的**: Issue #51の「Web版80%完成 → CLI版で仕上げ」のハイブリッド開発検証
+#### 背景・経緯
 
-**実施内容**:
-1. **Teleport機能の動作確認**:
-   - Web版でタスクを80%完成させる
-   - Teleport機能でCLI版に転送
-   - CLI版で残り20%の詳細調整を実施
-   - チャット履歴・変更ファイルの完全性確認
+**Stage 1完了後の判明事項**（2025-11-08）:
+- Claude Code on the Webは.NETプロジェクトの開発作業に不向き
+- **5つの制約事項**が判明：DevContainer起動不可、.NET SDK実行不可、MCP Server接続不可、GitHub CLI実行不可、ブランチ命名規則制約
+- **Issue #51の3大特徴**のうち「PR自動作成」「定型Command実行」が制約により実現不可
 
-2. **モバイルアクセス検証**（可能であれば）:
-   - iPhoneからClaude Code on the Webへアクセス
-   - 日中のリアルタイム進捗確認
-   - エラー通知・即座対応のテスト
+#### 方針転換の決定
 
-3. **ブランチ切り替え・コンテキスト管理の評価**:
-   - 異なるブランチ間での作業切り替え
-   - コンテキスト保持状況の確認
+**従来方針**: Claude Code on the Webで夜間作業自動化を実現
 
-**成果物**:
-- Teleport機能検証レポート（Section 3）
-- Web版 → CLI版転送の実証（実際の転送履歴）
-- モバイルアクセス確認レポート（可能であれば）
+**新方針**: **GitHub Codespaces**で夜間作業自動化を実現
 
-**完了条件**:
-- Teleport機能の実用性確認（Web版 → CLI版転送成功）
-- チャット履歴・変更ファイルの完全性確認
-- ハイブリッド開発フローの有効性確認
+**転換理由**:
+1. **必須要件充足度**: GitHub Codespacesは85%（17/20項目）を満たす
+2. **MCP Server完全対応**: Serena MCP、Playwright MCPが制約なく動作
+3. **DevContainer完全対応**: 既存`.devcontainer/devcontainer.json`を90%再利用可能
+4. **低コスト**: 月$0-5（無料枠60時間内）
+5. **短期導入**: 2-3時間で環境構築完了
+
+**転換の性質**:
+- ❌ **Step5放棄ではない**
+- ✅ **Step5実施方法変更**（Claude Code on the Web → GitHub Codespaces）
+- ✅ **Issue #51の目的は継続**（夜間作業自動化・時間削減50%以上）
+
+#### Stage 2-4の方針
+
+**従来計画**: Claude Code on the Webで並列タスク実行検証・Teleport機能検証・効果測定
+
+**新計画**: GitHub Codespacesで技術調査→定型Command検証→効果測定
+
+**変更内容**:
+- Stage 2: 未実施のまま中止（Claude Code on the Web制約により実施不可）
+- Stage 3: GitHub Codespaces技術調査（新規）
+- Stage 4: 定型Command実行検証（新規）
+- Stage 5: 効果測定・Phase2判断（新規）
+
+**参考資料**:
+- 代替案評価レポート: Plan Agent調査結果（2025-11-10）
+- Issue #51: 段階的導入計画（Phase1/Phase2構成）
 
 ---
 
-### Stage 4: 効果測定・Phase 2判断（1-2時間）
+### Stage 3: GitHub Codespaces技術調査（2-3時間）
 
-**❗ 判断基準**: Issue #51のPhase 2本格運用開始の可否判断
-- ✅ 時間削減効果50%以上
-- ✅ 品質問題なし（0 Warning/0 Error維持）
-- ✅ PR確認フロー実用性確認
-- ⚠️ 上記のいずれか不満足 → Phase 2延期・プロセス改善
+**❗ 調査目的**: GitHub CodespacesでIssue #51の必須要件を満たせるか検証
+
+**必須要件**（Issue #51より）:
+1. **プロジェクト運用要件**: SubAgent利用、Skills利用、Command実行、MCP Server利用
+2. **開発環境要件**: DevContainer動作、dotnet SDK実行、PostgreSQL接続
+3. **品質要件**: ビルド成功必須（0 Warning/0 Error）、テスト成功必須
+4. **Git操作要件**: 任意ブランチ名作成、PR自動作成（gh pr create）
+5. **非同期実行要件**: バックグラウンド実行継続、並列実行可能、エラー時自律対応
+
+**調査項目（5項目）**:
+
+#### 3-1: Codespaces環境構築（30分）
 
 **実施内容**:
-1. **時間削減率の総合評価**:
-   - Stage 2の並列実行による時間削減率（目標: 50%以上）
-   - Stage 3のTeleport機能による効率化効果
-   - 総合的な時間削減効果の評価
+- GitHub Codespacesでリポジトリを開く
+- DevContainer自動構築確認（`.devcontainer/devcontainer.json`適用）
+- タイムアウト設定確認（デフォルト30分→4時間に延長）
+- 基本ツール確認（dotnet, docker, gh）
 
-2. **品質・コストの総合評価**:
-   - ビルド・テスト結果の品質維持確認
-   - Pro/Maxプラン内での追加コスト評価
-   - 従来案（GitHub Actions + API）とのコスト比較
+**成功条件**:
+- DevContainerが正常に構築される
+- .NET 8.0 SDKが利用可能
+- Docker、GitHub CLIが利用可能
 
-3. **Phase 2実施判断**:
-   - Issue #51のPhase 2本格運用開始の可否判断
-   - 判断基準達成状況の確認
-   - リスク・制約の再評価
+#### 3-2: MCP Server接続確認（30分）
 
-4. **ADR_0XX作成**（Claude Code on the Web 統合決定）:
-   - 技術決定の記録
-   - Phase 2実施判断の根拠記録
-   - リスク・代替案の評価記録
+**実施内容**:
+- `claude mcp list` 実行
+- Serena MCP認識確認
+- Playwright MCP認識確認
+- 簡単なMCP操作テスト（Serena: project_overview読み込み）
+
+**成功条件**:
+- Serena MCP、Playwright MCPが認識される
+- MCP経由でのファイル操作が成功する
+
+#### 3-3: 開発環境動作確認（30分）
+
+**実施内容**:
+- `dotnet --version` 確認（.NET 8.0）
+- `dotnet restore` 実行
+- `dotnet build` 実行（0 Warning, 0 Error）
+- `dotnet test` 実行（全テスト成功）
+
+**成功条件**:
+- dotnet buildが成功（0 Warning, 0 Error）
+- dotnet testが成功（全テスト合格）
+
+#### 3-4: 基本Command実行確認（30分）
+
+**実施内容**:
+- `/session-start` 実行
+- `/spec-compliance-check` 実行
+- Command正常終了確認
+- SubAgent・Skills動作確認
+
+**成功条件**:
+- Commandが正常に実行される
+- SubAgent・Skillsが正常に動作する
+
+#### 3-5: バックグラウンド実行検証（30分）
+
+**実施内容**:
+- タスク投入（例：weekly-retrospective）
+- ブラウザを閉じる（またはCodespacesタブを閉じる）
+- 30分後に再接続
+- タスク継続実行確認
+
+**成功条件**:
+- ブラウザを閉じた後もタスクが継続実行される
+- 再接続時に実行状況が確認できる
+- タスクが正常に完了する
 
 **成果物**:
-- Claude Code on the Web 検証レポート統合版
-- 効果測定結果（時間削減率・品質・コスト）
-- Phase 2実施判断材料（Go/No-Go判断）
-- ADR_0XX作成（Claude Code on the Web 統合決定）
+- 技術調査レポート（`Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md`）
+  - 各調査項目の結果（成功/失敗）
+  - 制約事項・回避策
+  - 必須要件充足度評価（17/20項目の詳細）
+  - Go/No-Go判断
+
+**Go/No-Go判断基準**:
+- ✅ **Go条件**: 5項目すべて成功
+- ❌ **No-Go条件**: いずれか1項目でも失敗
 
 **完了条件**:
-- 効果測定完了（時間削減率・品質・コスト評価）
-- Phase 2実施判断完了（Go/No-Go明確化）
-- ADR作成完了（技術決定の記録）
+- 技術調査レポート作成完了
+- Go/No-Go判断完了
+- Issue #51更新完了（Stage 3結果反映）
+- Stage 4以降の詳細計画確定（Go判断時）
+
+---
+
+### Stage 4: 定型Command実行検証（2-3時間）
+
+**前提条件**: Stage 3技術調査完了・Go判断
+
+**実施内容**:
+（Stage 3技術調査完了後に詳細計画確定）
+
+**暫定計画**:
+- weekly-retrospective実行（60-90分）
+- spec-compliance-check実行（30-60分）
+- PR自動作成検証（gh pr create）
+- バックグラウンド実行の実用性確認
+
+**成果物**:
+- 定型Command実行検証レポート（`Doc/08_Organization/Active/Phase_B-F2/Research/定型Command実行検証結果.md`）
+
+---
+
+### Stage 5: 効果測定・Phase2判断（2-3時間）
+
+**前提条件**: Stage 4完了
+
+**実施内容**:
+（Stage 3技術調査完了後に詳細計画確定）
+
+**暫定計画**:
+- 夜間タスク投入シミュレーション
+- 時間削減効果測定（目標50%以上）
+- コスト評価
+- 本格運用Go/No-Go判断
+
+**成果物**:
+- 効果測定結果レポート（`Doc/08_Organization/Active/Phase_B-F2/Research/効果測定結果.md`）
 
 ---
 
@@ -505,20 +606,23 @@
 ## ✅ Step完了条件チェックリスト
 
 - [x] Stage 1完了（Claude Code on the Web基本動作確認）
-- [ ] Stage 2完了（並列タスク実行検証）
-- [ ] Stage 3完了（Teleport機能検証）
-- [ ] Stage 4完了（効果測定・Phase 2判断）
+- [x] Stage 2完了（未実施のまま中止・方針転換）
+- [ ] Stage 3完了（GitHub Codespaces技術調査）
+- [ ] Stage 4完了（定型Command実行検証）
+- [ ] Stage 5完了（効果測定・Phase2判断）
 - [ ] 全成果物作成完了
 - [ ] ユーザー承認取得
 
 ⚠️ **上記すべてが完了するまでStep完了と記録しない**
 
 **現在の状況**（2025-11-10更新）:
-- Stage 1のみ完了（2025-11-08）
-- Stage 2-4は未実施（実施方法変更によりGitHub Codespacesで再試行予定）
-- **Step5は「完全完了」ではなく「実施中」状態**
+- Stage 1完了（2025-11-08）
+- Stage 2: 未実施のまま中止（Claude Code on the Web制約により実施不可）
+- **方針転換**: Claude Code on the Web → GitHub Codespaces（2025-11-10）
+- Stage 3以降: GitHub Codespacesで再構成・実施予定
+- **Step5は「実施中」状態**
 
-**次回作業**: Stage 2-4をGitHub Codespacesで再試行
+**次回作業**: Stage 3（GitHub Codespaces技術調査）を開始
 
 ---
 
