@@ -113,7 +113,10 @@
 **調査項目3: 開発環境動作確認 - 完了** ✅（2025-11-12・Codespaces環境）
 - ✅ dotnet build成功: **0 Warning / 0 Error**（8秒）🎉
 - ✅ Unit Tests全成功: 341/341（100%）🎉
-- ⚠️ E2Eテスト失敗: Playwrightブラウザ未インストール（既知の制約）
+- ⚠️ E2Eテスト失敗: Playwrightブラウザ未インストール（既知の制約・**次回解決予定**）
+  - **解決計画確立**（2025-11-12セッション2）: 調査項目5実施時に同時解決（所要時間10分）
+  - 解決方法: `pwsh bin/Debug/net8.0/playwright.ps1 install` 実行
+  - 記録完了: 実施手順・技術調査結果（2箇所更新）
 - ⚠️ UIテスト一部失敗: ProjectMembersTests 8/16（既存の技術負債）
 - ✅ 技術調査レポート更新（調査項目3結果記録）
 
@@ -134,7 +137,7 @@
 - ビルド・Unit Tests・Commands・SubAgent・Skillsすべて正常動作
 - spec-compliance-check Command所要時間: 12分（期待範囲内）
 
-**次回作業**: 調査項目5実施（バックグラウンド実行検証・Codespaces環境）
+**次回作業**: 調査項目5実施 + E2E問題解決 + Go/No-Go判断（Codespaces環境・40-50分）
 
 **Claude Code on the Web制約事項（5点）**:
 1. DevContainer環境起動不可（Sandbox環境のため）
