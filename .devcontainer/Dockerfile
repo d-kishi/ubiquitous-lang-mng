@@ -72,7 +72,7 @@ ENV PATH="${PATH}:/home/${USERNAME}/.dotnet/tools"
 
 # .NET Global Toolsインストール（開発ツール）
 # 注: USER $USERNAME の後に実行することで、非rootユーザーのホームディレクトリにインストール
-RUN dotnet tool install -g dotnet-ef \
+RUN dotnet tool install -g dotnet-ef --version 8.0.11 \
     && dotnet tool install -g dotnet-format
 
 # コンテナ起動時のデフォルトコマンド
