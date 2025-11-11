@@ -29,6 +29,12 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs
 
+# Python uv インストール（Serena MCP用）
+# 注: グローバルインストール（全ユーザーから利用可能）
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && mv /root/.local/bin/uv /usr/local/bin/uv \
+    && mv /root/.local/bin/uvx /usr/local/bin/uvx
+
 # グローバルnpmパッケージインストール
 RUN npm install -g \
     # Playwright（E2Eテスト）

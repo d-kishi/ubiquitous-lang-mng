@@ -314,3 +314,8 @@ backup_database_*.sql
 # OpenCover UI analysis results
 OpenCover/
 CoverageReport/
+
+# Serena MCP設定（ユーザー固有）
+.serena/serena_config.yml
+.serena/*.db
+.serena/logs/

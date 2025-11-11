@@ -59,7 +59,7 @@
   },
 
   // コンテナ起動後の初期化コマンド
-  "postCreateCommand": "bash .devcontainer/scripts/setup-https.sh && dotnet restore",
+  "postCreateCommand": "bash .devcontainer/scripts/setup-https.sh && bash .devcontainer/scripts/setup-mcp.sh && dotnet restore",
 
   // ポートフォワーディング設定
   "forwardPorts": [
