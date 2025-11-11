@@ -137,5 +137,10 @@
     "excludedCommands": [],
     "autoAllowBashIfSandboxed": true,
     "enabled": true
-  }
+  },
+  "enabledMcpjsonServers": [
+    "serena",
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
 }
