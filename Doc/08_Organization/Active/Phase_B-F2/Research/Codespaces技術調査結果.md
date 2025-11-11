@@ -132,40 +132,115 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 ---
 
-### 調査項目2: MCP Server接続確認（30分）
+### 調査項目2: MCP Server接続確認（完了）
+
+**実施日**: 2025-11-11
+**実施環境**: GitHub Codespaces + VS Code（デスクトップ版）
 
 **実施内容**:
-- `claude mcp list` 実行
-- Serena MCP認識確認
-- Playwright MCP認識確認
-- 簡単なMCP操作テスト（Serena: project_overview読み込み）
+- MCP自動セットアップスクリプト実装（`.mcp.json`, `setup-mcp.sh`）
+- dotnet-ef互換性問題解決（8.0.11固定）
+- Codespaces環境でのDevContainerビルド成功確認
+- Claude Code CLI起動・MCP Server接続確認
 
 **実施コマンド**:
 ```bash
-# MCP Server一覧確認
-claude mcp list
+# DevContainer内で実施
+cd /workspace
+claude
 
-# Serenaメモリー読み込みテスト
-# (Claude Code内で実施)
+# Claude Code CLI内で実施
+/mcp
 ```
 
+**実装成果物**:
+1. **`.mcp.json`**: MCP Server設定（プロジェクトルート）
+2. **`.devcontainer/scripts/setup-mcp.sh`**: MCP自動セットアップスクリプト
+3. **`.devcontainer/Dockerfile`**: Python uvインストール追加、dotnet-ef 8.0.11固定
+4. **`.devcontainer/devcontainer.json`**: postCreateCommand更新
+5. **`.serena/project.yml`**: read_only=true設定、ignored_paths追加
+6. **`.gitignore`**: Serenaユーザー固有ファイル除外
+7. **`Doc/08_Organization/Rules/MCP設定メンテナンスガイド.md`**: メンテナンスガイド作成
+
 **結果**:
-- [ ] Serena MCPが認識された
-- [ ] Playwright MCPが認識された
-- [ ] MCP経由でのファイル操作が成功した（例: project_overview読み込み）
+- [x] ✅ **Serena MCP認識成功**（VS Code デスクトップ版）
+- [x] ✅ **Playwright MCP認識成功**（VS Code デスクトップ版）
+- [x] ✅ **MCP Server動作確認成功**（/mcpコマンドで両方表示）
+- [x] ✅ **dotnet-ef互換性問題解決**（8.0.11固定）
 
 **MCP Server詳細**:
-- Serena MCP: ⭐⭐⭐⭐⭐ / ❌ 失敗
-  - 動作確認: [ ] 成功 / [ ] 失敗
-  - 詳細: （記録）
-- Playwright MCP: ⭐⭐⭐⭐⭐ / ❌ 失敗
-  - 動作確認: [ ] 成功 / [ ] 失敗
-  - 詳細: （記録）
+
+#### Serena MCP: ⭐⭐⭐⭐⭐ 成功
+- **動作確認**: ✅ 成功（VS Code デスクトップ版）
+- **起動方法**: `uvx --from git+https://github.com/oraios/serena serena-mcp-server`
+- **設定ファイル**: `.serena/project.yml`（read_only=true）
+- **初回起動時間**: 5-10分（Gitクローン・Python依存関係インストール）
+- **2回目以降**: 1-3分（キャッシュ効果）
+- **⚠️ 制約**: ブラウザ版VSCodeでの動作未検証（Serenaダッシュボード表示がネックの可能性）
+
+#### Playwright MCP: ⭐⭐⭐⭐⭐ 成功
+- **動作確認**: ✅ 成功（VS Code デスクトップ版）
+- **起動方法**: `npx -y @playwright/mcp@latest`
+- **初回起動時間**: 1-2分（パッケージダウンロード）
+- **2回目以降**: 数秒（キャッシュ効果）
+
+**dotnet-ef互換性問題と解決策**:
+
+**問題発生**:
+```
+Tool 'dotnet-ef' failed to update due to the following:
+The settings file in the tool's NuGet package is invalid: Settings file 'DotnetToolSettings.xml' was not found in the package.
+```
+
+**原因**: dotnet-ef 9.x系と.NET SDK 8.0.415の互換性問題
+
+**解決策**: Dockerfile 75行目を修正
+```dockerfile
+# 修正前
+RUN dotnet tool install -g dotnet-ef \
+
+# 修正後（バージョン固定）
+RUN dotnet tool install -g dotnet-ef --version 8.0.11 \
+```
+
+**検証結果**:
+- ✅ ローカルno-cacheビルド成功
+- ✅ Codespacesビルド成功
+- ✅ dotnet-ef 8.0.11正常インストール
+
+**Codespaces環境リソース制約**:
+- **CPU**: 2コア（オンプレ環境より低スペック）
+- **メモリ**: 8GB RAM（使用率72%で限界に近い）
+- **影響**: 初回MCP起動時間が5-10分と長い
+- **改善**: 2回目以降はキャッシュが効いて1-3分に短縮
 
 **制約事項・問題点**:
-（ここに記録）
 
-**評価**: ⭐⭐⭐⭐⭐ / ❌ 失敗
+1. **⚠️ ブラウザ版VSCodeでのSerena動作未検証**
+   - VS Code（デスクトップ版）では正常動作確認済み
+   - ブラウザ版VSCodeでは初回起動時にSerenaダッシュボード表示がネックの可能性
+   - ポップアップブロック等でブラウザ起動失敗 → 初期化が完了しない可能性
+   - **要追加検証**: 次回セッションでブラウザ版VSCodeでの動作確認必要
+
+2. **初回起動時間が長い**（5-10分）
+   - Codespaces 2コア/8GB RAMの制約
+   - Gitクローン・パッケージダウンロード・依存関係インストール
+   - メモリ使用率72%でスワップ発生の可能性
+   - 2回目以降は1-3分に改善
+
+3. **Line ending問題**（解決済み）
+   - Windows環境でCRLF作成 → Linuxで実行エラー
+   - 解決策: 手動でLF変換（VS Code右下ステータスバー）
+
+**評価**: ⭐⭐⭐⭐⭐ **成功（VS Code デスクトップ版で完全動作）**
+
+**成果物（Git commit）**:
+- e1e0c4b: MCP自動セットアップ実装・メンテナンスガイド作成
+- 1b96510: dotnet-ef 8.0.11固定（互換性問題解決）
+
+**次のアクション**:
+- [ ] ブラウザ版VSCodeでのSerena動作確認（任意・次回セッション）
+- [x] 調査項目3へ進む（開発環境動作確認）
 
 ---
 
