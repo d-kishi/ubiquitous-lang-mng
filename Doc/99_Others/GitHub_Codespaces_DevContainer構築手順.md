@@ -175,71 +175,40 @@ RUN npx playwright install --with-deps chromium
 
 ---
 
-## 環境変数設定
+## Claude認証設定
 
-### ANTHROPIC_API_KEY設定（必須）
+### 🔴 重要：API Key不要（Max Planサブスクリプション利用）
 
-Claude Code CLIの認証に必要な環境変数を設定します。
+**Claude Code CLIはMax Planサブスクリプションで認証します。API Key設定は不要です。**
 
-#### 方法1: GitHub Codespaces Secrets（推奨）
+#### 認証方法
 
-**手順**:
-
-1. **GitHubリポジトリにアクセス**
-   ```
-   https://github.com/[your-username]/ubiquitous-lang-mng
-   ```
-
-2. **Settings → Secrets and variables → Codespaces**
-   - 「Secrets」タブを選択
-   - 「New repository secret」をクリック
-
-3. **Secret追加**
-   - **Name**: `ANTHROPIC_API_KEY`
-   - **Value**: `sk-ant-xxxxx...` （ユーザーのAPIキー）
-   - 「Add secret」をクリック
-
-4. **Codespaces起動**
-   - 新規Codespaces作成 or 既存Codespaces再起動
-   - 環境変数が自動的に設定される
-
-**確認方法**:
-```bash
-# Codespaces内で実行
-echo $ANTHROPIC_API_KEY
-# 出力: sk-ant-xxxxx... (マスク表示される場合あり)
-```
-
-#### 方法2: .env.localファイル（ローカル開発用）
-
-**手順**:
-
-1. **ファイル作成** (`.gitignore`に登録済み)
-   ```bash
-   # プロジェクトルートで実行
-   echo "ANTHROPIC_API_KEY=sk-ant-xxxxx..." > .env.local
-   ```
-
-2. **devcontainer.jsonに設定追加** (オプション)
-   ```json
-   "remoteEnv": {
-     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
-   }
-   ```
-
-**注意**: ローカル開発専用・Codespacesでは使用不可
-
-#### 方法3: ~/.bashrc設定（非推奨）
+Claude Code CLI起動時に**ブラウザでログイン**します：
 
 ```bash
-# ホスト環境で実行
-echo 'export ANTHROPIC_API_KEY="sk-ant-xxxxx..."' >> ~/.bashrc
-source ~/.bashrc
+claude
+# → ブラウザが開く → Max Planアカウントでログイン → 認証完了
 ```
 
-**デメリット**:
-- リポジトリ固有の設定ではない
-- チームメンバーが各自設定する必要あり
+#### Max Planサブスクリプションのメリット
+
+| 項目 | Max Plan | API Key |
+|------|----------|---------|
+| **料金** | $100/月（固定） | 従量課金（使用量次第） |
+| **追加コスト** | なし | API使用料金が発生 |
+| **MCP Server使用** | 無料（プラン内） | 追加課金 |
+| **認証** | ブラウザログイン（1回） | API Key設定必要 |
+
+#### ⚠️ 誤ったAPI Key設定に注意
+
+**GitHub Secretsで`ANTHROPIC_API_KEY`を設定しないでください。**
+
+もし設定してしまった場合：
+1. Claude起動時に「Detected a custom API key」と表示される
+2. [Yes]を選択すると**API従量課金に切り替わる**
+3. Max Planではなく追加料金が発生
+
+**解決策**：GitHub SecretsからAPI Keyを削除（後述）
 
 ### タイムアウト設定（推奨）
 
@@ -336,40 +305,42 @@ claude --version
 ```
 → [トラブルシューティング](#トラブルシューティング) を参照
 
-### Step 2: 環境変数確認
-
-```bash
-echo $ANTHROPIC_API_KEY
-```
-
-**期待される出力**:
-```
-sk-ant-xxxxx...
-```
-
-または
-```
-(空白・何も表示されない)
-```
-→ [環境変数設定](#環境変数設定) を参照
-
-### Step 3: Claude Code CLI起動
+### Step 2: Claude Code CLI起動・認証
 
 ```bash
 claude
 ```
 
-**期待される動作**:
-- Claude Code CLIのインタラクティブセッションが起動
-- プロンプト表示: `Claude>`
+**初回起動時の動作**:
 
-**初回起動時のメッセージ例**:
+1. **ブラウザが自動的に開く**
+   - 認証ページが表示される
+   - Max Planアカウントでログイン
+
+2. **認証完了**
+   - ブラウザに「Authentication successful」と表示
+   - ターミナルに戻る
+
+3. **プロンプト表示**
+   ```
+   Welcome to Claude Code!
+   Claude>
+   ```
+
+**⚠️ API Key検出時の対応**:
+
+もし以下のメッセージが表示された場合：
 ```
-Welcome to Claude Code!
-Claude>
+Detected a custom API key in your environment
+ANTHROPIC_API_KEY: sk-ant-...
+Do you want to use this API key?
 ```
 
-### Step 4: 簡単なコマンド実行
+→ **[No]を選択** → ブラウザログインに進む
+
+**理由**: API Key使用すると従量課金に切り替わり、Max Planプラン内の無料使用ができなくなる
+
+### Step 3: 簡単なコマンド実行
 
 ```bash
 # Claude Code内で実行
@@ -380,7 +351,7 @@ Claude>
 - ヘルプメッセージ表示
 - 利用可能なコマンド一覧
 
-### Step 5: セッション終了
+### Step 4: セッション終了
 
 ```bash
 # Claude Code内で実行
@@ -400,7 +371,7 @@ Claude>
 | Docker実行環境 | ローカルDocker Desktop | GitHub managed |
 | ネットワーク | ローカルネットワーク | GitHub ネットワーク |
 | ストレージ | ローカルディスク | Codespaces永続ストレージ |
-| 環境変数 | `.env.local` | GitHub Secrets |
+| Claude認証 | ブラウザログイン | ブラウザログイン |
 
 ### Claude Code CLI動作
 
@@ -408,7 +379,7 @@ Claude>
 |------|---------------------|-------------------|
 | インストール方法 | Dockerfile（同一） | Dockerfile（同一） |
 | バージョン | 同一 | 同一 |
-| 認証方法 | `.env.local` | GitHub Secrets |
+| 認証方法 | ブラウザログイン（Max Plan） | ブラウザログイン（Max Plan） |
 | MCP Server接続 | ローカル | Codespaces内 |
 
 ### PostgreSQL接続
@@ -465,32 +436,40 @@ $ claude
 
 ---
 
-### 問題2: 環境変数`ANTHROPIC_API_KEY`が設定されていない
+### 問題2: GitHub SecretsでAPI Keyを設定してしまった
 
 **症状**:
 ```bash
-$ echo $ANTHROPIC_API_KEY
-(空白)
+$ claude
+Detected a custom API key in your environment
+ANTHROPIC_API_KEY: sk-ant-...
+Do you want to use this API key?
 ```
 
 **原因**:
-- GitHub Secretsが設定されていない
-- Codespaces起動前にSecrets設定が必要
+- GitHub Secretsで`ANTHROPIC_API_KEY`を設定した
+- Claude起動時にAPI Key認証に切り替わる
+- Max Planではなく従量課金になる
 
 **解決策**:
 
-1. **GitHub Secrets確認**
+1. **GitHub SecretsからAPI Key削除**
    - https://github.com/[username]/ubiquitous-lang-mng/settings/secrets/codespaces
-   - `ANTHROPIC_API_KEY` が存在するか確認
+   - `ANTHROPIC_API_KEY`を削除
 
-2. **Secrets設定後、Codespaces再起動**
+2. **Codespaces再起動**
    - 「Code」→「Codespaces」→「...」→「Stop codespace」
    - 「Start」で再起動
 
-3. **ローカル開発の場合は `.env.local` 作成**
+3. **再度Claude起動**
    ```bash
-   echo "ANTHROPIC_API_KEY=sk-ant-xxxxx..." > .env.local
+   claude
+   # → ブラウザログインに進む（API Key検出なし）
    ```
+
+4. **緊急の場合（API Key削除前）**
+   - Claude起動時に「Do you want to use this API key?」→ **[No]を選択**
+   - ブラウザログインに進む
 
 ---
 
@@ -528,40 +507,38 @@ ERROR: failed to solve: process "/bin/sh -c npm install -g @anthropic-ai/claude-
 
 ---
 
-### 問題4: `claude`コマンドは動作するが認証エラー
+### 問題4: ブラウザログインが開かない
 
 **症状**:
 ```bash
 $ claude
-Error: ANTHROPIC_API_KEY is not set
+# ブラウザが開かない、何も起こらない
 ```
 
 **原因**:
-- 環境変数は設定されているがClaude Code CLIが認識していない
-- APIキーの形式が不正
+- Codespaces環境でのブラウザ起動失敗
+- VS Code（ブラウザ版）でのポップアップブロック
 
 **解決策**:
 
-1. **APIキー形式確認**
-   ```bash
-   echo $ANTHROPIC_API_KEY | grep -E "^sk-ant-"
+1. **VS Code（デスクトップ版）を使用**（推奨）
+   ```
+   Command Palette (Ctrl+Shift+P)
+   → "Codespaces: Connect to Codespace"
+   → Codespace選択
    ```
 
-   期待される出力:
-   ```
-   sk-ant-xxxxx...
-   ```
+2. **ブラウザでポップアップ許可**
+   - Codespacesページでポップアップブロック解除
+   - 再度`claude`実行
 
-2. **Claude Code CLI設定確認**
-   ```bash
-   cat ~/.claude/config.json
-   ```
+3. **手動認証リンク確認**
+   - ターミナルに認証URLが表示されていないか確認
+   - 表示されていれば、そのURLをブラウザで開く
 
-3. **手動設定**（最終手段）
-   ```bash
-   export ANTHROPIC_API_KEY="sk-ant-xxxxx..."
-   claude
-   ```
+4. **MCP Serverの場合（Serena等）**
+   - VS Code（デスクトップ版）使用を強く推奨
+   - ブラウザ版では起動に時間がかかる場合あり（5-10分）
 
 ---
 
@@ -619,9 +596,9 @@ Error: ANTHROPIC_API_KEY is not set
 - Codespaces再作成対応
 - 再現可能な開発環境
 
-✅ **環境変数設定完了**
-- GitHub Secrets経由で安全に設定
-- ローカル開発でも動作
+✅ **Claude認証設定完了**
+- Max Planサブスクリプション利用（追加課金なし）
+- ブラウザログイン認証（API Key不要）
 
 ✅ **DevContainer完全統合**
 - 既存の開発環境に影響なし
@@ -636,5 +613,5 @@ Error: ANTHROPIC_API_KEY is not set
 ---
 
 **作成日**: 2025-11-11
-**最終更新**: 2025-11-11
+**最終更新**: 2025-11-12（Max Plan認証方式に修正）
 **関連Issue**: #51（Claude Code on the Web による開発プロセス自動化）

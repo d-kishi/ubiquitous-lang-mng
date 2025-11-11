@@ -74,7 +74,6 @@ claude --version
 - [x] **Dockerfile修正完了**: Claude Code CLIインストール処理を追加
 - [x] **構築手順ドキュメント作成**: `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md`（約450行）
 - [ ] **DevContainer再ビルド**: ユーザー操作が必要（次の手順で実施）
-- [ ] **環境変数設定**: GitHub Secrets設定が必要（ユーザー操作）
 - [ ] **動作確認**: DevContainer再ビルド後に実施
 
 **Dockerfile修正内容**:
@@ -88,23 +87,21 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
 **制約事項・問題点**:
 - ⚠️ **DevContainer再ビルド必要**: 初回のみ3-5分かかる
-- ⚠️ **GitHub Secrets設定必要**: `ANTHROPIC_API_KEY`環境変数をGitHub Secretsで設定
-- ⚠️ **ユーザー操作必須**: DevContainer再ビルド・環境変数設定はユーザーが実施
+- ⚠️ **ユーザー操作必須**: DevContainer再ビルド・認証はユーザーが実施
 
 **次のステップ（ユーザー操作）**:
-1. **GitHub Secrets設定**
-   - リポジトリ Settings → Secrets and variables → Codespaces
-   - `ANTHROPIC_API_KEY` を追加
-
-2. **Codespaces削除→再作成** または **既存Codespaces再ビルド**
+1. **Codespaces削除→再作成** または **既存Codespaces再ビルド**
    - 新規作成推奨: 「Code」→「Codespaces」→「Create codespace on feature/PhaseB-F2」
    - 再ビルド: `Ctrl+Shift+P` → "Codespaces: Rebuild Container"
 
-3. **動作確認**
+2. **動作確認**
    ```bash
+   # Claude Code CLIインストール確認
    claude --version
-   echo $ANTHROPIC_API_KEY
+
+   # Claude起動・ブラウザログイン認証
    claude
+   # → ブラウザでMax Planアカウントログイン
    ```
 
 **ローカルDevContainer検証結果**（2025-11-11追加）:
@@ -113,18 +110,19 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 - ✅ **Dockerfile修正の妥当性確認**: ローカル環境で問題なし
 
 **Codespaces環境検証結果**（2025-11-11完了）:
-- ✅ **GitHub Secrets設定完了**: `ANTHROPIC_API_KEY` 設定済み
 - ✅ **Codespaces再ビルド成功**: DevContainer自動構築完了（所要時間: 5-8分）
-- ✅ **Claude Code CLI動作確認成功**: `claude --version` 正常動作、環境変数確認完了
+- ✅ **Claude Code CLI動作確認成功**: `claude --version` 正常動作確認
+- ✅ **Max Plan認証確認**: ブラウザログイン認証成功（API Key不要）
 - ✅ **調査項目1完了**: Codespaces環境構築・Claude CLI統合完了
 
 **評価**: ⭐⭐⭐⭐⭐ **成功（完全完了）**
 
 **成果物**:
 - `.devcontainer/Dockerfile` 修正（3行追加）
-- `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md` 作成（450行）
+- `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md` 作成（600行）
 - `Doc/08_Organization/Active/Phase_B-F2/Research/Codespaces技術調査結果.md` 更新
-- Git commit: 46c5e62
+- Git commit: 46c5e62（初回実装）
+- Git commit: 未コミット（2025-11-12 Max Plan認証方式修正）
 
 **詳細ドキュメント**: `Doc/99_Others/GitHub_Codespaces_DevContainer構築手順.md`
 
@@ -216,19 +214,27 @@ RUN dotnet tool install -g dotnet-ef --version 8.0.11 \
 
 **制約事項・問題点**:
 
-1. **⚠️ ブラウザ版VSCodeでのSerena動作未検証**
+1. **🔴 Max Plan認証方式の確立**（2025-11-12解決）
+   - **問題**: 初回実装でGitHub SecretsにAPI Key設定を推奨してしまった
+   - **結果**: Claude起動時「Detected a custom API key」→ [Yes]選択 → 従量課金に切り替わった
+   - **影響**: Max Planプラン内の無料使用ができず、API残高不足エラー発生
+   - **解決**: GitHub SecretsからAPI Key削除 → ブラウザログイン認証（Max Plan利用）
+   - **教訓**: Max Planサブスクリプション契約者はAPI Key設定不要
+   - **ドキュメント修正**: 構築手順・技術調査レポートを2025-11-12に修正完了
+
+2. **⚠️ ブラウザ版VSCodeでのSerena動作未検証**
    - VS Code（デスクトップ版）では正常動作確認済み
    - ブラウザ版VSCodeでは初回起動時にSerenaダッシュボード表示がネックの可能性
    - ポップアップブロック等でブラウザ起動失敗 → 初期化が完了しない可能性
    - **要追加検証**: 次回セッションでブラウザ版VSCodeでの動作確認必要
 
-2. **初回起動時間が長い**（5-10分）
+3. **初回起動時間が長い**（5-10分）
    - Codespaces 2コア/8GB RAMの制約
    - Gitクローン・パッケージダウンロード・依存関係インストール
    - メモリ使用率72%でスワップ発生の可能性
    - 2回目以降は1-3分に改善
 
-3. **Line ending問題**（解決済み）
+4. **Line ending問題**（解決済み）
    - Windows環境でCRLF作成 → Linuxで実行エラー
    - 解決策: 手動でLF変換（VS Code右下ステータスバー）
 
@@ -237,8 +243,12 @@ RUN dotnet tool install -g dotnet-ef --version 8.0.11 \
 **成果物（Git commit）**:
 - e1e0c4b: MCP自動セットアップ実装・メンテナンスガイド作成
 - 1b96510: dotnet-ef 8.0.11固定（互換性問題解決）
+- c215289: 調査項目2完了記録・ブラウザ版VSCode制約追記
+- 未コミット: Max Plan認証方式修正（構築手順・技術調査レポート）
 
 **次のアクション**:
+- [ ] GitHub SecretsからAPI Key削除（ユーザー操作）
+- [ ] Codespaces再起動・Max Plan認証確認（ユーザー操作）
 - [ ] ブラウザ版VSCodeでのSerena動作確認（任意・次回セッション）
 - [x] 調査項目3へ進む（開発環境動作確認）
 
