@@ -59,7 +59,6 @@
       "Bash(timeout:*)",
       "Bash(awk:*)",
       "Bash(copy:*)",
-      "Read(//c/**)",
       "Bash($start = Get-Date)",
       "Bash(md5sum:*)",
       "Bash(mcp__serena__check_onboarding_performed:*)",
@@ -117,16 +116,15 @@
       "Bash(docker --version:*)",
       "Bash(docker logs:*)",
       "WebFetch(domain:www.marcusturewicz.com)",
-      "Bash(chmod +x \"C:\\Develop\\ubiquitous-lang-mng\\.devcontainer\\scripts\\setup-https.sh\")",
       "WebFetch(domain:code.claude.com)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(tasklist:*)",
+      "Bash(uvx:*)",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": [],
-    "defaultMode": "acceptEdits",
-    "additionalDirectories": [
-      "C:\\Develop"
-    ]
+    "defaultMode": "acceptEdits"
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
