@@ -107,7 +107,7 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ### 技術負債
 
-- **CS8600/CS8625等78 warnings**: DevContainer環境特有のnullable reference type警告（GitHub Issue #62記録済み）
+- **CS8600/CS8625等78 warnings**: ✅ **解決済み**（2025-11-04・`.gitattributes`作成により0件に解消・GitHub Issue #62クローズ済み）
 
 ---
 

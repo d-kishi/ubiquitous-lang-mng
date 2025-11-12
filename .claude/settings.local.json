@@ -118,7 +118,8 @@
       "Bash(docker logs:*)",
       "WebFetch(domain:www.marcusturewicz.com)",
       "Bash(chmod +x \"C:\\Develop\\ubiquitous-lang-mng\\.devcontainer\\scripts\\setup-https.sh\")",
-      "WebFetch(domain:code.claude.com)"
+      "WebFetch(domain:code.claude.com)",
+      "Bash(env)"
     ],
     "deny": [],
     "ask": [],
@@ -127,6 +128,11 @@
       "C:\\Develop"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "serena",
+    "playwright"
+  ],
   "sandbox": {
     "network": {
       "allowUnixSockets": [
@@ -137,10 +143,5 @@
     "excludedCommands": [],
     "autoAllowBashIfSandboxed": true,
     "enabled": true
-  },
-  "enabledMcpjsonServers": [
-    "serena",
-    "playwright"
-  ],
-  "enableAllProjectMcpServers": true
+  }
 }
