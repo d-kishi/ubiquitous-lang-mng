@@ -120,7 +120,9 @@
       "Bash(env)",
       "Bash(tasklist:*)",
       "Bash(uvx:*)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "mcp__serena__activate_project",
+      "mcp__serena__edit_memory"
     ],
     "deny": [],
     "ask": [],

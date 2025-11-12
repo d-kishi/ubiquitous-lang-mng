@@ -336,11 +336,16 @@ Time Elapsed 00:00:08.13
 
 **制約事項・問題点**:
 
-1. **⚠️ Playwright E2Eテスト失敗（既知の制約・次回解決予定）**
-   - 原因: Playwrightブラウザが未インストール
+1. **⚠️ Playwright E2Eテスト失敗（既知の制約・構造的問題）**
+   - **第一の原因**: Playwrightブラウザが未インストール（✅ 2025-11-13解決）
+     - エラー: "Executable doesn't exist at /home/vscode/.cache/ms-playwright/chromium_headless_shell-118"
+     - 対応: `pwsh -File tests/UbiquitousLanguageManager.E2E.Tests/bin/Debug/net8.0/playwright.ps1 install` 実行
+     - 結果: ✅ Chromium, Firefox, Webkit, FFMPEG ダウンロード成功
+   - **第二の原因**: アプリケーションサーバー起動必要（構造的制約）
+     - エラー: `net::ERR_CONNECTION_REFUSED at https://localhost:5001/`
+     - E2Eテストは実際のアプリケーションサーバーへの接続が必要
+     - Codespaces/ローカル環境ともに手動でアプリケーション起動が必要
    - 影響: E2Eテスト3件すべて失敗（0/3）
-   - 回避策: `pwsh bin/Debug/net8.0/playwright.ps1 install` 実行で解決可能
-   - **次回対応**: 調査項目5実施時に同時解決予定（所要時間10分）
    - 備考: これは既知の制約で、E2Eテストは今回の技術調査の必須要件ではない
 
 2. **⚠️ bUnit UIテスト一部失敗（新規発見）**
