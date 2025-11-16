@@ -213,7 +213,7 @@ public class DbInitializer
     /// <summary>
     /// ユーザー初期データ投入（5件）
     /// 全ユーザーの初期パスワード: "su"
-    /// E2Eテストユーザー: "E2eTest#2025!"
+    /// E2Eテストユーザー: "E2ETest#2025!Secure"
     /// </summary>
     private async Task SeedUsersAsync()
     {
@@ -223,7 +223,7 @@ public class DbInitializer
             new { Id = "pm-001", Email = "project.manager@ubiquitous-lang.com", Name = "プロジェクト管理者", Role = "project-manager", Password = "su", IsFirstLogin = true },
             new { Id = "da-001", Email = "domain.approver@ubiquitous-lang.com", Name = "ドメイン承認者", Role = "domain-approver", Password = "su", IsFirstLogin = true },
             new { Id = "gu-001", Email = "general.user@ubiquitous-lang.com", Name = "一般ユーザー", Role = "general-user", Password = "su", IsFirstLogin = true },
-            new { Id = E2eTestUserId, Email = E2eTestUserId, Name = "E2Eテストユーザー", Role = "super-user", Password = "E2eTest#2025!", IsFirstLogin = false }
+            new { Id = E2eTestUserId, Email = E2eTestUserId, Name = "E2Eテストユーザー", Role = "super-user", Password = "E2ETest#2025!Secure", IsFirstLogin = false }
         };
 
         foreach (var userData in users)
@@ -529,7 +529,7 @@ public class DbInitializer
         _logger.LogInformation("DomainApprovers設定: 後続Stepで実装予定");
         _logger.LogInformation("E2Eテストドラフト用語: 1件");
         _logger.LogInformation("デフォルトパスワード: su（機能仕様書2.0.1準拠）");
-        _logger.LogInformation("E2Eテストパスワード: E2eTest#2025!（IsFirstLogin=false）");
+        _logger.LogInformation("E2Eテストパスワード: E2ETest#2025!Secure（IsFirstLogin=false）");
         _logger.LogInformation("認証システム: ASP.NET Core Identity");
         _logger.LogInformation("用語統一: ADR_003準拠（UbiquitousLang表記）");
         _logger.LogInformation("初期パスワード管理: US-005準拠（InitialPassword保存）");

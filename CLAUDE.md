@@ -182,7 +182,13 @@ ADRとAgent Skillsの使い分けについては、以下のガイドライン�
 
 ## 開発コマンド（DevContainer環境）
 
-**🔴 重要**: 本プロジェクトはDevContainer環境で開発します。以下のコマンドは全てDevContainer内で実行してください。
+**🔴 CRITICAL**: 本プロジェクトはDevContainer環境で開発します。以下のコマンドは全てDevContainer内で実行してください。
+
+**Claude Code使用時の必須ルール**:
+- Claude CodeはWindowsホスト環境で実行されるため、`dotnet`コマンドを直接実行すると**ホスト環境で実行されてしまう**
+- **必ず方法Bの`docker exec`形式でDevContainer内実行を明示すること**
+- ホスト環境で実行すると、ビルド成果物が混在しDevContainer環境でのビルド/実行が失敗する
+- **違反時の対処**: ホスト環境のbin/objディレクトリをすべて削除し、DevContainer内で再ビルドが必要
 
 ### コマンド実行方法
 
@@ -226,7 +232,48 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test --filter
 # データベース
 docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
 docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
+
+# E2Eテスト
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh AuthenticationTests
 ```
+
+### E2Eテスト自動実行
+
+**一括実行スクリプト**（推奨）:
+
+`tests/run-e2e-tests.sh`は、E2Eテスト実行を自動化するスクリプトです：
+- Webアプリケーションをバックグラウンド起動
+- ポート5001の応答待機（最大60秒）
+- E2Eテスト実行（dotnet test）
+- プロセスクリーンアップ
+
+**実行時間**: 約30秒（手動実行3-5分 → 83-93%削減）
+
+#### 方法A: VS Code統合ターミナル（推奨）
+
+```bash
+# 全E2Eテスト実行
+bash tests/run-e2e-tests.sh
+
+# 特定テストクラスのみ実行
+bash tests/run-e2e-tests.sh AuthenticationTests
+bash tests/run-e2e-tests.sh UserProjectsTests
+```
+
+#### 方法B: ホスト環境から明示的実行（Claude Code用）
+
+```bash
+# 全E2Eテスト実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
+
+# 特定テストクラスのみ実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh AuthenticationTests
+```
+
+**終了コード**:
+- `0`: テスト成功
+- `1`: テスト失敗またはエラー
 
 ### Docker環境管理
 

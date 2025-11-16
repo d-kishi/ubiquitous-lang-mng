@@ -45,63 +45,58 @@
   - 対象期間: YYYY-MM-DD ～ YYYY-MM-DD
   - 週番号: YYYY-WXX形式（例: 2025-W33）
   - 内容: 主要成果・課題分析・学習事項・次期計画
-- [ ] **Serenaメモリー更新（直接ファイル編集方式）**: 4種類のメモリー更新
+- [ ] **Serenaメモリー更新（edit_memory方式）**: 4種類のメモリー更新
 - [ ] 重要決定事項のADR化検討（プロセス改善・技術方針等）
 
-### 8. Serenaメモリー更新（必須・直接ファイル編集方式）
+### 8. Serenaメモリー更新（必須・edit_memory方式）
 
-#### 🔴 重要：Context効率化のため直接ファイル編集を使用
-**理由**: Context消費87.5%削減・時間75%短縮達成（session-end実績）
+#### 🔴 重要：Context効率化のためedit_memoryを使用
+**理由**: Context消費65.3%削減・応答性28.6%改善達成（2025-11-16検証済み）
 **適用範囲**: weekly-retrospectiveコマンド実行時のみ（手動操作・他コマンドでは従来通り`write_memory`使用可能）
 **禁止事項**: weekly-retrospective時は`mcp__serena__read_memory` / `mcp__serena__write_memory`使用禁止
 
 #### 更新手順（全メモリー共通）
-1. **Grepツール**: 更新対象セクション・行を検索
-2. **Readツール**: 必要箇所のみ部分読み込み（limit指定推奨）
-3. **Editツール**: 該当箇所のみ差分更新（置換・追記・削除）
+1. **edit_memoryツール**: regex指定で該当箇所のみ差分更新（置換・追記・削除）
+2. **検証**: 必要に応じてtailコマンドで更新結果確認
 
 #### 各メモリー更新詳細
 
 - [ ] **project_overview更新（`.serena/memories/project_overview.md`）**:
   ```
   必須更新:
-  1. Grep "## 📅 週次振り返り実施状況" で該当セクション特定
-  2. Read該当セクション周辺（直近の週次振り返り記録部分）
-  3. Editツールで以下を更新:
-     - 最新週次振り返り記録追加（対象週・実施日・主要成果・重要決定）
-     - 次回セッション実施計画更新（次週重点事項反映）
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: project_overview.md
+     - regex: (## 📅 週次振り返り実施状況\n\n)[\s\S]*?(\n\n## 次回セッション推奨範囲)
+     - repl: $1[最新週次振り返り記録追加 + 次回計画更新]$2
   ```
 
 - [ ] **development_guidelines更新（`.serena/memories/development_guidelines.md`）**:
   ```
   変更がある場合のみ:
-  1. Grep該当セクション名（例: "## 🔧 プロセス改善"）で確認
-  2. 新規追加の場合:
-     - 週次振り返りで確立されたプロセス改善をEditで追記
-     - 改善内容・効果・適用範囲を記録
-  3. 既存更新の場合:
-     - Read該当セクション周辺
-     - Editツールで既存プロセス改善セクション更新
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: development_guidelines.md
+     - regex: (該当セクション名を含むregexパターン)
+     - repl: [週次振り返りで確立されたプロセス改善追記 or 既存セクション更新]
   変更がない場合: スキップ
   ```
 
 - [ ] **tech_stack_and_conventions更新（`.serena/memories/tech_stack_and_conventions.md`）**:
   ```
   変更がある場合のみ:
-  1. Grep該当セクション名（例: "## ベストプラクティス"）で特定
-  2. Read該当セクション周辺
-  3. Editツールで週次で確立された技術パターン・ベストプラクティスを追記
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: tech_stack_and_conventions.md
+     - regex: (該当セクション名を含むregexパターン)
+     - repl: [週次で確立された技術パターン・ベストプラクティス追記]
   変更がない場合: スキップ
   ```
 
 - [ ] **task_completion_checklist更新（`.serena/memories/task_completion_checklist.md`）**:
   ```
   必須更新:
-  1. Grep "## 🔄 次回セッション継続タスク" で該当セクション特定
-  2. Editツールで以下を更新:
-     - 最終更新日時更新（週次振り返り実施日）
-     - 週次完了事項のマーク（- [ ] → - [x]）
-     - 次週継続タスクセクション更新（次週重点事項反映）
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: task_completion_checklist.md
+     - regex: (## 🔄 次回セッション継続タスク\n\n)[\s\S]*?(\n\n## )
+     - repl: $1[最終更新日時更新 + 週次完了マーク + 次週継続タスク更新]$2
   ```
 
 - [ ] **メモリー更新品質確認**:
@@ -125,26 +120,24 @@
 
 - [ ] **Step 2: 対象期間のセッション記録読み込み**
   ```
-  Read .serena/memories/daily_sessions.md
-  対象: 振り返り対象期間の全日付セクション・全セッション記録
-  limit指定なし（完全読み込み）
+  tailコマンドで直近セッション記録確認（削除前の最終確認）
   ```
 
 - [ ] **Step 3: weekly_retrospectives.mdに統合**
   ```
-  1. Read .serena/memories/weekly_retrospectives.md（先頭100行）
-  2. Edit weekly_retrospectives.mdに最新振り返りセクション作成:
-     - 対象期間のdaily_sessions記録から主要情報を抽出・要約
-     - 週のハイライト・主要成果・技術的学習・プロセス改善をまとめる
-     - 詳細文書へのリンク追加（週次総括文書）
-  3. 既存の「最新振り返り」を「過去の振り返り」に移動
+  edit_memoryツールでregex実行:
+  - memory_file_name: weekly_retrospectives.md
+  - regex: (^# 週次振り返り実施記録\n\n)
+  - repl: $1## 📅 YYYY年第XX週（MM/DD-MM/DD）\n\n[対象期間の主要情報を抽出・要約]\n\n
   ```
 
 - [ ] **Step 4: daily_sessionsから対象期間を削除**
   ```
-  Edit .serena/memories/daily_sessions.md
-  削除対象: 振り返り対象期間の全日付セクション（## 📅 YYYY-MM-DD）
-  保持対象: 振り返り対象期間外の最新セッション記録のみ
+  edit_memoryツールでregex実行:
+  - memory_file_name: daily_sessions.md
+  - regex: (## 📅 YYYY-MM-DD.*?\n\n---\n\n){複数回マッチ}
+  - repl: （空文字列で削除）
+  注意: 最新1週間分のみ保持・対象期間全体を削除
   ```
 
 **削除対象期間**: 振り返り対象期間全体（通常1週間）
@@ -235,23 +228,16 @@
 - [ ] **Write/Editツール実行結果確認**: 以下の必須ファイル作成・更新が実際に実行されたか
   - [ ] `週次総括_YYYY-WXX.md` 作成済み（週次総括文書完成）
 
-- [ ] **Readツール実行確認**: 各メモリー更新に必要な箇所の部分読み込み実行
-  - [ ] project_overview該当セクション読み込み済み（週次振り返り実施状況部分）
-  - [ ] development_guidelines該当セクション読み込み済み（変更がある場合のみ）
-  - [ ] tech_stack_and_conventions該当セクション読み込み済み（変更がある場合のみ）
-  - [ ] task_completion_checklist該当セクション読み込み済み（次回継続タスク部分）
-
-- [ ] **Editツール実行確認**: 差分更新で4種類のメモリー更新
+- [ ] **edit_memoryツール実行確認**: regex指定で4種類のメモリー更新
   - [ ] project_overview差分更新実行済み（週次振り返り記録・次週計画）
   - [ ] development_guidelines差分追記実行済み（変更がある場合のみ・スキップ可）
   - [ ] tech_stack_and_conventions差分追記実行済み（変更がある場合のみ・スキップ可）
   - [ ] task_completion_checklist状態更新実行済み（週次完了マーク・次週継続タスク）
 
 - [ ] **daily_sessions統合・削除確認**: 振り返り対象期間のセッション記録をweekly_retrospectives.mdに統合後、daily_sessionsから削除実行済み
-  - [ ] Grep実行済み（対象期間日付セクション特定）
-  - [ ] Read実行済み（対象期間セッション記録全体読み込み・daily_sessions完全読み込み）
-  - [ ] weekly_retrospectives.md統合実行済み（Edit実行・最新振り返りセクション作成）
-  - [ ] daily_sessions削除実行済み（Edit実行・対象期間の全日付セクション削除）
+  - [ ] tailコマンド実行済み（対象期間セッション記録確認）
+  - [ ] weekly_retrospectives.md統合実行済み（edit_memory実行・最新振り返りセクション作成）
+  - [ ] daily_sessions削除実行済み（edit_memory実行・対象期間の全日付セクション削除）
 
 - [ ] **write_memory不使用確認**: weekly-retrospective時は`mcp__serena__write_memory`使用していないことを確認
 

@@ -375,3 +375,163 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 **作成**: 2025-09-22（技術的学習DB・ログ管理戦略統合版）
 **更新**: 2025-11-03（DevContainer構築・Sandboxモード統合・Node.jsバージョン管理哲学・Features競合解決・`claude -c`問題回避戦略追加）
 **統合元**: technical_learnings, logging_management_strategy_planning, session_insights系メモリー
+
+---
+
+## VSCode拡張機能のリグレッションバグ調査・対応（2025-11-15）
+
+### C# Dev Kit / Ionide F# の役割理解
+
+**C# Dev Kit (ms-dotnettools.csdevkit)**:
+- **対応言語**: C#のみ
+- **機能**: C#プロジェクトのIntelliSense、デバッグ、プロジェクト管理
+- **重要**: F#はネイティブサポートしない（Ionideが必要）
+
+**Ionide F# (ionide.ionide-fsharp)**:
+- **対応言語**: F#のみ
+- **機能**: F#プロジェクトのIntelliSense、REPL、プロジェクト管理
+- **独立性**: C# Dev Kitとは独立して動作
+
+**誤解の教訓**:
+- 両者の「競合」は誤った仮説だった
+- 各拡張機能の役割範囲を正確に理解することが重要
+
+### リグレッションバグの調査手法
+
+**タイムライン相関分析**:
+1. 拡張機能の更新日を確認（VSCode拡張機能ビュー）
+2. GitHub Issuesで同時期の報告を検索
+3. リリースノート・変更履歴を確認
+4. エラーメッセージの完全一致を検証
+
+**本件の調査フロー**:
+```
+C# Dev Kit v1.81.7リリース（2025-11-13）
+  ↓
+GitHub Issues #2492/#2500報告（2025-11-13）
+  ↓
+ユーザー環境で問題発生（2025-11-15報告）
+  ↓
+エラーメッセージの完全一致確認
+  ↓
+リグレッションバグ確定
+```
+
+### 一時的な回避策としてのバージョンダウングレード
+
+**目的**: アップストリーム修正までの業務継続
+
+**手順**:
+1. VSCode拡張機能ビューで対象拡張機能を選択
+2. 歯車アイコン → "Install Another Version..."
+3. 安定版（前バージョン）を選択してインストール
+4. 自動更新を**一時的に**無効化
+
+**重要な原則**:
+- ⚠️ **恒久的なバージョン固定は避ける**
+- アップストリーム修正を監視し、修正版リリース後は速やかに最新版に戻す
+- チーム全体に一時的措置であることを共有
+
+### DevContainerエラーログアクセス方法
+
+**Claude Code実行環境の理解**:
+- Claude CodeはWindowsホスト環境で実行
+- DevContainer内のファイルには直接アクセス不可
+- `docker exec`コマンドでコンテナ内実行が必要
+
+**Git Bash環境での注意点**:
+```bash
+# パス変換を無効化する環境変数が必要
+MSYS_NO_PATHCONV=1 docker exec <container_name> cat /path/to/file
+```
+
+**理由**: Git BashはWindowsパスをUnixパスに自動変換するため、`MSYS_NO_PATHCONV=1`で無効化
+
+### アップストリームissue監視の重要性
+
+**外部依存の問題対応原則**:
+1. 自力での根本修正は不可能（外部ライブラリ/拡張機能）
+2. 一時的回避策で業務継続
+3. アップストリームの修正を定期監視
+4. 修正版リリース後、速やかに適用
+
+**監視方法**:
+- GitHub Issuesをブックマーク
+- 週次チェックを習慣化
+- リリースノートの定期確認
+
+## Playwright Test Agent vs MCP Serverの違い理解（2025-11-15）
+
+### Phase B2記録との重大な不整合発見
+
+**記録されていた内容**: 「Playwright Agents統合完了」
+**実態**: Playwright MCP Serverのみ統合・Playwright Test Agentsは未導入
+
+**混同の原因**:
+- 「Playwright Agents」という表現の曖昧性
+- MCP Server統合時に「Agents」という言葉を不正確に使用
+- Test Agentsとの違いを明確に理解していなかった
+
+### Playwright MCP Server vs Test Agentsの違い
+
+**Playwright MCP Server**:
+- **種類**: MCP (Model Context Protocol) ツール
+- **機能**: 21個のツールを提供（browser_navigate, browser_click, etc.）
+- **役割**: Claude Codeがブラウザを操作するための「道具」
+- **本プロジェクトの状況**: ✅ **統合済み**（Phase B2で完了）
+- **成果**: 93.3%効率化達成（Skills + MCP Serverの組み合わせ）
+
+**Playwright Test Agents（Planner/Generator/Healer）**:
+- **種類**: 3つのAI駆動Claude Code SubAgents
+- **機能**:
+  - **Planner**: テストシナリオ計画策定
+  - **Generator**: Playwright Test コード自動生成
+  - **Healer**: テスト失敗時の自動修復
+- **要件**: Playwright Test（TypeScript/JavaScript）環境必須
+- **本プロジェクトの状況**: ❌ **未導入**（C# Microsoft.Playwrightのみ使用）
+- **導入の可否**: package.json不在・playwright.config.ts不在・JavaScript/TypeScript環境なし
+
+### 93.3%効率化の正しい理解
+
+**従来の誤認**: Playwright Test Agents統合による効率化
+**実態**: 以下の組み合わせによる効率化
+
+1. **Playwright MCP Server**（21ツール）
+   - browser操作の自動化
+   - スナップショット取得・要素選択支援
+   
+2. **playwright-e2e-patterns Skill**（Phase B2作成）
+   - E2Eテスト実装パターンの標準化
+   - data-testid設計パターン
+   - Blazor Server SignalR対応パターン
+
+3. **e2e-test Agent**（既存SubAgent）
+   - E2Eテスト設計・実装の専門知識
+
+### 技術調査による新たな発見
+
+**Playwright Test Agents導入の評価結果**:
+- **選択肢A（導入する）**: 環境構築コスト大・本プロジェクトとのミスマッチ
+- **選択肢B（導入しない）**: 現状維持・Phase B3以降検討
+- **選択肢C（既存基盤活用）**: 推奨・実証済み93.3%効率化継続
+
+**推奨方針**: 選択肢C
+- 理由: 既存基盤（MCP Server + Skills + e2e-test Agent）で十分な効果
+- 実証: Phase B2で93.3%効率化達成済み
+- リスク: 新規導入によるリスク回避
+
+### ドキュメント記録の正確性の重要性
+
+**教訓**:
+1. **用語の正確性**: 「Playwright Agents」ではなく「Playwright MCP Server」
+2. **成果の帰属**: 何によって効率化が達成されたかの明確な記録
+3. **検証の重要性**: 記録内容と実装の照合確認
+
+**再発防止**:
+- Phase完了時の成果物リスト作成（具体的なファイル名・ツール名）
+- 「統合」「導入」の定義明確化
+- 実装確認の徹底（記録だけでなく実体の確認）
+
+---
+
+**最終更新**: 2025-11-15（VSCode拡張機能リグレッションバグ調査・対応、Playwright Test Agent vs MCP Server理解追加）

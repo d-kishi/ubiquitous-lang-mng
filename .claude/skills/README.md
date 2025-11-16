@@ -2,14 +2,15 @@
 
 ## 概要
 
-このディレクトリには、Claude Codeが自律的に使用するAgent Skillsが含まれています。Phase 1（2025-10-21）でF#↔C#相互運用とClean Architecture準拠性、Phase 2（2025-11-01）でTDD実践・仕様準拠・ADR知見・SubAgent組み合わせ・テストアーキテクチャの計7個のSkillsを導入しました。
+このディレクトリには、Claude Codeが自律的に使用するAgent Skillsが含まれています。Phase 1（2025-10-21）でF#↔C#相互運用とClean Architecture準拠性、Phase 2（2025-11-01）でTDD実践・仕様準拠・ADR知見・SubAgent組み合わせ・テストアーキテクチャ、Phase B-F2（2025-11-15）でGitHub Issues運用の計8個のSkillsを導入しました。
 
 ## 導入日
 
 - **Phase 1導入日**: 2025-10-21
 - **Phase 2導入日**: 2025-11-01
+- **Phase B-F2追加**: 2025-11-15
 
-## Skill一覧（全7個）
+## Skill一覧（全8個）
 
 ### Phase 1 Skills（2個）
 
@@ -188,6 +189,33 @@
 
 ---
 
+### Phase B-F2 Skills（1個）
+
+### 8. github-issues-management
+
+**目的**: GitHub Issue作成時のラベル判断・運用規則の自律的適用
+
+**使用タイミング**:
+- GitHub Issue作成時（最優先）
+- 技術的負債記録時
+- 課題管理時
+- Step/Phase完了時の技術的負債整理
+
+**提供パターン**:
+1. ラベル選択ガイド（種別・優先度・影響範囲の3段階判断）
+2. Issueテンプレート活用パターン（種別ごとのカスタマイズ）
+3. Issue作成判断基準（4基準による判断フロー）
+4. ラベル体系一覧（クイックリファレンス）
+
+**Phase B-F2 Step6成果**:
+- ラベル判断ミス: 1件→0件（本Skill作成により）
+- 運用規則準拠: 自律的適用実現
+- Issue品質向上: テンプレート・ラベル体系の標準化
+
+**詳細**: [github-issues-management/SKILL.md](./github-issues-management/SKILL.md)
+
+---
+
 ## ADR・Rulesからの移行
 
 ### Phase 1移行（2025-10-21）
@@ -206,6 +234,12 @@
 | ADR_010/016/019/020（抜粋） | adr-knowledge-base | - |
 | SubAgent組み合わせパターン.md | subagent-patterns | `Doc/08_Organization/Rules/backup/` |
 | 新規テストプロジェクト作成ガイドライン（参照） | test-architecture | - |
+
+### Phase B-F2追加（2025-11-15）
+
+| ADR/Rules | 移行先Skill | バックアップ場所 |
+|-----------|-------------|-----------------|
+| GitHub_Issues運用規則.md（参照） | github-issues-management | - |
 
 **移行理由**: 効果測定の正確性確保（Skillsからのみ知見を参照させる）
 
@@ -369,12 +403,19 @@ Phase 1の効果は以下のドキュメントで測定されます：
 │   └── rules/
 │       └── agent-responsibility-boundary.md
 │
-└── test-architecture/                           # Phase 2
+├── test-architecture/                           # Phase 2
+│   ├── SKILL.md
+│   └── rules/
+│       ├── new-test-project-checklist.md
+│       ├── test-project-naming-convention.md
+│       └── test-project-reference-rules.md
+│
+└── github-issues-management/                    # Phase B-F2
     ├── SKILL.md
-    └── rules/
-        ├── new-test-project-checklist.md
-        ├── test-project-naming-convention.md
-        └── test-project-reference-rules.md
+    ├── label-selection-guide.md
+    ├── issue-template-patterns.md
+    ├── creation-criteria.md
+    └── label-reference.md
 ```
 
 ---
@@ -395,7 +436,8 @@ Phase 1の効果は以下のドキュメントで測定されます：
 | 2025-10-21 | Phase 1 | 初版作成・fsharp-csharp-bridge + clean-architecture-guardian | Claude Code |
 | 2025-10-26 | Phase B2 | Agent Skills作成判断基準セクション追加・ADR vs Skills使い分けガイド統合 | Claude Code |
 | 2025-11-01 | Phase 2 | Phase 2完了・5つのSkills追加（tdd/spec-compliance/adr-knowledge/subagent/test-architecture）・計7個のSkills体系完成 | Claude Code |
+| 2025-11-15 | Phase B-F2 | github-issues-management追加・GitHub Issues運用規則の自律的適用実現・計8個のSkills体系完成 | Claude Code |
 
 ---
 
-**最終更新**: 2025-11-01（Phase 2完了・5 Skills追加・計7個）
+**最終更新**: 2025-11-15（Phase B-F2・github-issues-management追加・計8個）

@@ -37,7 +37,17 @@ services:
     #       cpus: '2.0'
     #       memory: 4G
 
+  # PostgreSQL設定（DevContainer専用のcontainer_name）
+  postgres:
+    container_name: devcontainer-postgres
+
+  pgadmin:
+    container_name: devcontainer-pgadmin
+
+  smtp4dev:
+    container_name: devcontainer-smtp4dev
+
 networks:
   ubiquitous-lang-network:
-    # 既存docker-compose.ymlのネットワーク定義を使用
-    # driver: bridge（プロジェクトルートのdocker-compose.ymlで定義済み）
+    external: true
+    name: ubiquitous-lang-mng_ubiquitous-lang-network

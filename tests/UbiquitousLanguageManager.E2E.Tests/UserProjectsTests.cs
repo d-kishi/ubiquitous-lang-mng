@@ -15,7 +15,7 @@ public class UserProjectsTests : IAsyncLifetime
 
     // テスト専用アカウント（Phase B2 Step6 Stage 0で定義）
     private const string TestEmail = "e2e-test@ubiquitous-lang.local";
-    private const string TestPassword = "E2ETest#2025!Secure";
+    private const string TestPassword = "E2ETest#2025!Secure"; // DbInitializer.cs:226 の登録値と一致
 
     public async Task InitializeAsync()
     {
