@@ -13,8 +13,10 @@ echo "========================================="
 # 作業ディレクトリ移動
 cd /workspace
 
-# テストフィルタ（引数で指定可能、デフォルトは全E2Eテスト）
-TEST_FILTER="${1:-E2E}"
+# テストフィルタ（引数で指定可能、デフォルトは全テスト実行）
+# 使用例: bash tests/run-e2e-tests.sh authentication.spec.ts
+# 使用例: bash tests/run-e2e-tests.sh user-projects.spec.ts
+TEST_FILTER="${1:-}"
 
 echo ""
 echo "Step 1: Starting Web Application..."
@@ -34,7 +36,7 @@ echo "========================================="
 TIMEOUT=60
 ELAPSED=0
 
-while ! netstat -tln 2>/dev/null | grep -q ":5001"; do
+while ! curl -k -s https://localhost:5001 > /dev/null 2>&1; do
     if [ $ELAPSED -ge $TIMEOUT ]; then
         echo "ERROR: Timeout waiting for port 5001"
         echo "Web Application logs:"
@@ -58,11 +60,19 @@ echo ""
 echo "Step 3: Running E2E Tests..."
 echo "========================================="
 
-# E2Eテスト実行
+# E2Eテスト実行（TypeScript/Playwright）
 TEST_EXIT_CODE=0
-dotnet test tests/UbiquitousLanguageManager.E2E.Tests \
-    --filter "FullyQualifiedName~$TEST_FILTER" \
-    --logger "console;verbosity=detailed" || TEST_EXIT_CODE=$?
+cd tests/UbiquitousLanguageManager.E2E.Tests
+
+if [ -z "$TEST_FILTER" ]; then
+    # 全テスト実行
+    npx playwright test || TEST_EXIT_CODE=$?
+else
+    # 特定テストファイル実行
+    npx playwright test "$TEST_FILTER" || TEST_EXIT_CODE=$?
+fi
+
+cd /workspace
 
 echo ""
 echo "Step 4: Stopping Web Application..."

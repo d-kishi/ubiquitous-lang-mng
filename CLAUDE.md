@@ -87,7 +87,7 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 **Phase 1導入完了**（2025-10-21）:
 - **fsharp-csharp-bridge**: F#↔C#型変換パターンの自律的適用
 - **clean-architecture-guardian**: Clean Architecture準拠性の自動チェック
-- **playwright-e2e-patterns**: Playwright MCP活用によるE2Eテスト作成パターン
+- **playwright-e2e-patterns**: TypeScript/Playwright Test + Generator/Healer Agents活用によるE2Eテスト作成パターン（Phase B2-F2でTypeScript移行完了）
 
 ### Skills作成判断基準
 
@@ -233,22 +233,24 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test --filter
 docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
 docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
 
-# E2Eテスト
+# E2Eテスト（TypeScript/Playwright Test）
 docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
-docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh AuthenticationTests
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh authentication.spec.ts
 ```
 
-### E2Eテスト自動実行
+### E2Eテスト自動実行（TypeScript/Playwright Test）
 
 **一括実行スクリプト**（推奨）:
 
 `tests/run-e2e-tests.sh`は、E2Eテスト実行を自動化するスクリプトです：
 - Webアプリケーションをバックグラウンド起動
 - ポート5001の応答待機（最大60秒）
-- E2Eテスト実行（dotnet test）
+- E2Eテスト実行（npx playwright test）
 - プロセスクリーンアップ
 
 **実行時間**: 約30秒（手動実行3-5分 → 83-93%削減）
+
+**Phase B2-F2移行完了**: C# E2Eテスト削除・TypeScript/Playwright Test移行完了
 
 #### 方法A: VS Code統合ターミナル（推奨）
 
@@ -256,9 +258,9 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-t
 # 全E2Eテスト実行
 bash tests/run-e2e-tests.sh
 
-# 特定テストクラスのみ実行
-bash tests/run-e2e-tests.sh AuthenticationTests
-bash tests/run-e2e-tests.sh UserProjectsTests
+# 特定テストファイルのみ実行
+bash tests/run-e2e-tests.sh authentication.spec.ts
+bash tests/run-e2e-tests.sh user-projects.spec.ts
 ```
 
 #### 方法B: ホスト環境から明示的実行（Claude Code用）
@@ -267,8 +269,8 @@ bash tests/run-e2e-tests.sh UserProjectsTests
 # 全E2Eテスト実行
 docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
 
-# 特定テストクラスのみ実行
-docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh AuthenticationTests
+# 特定テストファイルのみ実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh authentication.spec.ts
 ```
 
 **終了コード**:

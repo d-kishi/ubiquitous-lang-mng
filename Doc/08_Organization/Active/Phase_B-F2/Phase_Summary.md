@@ -351,21 +351,25 @@
 
 ---
 
-### Step 7: UserProjects E2Eテスト再設計（2-3時間）
+### Step 7: UserProjects E2Eテスト再設計（1.5-2.5時間）⚠️ **TypeScript移行により時間短縮**
 **対応Issue**: #59
 
-**前提条件**: Issue #57, #53, #46解決済み（Step 3完了）
+**⚠️ 前提条件変更**:
+- Issue #57, #53, #46解決済み（Step 3完了）
+- **Step06_2 E2EテストTypeScript移行完了**（2025-11-17）
+  - ✅ user-projects.spec.ts 作成済み（136行・3シナリオ）
+  - ✅ TestPassword統一完了（`E2ETest#2025!Secure`）
+  - ⚠️ User Projects機能未実装のためテスト失敗中（予想通り）
 
 **実施内容**:
 - 画面遷移フロー事前確認（手動確認）
-- E2Eテストシナリオ再設計
-- TestPassword統一
+- E2Eテストシナリオ検証（既存user-projects.spec.tsベース）
 - ProjectEdit.razor問題解決
-- UserProjectsTests.cs再実装（3シナリオ）
+- user-projects.spec.ts 改善（手動確認結果反映）
 
 **成果物**:
 - 画面遷移フロー確認レポート
-- UserProjectsTests.cs再実装完了
+- user-projects.spec.ts 改善完了
 - 3シナリオ全成功
 - ProjectEdit.razor統一方針決定
 
@@ -373,6 +377,8 @@
 - 3シナリオ全成功
 - 0 Warning / 0 Error維持
 - Phase B2 Step8の技術負債解消
+
+**推定時間削減**: 2-3時間 → 1.5-2.5時間（0.5-1時間削減・TypeScript移行効果）
 
 ---
 

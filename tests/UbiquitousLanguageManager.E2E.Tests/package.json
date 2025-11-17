@@ -5,7 +5,10 @@
   "scripts": {
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
-    "test:debug": "npx playwright test --debug"
+    "test:debug": "npx playwright test --debug",
+    "test:e2e:auth": "npx playwright test authentication.spec.ts",
+    "test:e2e:projects": "npx playwright test user-projects.spec.ts",
+    "test:e2e:seed": "npx playwright test seed.spec.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
