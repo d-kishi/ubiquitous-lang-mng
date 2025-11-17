@@ -107,6 +107,9 @@ echo "🎯 作業特性・段階を判断します..."
 **Phase3（統合検証・品質確認）**:
 - [ ] **integration-test**（統合テスト）: データベース統合テスト・パフォーマンステスト
 - [ ] **e2e-test**（E2Eテスト）: Playwright E2Eテスト・UIインタラクション確認・エンドツーエンドシナリオ検証
+  - **注意**: Playwright Test Agents（Generator/Healer）統合時はMainAgentオーケストレーション型を採用
+  - **パターンA**: MainAgent → playwright-test-generator → e2e-test → playwright-test-healer（該当時）
+  - **パターンB**: MainAgent → e2e-test（既存テストメンテナンス・小規模修正）
 - [ ] **spec-compliance**（仕様準拠監査）: 仕様準拠維持確認・品質基準達成確認
 
 #### Pattern E: 拡張段階（Phase D7-D8等）

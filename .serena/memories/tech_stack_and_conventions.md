@@ -409,7 +409,78 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
 - ✅ **ADR肥大化防止**: 判断根拠のみ記載・詳細はSkills
 - ✅ **Skills自律適用**: Claudeが詳細パターンを自動適用
 
+## Playwright Test Agents統合パターン（2025-11-17追加）
+
+**目的**: SubAgent間呼び出し制限を遵守したPlaywright Test Agents統合運用
+
+**技術制約**: Claude Code公式仕様
+- **SubAgent制限**: "subagents cannot spawn other subagents"
+- **理由**: 無限ネスティング防止
+- **参照**: https://code.claude.com/docs/en/sub-agents
+
+### パターンA: MainAgentオーケストレーション型（推奨）
+
+**適用条件**:
+- 新規E2Eテストスイート作成
+- 複雑なシナリオ（5シナリオ以上）
+- 大幅なテスト変更が必要
+
+**フロー**:
+```
+MainAgent
+  ├─ Task(playwright-test-planner) → テスト計画生成（該当時）
+  ├─ Task(playwright-test-generator) → TypeScriptテスト生成（該当時）
+  ├─ Task(e2e-test) → テスト実行・統合検証
+  └─ Task(playwright-test-healer) → 失敗時の修復（該当時）
+```
+
+**効率化効果**: 60-70%（Generator/Healer活用時）
+
+**責務分担**:
+- **MainAgent**: オーケストレーション・Agent間調整・統合判断
+- **playwright-test-generator**: TypeScriptテストコード生成
+- **e2e-test**: テスト実行・検証・品質確認
+- **playwright-test-healer**: 失敗テストの修復
+
+### パターンB: e2e-testスタンドアロン型
+
+**適用条件**:
+- 既存E2Eテストのメンテナンス
+- 小規模修正（1-2箇所）
+- テスト実行・検証のみ
+
+**フロー**:
+```
+MainAgent → Task(e2e-test) → テスト実装/実行/検証
+```
+
+**効率化効果**: 基本（Playwright MCP 21ツール直接使用）
+
+### 関連定義ファイル
+
+1. **e2e-test.md**: e2e-test SubAgent定義（責務・統合パターン記載）
+2. **subagent-selection.md**: Pattern D（品質保証段階）に統合パターン記載
+3. **subagent-patterns SKILL.md**: e2e-test責務境界・統合パターン詳細
+4. **ADR_024**: SubAgent制限・統合パターン技術決定記録
+5. **組織管理運用マニュアル.md**: 統合運用ガイド
+
+### 実装時の注意点
+
+1. **e2e-test SubAgentから直接呼び出し不可**:
+   - ❌ e2e-test内で`Task(playwright-test-generator)`実行
+   - ✅ MainAgentが調整・e2e-testは実行担当
+
+2. **MainAgent責務**:
+   - Agent選択・実行順序決定
+   - 成果物引継ぎ・統合判断
+   - 品質確認・承認取得
+
+3. **パターン選択基準**:
+   - 新規/大規模 → パターンA
+   - メンテナンス/小規模 → パターンB
+
 ---
 
-**最終更新**: 2025-11-04（**Week 44週次振り返り完了・MCP仕様/ADR vs Skills判断基準追加**）
+**最終更新**: 2025-11-17（Playwright Test Agents統合パターン追加）
+**前回更新**: 2025-11-04（**Week 44週次振り返り完了・MCP仕様/ADR vs Skills判断基準追加**）
 **重要変更**: MCP仕様・メンテナンスパターン追加（JSON-RPC活用・半自動メンテナンス・ADR_024参照）、ADR vs Skills判断基準実証追加（Phase B-F2実証事例）

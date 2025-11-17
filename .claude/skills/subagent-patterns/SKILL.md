@@ -63,7 +63,10 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 1. **unit-test**: TDD実践・単体テスト設計実装・Red-Green-Refactorサイクル
 2. **integration-test**: WebApplicationFactory統合テスト・データベース統合テスト（`Infrastructure.Integration.Tests`専任）
-3. **e2e-test**: Playwright E2Eテスト実装・UIインタラクション・エンドツーエンドシナリオテスト（`E2E.Tests`専任・playwright-e2e-patterns Skill活用・Playwright MCP 25ツール）
+3. **e2e-test**: Playwright E2Eテスト実装・UIインタラクション・エンドツーエンドシナリオテスト（`E2E.Tests`専任・playwright-e2e-patterns Skill活用・Playwright MCP 21ツール）
+   - **Playwright Test Agents統合**: MainAgentオーケストレーション型（パターンA/B）
+   - **パターンA**: MainAgent → playwright-test-generator → e2e-test → playwright-test-healer（該当時）
+   - **パターンB**: MainAgent → e2e-test（既存テストメンテナンス）
 4. **code-review**: コード品質・保守性・Clean Architecture準拠・パフォーマンス・セキュリティレビュー
 5. **spec-compliance**: 仕様準拠監査・受け入れ基準確認・仕様準拠マトリックス検証
 
@@ -144,14 +147,16 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 #### e2e-test
 **✅ 実行範囲**:
 - `tests/E2E.Tests/` 専任
-- Playwright E2Eテスト実装
+- Playwright E2Eテスト実装・実行・検証
 - UIインタラクション・エンドツーエンドシナリオテスト
 - playwright-e2e-patterns Skill活用（data-testid/MCP/SignalR）
-- Playwright MCP 25ツール使用
+- Playwright MCP 21ツール直接使用
+- **重要**: Playwright Test Agents統合はMainAgentが調整（本Agentは実行・検証担当）
 
 **❌ 禁止範囲**:
 - `src/` 配下の実装コード修正（テスト対象の修正禁止）
 - `tests/Infrastructure.Integration.Tests/` 配下の実装（integration-test Agentの責務）
+- Playwright Test Agentsの直接呼び出し（SubAgent間呼び出し不可・MainAgent責務）
 
 #### code-review
 **✅ 実行範囲**:
