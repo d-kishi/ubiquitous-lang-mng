@@ -85,6 +85,85 @@ claude mcp add playwright npx '@playwright/mcp@latest'
 - Playwright MCPツール活用パターン
 - Blazor Server SignalR対応パターン
 
+### Playwright Test Agents活用指針詳細
+
+**確立日**: 2025-11-16（Phase B-F2 Step6で検証）
+**最終更新**: 2025-11-17
+
+**背景**: Phase B-F2 Step6でPlaywright Test Agents（Planner/Generator/Healer）の効果測定完了
+
+#### Playwright Test Agents配置原則（🔴重要）
+
+**必須配置場所**: プロジェクトルート`.claude/agents/`
+
+**配置ルール**:
+- ✅ **正しい配置**: プロジェクトルート`.claude/agents/playwright-test-*.md`
+- ❌ **誤った配置**: サブディレクトリ（例: `tests/.../E2E.Tests/.claude/agents/`）
+
+**技術的根拠**:
+- Claude Code検索パスはプロジェクトルート`.claude/agents/`のみ認識
+- サブディレクトリ配置は非標準（GitHub Issue #4773）
+- Playwright v1.56仕様変更: `.github/chatmodes/` → `.claude/agents/`
+
+**導入方法**:
+```bash
+# プロジェクトルートで実行
+npx playwright init-agents --loop=claude
+
+# または生成後にプロジェクトルート .claude/agents/ へ移動
+mv tests/[ProjectName]/.claude/agents/*.md .claude/agents/
+```
+
+**導入状況**（2025-11-18更新）:
+- ✅ `/agents`コマンド確認完了: 3つのAgents正常認識
+- ✅ .mcp.json統合完了: プロジェクトルート`.mcp.json`に`playwright-test`設定追加
+
+#### Generator Agent実績（TypeScript専用）
+
+**効果**: ⭐⭐⭐⭐⭐ 極めて高い（1-2時間削減・60-70%時間削減）
+
+**品質**: TypeScript → C#変換の精度が高く、ほぼそのまま使用可能
+
+**Phase B-F2 Step6実績**: AuthenticationTests.cs（6シナリオ）を短時間で生成
+
+**推奨**: 今後のE2Eテスト実装で積極活用推奨
+
+**技術的制約**:
+- TypeScript専用（本プロジェクトではC# Playwright使用のため直接利用不可）
+- 生成後のC#変換作業が必要
+
+#### Healer Agent実績
+
+**効果**: ⭐ 限定的（複雑な状態管理問題は検出・修復不可）
+
+**Phase B-F2 Step6実績**: 0%成功率（4件のエラーすべて手動修正が必要）
+
+**有効範囲**: セレクタ問題等の単純なエラー
+
+**限界**: パスワード変更等による認証情報不整合は検出不可
+
+**推奨**: 単純な問題には有効だが、複雑な問題には慎重な判断が必要
+
+#### E2Eテストデータ整合性管理の重要性
+
+**原則**: テスト実行後の状態を必ず元に戻す
+
+**注意点**: リダイレクト等の画面遷移を考慮したリセット処理設計が必須
+
+**具体例**: パスワード変更テスト後、`/`リダイレクトされる場合は再度`/change-password`へ遷移してリセット実行
+
+#### 人間-AI協調の重要性
+
+**発見**: 複雑な問題の根本原因特定には人間の洞察が不可欠
+
+**実例**: Phase B-F2 Step6でユーザー手動テストがパスワード不整合問題を発見
+
+**推奨**: AIツールと人間の手動検証を組み合わせた品質保証
+
+**詳細効果測定**: `Doc/08_Organization/Active/Phase_B-F2/Step06_Phase_A機能E2Eテスト実装.md`
+
+---
+
 ### Playwright Test Agents（段階的評価中）
 
 **定義ファイル**:
@@ -216,6 +295,99 @@ claude mcp add playwright npx '@playwright/mcp@latest'
 ---
 
 ## 🛠️ 運用ガイドライン
+
+### E2Eテスト実装タイミング原則
+
+**確立日**: 2025-10-17（Phase B2 Step2で発見）
+
+#### 原則: E2Eテストは機能完成後に実装
+
+**背景**: Phase B2 Step2でE2Eテスト先行実装により以下の問題発生
+- Playwright実装に2時間要したが機能未完成のため実行不可
+- 仕様変更時のテストメンテナンス工数発生
+- 作業効率30-40%低下
+
+#### 推奨フロー
+
+```
+1. 機能実装完了（Unit/Integration Test完了）
+   ↓
+2. 手動E2E確認（Playwright MCP使用・5-10分）
+   ↓
+3. E2E自動テスト実装（安定した仕様に対して）
+```
+
+#### 例外: E2Eテスト先行実装が許容されるケース
+
+- ユーザー明示的指示
+- 仕様確定済み・変更リスク極小
+- E2E駆動開発（BDD/ATDD）採用時
+
+---
+
+### E2Eテスト作成前の前提条件確認プロセス
+
+**確立日**: 2025-11-17
+
+**目的**: E2Eテスト作成時にUI未実装を早期発見し、無駄な実装作業を回避
+
+**適用タイミング**: E2Eテスト作成・修正・TypeScript移行時
+
+#### 必須チェックリスト
+
+**Phase 1: 手動画面遷移確認**（最重要）
+
+1. **実際のブラウザで手動操作実施**:
+   - アプリケーション起動（https://localhost:5001）
+   - テストシナリオの全画面遷移を手動実行
+   - 各画面の表示確認・UI要素存在確認
+
+2. **data-testid属性存在確認**:
+   - ブラウザ開発者ツールでHTML要素確認
+   - テストシナリオで使用する全data-testid属性の存在確認
+   - 属性名のtypo・大文字小文字違いチェック
+
+3. **画面遷移パス確認**:
+   - リンク・ボタンの実際の遷移先URL確認
+   - 想定ルートと実際のルートの一致確認
+   - 404エラー・未実装画面の有無確認
+
+**Phase 2: UI実装完了確認**
+
+1. **該当Razorコンポーネント存在確認**:
+   - テストシナリオに対応するRazorファイル存在確認
+   - ファイル内のdata-testid属性grep検索実行
+
+2. **ルート定義確認**:
+   - @page ディレクティブで正しいルート定義確認
+   - パラメータ型（Guid/long/string等）一致確認
+
+**Phase 3: E2Eテスト実装判断**
+
+- ✅ **Phase 1-2すべて完了**: E2Eテスト実装開始
+- ❌ **UI未実装発見**:
+  1. UI実装をPhase計画に追加（縦方向スライス実装マスタープラン.md）
+  2. GitHub Issue更新（根本原因・対応方針記録）
+  3. E2Eテスト作業を戦略的中断
+  4. UI実装完了後にE2Eテスト再開
+
+#### 教訓（Phase B-F2 Step7より）
+
+**問題事例**:
+- Phase B2 Step6: user-projects.spec.ts作成時にUI実装状況未確認
+- Phase B-F2 Step2: TypeScript移行時にもUI実装状況未確認
+- Phase B-F2 Step7: 手動確認により`member-management-link`未実装発覚
+
+**根本原因**:
+- E2Eテスト作成時の手動画面遷移確認プロセス未確立
+- UI実装完了を前提とした実装開始
+
+**再発防止策**:
+- 本チェックリスト必須実施
+- development_guidelinesに記録
+- playwright-e2e-patterns Skill更新検討
+
+---
 
 ### E2Eテスト作成時の原則
 

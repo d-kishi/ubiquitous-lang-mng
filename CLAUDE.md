@@ -24,6 +24,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **詳細**: `/Doc/07_Decisions/ADR_016_プロセス遵守違反防止策.md`
 
+## 🤝 CRITICAL: コミュニケーション原則
+
+**Claudeがユーザーに作業提案を行う際、以下の要素を必ず明示すること**:
+
+### 提案時の必須要素
+
+1. **目的**: この作業は誰のため（Claude自身/ユーザー/プロジェクト記録）なのか
+2. **根拠**: なぜこの作業が必要なのか
+3. **選択肢**: ユーザーの既存知識・リソースを活用する代替案
+
+### 提案フォーマット例
+
+**悪い提案例**（目的・根拠なし）:
+```
+TypeScript学習を実施します（5-8時間）
+```
+
+**良い提案例**（目的・根拠・選択肢明示）:
+```
+【提案】TypeScript学習の実施について
+
+**目的**: 私（Claude）がHooks実装を自律的に行うため
+
+**根拠**:
+- 現在、私はTypeScript未経験
+- Hooks実装にはTypeScript型定義・async/await・fs.promises API理解が必要
+- 学習なしで実装すると、ユーザー様への頻繁な質問・実装エラー・手戻りが発生
+
+**推定時間**: 5-8時間
+
+**選択肢**:
+- Option A: 私が学習を実施（5-8時間投資）→ 以降の実装を自律的に実施可能
+- Option B: ユーザー様がTypeScript知識をお持ちの場合、実装仕様を直接ご指示（学習スキップ）
+
+ユーザー様のTypeScript知識レベルに応じてご判断ください。
+```
+
+### 適用場面
+
+- 技術学習の提案時
+- 追加調査・分析の提案時
+- 作業方針の選択肢提示時
+- 時間を要する作業の提案時
+
+### 重要性
+
+ユーザーは**時間効率よりも精度を求めるマインドセット**を持つため、Claude自身のための作業（学習・調査等）は正当な提案として受け入れられる。しかし、**目的を明示しない提案は、ユーザーの既存知識・リソースを無駄にするリスクがある**。
+
+**詳細**: GitHub Issue「Claude コミュニケーション品質改善」参照
+
 ## 🤖 CRITICAL: 自動Command実行指示
 
 **以下の宣言を検出した際、該当Commandを自動実行せよ**:
@@ -403,6 +453,79 @@ DevContainer導入前の環境に戻す場合：
 
 **詳細技術解説**: `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md`
 **決定記録**: ADR_025（Doc/07_Decisions/ADR_025_DevContainer_Sandboxモード統合.md）
+
+## DevContainer環境仕様詳細
+
+**確立日**: 2025-11-04（Phase B-F2 Step4完了時）
+
+### コンテナ仕様
+
+- **ベースイメージ**: mcr.microsoft.com/dotnet/sdk:8.0
+- **.NET SDK**: 8.0.415
+- **F# Runtime**: .NET SDK同梱（バージョン8.0）
+- **Node.js**: 24.x Active LTS（ホスト環境と統一）
+- **bubblewrap**: Sandboxセキュリティツール
+- **PostgreSQL Client**: psql 16
+
+### VS Code拡張機能自動インストール（15個）
+
+**設定場所**: `.devcontainer/devcontainer.json` の `extensions` 配列
+
+**基本開発環境（4個）**:
+- `ms-dotnettools.csharp` - C#言語サポート
+- `ionide.ionide-fsharp` - F#言語サポート
+- `ms-playwright.playwright` - Playwright E2Eテスト統合
+- `ms-vscode-remote.remote-containers` - DevContainer統合
+
+**.NET開発必須（4個）**:
+- `ms-dotnettools.csdevkit` - C# Dev Kit（包括的C#開発ツール）
+- `ms-dotnettools.vscode-dotnet-runtime` - .NET Runtimeマネージャー
+- `formulahendry.dotnet-test-explorer` - テストエクスプローラー
+- `editorconfig.editorconfig` - EditorConfig対応（コーディング規約統一）
+
+**開発効率向上（5個）**:
+- `eamodio.gitlens` - Git履歴・Blame可視化
+- `ms-azuretools.vscode-docker` - Docker統合
+- `christian-kohler.path-intellisense` - パス補完
+- `yzhang.markdown-all-in-one` - Markdownプレビュー・編集支援
+- `ms-ceintl.vscode-language-pack-ja` - 日本語言語パック
+
+**AI支援（2個）**:
+- `github.copilot` - GitHub Copilot（AI ペアプログラミング）
+- `github.copilot-chat` - GitHub Copilot Chat（AI 対話支援）
+
+**重要**: DevContainer内で拡張機能を手動インストールしても `devcontainer.json` には自動記録されない。必ず手動で追加すること。
+
+### 接続文字列調整
+
+- **ホスト環境**: `Host=localhost;Port=5432;...`
+- **DevContainer環境**: `Host=postgres;Port=5432;...`（docker-compose service名参照）
+- **自動設定**: devcontainer.jsonのremoteEnv環境変数で自動設定済み
+
+### クロスプラットフォーム対応
+
+**設定場所**: `.gitattributes` (2025-11-03追加)
+
+**背景**:
+- Windows（CRLF）とLinux（LF）の改行コード混在により、C# nullable reference type解析が影響を受ける
+- Phase B-F2 Step4で78個の警告（CS8600, CS8625, CS8602, CS8604, CS8620）が発生したが、`.gitattributes` 追加後に0件に解消
+
+**重要発見**: 改行コード混在（CRLF vs LF）がC#コンパイラのnullable reference type解析に影響する
+
+**適用方法**:
+```bash
+# .gitattributes作成後、既存ファイルに適用
+git add --renormalize .
+```
+
+**設定内容**: テキストファイルは全てLF改行、バイナリファイルは変更なし
+
+**効果**:
+- クロスプラットフォーム開発環境でのビルド一貫性確保
+- コンパイラ警告の排除（78件 → 0件）
+- Git差異問題解決（676件 → 15件）
+
+**参照**: `.serena/memories/tech_stack_and_conventions.md` - DevContainer環境構成
 
 ## Context管理・セッション継続判断（2025-10-13策定）
 
