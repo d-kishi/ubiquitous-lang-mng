@@ -1,0 +1,25 @@
+{
+  "name": "claude-code-hooks",
+  "version": "1.0.0",
+  "description": "Claude Code Hooks for Agent SDK Phase 1 (Issue #55)",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "claude-code",
+    "agent-sdk",
+    "hooks",
+    "adr-016"
+  ],
+  "author": "Ubiquitous Language Manager Project",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {}
+}

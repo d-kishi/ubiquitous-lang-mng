@@ -1,5 +1,9 @@
 # 技術スタック・規約
 
+**最終更新**: 2025-11-18（**Phase B-F2完了・DevContainer環境確立・Agent Skills Phase 2展開完了**）
+
+---
+
 ## 🤖 Agent Skills参照方法（2025-10-21新設・Phase 1導入完了）
 
 ### F#↔C#型変換パターンの参照
@@ -8,7 +12,7 @@
 
 **Phase 1以降**: `.claude/skills/fsharp-csharp-bridge/` から自律的に参照
 
-**変更理由**: 
+**変更理由**:
 - Agent SkillsによりClaude Codeが自律的に適用
 - 効果測定の正確性確保
 
@@ -24,7 +28,7 @@
 
 **Phase 1以降**: `.claude/skills/clean-architecture-guardian/` から自律的に参照
 
-**変更理由**: 
+**変更理由**:
 - Agent SkillsによりClaude Codeが自律的にチェック
 - Phase B1で97点品質を達成した知見の自動維持
 
@@ -49,8 +53,48 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **Database**: PostgreSQL 16 (Docker Container)
 - **認証**: ASP.NET Core Identity
 - **テスト**: xUnit + FsUnit + Moq + WebApplicationFactory + bUnit (Blazor Component Testing)
-- **E2Eテスト**: Playwright for .NET + **Playwright MCP統合完了**（2025-10-17・Claude Code直接統合・25ツール利用可能）
-- **⭐Agent Skills**: Phase 1導入完了（2025-10-21・fsharp-csharp-bridge + clean-architecture-guardian）
+- **E2Eテスト**: TypeScript/Playwright Test（Phase B-F2 Step6でTypeScript移行完了）
+- **⭐Agent Skills**: Phase 1-2展開完了（計8個Skills確立・自律適用確認済み）
+  - **Phase 1 Skills（3個）**: fsharp-csharp-bridge, clean-architecture-guardian, playwright-e2e-patterns
+  - **Phase 2 Skills（5個）**: tdd-red-green-refactor, spec-compliance-auto, adr-knowledge-base, subagent-patterns, test-architecture
+
+---
+
+## 開発環境構成（2025-11-04確定）
+
+### 🔴 CRITICAL: Claude Code実行環境
+
+**原則**: Claude Code CLIはホスト環境で実行、DevContainerはSandboxモード環境として機能
+
+**例**: dotnet/dockerコマンド実行時、自動的にDevContainer内で実行される（`.claude/settings.local.json` の `sandbox.enabled: true`）
+
+**詳細**: `CLAUDE.md` - DevContainer環境仕様詳細（コンテナ仕様・VS Code拡張機能15個・接続文字列・クロスプラットフォーム対応）
+
+### DevContainer + Sandboxモード統合効果（Phase B-F2 Step4完了・2025-11-04）
+
+**セットアップ時間削減**: 96%削減達成（75-140分 → 5-8分）
+**環境再現性**: 100%（HTTPS証明書ボリュームマウント方式・Microsoft公式推奨）
+**開発効率向上**: VS Code拡張15個自動インストール・即座に開発開始可能
+
+**技術構成**:
+- **.devcontainer/devcontainer.json**: VS Code拡張・Sandbox設定・ポート転送・環境変数・HTTPS証明書ボリュームマウント
+- **.devcontainer/Dockerfile**: .NET 8.0 + F# 8.0 + Node.js 24 + bubblewrap環境
+- **.devcontainer/docker-compose.yml**: Container orchestration設定
+- **.devcontainer/scripts/setup-https.sh**: HTTPS証明書検証スクリプト
+- **.claude/settings.local.json**: Sandboxモード有効化
+
+**重要な技術発見**:
+- **改行コード混在問題**: CRLF vs LFがC# nullable reference type解析に影響（`.gitattributes`設定で解決）
+- **HTTPS証明書管理**: ボリュームマウント方式により環境再現性100%確保
+- **Windows Sandboxモード**: 非対応判明（Issue #63で継続追跡）
+
+**詳細ドキュメント**:
+- `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md` - 技術解説
+- ADR_025 - DevContainer + Sandboxモード統合採用
+- ADR_026 - DevContainer HTTPS証明書管理方針（約11,000文字）
+- DevContainer使用ガイド（約8,700文字）
+- 環境構築手順書更新（HTTPS証明書セクション追加）
+- トラブルシューティングガイド更新（DevContainer問題セクション追加）
 
 ---
 
@@ -58,53 +102,15 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ### 🔴 必須ルール: 全識別子Quote必須
 
-**背景**: PostgreSQL識別子正規化動作（Unquoted識別子 → 小文字変換）
+**原則**: PostgreSQL識別子正規化動作により、Unquoted識別子は小文字に変換される
 
-**問題事例**（Phase B2で発見）:
-- `CREATE TABLE AspNetUsers` → `aspnetusers`テーブル作成（意図しない重複テーブル発生）
-- `INSERT INTO AspNetUsers` → `aspnetusers`テーブルへ挿入（既存`"AspNetUsers"`テーブルは未使用）
-- 結果: 27テーブル作成（15正常 + 12重複小文字）
-
-**解決策**: 全識別子を`""`でQuote
-
+**例**:
 ```sql
--- ❌ 誤り（小文字化される）
-CREATE TABLE AspNetUsers (
-    Id VARCHAR(450),
-    UserName VARCHAR(256)
-);
-
--- ✅ 正しい（大文字小文字保持）
-CREATE TABLE "AspNetUsers" (
-    "Id" VARCHAR(450),
-    "UserName" VARCHAR(256)
-);
+-- ❌ 誤り: CREATE TABLE AspNetUsers → aspnetusersテーブル作成
+-- ✅ 正しい: CREATE TABLE "AspNetUsers" → AspNetUsersテーブル作成（大文字小文字保持）
 ```
 
-### 必須適用箇所
-
-1. **CREATE TABLE**: テーブル名・全列名
-2. **INSERT INTO**: テーブル名・全列名
-3. **FOREIGN KEY**: 参照テーブル名・参照列名
-4. **CREATE INDEX**: テーブル名・列名
-5. **COMMENT ON**: テーブル名・列名（`"TableName"."ColumnName"`形式）
-
-### COMMENT文の正しい形式
-
-```sql
--- ❌ 誤り
-COMMENT ON TABLE AspNetUsers IS 'ユーザー情報';
-COMMENT ON COLUMN AspNetUsers.Id IS 'ユーザーID';
-
--- ✅ 正しい
-COMMENT ON TABLE "AspNetUsers" IS 'ASP.NET Core Identity ユーザー情報';
-COMMENT ON COLUMN "AspNetUsers"."Id" IS 'ユーザーID（主キー、GUID形式）';
-```
-
-### 参考ファイル
-
-- `init/01_create_schema.sql` - 全識別子Quote済み（2025-10-26修正）
-- `init/02_initial_data.sql` - 全INSERT文Quote済み（2025-10-26修正）
+**詳細**: `Doc/02_Design/データベース設計書.md` - Section 9（PostgreSQL識別子規約）
 
 ---
 
@@ -150,14 +156,152 @@ COMMENT ON COLUMN "AspNetUsers"."Id" IS 'ユーザーID（主キー、GUID形式
 
 ---
 
-（以下、既存の tech_stack_and_conventions 内容を維持）
+## MCP（Model Context Protocol）仕様・メンテナンス（2025-11-02確立）
 
-## プロジェクト構成
-...
-（既存内容省略）
-...
+### MCP仕様理解の原則
+
+**原則**: JSON-RPC `tools/list`メソッドでツール一覧を取得し、SubAgent定義の正確性を維持
+
+**例**:
+```bash
+# Playwright MCP ツール一覧取得
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
+  | npx @playwright/mcp@latest | jq '.result.tools[].name'
+```
+
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` - MCP仕様・メンテナンス
+
+### MCPメンテナンスパターン（半自動推奨）
+
+**原則**: 週次振り返り時に半自動メンテナンス（5-10分/週の運用負荷で安全性確保）
+
+**例**: バージョン確認 → ツール変更検出 → 変更レポート作成 → SubAgent定義更新判断
+
+**詳細**:
+- `Doc/08_Organization/Rules/開発手法詳細ガイド.md` - 週次メンテナンスフロー
+- `Doc/07_Decisions/ADR_024_Playwright専用SubAgent新設決定.md` - 5段階手順・トラブルシューティング
 
 ---
 
-**最終更新**: 2025-10-21（**Agent Skills Phase 1導入完了・Skills参照方法追記**）
-**重要変更**: F#↔C#型変換パターンの詳細を`.claude/skills/fsharp-csharp-bridge/`に移行
+## ADR vs Skills判断基準の実証（2025-11-02確立）
+
+### 判断基準（30秒チェック）
+
+**詳細**: `.serena/memories/development_guidelines.md` - Section「ADR vs Agent Skills 判断基準」
+
+**簡潔版**:
+1. **歴史的記録が必要か？**（なぜこの決定をしたか） → ADR作成
+2. **Claudeが自律的に適用すべきか？**（実装時に自動適用） → Skills作成
+3. **技術選定の根拠か？**（代替案との比較・リスク評価） → ADR作成
+4. **実装パターン・チェックリストか？**（繰り返し使うパターン） → Skills作成
+
+### Phase B-F2実証事例
+
+#### Step2: ADR/Rules → Skills migration
+
+**移行ファイル**:
+1. `仕様準拠ガイド.md` → `spec-compliance-auto` Skill
+2. `SubAgent組み合わせパターン.md` → `subagent-patterns` Skill
+
+**評価結果**:
+- ✅ 適切な判断（ADR vs Skills判断基準に準拠）
+- ✅ "why"（判断根拠）はADR、"how"（適用方法）はSkillsの分離原則確認
+
+#### Step3: ADR_024作成（簡潔版）
+
+**作成方針**:
+- **判断根拠のみ記載**（簡潔版）
+- **詳細はSkillsに記載**（playwright-e2e-patterns, subagent-patterns）
+
+**ADR_024内容**:
+- E2E専用SubAgent新設決定
+- 5点の判断根拠（ADR_020整合性・レイヤー分離・技術スタック・Skill参照・MCP連携）
+- 詳細実装パターンはSkillsに記載
+
+**効果**:
+- ADR肥大化防止（簡潔版ADR）
+- Skills自律適用の実現（詳細パターン）
+- 重複記載の削減
+
+---
+
+## Playwright Test Agents統合パターン（2025-11-17追加）
+
+**目的**: SubAgent間呼び出し制限を遵守したPlaywright Test Agents統合運用
+
+**技術制約**: Claude Code公式仕様
+- **SubAgent制限**: "subagents cannot spawn other subagents"
+- **理由**: 無限ネスティング防止
+- **参照**: https://code.claude.com/docs/en/sub-agents
+
+### パターンA: MainAgentオーケストレーション型（推奨）
+
+**適用条件**:
+- 新規E2Eテストスイート作成
+- 複雑なシナリオ（5シナリオ以上）
+- 大幅なテスト変更が必要
+
+**フロー**:
+```
+MainAgent
+  ├─ Task(playwright-test-planner) → テスト計画生成（該当時）
+  ├─ Task(playwright-test-generator) → TypeScriptテスト生成（該当時）
+  ├─ Task(e2e-test) → テスト実行・統合検証
+  └─ Task(playwright-test-healer) → 失敗時の修復（該当時）
+```
+
+**効率化効果**: 60-70%（Generator/Healer活用時）
+
+**責務分担**:
+- **MainAgent**: オーケストレーション・Agent間調整・統合判断
+- **playwright-test-generator**: TypeScriptテストコード生成
+- **e2e-test**: テスト実行・検証・品質確認
+- **playwright-test-healer**: 失敗テストの修復
+
+### パターンB: e2e-testスタンドアロン型
+
+**適用条件**:
+- 既存E2Eテストのメンテナンス
+- 小規模修正（1-2箇所）
+- テスト実行・検証のみ
+
+**フロー**:
+```
+MainAgent → Task(e2e-test) → テスト実装/実行/検証
+```
+
+**効率化効果**: 基本（Playwright MCP 21ツール直接使用）
+
+### 関連定義ファイル
+
+1. **e2e-test.md**: e2e-test SubAgent定義（責務・統合パターン記載）
+2. **subagent-selection.md**: Pattern D（品質保証段階）に統合パターン記載
+3. **subagent-patterns SKILL.md**: e2e-test責務境界・統合パターン詳細
+4. **ADR_024**: SubAgent制限・統合パターン技術決定記録
+5. **組織管理運用マニュアル.md**: 統合運用ガイド
+
+### 実装時の注意点
+
+1. **e2e-test SubAgentから直接呼び出し不可**:
+   - ❌ e2e-test内で`Task(playwright-test-generator)`実行
+   - ✅ MainAgentが調整・e2e-testは実行担当
+
+2. **MainAgent責務**:
+   - Agent選択・実行順序決定
+   - 成果物引継ぎ・統合判断
+   - 品質確認・承認取得
+
+3. **パターン選択基準**:
+   - 新規/大規模 → パターンA
+   - メンテナンス/小規模 → パターンB
+
+---
+
+**最終更新**: 2025-11-18（**Phase B-F2完了・DevContainer環境確立・Agent Skills Phase 2展開完了**）
+**前回更新**: 2025-11-04（Week 44週次振り返り完了・MCP仕様/ADR vs Skills判断基準追加）
+**Phase B-F2主要成果**:
+- DevContainer環境構築完了（セットアップ時間96%削減・環境再現性100%）
+- Agent Skills Phase 2展開完了（+5個・計8個Skills確立）
+- e2e-test Agent新設（14種類目・Playwright専門Agent）
+- Agent SDK Phase 1技術検証完了（TypeScript学習・Hooks実装・実現可能性確認）
+- ADR 3件作成（ADR_024, 025, 026）・ドキュメント4件作成

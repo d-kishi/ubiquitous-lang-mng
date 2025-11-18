@@ -6,9 +6,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}\\src\\UbiquitousLanguageManager.Web\\bin\\Debug\\net8.0\\UbiquitousLanguageManager.Web.dll",
+      "program": "${workspaceFolder}/src/UbiquitousLanguageManager.Web/bin/Debug/net8.0/UbiquitousLanguageManager.Web.dll",
       "args": [],
-      "cwd": "${workspaceFolder}\\src\\UbiquitousLanguageManager.Web",
+      "cwd": "${workspaceFolder}/src/UbiquitousLanguageManager.Web",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
@@ -18,7 +18,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "https://localhost:5001"
       },
-      "console": "externalTerminal"
+      "console": "integratedTerminal"
     },
     {
       "name": "dotnet run",
@@ -29,7 +29,7 @@
       "args": [
         "run"
       ],
-      "cwd": "${workspaceFolder}\\src\\UbiquitousLanguageManager.Web",
+      "cwd": "${workspaceFolder}/src/UbiquitousLanguageManager.Web",
       "stopAtEntry": false,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",

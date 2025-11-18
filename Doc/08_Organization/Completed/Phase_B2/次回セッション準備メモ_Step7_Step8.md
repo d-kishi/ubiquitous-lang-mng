@@ -134,8 +134,8 @@
 - **UserName**: `e2e-test@ubiquitous-lang.local`（Emailと同じ）
 - **Name**: `E2Eテストユーザー`
 - **IsFirstLogin**: **false**（初回ログイン済み状態）
-- **PasswordHash**: BCryptハッシュ（平文: `E2eTest#2025!`）
-- **InitialPassword**: `E2eTest#2025!`（平文保存）
+- **PasswordHash**: BCryptハッシュ（平文: `E2ETest#2025!Secure`）
+- **InitialPassword**: `E2ETest#2025!Secure`（平文保存）
 - **Role**: SuperUser（全機能アクセス権限）
 
 #### 作成方法（Step7決定方式による）

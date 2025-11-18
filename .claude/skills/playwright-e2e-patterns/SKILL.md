@@ -1,6 +1,6 @@
 ---
 name: playwright-e2e-patterns
-description: Playwright MCP/Agents活用によるE2Eテスト作成パターンガイド。E2Eテスト実装時・data-testid属性設計時・Blazor Server SignalR対応時に使用。Phase B2で確立した93.3%効率化パターンを適用。
+description: TypeScript/Playwright Test + Generator/Healer Agents活用によるE2Eテスト作成パターンガイド。E2Eテスト実装時・data-testid属性設計時・Blazor Server SignalR対応時に使用。Phase B2で確立した93.3%効率化パターン + Phase B2-F2でTypeScript移行完了。
 allowed-tools: Read, Grep
 ---
 
@@ -8,7 +8,14 @@ allowed-tools: Read, Grep
 
 ## 概要
 
-このSkillは、Playwright MCP + Agents活用によるE2Eテスト作成パターンを自律的に適用します。Phase B2 Step6で確立した**93.3%効率化パターン**を提供します。
+このSkillは、TypeScript/Playwright Test + Generator/Healer Agents活用によるE2Eテスト作成パターンを自律的に適用します。
+
+**Phase B2-F2移行完了**:
+- ✅ C# E2Eテストプロジェクト削除完了
+- ✅ TypeScript/Playwright Test移行完了
+- ✅ Playwright Test Generator Agent統合（60-70%時間削減）
+- ✅ Playwright Test Healer Agent統合（50-70%成功率）
+- ✅ Phase B2で確立した**93.3%効率化パターン**継続適用
 
 ## 使用タイミング
 

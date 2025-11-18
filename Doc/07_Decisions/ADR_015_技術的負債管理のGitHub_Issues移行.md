@@ -129,7 +129,8 @@ Phase A1-A6において、技術的負債は`/Doc/10_Debt/`配下のMarkdownフ�
 
 ## 関連文書
 
-- **運用規則**: `/Doc/08_Organization/Rules/GitHub_Issues運用規則.md`
+- **運用規則**: `/Doc/08_Organization/Rules/backup/GitHub_Issues運用規則.md` (2025-11-15アーカイブ、Agent Skillsに移行)
+- **Agent Skills**: `.claude/skills/github-issues-management/` (2025-11-15導入、運用規則を自律的適用)
 - **移行対象**: `/Doc/10_Debt/Technical/TECH-*.md`
 - **参考ADR**: 
   - ADR_010: 詳細コメント記述指針

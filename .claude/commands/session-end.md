@@ -52,64 +52,69 @@
   - 次回セッション推奨範囲（最優先事項・読み込み推奨ファイル・予想時間配分）
 - [ ] **週次総括反映**: 週末セッションの場合は週次総括への重要事項反映確認
 
-### 9. Serenaメモリー更新（必須・直接ファイル編集方式）
+### 9. Serenaメモリー更新（必須・edit_memory方式）
 
-#### 🔴 重要：Context効率化のため直接ファイル編集を使用
-**理由**: Context消費87.5%削減・時間75%短縮達成
+#### 🔴 重要：Context効率化のためedit_memoryを使用
+**理由**: Context消費65.3%削減・応答性28.6%改善達成（2025-11-16検証済み）
 **適用範囲**: session-endコマンド実行時のみ（手動操作・他コマンドでは従来通り`write_memory`使用可能）
 **禁止事項**: session-end時は`mcp__serena__read_memory` / `mcp__serena__write_memory`使用禁止
 
 #### 更新手順（全メモリー共通）
-1. **Grepツール**: 更新対象セクション・行を検索
-2. **Readツール**: 必要箇所のみ部分読み込み（limit指定推奨）
-3. **Editツール**: 該当箇所のみ差分更新（置換・追記・削除）
+1. **edit_memoryツール**: regex指定で該当箇所のみ差分更新（置換・追記・削除）
+2. **検証**: 必要に応じてtailコマンドで更新結果確認
 
 #### 各メモリー更新詳細
 
 - [ ] **daily_sessions更新（`.serena/memories/daily_sessions.md`）**:
   ```
-  1. Readツールで先頭100行読み込み（本日日付セクション有無確認）
-  2. Editツールで以下のいずれかを実行:
-     - 既存日付セクションがある場合: 該当セクション内に「セッション2」「セッション3」追記
-     - 既存日付セクションがない場合: 新規日付セクション作成後「セッション1」追記
-  3. 2週間超の古い記録がある場合: 警告メッセージ表示（振り返り実施推奨）
-     - Grep "^## 📅" で日付セクション一覧取得
-     - 最古の日付が14日以上前の場合、警告表示
-     - 削除は実施せず、weekly-retrospective実行を促す
+  1. edit_memoryツールで以下のregex実行:
+     - memory_file_name: daily_sessions.md
+     - regex: (---\n\n\$1)$
+     - repl: [新規セッション記録（日付セクション+セッション詳細）] + \n\n---\n\n$1
+  2. 2週間超の古い記録がある場合: 警告メッセージ表示（振り返り実施推奨）
+     - tailコマンドで最新記録確認
+     - 最古の日付が14日以上前の場合、weekly-retrospective実行を促す
   ```
 
 - [ ] **project_overview更新（`.serena/memories/project_overview.md`）**:
   ```
   変更がある場合のみ:
-  1. Grep "## 現在のプロジェクト状況" で該当セクション特定
-  2. Read該当セクション周辺（100-200行程度）
-  3. Editツールで該当セクションのみ置換
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: project_overview.md
+     - regex: (## 現在のプロジェクト状況\n\n)[\s\S]*?(\n\n## 次回セッション推奨範囲)
+     - repl: $1[更新内容]$2
   変更がない場合: スキップ
   ```
 
 - [ ] **development_guidelines更新（`.serena/memories/development_guidelines.md`）**:
   ```
   変更がある場合のみ:
-  1. Grep該当セクション名（例: "## 🔧 SubAgent責務境界原則"）で特定
-  2. Read該当セクション周辺
-  3. Editツールで新規セクション追記 or 既存セクション更新
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: development_guidelines.md
+     - regex: (該当セクション名を含むregexパターン)
+     - repl: [新規セクション追記 or 既存セクション更新内容]
   変更がない場合: スキップ
   ```
 
 - [ ] **tech_stack_and_conventions更新（`.serena/memories/tech_stack_and_conventions.md`）**:
   ```
   変更がある場合のみ:
-  1. Grep該当セクション名（例: "## F# 実装規約・パターン"）で特定
-  2. Read該当セクション周辺
-  3. Editツールで新規追記 or セクション更新
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: tech_stack_and_conventions.md
+     - regex: (該当セクション名を含むregexパターン)
+     - repl: [新規追記 or セクション更新内容]
   変更がない場合: スキップ
   ```
 
 - [ ] **task_completion_checklist更新（`.serena/memories/task_completion_checklist.md`）**:
   ```
-  1. Grep該当タスク名で特定
-  2. Editツールでタスク状態更新（`- [ ]` → `- [x]`）
-  3. 新規タスク追加が必要な場合: Editで該当優先度位置に追記
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: task_completion_checklist.md
+     - regex: (- \[ \] 該当タスク名.*)
+     - repl: - [x] 該当タスク名...（完了マーク付与）
+  2. 新規タスク追加が必要な場合:
+     - regex: (該当優先度セクション末尾のregexパターン)
+     - repl: [新規タスク追記]
   ```
 
 - [ ] **メモリー更新品質確認**:
@@ -124,14 +129,7 @@
 - [ ] **Write/Editツール実行結果確認**: 以下の必須ファイル作成・更新が実際に実行されたか
   - [ ] `/Doc/04_Daily/YYYY-MM/YYYY-MM-DD.md` 作成済み（Issue #34完了まで・オプション）
 
-- [ ] **Readツール実行確認**: 各メモリー更新に必要な箇所の部分読み込み実行
-  - [ ] daily_sessions部分読み込み済み（先頭100行程度）
-  - [ ] project_overview該当セクション読み込み済み（変更がある場合のみ）
-  - [ ] development_guidelines該当セクション読み込み済み（変更がある場合のみ）
-  - [ ] tech_stack_and_conventions該当セクション読み込み済み（変更がある場合のみ）
-  - [ ] task_completion_checklist該当タスク周辺読み込み済み（変更がある場合のみ）
-
-- [ ] **Editツール実行確認**: 差分更新で5種類のメモリー更新
+- [ ] **edit_memoryツール実行確認**: regex指定で5種類のメモリー差分更新
   - [ ] daily_sessions差分追記実行済み（本日セッション追加・2週間超警告表示含む）
   - [ ] project_overview差分更新実行済み（変更がある場合のみ・スキップ可）
   - [ ] development_guidelines差分追記実行済み（変更がある場合のみ・スキップ可）

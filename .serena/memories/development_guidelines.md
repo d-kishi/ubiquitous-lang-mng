@@ -1,305 +1,165 @@
 # 開発ガイドライン
 
-## 🤖 Agent Skills活用方法（2025-10-21新設・Phase 1導入完了）
-
-### Agent Skillsとは
-
-**定義**: プロジェクト固有の知見・パターン・判断基準をモジュール化し、Claudeが自律的に適用する仕組み
-
-**配置場所**: `.claude/skills/`
-
-**使用方法**: Claudeが状況に応じて自律的に判断・使用（ユーザーの明示的呼び出し不要）
-
-### Phase 1導入済みSkills
-
-#### 1. fsharp-csharp-bridge
-
-**目的**: F#↔C#型変換パターンの自律的適用
-
-**使用タイミング**:
-- F#↔C#境界コード実装時
-- 型変換エラー発生時
-- contracts-bridge Agent作業時
-
-**提供パターン**: Result型・Option型・Discriminated Union・Record型の4パターン
-
-**詳細**: `.claude/skills/fsharp-csharp-bridge/SKILL.md`
-
-#### 2. clean-architecture-guardian
-
-**目的**: Clean Architecture準拠性の自動チェック
-
-**使用タイミング**:
-- 新規実装時
-- リファクタリング時
-- Step/Phase完了時
-
-**チェック項目**: レイヤー分離・namespace階層・BC境界・F# Compilation Order
-
-**詳細**: `.claude/skills/clean-architecture-guardian/SKILL.md`
-
-### 効果測定
-
-**測定ドキュメント**: `Doc/08_Organization/Active/AgentSkills_Phase1_効果測定.md`
-
-**測定期間**: Phase B2 Step5 ～ Phase B3完了
-
-**期待効果**: 作業効率20-25分/セッション削減、品質向上（ADR遵守率90%→98%）
-
-#### 3. db-schema-management（2025-10-27新設・Phase B2 Step7）
-
-**目的**: EF Core Migrationsによるスキーマ変更ガイドライン・パターン提供
-
-**使用タイミング**:
-- スキーマ変更時（テーブル・列追加、制約追加等）
-- CHECK制約・COMMENT文追加時
-- データベース設計書更新時
-- Phase B3以降のスキーマ変更全般
-
-**提供パターン**: 5種類
-- ef-migrations-workflow.md: 5段階スキーマ変更ワークフロー
-- check-constraint-pattern.md: CHECK制約実装パターン
-- manual-sql-pattern.md: GIN/BRIN/COMMENT手動SQLパターン
-- db-doc-sync-checklist.md: DB設計書同期チェックリスト
-
-**詳細**: `.claude/skills/db-schema-management/SKILL.md`
-
-**Phase B2 Step7成果**: GitHub Issue #58完全解決・ADR_023作成・EF Migrations主体方式確立
+**最終更新**: 2025-11-18（**Serenaメモリスリム化実施・Context効率化**）
 
 ---
 
-## 🎊 Phase B2完了成果（2025-10-27）
+## 🤖 Agent Skills活用
 
-### 技術負債管理ベストプラクティス確立
+**原則**: Agent Skillsにより詳細パターンを自律的参照（手動参照不要）
 
-**3回修正試行ルール**:
-- 3回の修正試行で解決しない場合、根本的な設計問題と判断
-- 戦略的延期判断を実施（効率性より技術負債解決を優先）
-- GitHub Issueに技術負債として明確に記録
+**例**: fsharp-csharp-bridge使用時、F#↔C#型変換パターンを自動適用
 
-**Phase B2 Step8適用例**:
-- E2Eテスト実装で3回修正試行→すべて失敗
-- 根本原因分析完了（E2Eテストシナリオと画面遷移フロー不一致）
-- 戦略的延期判断（GitHub Issue #59記録）
-
-**学んだ教訓**:
-- E2Eテスト設計時、実際のアプリケーション動作を事前確認すべき
-- 技術負債の依存関係を事前に整理すべき（Issue #57 → #53 → #59）
-- 戦略的延期判断時、前提条件・再実装計画を明確に記録すべき
+**詳細**: `.serena/memories/tech_stack_and_conventions.md` 参照
 
 ---
 
-## 📋 ADR vs Agent Skills 判断基準（2025-10-26新設・30秒チェック）
+## 📋 ADR vs Agent Skills判断基準
 
-### 判断フロー（4つの質問）
+**原則**: 「なぜこの決定をしたか」→ADR、「どう実装すべきか」→Skills（30秒判断フロー）
 
-1. **歴史的記録が必要か？**（なぜこの決定をしたか）
-   → YES: **ADR作成**
+**例**: 歴史的記録が必要か？→YES: ADR作成
 
-2. **Claudeが自律的に適用すべきか？**（実装時に自動適用）
-   → YES: **Agent Skills作成**
-
-3. **技術選定の根拠か？**（代替案との比較・リスク評価）
-   → YES: **ADR作成**
-
-4. **実装パターン・チェックリストか？**（繰り返し使うパターン）
-   → YES: **Agent Skills作成**
-
-### 簡潔な定義
-
-**ADR（Architectural Decision Record）**:
-- 目的: 「**なぜ**その技術決定をしたか」を記録
-- 性質: 歴史的文書・技術選定の根拠
-- 参照: 技術選定の振り返り・新メンバーのオンボーディング・将来の技術変更時
-
-**Agent Skills**:
-- 目的: 「**どう**実装すべきか」をガイド
-- 性質: 実行可能な知見・自律的適用
-- 参照: Claudeが自律的に判断して使用（明示的呼び出し不要）
-
-### 詳細ガイドライン
-
-**迷った時の参照**: `Doc/08_Organization/Rules/ADRとAgent_Skills判断ガイドライン.md`
-
-**提供内容**:
-- 判断フローチャート
-- 判断基準マトリックス（5W1H）
-- ADR適用例・Skills適用例
-- 移行事例（ADR→Skills）
-- 迷った時のチェックリスト
-
-**重要**: 技術的知見が発生した際は、必ず上記ガイドラインを参照して適切な記録方法を選択すること
+**詳細**: `Doc/08_Organization/Rules/ADRとAgent_Skills判断ガイドライン.md` 参照
 
 ---
 
-## プロセス遵守絶対原則（ADR_016）
+## 🔴 プロセス遵守絶対原則
 
-### 絶対遵守原則
-- **コマンド = 契約**: 一字一句を法的契約として遵守・例外なし
-- **承認 = 必須**: 「ユーザー承認」表記は例外なく取得・勝手な判断禁止
-- **手順 = 聖域**: 定められた順序の変更禁止・先回り作業禁止
+**原則**: コマンド=契約、承認=必須、手順=聖域（違反は一切許容されない）
 
-### 禁止行為（重大違反）
-- ❌ **承認前の作業開始**: いかなる理由でも禁止
-- ❌ **独断での判断**: 「効率化」を理由とした勝手な作業
-- ❌ **成果物の虚偽報告**: 実体のない成果物の報告
-- ❌ **コマンド手順の無視**: phase-start/step-start等の手順飛ばし
+**例**: 承認前の作業開始禁止・成果物の虚偽報告禁止
 
-### 必須実行事項
-- ✅ **実体確認**: SubAgent成果物の物理的存在確認
-- ✅ **承認記録**: 取得した承認の明示的記録  
-- ✅ **チェックリスト実行**: 組織管理運用マニュアルのプロセス遵守チェック
-
-**詳細**: `/Doc/07_Decisions/ADR_016_プロセス遵守違反防止策.md`
+**詳細**: `CLAUDE.md` - ADR_016プロセス遵守絶対原則 参照
 
 ---
 
-## 🧪 E2Eテスト実装タイミング原則（2025-10-17確立・Phase B2 Step2で発見）
+## 📖 開発プロセス・判断基準
 
-### 原則: E2Eテストは機能完成後に実装
+### 3回修正試行ルール
 
-**背景**: Phase B2 Step2でE2Eテスト先行実装により以下の問題発生
-- Playwright実装に2時間要したが機能未完成のため実行不可
-- 仕様変更時のテストメンテナンス工数発生
-- 作業効率30-40%低下
+**原則**: 3回修正試行で解決しない場合は方針転換（効率性重視）
 
-### 推奨フロー
+**例**: 3回試行後も失敗 → アプローチ変更判断
 
-```
-1. 機能実装完了（Unit/Integration Test完了）
-   ↓
-2. 手動E2E確認（Playwright MCP使用・5-10分）
-   ↓
-3. E2E自動テスト実装（安定した仕様に対して）
-```
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
 
-### 例外: E2Eテスト先行実装が許容されるケース
-- ユーザー明示的指示
-- 仕様確定済み・変更リスク極小
-- E2E駆動開発（BDD/ATDD）採用時
+### Step再実行プロセス
 
-**詳細**: `Doc/08_Organization/Active/E2Eテスト実装タイミング原則.md`
+**原則**: Step失敗時は原因分析→Issue記録→再実行判断
 
----
+**例**: 仕様理解不足 → Issue記録 → 同一Step再実行
 
-## 🔧 namespace設計原則（ADR_019準拠・2025-10-01確立）
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
 
-**重要**: ADR_019は`.claude/skills/clean-architecture-guardian/rules/namespace-design.md`に移行
+### 技術調査時のアーキテクチャ図作成標準
 
-### 必須遵守事項
-**基本テンプレート**: `<ProjectName>.<Layer>.<BoundedContext>[.<Feature>]`
+**原則**: 技術調査時はMermaid形式アーキテクチャ図を必ず作成
 
-#### 具体的namespace規約
-- **Domain層**: `UbiquitousLanguageManager.Domain.<BoundedContext>`
-- **Application層**: `UbiquitousLanguageManager.Application.<BoundedContext>`
-- **Infrastructure層**: `UbiquitousLanguageManager.Infrastructure.<Feature>`
-- **Contracts層**: `UbiquitousLanguageManager.Contracts.<Feature>`
-- **Web層**: `UbiquitousLanguageManager.Web.<Feature>`
+**例**: Playwright統合調査 → 統合アーキテクチャ図作成（プロセス境界・通信方式明示）
 
-**詳細**: `.claude/skills/clean-architecture-guardian/rules/namespace-design.md`（ADR_019から移行）
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
 
----
+### 品質vs効率トレードオフ判断基準
 
-## 🎯 重要: Blazor Server・F#初学者対応
+**原則**: Phase初期=品質優先、Phase後期=効率優先（段階的移行）
 
-プロジェクトオーナーが初学者のため、**詳細なコメント必須**（ADR_010参照）
+**例**: Phase A-B（基盤確立期） → 品質優先、Phase E-F（最適化期） → 効率優先
 
-### 必須コメント対象
-- **Blazor Server**: ライフサイクル・StateHasChanged・SignalR接続の説明
-- **F#**: パターンマッチング・Option型・Result型の概念説明
-- **型変換**: F#↔C#境界での変換ロジック説明
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
 
-### コメントテンプレート例
+### Step目的の明確化プロセス
 
-```csharp
-// Blazor Server: StateHasChanged()を呼び出してUIを更新
-// StateHasChangedはBlazor Serverのライフサイクルメソッドで、
-// コンポーネントの状態が変更されたことをBlazorランタイムに通知する。
-// これにより、SignalR経由でクライアントに変更が通知され、UIが再レンダリングされる。
-StateHasChanged();
-```
+**原則**: Step開始前に目的・成果物を明確化（曖昧なまま開始禁止）
 
-```fsharp
-// F# Pattern Matching: Result型の成功/失敗を分岐処理
-// match式はF#の強力な構文で、Result<T, E>型の成功(Ok)と失敗(Error)を
-// 網羅的にチェックし、それぞれの場合の処理を記述できる。
-match result with
-| Ok value -> // 成功時の処理
-| Error err -> // 失敗時の処理
-```
+**例**: Step目的不明確 → ユーザー確認必須
+
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+
+### VSCode拡張機能更新時の検証プロセス
+
+**原則**: VS Code拡張機能更新時は影響範囲確認→検証→段階的適用
+
+**例**: C#拡張更新 → ビルド検証 → 問題なければ適用
+
+**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
 
 ---
 
-## 🔴 メインエージェント必須遵守事項（ADR_016・ADR_018準拠）
+## 🧪 E2Eテスト運用
 
-### エラー修正時の責務分担原則（タイミング問わず適用）
+### E2Eテスト実装タイミング原則
 
-#### MainAgent責務定義
+**原則**: 機能実装完了後すぐにE2Eテスト作成（後回し禁止）
 
-✅ **実行可能な作業**:
-- 全体調整・オーケストレーション
-- SubAgentへの作業委託・指示
-- 品質確認・統合テスト実行
-- プロセス管理・進捗管理
-- ドキュメント統合・レポート作成
+**例**: 認証機能実装完了 → 即座にE2Eテスト実装
 
-❌ **禁止事項（例外を除く）**:
-- 実装コードの直接修正
-- ビジネスロジックの追加・変更
-- 型変換ロジックの実装
-- テストコードの作成・修正
-- データベーススキーマの変更
+**詳細**: `Doc/08_Organization/Rules/Playwright_運用統合ガイドライン.md` 参照
 
-#### エラー発生時の必須対応原則
+### Playwright Test Agents活用指針
 
-1. **エラー内容で責務判定**（発生場所・タイミング問わず）
-2. **責務マッピングでSubAgent選定**：
-   - F# Domain/Application層 → fsharp-domain/fsharp-application
-   - F#↔C#境界・型変換 → contracts-bridge
-   - C# Infrastructure/Web層 → csharp-infrastructure/csharp-web-ui
-   - テストエラー → unit-test/integration-test
-3. **Fix-Mode活用**：`"[SubAgent名] Agent, Fix-Mode: [修正内容]"`
-4. **効率性より責務遵守を優先**
+**原則**: MainAgentオーケストレーション型（新規/大規模）、e2e-testスタンドアロン型（メンテナンス/小規模）
 
-#### 例外（直接修正可能）
+**例**: 新機能E2E → パターンA（planner→generator→e2e-test→healer）
 
-- 単純なtypo（1-2文字）
-- import文の追加のみ
-- コメントの追加・修正
-- 空白・インデントの調整
+**詳細**: `Doc/08_Organization/Rules/Playwright_運用統合ガイドライン.md` 参照
 
-**詳細**: `Doc/07_Decisions/ADR_018_SubAgent指示改善とFix-Mode活用.md`
+### E2Eテスト作成前の前提条件確認プロセス
+
+**原則**: E2Eテスト作成前に前提条件確認（機能実装完了・データ準備・環境構築）
+
+**例**: 機能実装未完了 → E2E作成延期
+
+**詳細**: `Doc/08_Organization/Rules/Playwright_運用統合ガイドライン.md` 参照
 
 ---
 
-## 🧪 新規テストプロジェクト作成時の必須確認事項
+## 🏗️ アーキテクチャ・設計原則
 
-**確認タイミング**（以下のいずれか）:
-1. **unit-test/integration-test Agent選択時**（step-start Command実行時）
-2. **新規テストプロジェクト作成指示を受けた時**（MainAgent/SubAgent問わず）
-3. **tests/配下に新規ディレクトリ・プロジェクトファイル作成前**
+### namespace設計原則
 
-**新規テストプロジェクト作成前に以下を必ず確認すること**（GitHub Issue #40再発防止策）：
+**原則**: Clean Architecture準拠のnamespace階層化（レイヤー分離原則）
 
-1. **ADR_020**: テストアーキテクチャ決定
-   - `/Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md`
-   - レイヤー×テストタイプ分離方式の理解
+**例**: Domain/Application/Contracts/Infrastructure/Web
 
-2. **テストアーキテクチャ設計書**: `/Doc/02_Design/テストアーキテクチャ設計書.md`
-   - プロジェクト構成図・命名規則・参照関係原則の確認
-
-3. **新規プロジェクト作成チェックリスト**: `/Doc/08_Organization/Rules/新規テストプロジェクト作成ガイドライン.md`
-   - 事前確認・プロジェクト作成・参照関係設定・ビルド確認・ドキュメント更新の全手順実施
-
-**命名規則（厳守）**: `UbiquitousLanguageManager.{Layer}.{TestType}.Tests`
-- **Layer**: Domain / Application / Contracts / Infrastructure / Web
-- **TestType**: Unit / Integration / UI / E2E
-
-**参照関係原則**:
-- **Unit Tests**: テスト対象レイヤーのみ参照
-- **Integration Tests**: 必要な依存層のみ参照
-- **E2E Tests**: 全層参照可
+**詳細**: `.claude/skills/clean-architecture-guardian/` 参照
 
 ---
 
-**最終更新**: 2025-10-26（**ADR vs Agent Skills 判断基準追加・30秒チェック確立**）
+## 🎯 初学者対応・コメント規約
+
+### Blazor Server・F#初学者対応
+
+**原則**: プロジェクトオーナーが初学者のため詳細なコメント必須
+
+**例**: Blazor: StateHasChanged説明、F#: Option型概念説明
+
+**詳細**: `CLAUDE.md` - Blazor Server・F#初学者対応 参照
+
+---
+
+## 🔴 メインエージェント責務
+
+### メインエージェント必須遵守事項
+
+**原則**: エラー修正は責務分担原則に基づきSubAgentへ委託（効率性より責務遵守優先）
+
+**例**: F# Domain層エラー → fsharp-domain Agent委託
+
+**詳細**: `CLAUDE.md` - メインエージェント必須遵守事項 参照
+
+---
+
+## 🧪 テストアーキテクチャ
+
+### 新規テストプロジェクト作成時の必須確認事項
+
+**原則**: ADR_020準拠のレイヤー×テストタイプ分離方式（命名規則・参照関係原則確認必須）
+
+**例**: UbiquitousLanguageManager.{Layer}.{TestType}.Tests
+
+**詳細**: `CLAUDE.md` + ADR_020 参照
+
+---
+
+**最終更新**: 2025-11-18（**Serenaメモリスリム化実施・Context効率化・-60%削減**）

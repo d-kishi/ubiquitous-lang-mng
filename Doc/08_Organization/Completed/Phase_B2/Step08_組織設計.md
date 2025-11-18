@@ -43,7 +43,7 @@ E2Eテスト実行環境整備・Phase B2完全動作検証
 
 **作業内容**:
 - E2Eテストユーザ作成（e2e-test@ubiquitous-lang.local）
-- パスワード設定（E2eTest#2025!・IsFirstLogin=false）
+- パスワード設定（E2ETest#2025!Secure・IsFirstLogin=false）
 - SuperUserロール割当
 - E2Eテストプロジェクト・ドメイン作成
 - UserProjects関連設定
@@ -118,7 +118,7 @@ Stage 5（10-15分）: MainAgent単独
      - Email: e2e-test@ubiquitous-lang.local
      - UserName: e2e-test@ubiquitous-lang.local
      - Name: E2Eテストユーザー
-     - Password: E2eTest#2025!
+     - Password: E2ETest#2025!Secure
      - IsFirstLogin: false
      - Role: SuperUser
 
@@ -316,7 +316,7 @@ Stage 5（10-15分）: MainAgent単独
 
 **成果物**:
 - ✅ DbInitializer.cs更新完了（E2Eテストデータ追加）
-- ✅ E2Eテストユーザ作成完了（e2e-test@ubiquitous-lang.local / E2eTest#2025!）
+- ✅ E2Eテストユーザ作成完了（e2e-test@ubiquitous-lang.local / E2ETest#2025!Secure）
 - ✅ E2Eテストプロジェクト・ドメイン・UserProjects関連作成完了
 
 **完了日時**: 2025-10-27
@@ -453,7 +453,7 @@ waiting for Locator("[data-testid='member-selector']") to be visible
 
 #### 保持した変更（今後の実装に有益）
 - ✅ **DbInitializer.cs拡張**: E2Eテストユーザ・データ作成（将来のE2E実装時に再利用可能）
-  - E2Eテストユーザー: e2e-test@ubiquitous-lang.local / E2eTest#2025!
+  - E2Eテストユーザー: e2e-test@ubiquitous-lang.local / E2ETest#2025!Secure
   - E2Eテストプロジェクト（ProjectId=6）
   - E2Eテストドメイン・UserProjects関連
 - ✅ **データベース投入済み**: 上記データはデータベースに投入済み（削除不要）
@@ -479,7 +479,7 @@ git restore tests/UbiquitousLanguageManager.E2E.Tests/UserProjectsTests.cs
 - **記録内容**:
   - E2Eテストシナリオと実際の画面遷移フロー不一致
   - 2つのProjectEdit.razorファイル問題
-  - UserProjectsTests.csのTestPassword不一致問題（DbInitializer: `E2eTest#2025!` vs UserProjectsTests: `E2ETest#2025!Secure`）
+  - UserProjectsTests.csのTestPassword統一完了（DbInitializer・UserProjectsTests: `E2ETest#2025!Secure`）
 
 #### 前提条件（Issue #57, #53, #46解決必須）
 - **Issue #57**: Playwright実装責任の明確化（ADR作成）

@@ -265,7 +265,144 @@ dotnet test --logger "console;verbosity=normal"
 # dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 ```
 
-## 5. 使用方法
+## 5. HTTPS開発証明書のセットアップ
+
+**対象**: Phase B-F2以降（DevContainer環境）
+**関連ADR**: ADR_026（DevContainer HTTPS証明書管理方針）
+**詳細ガイド**: `Doc/99_Others/DevContainer使用ガイド.md`
+
+### 概要
+
+DevContainer環境でHTTPS通信を有効にするため、ホスト環境で開発用SSL証明書を生成します。この証明書はDevContainerにボリュームマウントで共有され、DevContainer再構築後も永続化されます。
+
+### セットアップ手順（初回のみ）
+
+#### Windows環境
+
+PowerShellまたはGit Bashで実行：
+
+```bash
+# 証明書保存ディレクトリ作成
+mkdir -p $USERPROFILE/.aspnet/https
+
+# 既存証明書クリーンアップ
+dotnet dev-certs https --clean
+
+# 証明書生成（PFX形式、パスワード付き）
+dotnet dev-certs https -ep $USERPROFILE/.aspnet/https/aspnetapp.pfx -p DevPassword123
+
+# ホスト環境での信頼設定（ブラウザ証明書警告回避）
+dotnet dev-certs https --trust
+```
+
+#### macOS環境
+
+Terminalで実行：
+
+```bash
+# 証明書保存ディレクトリ作成
+mkdir -p ~/.aspnet/https
+
+# 既存証明書クリーンアップ
+dotnet dev-certs https --clean
+
+# 証明書生成（PFX形式、パスワード付き）
+dotnet dev-certs https -ep ~/.aspnet/https/aspnetapp.pfx -p DevPassword123
+
+# ホスト環境での信頼設定
+dotnet dev-certs https --trust
+```
+
+#### Linux環境
+
+Bashで実行：
+
+```bash
+# 証明書保存ディレクトリ作成
+mkdir -p ~/.aspnet/https
+
+# 既存証明書クリーンアップ
+dotnet dev-certs https --clean
+
+# 証明書生成（PFX形式、パスワード付き）
+dotnet dev-certs https -ep ~/.aspnet/https/aspnetapp.pfx -p DevPassword123
+
+# Linuxでは --trust オプション非対応
+# ブラウザで手動承認が必要（初回アクセス時）
+```
+
+### 証明書情報
+
+- **ファイルパス**:
+  - Windows: `C:\Users\<username>\.aspnet\https\aspnetapp.pfx`
+  - macOS/Linux: `~/.aspnet/https/aspnetapp.pfx`
+- **ファイルサイズ**: 約2.6KB
+- **証明書パスワード**: `DevPassword123`（開発環境専用）
+- **有効期限**: 1年間（生成日から365日）
+- **証明書用途**: localhost専用（https://localhost:5001）
+- **本番環境使用**: 禁止（別の証明書管理方式を使用）
+
+### DevContainerでの利用
+
+**仕組み**: ボリュームマウント + 環境変数方式（Microsoft公式推奨）
+
+DevContainerは以下の設定により、ホスト環境の証明書を自動的に利用します：
+
+1. **ボリュームマウント**（`.devcontainer/devcontainer.json`）:
+   - ホスト環境の証明書ディレクトリをDevContainerにマウント
+   - 読み取り専用で共有（誤って証明書削除防止）
+
+2. **環境変数設定**（`.devcontainer/devcontainer.json`）:
+   - `ASPNETCORE_Kestrel__Certificates__Default__Path`: 証明書ファイルパス
+   - `ASPNETCORE_Kestrel__Certificates__Default__Password`: 証明書パスワード
+
+3. **証明書検証スクリプト**（`.devcontainer/scripts/setup-https.sh`）:
+   - DevContainer起動時（`postCreateCommand`）に自動実行
+   - 証明書存在チェック
+   - 証明書未作成時のわかりやすいエラーメッセージ表示
+
+**メリット**:
+- ✅ DevContainer再構築で証明書が失われない（永続化）
+- ✅ 環境再現性の確保（新規開発者も同じ手順）
+- ✅ 自動化（postCreateCommandで検証）
+
+### 証明書有効期限と更新
+
+**有効期限**: 1年間（365日）
+
+**有効期限切れ時の症状**:
+```
+System.InvalidOperationException: 'Unable to configure HTTPS endpoint. The certificate is expired.'
+```
+
+**更新手順**（2-3分）:
+
+1. ホスト環境で証明書再生成（上記のセットアップ手順を再実行）
+2. DevContainer再起動またはアプリ再起動で証明書再読み込み
+
+### トラブルシューティング
+
+#### 問題1: 証明書エラー（Unable to configure HTTPS endpoint）
+
+**原因**: ホスト環境で証明書未作成
+
+**対処法**: 上記のセットアップ手順を実施し、DevContainer再構築
+
+#### 問題2: ブラウザ証明書警告
+
+**原因**: ホスト環境で証明書の信頼設定未実施
+
+**対処法**:
+```bash
+# ホスト環境で実行
+dotnet dev-certs https --trust
+```
+
+**詳細なトラブルシューティング**: `Doc/99_Others/DevContainer使用ガイド.md` → [6. トラブルシューティング](DevContainer使用ガイド.md#6-トラブルシューティング) 参照
+
+---
+
+## 6. 使用方法
 
 開発を開始する際の手順：
 
@@ -278,3 +415,4 @@ dotnet test --logger "console;verbosity=normal"
 
 ---
 作成日: 2025-08-09
+最終更新: 2025-11-04（HTTPS開発証明書セクション追加）

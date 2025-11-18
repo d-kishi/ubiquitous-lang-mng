@@ -24,6 +24,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **詳細**: `/Doc/07_Decisions/ADR_016_プロセス遵守違反防止策.md`
 
+## 🤝 CRITICAL: コミュニケーション原則
+
+**Claudeがユーザーに作業提案を行う際、以下の要素を必ず明示すること**:
+
+### 提案時の必須要素
+
+1. **目的**: この作業は誰のため（Claude自身/ユーザー/プロジェクト記録）なのか
+2. **根拠**: なぜこの作業が必要なのか
+3. **選択肢**: ユーザーの既存知識・リソースを活用する代替案
+
+### 提案フォーマット例
+
+**悪い提案例**（目的・根拠なし）:
+```
+TypeScript学習を実施します（5-8時間）
+```
+
+**良い提案例**（目的・根拠・選択肢明示）:
+```
+【提案】TypeScript学習の実施について
+
+**目的**: 私（Claude）がHooks実装を自律的に行うため
+
+**根拠**:
+- 現在、私はTypeScript未経験
+- Hooks実装にはTypeScript型定義・async/await・fs.promises API理解が必要
+- 学習なしで実装すると、ユーザー様への頻繁な質問・実装エラー・手戻りが発生
+
+**推定時間**: 5-8時間
+
+**選択肢**:
+- Option A: 私が学習を実施（5-8時間投資）→ 以降の実装を自律的に実施可能
+- Option B: ユーザー様がTypeScript知識をお持ちの場合、実装仕様を直接ご指示（学習スキップ）
+
+ユーザー様のTypeScript知識レベルに応じてご判断ください。
+```
+
+### 適用場面
+
+- 技術学習の提案時
+- 追加調査・分析の提案時
+- 作業方針の選択肢提示時
+- 時間を要する作業の提案時
+
+### 重要性
+
+ユーザーは**時間効率よりも精度を求めるマインドセット**を持つため、Claude自身のための作業（学習・調査等）は正当な提案として受け入れられる。しかし、**目的を明示しない提案は、ユーザーの既存知識・リソースを無駄にするリスクがある**。
+
+**詳細**: GitHub Issue「Claude コミュニケーション品質改善」参照
+
 ## 🤖 CRITICAL: 自動Command実行指示
 
 **以下の宣言を検出した際、該当Commandを自動実行せよ**:
@@ -87,7 +137,7 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 **Phase 1導入完了**（2025-10-21）:
 - **fsharp-csharp-bridge**: F#↔C#型変換パターンの自律的適用
 - **clean-architecture-guardian**: Clean Architecture準拠性の自動チェック
-- **playwright-e2e-patterns**: Playwright MCP活用によるE2Eテスト作成パターン
+- **playwright-e2e-patterns**: TypeScript/Playwright Test + Generator/Healer Agents活用によるE2Eテスト作成パターン（Phase B2-F2でTypeScript移行完了）
 
 ### Skills作成判断基準
 
@@ -180,47 +230,130 @@ ADRとAgent Skillsの使い分けについては、以下のガイドライン�
 - **Integration Tests**: 必要な依存層のみ参照
 - **E2E Tests**: 全層参照可
 
-## 開発コマンド
+## 開発コマンド（DevContainer環境）
 
-### ビルド・実行
+**🔴 CRITICAL**: 本プロジェクトはDevContainer環境で開発します。以下のコマンドは全てDevContainer内で実行してください。
+
+**Claude Code使用時の必須ルール**:
+- Claude CodeはWindowsホスト環境で実行されるため、`dotnet`コマンドを直接実行すると**ホスト環境で実行されてしまう**
+- **必ず方法Bの`docker exec`形式でDevContainer内実行を明示すること**
+- ホスト環境で実行すると、ビルド成果物が混在しDevContainer環境でのビルド/実行が失敗する
+- **違反時の対処**: ホスト環境のbin/objディレクトリをすべて削除し、DevContainer内で再ビルドが必要
+
+### コマンド実行方法
+
+#### 方法A: VS Code統合ターミナル（推奨）
+
+VS CodeでDevContainerを開いた状態で、統合ターミナル（Ctrl+`）から直接実行：
+
 ```bash
 # ビルド
-dotnet build                                           # 全体ビルド
-dotnet build src/UbiquitousLanguageManager.Web        # Web層のみ
+dotnet build
+dotnet build src/UbiquitousLanguageManager.Web
 
 # 実行
-dotnet run --project src/UbiquitousLanguageManager.Web # アプリ起動（https://localhost:5001）
+dotnet run --project src/UbiquitousLanguageManager.Web
 
-# Docker環境
-docker-compose up -d                                   # PostgreSQL/PgAdmin/Smtp4dev起動
-docker-compose down                                    # 停止
-```
+# テスト
+dotnet test
+dotnet test --filter "FullyQualifiedName~UserTests"
 
-### テスト
-```bash
-# テスト実行
-dotnet test                                            # 全テスト
-dotnet test --filter "FullyQualifiedName~UserTests"   # 特定テストのみ
-dotnet test --logger "console;verbosity=detailed"     # 詳細出力
-
-# カバレッジ測定
-dotnet test --collect:"XPlat Code Coverage"
-```
-
-### データベース
-```bash
-# Entity Framework
+# データベース
 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
+```
 
-# PostgreSQL接続
-psql -h localhost -U ubiquitous_lang_user -d ubiquitous_lang_db
+#### 方法B: ホスト環境から明示的実行（Claude Code用）
+
+**暫定対応**: Windows環境ではClaude Code Sandboxモードが非対応のため、以下の形式でDevContainer内実行を明示：
+
+```bash
+# ビルド
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet build
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet build src/UbiquitousLanguageManager.Web
+
+# 実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet run --project src/UbiquitousLanguageManager.Web
+
+# テスト
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test --filter "FullyQualifiedName~UserTests"
+
+# データベース
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef migrations add MigrationName --project src/UbiquitousLanguageManager.Infrastructure
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet ef database update --project src/UbiquitousLanguageManager.Infrastructure
+
+# E2Eテスト（TypeScript/Playwright Test）
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh authentication.spec.ts
+```
+
+### E2Eテスト自動実行（TypeScript/Playwright Test）
+
+**一括実行スクリプト**（推奨）:
+
+`tests/run-e2e-tests.sh`は、E2Eテスト実行を自動化するスクリプトです：
+- Webアプリケーションをバックグラウンド起動
+- ポート5001の応答待機（最大60秒）
+- E2Eテスト実行（npx playwright test）
+- プロセスクリーンアップ
+
+**実行時間**: 約30秒（手動実行3-5分 → 83-93%削減）
+
+**Phase B2-F2移行完了**: C# E2Eテスト削除・TypeScript/Playwright Test移行完了
+
+#### 方法A: VS Code統合ターミナル（推奨）
+
+```bash
+# 全E2Eテスト実行
+bash tests/run-e2e-tests.sh
+
+# 特定テストファイルのみ実行
+bash tests/run-e2e-tests.sh authentication.spec.ts
+bash tests/run-e2e-tests.sh user-projects.spec.ts
+```
+
+#### 方法B: ホスト環境から明示的実行（Claude Code用）
+
+```bash
+# 全E2Eテスト実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
+
+# 特定テストファイルのみ実行
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh authentication.spec.ts
+```
+
+**終了コード**:
+- `0`: テスト成功
+- `1`: テスト失敗またはエラー
+
+### Docker環境管理
+
+```bash
+# PostgreSQL/PgAdmin/Smtp4dev起動（ホスト環境で実行）
+docker-compose up -d
+
+# 停止
+docker-compose down
+
+# DevContainer確認
+docker ps --filter "name=devcontainer"
 ```
 
 ### 開発ツールURL
 - **アプリ**: https://localhost:5001
 - **PgAdmin**: http://localhost:8080 (admin@ubiquitous-lang.com / admin123)
 - **Smtp4dev**: http://localhost:5080
+
+### 暫定対応について
+
+**注意**: 現在、Windows環境ではClaude Code Sandboxモードが非対応のため、方法Bを使用しています。
+
+将来Sandboxモードが対応された際は、`docker exec`プレフィックスを省略して直接実行可能になります。
+
+**関連情報**:
+- GitHub Issue #63「Windows環境でのClaude Code Sandboxモード非対応に伴うDevContainer手動実行対応」
+- ADR_025「DevContainer + Sandboxモード統合採用」
 
 ## プロジェクト構成
 
@@ -272,6 +405,127 @@ Doc/
 - **スクラム開発**: 1-2週間スプリント（ADR_011）
 - **SubAgentプール方式**: 並列実行による効率化（ADR_013）
 - **詳細**: `/Doc/08_Organization/Rules/`参照
+
+## Claude Code実行環境・Sandboxモード統合（2025-11-03確定）
+
+### 🔴 CRITICAL: Claude Code実行場所の理解
+
+**標準構成（A方針・本プロジェクト採用）**: Claude Codeはホスト環境で実行
+- **Claude Code CLI**: Windows 11ホスト環境で起動（WSL2上ではない）
+- **DevContainer**: Sandboxモード環境として機能（セキュリティ分離）
+- **Sandboxモード**: Claude Codeがコマンド実行時にDevContainer内で安全に実行
+- **設定ファイル**: `.claude/settings.local.json`でSandbox有効化済み
+
+### Sandboxモード動作フロー
+```
+1. ユーザーがホスト環境でClaude Code CLIを起動
+2. `.claude/settings.local.json`の`sandbox.enabled: true`を読み込み
+3. dotnet/docker等のコマンド実行時、DevContainer内で自動実行
+4. ファイル操作・ビルド・テスト実行は全てSandbox環境で分離実行
+```
+
+### 非標準構成（B方針・非推奨）
+DevContainer内でClaude Code CLIを実行する構成は技術的に可能だが：
+- ❌ 複雑性増加（MCP Server設定・権限管理）
+- ❌ Sandbox二重化（意味なし）
+- ❌ Windows環境では非標準・サポート不足
+- ⚠️ **本プロジェクトでは採用しない**
+
+### 環境確認方法
+```bash
+# ホスト環境で実施（Windows PowerShell/Git Bash）
+dotnet --version       # .NET SDK確認
+docker --version       # Docker Desktop確認
+node --version         # Node.js確認
+
+# DevContainer内で実施（VS Code Terminal）
+# "Reopen in Container"後に実行
+dotnet --version       # .NET SDK 8.0.415確認
+dotnet build           # ビルド確認（Sandbox環境）
+dotnet test            # テスト実行（Sandbox環境）
+```
+
+### ロールバック手順
+DevContainer導入前の環境に戻す場合：
+1. VS Code左下の緑色ボタン「><」をクリック
+2. 「Reopen Folder Locally」を選択
+3. ホスト環境に復帰（30分以内）
+
+**詳細技術解説**: `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md`
+**決定記録**: ADR_025（Doc/07_Decisions/ADR_025_DevContainer_Sandboxモード統合.md）
+
+## DevContainer環境仕様詳細
+
+**確立日**: 2025-11-04（Phase B-F2 Step4完了時）
+
+### コンテナ仕様
+
+- **ベースイメージ**: mcr.microsoft.com/dotnet/sdk:8.0
+- **.NET SDK**: 8.0.415
+- **F# Runtime**: .NET SDK同梱（バージョン8.0）
+- **Node.js**: 24.x Active LTS（ホスト環境と統一）
+- **bubblewrap**: Sandboxセキュリティツール
+- **PostgreSQL Client**: psql 16
+
+### VS Code拡張機能自動インストール（15個）
+
+**設定場所**: `.devcontainer/devcontainer.json` の `extensions` 配列
+
+**基本開発環境（4個）**:
+- `ms-dotnettools.csharp` - C#言語サポート
+- `ionide.ionide-fsharp` - F#言語サポート
+- `ms-playwright.playwright` - Playwright E2Eテスト統合
+- `ms-vscode-remote.remote-containers` - DevContainer統合
+
+**.NET開発必須（4個）**:
+- `ms-dotnettools.csdevkit` - C# Dev Kit（包括的C#開発ツール）
+- `ms-dotnettools.vscode-dotnet-runtime` - .NET Runtimeマネージャー
+- `formulahendry.dotnet-test-explorer` - テストエクスプローラー
+- `editorconfig.editorconfig` - EditorConfig対応（コーディング規約統一）
+
+**開発効率向上（5個）**:
+- `eamodio.gitlens` - Git履歴・Blame可視化
+- `ms-azuretools.vscode-docker` - Docker統合
+- `christian-kohler.path-intellisense` - パス補完
+- `yzhang.markdown-all-in-one` - Markdownプレビュー・編集支援
+- `ms-ceintl.vscode-language-pack-ja` - 日本語言語パック
+
+**AI支援（2個）**:
+- `github.copilot` - GitHub Copilot（AI ペアプログラミング）
+- `github.copilot-chat` - GitHub Copilot Chat（AI 対話支援）
+
+**重要**: DevContainer内で拡張機能を手動インストールしても `devcontainer.json` には自動記録されない。必ず手動で追加すること。
+
+### 接続文字列調整
+
+- **ホスト環境**: `Host=localhost;Port=5432;...`
+- **DevContainer環境**: `Host=postgres;Port=5432;...`（docker-compose service名参照）
+- **自動設定**: devcontainer.jsonのremoteEnv環境変数で自動設定済み
+
+### クロスプラットフォーム対応
+
+**設定場所**: `.gitattributes` (2025-11-03追加)
+
+**背景**:
+- Windows（CRLF）とLinux（LF）の改行コード混在により、C# nullable reference type解析が影響を受ける
+- Phase B-F2 Step4で78個の警告（CS8600, CS8625, CS8602, CS8604, CS8620）が発生したが、`.gitattributes` 追加後に0件に解消
+
+**重要発見**: 改行コード混在（CRLF vs LF）がC#コンパイラのnullable reference type解析に影響する
+
+**適用方法**:
+```bash
+# .gitattributes作成後、既存ファイルに適用
+git add --renormalize .
+```
+
+**設定内容**: テキストファイルは全てLF改行、バイナリファイルは変更なし
+
+**効果**:
+- クロスプラットフォーム開発環境でのビルド一貫性確保
+- コンパイラ警告の排除（78件 → 0件）
+- Git差異問題解決（676件 → 15件）
+
+**参照**: `.serena/memories/tech_stack_and_conventions.md` - DevContainer環境構成
 
 ## Context管理・セッション継続判断（2025-10-13策定）
 

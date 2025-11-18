@@ -1,11 +1,27 @@
-# Agent Skills Phase 1 効果測定
+# Agent Skills 効果測定
 
 ## 📊 概要
 
-**目的**: Agent Skills Phase 1導入の効果を定量的に測定
-**導入日**: 2025-10-21
-**測定期間**: Phase B2 Step5 ～ Phase B3完了（推定2-3週間）
-**対象Skill**: fsharp-csharp-bridge + clean-architecture-guardian
+**目的**: Agent Skills Phase 1/Phase 2導入の効果を定量的に測定
+
+### Phase 1測定
+- **導入日**: 2025-10-21
+- **測定期間**: Phase B2 Step5 ～ Phase B3完了（推定2-3週間）
+- **対象Skill**: fsharp-csharp-bridge + clean-architecture-guardian
+
+### Phase 2測定
+- **導入日**: 2025-11-01（Phase B-F2 Step2）
+- **測定期間**: Phase B-F2 Step3以降 ～ Phase B-F2完了（推定1-2週間）
+- **対象Skill**: tdd-red-green-refactor + spec-compliance-auto + adr-knowledge-base + subagent-patterns + test-architecture
+
+### 測定方針
+
+**Phase 2では新測定項目を追加**:
+- SubAgent選択精度（subagent-patterns Skill）
+- TDD実践パターン適用率（tdd-red-green-refactor Skill）
+- 仕様準拠チェック自動化効果（spec-compliance-auto Skill）
+- ADR参照効率化（adr-knowledge-base Skill）
+- テストアーキテクチャ準拠率（test-architecture Skill）
 
 ---
 

@@ -324,7 +324,7 @@
 1. **E2Eテストユーザ作成**（30分）✅ 完了
    - ユーザアカウント作成（`e2e-test@ubiquitous-lang.local`）
    - **IsFirstLogin = false**（初回ログイン済み状態）
-   - PasswordHash設定（平文パスワード: `E2eTest#2025!`）
+   - PasswordHash設定（平文パスワード: `E2ETest#2025!Secure`）
    - SuperUserロール付与（全機能アクセス権限）
    - EF Seeding（DbInitializer.cs）で作成（Step7決定方式準拠）
 
@@ -754,7 +754,7 @@
 #### 申し送り事項
 1. **E2Eテスト実装延期**: GitHub Issue #59記録済み、Issue #57/#53解決後に再設計必須
 2. **2つのProjectEdit.razorファイル問題**: Phase B3前に統合・使い分けルール明確化推奨
-3. **TestPassword不一致**: DbInitializer（`E2eTest#2025!`）とUserProjectsTests（`E2ETest#2025!Secure`）の統一必要
+3. **TestPassword統一完了**: DbInitializerとUserProjectsTestsともに `E2ETest#2025!Secure` に統一済み
 4. **技術負債依存関係**: Issue #57 → #53 → #59 の順で解決推奨
 
 #### 次Phase推奨
