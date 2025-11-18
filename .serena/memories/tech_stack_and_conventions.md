@@ -1,6 +1,6 @@
 # 技術スタック・規約
 
-**最終更新**: 2025-11-18（**Serenaメモリスリム化実施・詳細内容移行完了**）
+**最終更新**: 2025-11-18（**Phase B-F2完了・DevContainer環境確立・Agent Skills Phase 2展開完了**）
 
 ---
 
@@ -54,7 +54,9 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **認証**: ASP.NET Core Identity
 - **テスト**: xUnit + FsUnit + Moq + WebApplicationFactory + bUnit (Blazor Component Testing)
 - **E2Eテスト**: TypeScript/Playwright Test（Phase B-F2 Step6でTypeScript移行完了）
-- **⭐Agent Skills**: Phase 1-3導入完了（計8個Skills確立）
+- **⭐Agent Skills**: Phase 1-2展開完了（計8個Skills確立・自律適用確認済み）
+  - **Phase 1 Skills（3個）**: fsharp-csharp-bridge, clean-architecture-guardian, playwright-e2e-patterns
+  - **Phase 2 Skills（5個）**: tdd-red-green-refactor, spec-compliance-auto, adr-knowledge-base, subagent-patterns, test-architecture
 
 ---
 
@@ -68,15 +70,31 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 **詳細**: `CLAUDE.md` - DevContainer環境仕様詳細（コンテナ仕様・VS Code拡張機能15個・接続文字列・クロスプラットフォーム対応）
 
-### DevContainer + Sandboxモード統合効果
+### DevContainer + Sandboxモード統合効果（Phase B-F2 Step4完了・2025-11-04）
 
-**原則**: セットアップ時間96%削減・承認プロンプト84%削減
+**セットアップ時間削減**: 96%削減達成（75-140分 → 5-8分）
+**環境再現性**: 100%（HTTPS証明書ボリュームマウント方式・Microsoft公式推奨）
+**開発効率向上**: VS Code拡張15個自動インストール・即座に開発開始可能
 
-**例**: セットアップ時間 75-140分 → 5-8分、承認プロンプト 30-50回/Phase → 5-8回/Phase
+**技術構成**:
+- **.devcontainer/devcontainer.json**: VS Code拡張・Sandbox設定・ポート転送・環境変数・HTTPS証明書ボリュームマウント
+- **.devcontainer/Dockerfile**: .NET 8.0 + F# 8.0 + Node.js 24 + bubblewrap環境
+- **.devcontainer/docker-compose.yml**: Container orchestration設定
+- **.devcontainer/scripts/setup-https.sh**: HTTPS証明書検証スクリプト
+- **.claude/settings.local.json**: Sandboxモード有効化
 
-**詳細**:
+**重要な技術発見**:
+- **改行コード混在問題**: CRLF vs LFがC# nullable reference type解析に影響（`.gitattributes`設定で解決）
+- **HTTPS証明書管理**: ボリュームマウント方式により環境再現性100%確保
+- **Windows Sandboxモード**: 非対応判明（Issue #63で継続追跡）
+
+**詳細ドキュメント**:
 - `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md` - 技術解説
-- ADR_025（`Doc/07_Decisions/ADR_025_DevContainer_Sandboxモード統合.md`） - 決定記録
+- ADR_025 - DevContainer + Sandboxモード統合採用
+- ADR_026 - DevContainer HTTPS証明書管理方針（約11,000文字）
+- DevContainer使用ガイド（約8,700文字）
+- 環境構築手順書更新（HTTPS証明書セクション追加）
+- トラブルシューティングガイド更新（DevContainer問題セクション追加）
 
 ---
 
@@ -279,6 +297,11 @@ MainAgent → Task(e2e-test) → テスト実装/実行/検証
 
 ---
 
-**最終更新**: 2025-11-18（**Serenaメモリスリム化実施・詳細内容移行完了・-69%削減**）
+**最終更新**: 2025-11-18（**Phase B-F2完了・DevContainer環境確立・Agent Skills Phase 2展開完了**）
 **前回更新**: 2025-11-04（Week 44週次振り返り完了・MCP仕様/ADR vs Skills判断基準追加）
-**重要変更**: 詳細内容を既存ファイルに移行（CLAUDE.md・データベース設計書.md・開発手法詳細ガイド.md）、基本原則 + 例示 + 参照形式に再構成
+**Phase B-F2主要成果**:
+- DevContainer環境構築完了（セットアップ時間96%削減・環境再現性100%）
+- Agent Skills Phase 2展開完了（+5個・計8個Skills確立）
+- e2e-test Agent新設（14種類目・Playwright専門Agent）
+- Agent SDK Phase 1技術検証完了（TypeScript学習・Hooks実装・実現可能性確認）
+- ADR 3件作成（ADR_024, 025, 026）・ドキュメント4件作成

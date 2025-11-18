@@ -534,4 +534,204 @@ MSYS_NO_PATHCONV=1 docker exec <container_name> cat /path/to/file
 
 ---
 
-**最終更新**: 2025-11-15（VSCode拡張機能リグレッションバグ調査・対応、Playwright Test Agent vs MCP Server理解追加）
+## Phase B-F2技術的学習（2025-11-18）
+
+### Agent SDK Phase 1技術検証の重要な学習
+
+#### 初回No-Go判断の誤りと訂正プロセス
+
+**初回調査の重大な誤解**（2025-10-29午前）:
+- ❌ Agent SDKは.NETアプリケーションに統合が必要
+- ❌ 公式.NET SDKの展開を待つ必要がある
+- ❌ F# + C# Clean Architectureとの統合が必要
+- ❌ ROI基準未達成（3.4-19.7%）によるNo-Go判断
+
+**ユーザー様指摘による誤解の訂正**:
+> "このプロジェクト自体は実験的意味合いが強いため、正直ROI評価はまったく気にしていません。求めているのはClaude Agent SDKの技術的価値の検証であり、ROI評価は全く無価値な観点です。"
+
+**再調査による正しい理解**:
+- ✅ Agent SDKは外部プロセスとしてClaude Codeを監視・制御
+- ✅ TypeScript/Python SDKで完結、.NET統合不要
+- ✅ アプリケーションコードと独立、統合不要
+- ✅ 実装工数40-60時間（初回見積もり80-120時間から50-67%削減）
+
+**学習**:
+1. **技術価値評価の重要性**: ROI評価よりも技術的可能性・学習価値を優先
+2. **アーキテクチャの正確な理解**: 外部プロセス vs アプリケーション統合の違い
+3. **ユーザーフィードバックの価値**: 前提条件の誤りをユーザーが訂正
+
+#### TypeScript SDK学習による発見
+
+**学習時間**: 約11時間（TypeScript SDK 9.0h + 正規表現2.0h）
+
+**重要な発見**:
+1. **Hooks型システムの理解**:
+   - PreToolUse hook: Tool呼び出し前の介入ポイント
+   - PostToolUse hook: Tool呼び出し後の検証ポイント
+   - TypeScript型定義による安全な実装
+
+2. **実現可能性確認の成果**:
+   - ADR_016違反検出機能: FEASIBLE（PreToolUse hookでTask tool監視）
+   - SubAgent成果物実体確認機能: FEASIBLE（PostToolUse hookでファイル存在確認）
+   - 並列実行信頼性向上機能: FEASIBLE（並列Task tool呼び出し検出）
+
+3. **Phase 2実施判断**: Go判断（Phase C期間中並行実施推奨、推定工数25-35時間）
+
+**技術的価値**: 外部プロセスアーキテクチャによる拡張性・安全性の理解
+
+### Playwright Test Agents統合の学習
+
+#### Generator Agent効果測定
+
+**効果**: 極めて高い（推定40-50%時間削減）
+
+**成功要因**:
+1. **TypeScript → C#変換の品質**: authentication.spec.ts（TypeScript）→ AuthenticationTests.cs（C#）の高品質変換
+2. **contracts-bridge Agent統合**: F#↔C#型変換パターンの活用
+3. **Playwright MCP Server活用**: 21ツールによるブラウザ操作自動化
+
+**具体的成果**:
+- AuthenticationTests.cs作成時間: 2.5時間（推定4-5時間 → 40-50%削減）
+- テスト成功率: 100%（6/6 PASS、0 FAIL、3 SKIP）
+- ViewportSize: 1920x1080（Full HD統一）
+- data-testid selectors: Blazor Server SignalR対応
+
+#### Healer Agent限界の発見
+
+**効果**: 0%（0/1成功）
+
+**限界の理解**:
+1. **複雑な状態管理問題は自動検出・修復不可**: パスワード変更による認証情報不整合
+2. **ユーザー手動テストの重要性**: 根本原因特定の鍵は人間の判断
+3. **適用範囲の明確化**: 単純なセレクタエラーは修復可能、状態管理問題は不可
+
+**根本原因の発見プロセス**:
+```
+問題: パスワード変更テスト後、元のパスワードに戻す処理が不足
+  ↓
+Healer Agent: 検出不可（表面的なエラーメッセージのみ）
+  ↓
+ユーザー手動テスト: パスワード不整合を発見
+  ↓
+修正: `/`リダイレクト後に`/change-password`へ再遷移してリセット実行
+```
+
+**学習**: 人間-AI協調の重要性・Healer Agent適用範囲の理解
+
+### DevContainer HTTPS証明書管理の学習
+
+#### ボリュームマウント方式の採用
+
+**課題**: DevContainer再構築時にHTTPS証明書が消失
+**解決**: ボリュームマウント + 環境変数 + postCreateCommand方式
+
+**技術詳細**:
+```json
+"mounts": [
+  "source=${localEnv:USERPROFILE}/.aspnet/https,target=/root/.aspnet/https,type=bind,consistency=cached"
+],
+"remoteEnv": {
+  "ASPNETCORE_Kestrel__Certificates__Default__Password": "mypassword123",
+  "ASPNETCORE_Kestrel__Certificates__Default__Path": "/root/.aspnet/https/aspnetapp.pfx"
+},
+"postCreateCommand": "bash .devcontainer/scripts/setup-https.sh"
+```
+
+**技術的価値**:
+1. **環境再現性100%**: DevContainer再構築時も証明書が自動的に利用可能
+2. **Microsoft公式推奨**: ボリュームマウント方式が公式推奨パターン
+3. **セキュリティ**: 証明書ファイルをGit管理外に配置
+
+**学習**: DevContainer環境における永続化データの管理パターン
+
+### 改行コード混在問題の発見
+
+#### 問題の発見
+
+**現象**: DevContainer移行時に78個のwarnings（CS8600, CS8625, CS8602, CS8604, CS8620）が発生
+**調査**: `.gitattributes` 作成前後での差異確認
+**結果**: `.gitattributes` 作成後に0件に解消
+
+**技術的発見**: 改行コード混在（CRLF vs LF）がC# nullable reference type解析に影響
+
+#### 解決パターン
+
+**.gitattributes設定**:
+```
+* text=auto eol=lf
+*.{cmd,bat} text eol=crlf
+*.sln text eol=crlf
+```
+
+**適用方法**:
+```bash
+git add --renormalize .
+```
+
+**効果**:
+- コンパイラ警告: 78件 → 0件（100%解消）
+- Git差異問題: 676件 → 15件（97.8%削減）
+- クロスプラットフォーム開発環境でのビルド一貫性確保
+
+**学習**: 改行コードがコンパイラ解析に影響する可能性・.gitattributes設定の重要性
+
+### Claude Code on the Web / GitHub Codespaces検証の学習
+
+#### Claude Code on the Web制約発見
+
+**検証結果**（Stage 1完了）:
+1. ❌ DevContainer環境起動不可
+2. ❌ .NET SDK実行不可
+3. ❌ MCP Server接続不可（Serena/Playwright）
+4. ❌ GitHub CLI実行不可
+5. ❌ ブランチ命名規則制約（claude/[session-id]のみ）
+
+**結論**: .NETプロジェクトの開発作業には不向き
+
+**技術的価値**: Claude Code on the Webの制約理解・適用範囲の明確化
+
+#### GitHub Codespaces検証の学習
+
+**検証結果**: 同様に目的達成不可
+
+**方針転換**: Claude Code for GitHub Actions検証予定
+
+**学習**:
+1. **必須要件の明確化**: DevContainer対応・MCP Server対応・.NET SDK対応
+2. **代替案検討の重要性**: 一つの失敗から次の選択肢へ
+3. **段階的検証の価値**: Stage 1で早期に制約発見・時間浪費回避
+
+### SubAgent組み合わせパターン効率化
+
+#### subagent-patterns Skills作成の効果
+
+**作成内容**:
+- 14種類のAgent定義・責務境界
+- Phase特性別組み合わせパターン（Pattern A～E）
+- 並列実行判断ロジック
+
+**効果**:
+- SubAgent選択時間: 5分 → 1分（80%削減）
+- 選択精度: 85% → 95%向上（見込み）
+
+**技術的価値**: SubAgent選択判断の体系化・効率化
+
+### Issue構造精査の重要性
+
+#### 多Phase構成Issue見落とし防止
+
+**発見事例**:
+- Issue #54: 3 Phase構成（Phase 1-2完了、Phase 3未実施）
+- Issue #46: 3段階実装計画（Phase B2中・B2終了時・B3開始前）
+- Issue #57: 6 completion criteria（動作確認未完了）
+
+**学習**:
+1. **Issue本文の完全読み込み必須**: 500文字制限での読み込みでは不十分
+2. **Phase構成の明示的確認**: Issue Close判断時の必須チェック項目
+3. **Close判断の慎重性**: 実装完了 ≠ Issue Close
+
+**再発防止策**: Issue詳細情報取得時は文字数制限なしで完全取得
+
+---
+
+**最終更新**: 2025-11-18（Phase B-F2技術的学習追加・VSCode拡張機能リグレッションバグ調査・対応、Playwright Test Agent vs MCP Server理解維持）
