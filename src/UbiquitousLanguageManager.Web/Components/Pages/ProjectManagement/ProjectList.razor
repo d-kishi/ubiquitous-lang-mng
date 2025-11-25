@@ -5,7 +5,6 @@
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.FSharp.Core
-@using UbiquitousLanguageManager.Web.Pages.Admin.Components
 @using UbiquitousLanguageManager.Web.Components.Authorization
 @inject IProjectManagementService ProjectManagementService
 @inject NavigationManager NavigationManager
@@ -84,17 +83,24 @@
                 </div>
             </div>
 
-            @* Loading State with LoadingOverlay *@
-            <div class="position-relative">
-                <LoadingOverlay IsVisible="@isLoading"
-                               LoadingText="プロジェクト情報を読み込んでいます..."
-                               SpinnerType="LoadingOverlay.SpinnerStyle.Border"
-                               Size="LoadingOverlay.SpinnerSize.Medium" />
-
-                @if (!isLoading)
-                {
-                    @* Projects DataGrid *@
-                    <div class="card">
+            @* Loading State *@
+            @* 【Blazor Server初学者向け解説】
+               LoadingOverlayカスタムコンポーネント削除に伴う代替実装
+               Bootstrap標準のspinnerとBlazorの@if文による条件表示を使用
+               isLoadingフラグでspinnerの表示/非表示を制御 *@
+            @if (isLoading)
+            {
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">プロジェクト情報を読み込んでいます...</span>
+                    </div>
+                    <p class="mt-2">プロジェクト情報を読み込んでいます...</p>
+                </div>
+            }
+            else
+            {
+                @* Projects DataGrid *@
+                <div class="card">
                         <div class="card-body p-0">
                             @if (filteredProjects?.Any() == true)
                             {
@@ -236,19 +242,10 @@
                         </div>
                     </div>
                 }
-            </div>
+            }
         </div>
     </div>
 </div>
-
-@* 削除確認ダイアログ *@
-<ConfirmationDialog @ref="deleteDialog"
-                   Title="プロジェクト削除確認"
-                   Message="@deleteConfirmMessage"
-                   Type="ConfirmationDialog.DialogType.Danger"
-                   OnConfirm="ExecuteDelete"
-                   ConfirmText="削除"
-                   CancelText="キャンセル" />
 
 @code {
     // 【Blazor Server初学者向け解説】
@@ -278,7 +275,6 @@
     // 削除関連
     private ProjectDto? selectedProject;
     private string deleteConfirmMessage = "";
-    private ConfirmationDialog? deleteDialog;
 
     // 認証状態
     private Guid currentUserId;
@@ -534,17 +530,22 @@
 
     /// <summary>
     /// 削除確認ダイアログ表示
+    /// 【Blazor Server初学者向け解説】
+    /// ConfirmationDialogカスタムコンポーネント削除に伴う代替実装
+    /// IJSRuntime.InvokeAsync&lt;bool&gt;("confirm", message)でJavaScript confirm()を呼び出し
+    /// 戻り値のboolでユーザーの選択（OK/Cancel）を判定
     /// </summary>
-    private void ShowDeleteConfirmation(ProjectDto project)
+    private async Task ShowDeleteConfirmation(ProjectDto project)
     {
         selectedProject = project;
-        deleteConfirmMessage = $"プロジェクト「{project.Name}」を削除しますか？\n" +
-                              $"関連ドメイン: {project.Domains.Count}個\n" +
-                              $"※ この操作は取り消せません。";
+        deleteConfirmMessage = $"プロジェクト「{project.Name}」を削除してもよろしいですか？\n削除後も論理削除として復元可能です。";
 
-        if (deleteDialog != null)
+        // JavaScript confirm()で確認
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", deleteConfirmMessage);
+
+        if (confirmed)
         {
-            deleteDialog.Show();
+            await ExecuteDelete();
         }
     }
 

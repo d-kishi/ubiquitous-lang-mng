@@ -67,8 +67,10 @@
 
 ## 📊 Step構成（10 Steps）
 
-**Part 1: 前提タスク対処**（Step1-4）
-- Step 1-2: Phase A完全完成
+**Part 1: 前提タスク対処**（Step1-4 + Step1.5）
+- Step 1: ユーザー管理UI実装
+- Step 1.5: ユーザー管理UI全面リファクタ（Option A）【追加】
+- Step 2: 認証補助機能UI
 - Step 3-4: Issue対処・システム改善
 
 **Part 2: Phase B機能完成**（Step5-10）
@@ -163,6 +165,82 @@
 - ✅ 単体・統合テスト80%+カバレッジ
 - ✅ 0 Warning/0 Error維持
 - ✅ Issue #52 Close可能状態
+
+---
+
+### Step 1.5: ユーザー管理UI全面リファクタ（Option A）
+
+**推定時間**: 6-10時間（1-2セッション）
+**優先度**: 🔴 Critical
+**前提条件**: Step1 Stage1-2完了済み
+**背景**: Step1 Stage3でIndex.razor初期表示だけで7件のIssue発生 → 品質問題判明
+
+#### 背景・経緯
+
+**問題発生**:
+- Step1 Stage3（ユーザー動作確認）開始
+- 本来目的: UIレイアウト確認・フィードバック収集
+- 実際の状況: Index.razor初期表示だけで7件のIssue発生
+  - Issue #1-6: 各種バグ・表示エラー
+  - Issue #7: Blazor Server デッドロック（.GetAwaiter().GetResult()問題）
+
+**根本原因分析**:
+- Step1実装時に `/Pages/Admin/` 配下のPhase A初期実装を参考にした
+- Phase A初期実装はClaude Code v1時代のコード
+- 当時の品質基準が現在と大きく異なる
+- **信頼できない品質のコードをベースにしたため、問題が連鎖**
+
+**ユーザー判断**:
+- Stage3を継続しても同等の問題が続く可能性が高い
+- デバッグ継続より全面リファクタの方が効率的
+- **Option A: 既存コード一切不信用・仕様書ベース再実装を採用**
+
+#### 実施内容
+
+**方針**: 既存のrazorファイル内容を全面書き換え。ファイル配置は維持。
+
+1. **Index.razor 全面書き換え**（2-3h）
+   - UI設計書3.6節に完全準拠
+   - 既存コードを参考にしない
+   - Clean Architecture準拠・F#↔C#境界パターン適用
+   - SubAgent: csharp-web-ui
+
+2. **Create.razor 全面書き換え**（2-3h）
+   - UI設計書3.7節に完全準拠
+   - 既存コードを参考にしない
+   - SubAgent: csharp-web-ui
+
+3. **Edit.razor 全面書き換え**（2-3h）
+   - UI設計書3.8節に完全準拠
+   - 既存コードを参考にしない
+   - SubAgent: csharp-web-ui
+
+4. **UI Tests 再作成**（1-2h）
+   - bUnitテスト全面書き換え
+   - SubAgent: unit-test
+
+#### 保持する成果物（Step1で修正済み）
+
+以下はStep1.5スコープ外（既に正しく修正済み）:
+
+| 成果物 | 理由 |
+|--------|------|
+| `UserRepositoryAdapter.cs` async化 | Issue #7修正。Infrastructure層バグ修正として有効 |
+| `/Pages/Admin/` 削除 | 旧構造クリーンアップ完了 |
+| ファイル配置（Components/Pages/Admin/Users/） | ディレクトリ構造は正しい |
+| Contracts DTOs（UpdateUserDto等） | DTO定義は再利用可能 |
+
+#### 完了基準
+
+- ✅ Index/Create/Edit 3画面がUI設計書通り動作
+- ✅ Stage3で発生したIssue #1-7相当の問題が再発しない
+- ✅ 単体テスト全Pass
+- ✅ 0 Warning/0 Error維持
+
+#### Step1.5完了後
+
+- **Stage3再開**: Step1.5完了後、Stage3（ユーザー動作確認）を再実施
+- Stage3の本来目的（UIレイアウト確認・フィードバック）を達成
 
 ---
 
@@ -633,18 +711,19 @@
 | Step | タスク内容 | 推定時間 | セッション | 累積時間 |
 |------|-----------|---------|-----------|---------|
 | **Step 1** | Phase A対応漏れ（ユーザー管理UI） | 8-12h | 1-2 | 8-12h |
-| **Step 2** | Phase A対応漏れ（認証補助機能UI） | 5-8h | 1 | 13-20h |
-| **Step 3** | Phase B UI拡張 + Agent検証 | 2-4h | 1 | 15-24h |
-| **Step 4** | システム改善・Issue対処（並列） | 4-5.5h | 1 | 19-29.5h |
-| **合計（Part 1）** | 前提タスク対処 | **19-29.5h** | **3-5** | - |
-| **Step 5** | サイドメニュー→プロジェクト一覧画面遷移 | 1-2h | 1 | 20-31.5h |
-| **Step 6** | 統計情報表示（所属ドメイン数・ユーザー数） | 2-3h | 1 | 22-34.5h |
-| **Step 7** | ProjectMembers.razor削除（設計外実装） | 1h | 1 | 23-35.5h |
-| **Step 8** | デフォルトドメイン自動作成確認 | 1-2h | 1 | 24-37.5h |
-| **Step 9** | 削除時影響分析 | 2-4h | 1 | 26-41.5h |
-| **Step 10** | ユーザ動作確認・Phase B3移行可否判断 | 時間不明 | 1 | 26-41.5h + α |
+| **Step 1.5** | ユーザー管理UI全面リファクタ（Option A）【追加】 | 6-10h | 1-2 | 14-22h |
+| **Step 2** | Phase A対応漏れ（認証補助機能UI） | 5-8h | 1 | 19-30h |
+| **Step 3** | Phase B UI拡張 + Agent検証 | 2-4h | 1 | 21-34h |
+| **Step 4** | システム改善・Issue対処（並列） | 4-5.5h | 1 | 25-39.5h |
+| **合計（Part 1）** | 前提タスク対処 | **25-39.5h** | **4-7** | - |
+| **Step 5** | サイドメニュー→プロジェクト一覧画面遷移 | 1-2h | 1 | 26-41.5h |
+| **Step 6** | 統計情報表示（所属ドメイン数・ユーザー数） | 2-3h | 1 | 28-44.5h |
+| **Step 7** | ProjectMembers.razor削除（設計外実装） | 1h | 1 | 29-45.5h |
+| **Step 8** | デフォルトドメイン自動作成確認 | 1-2h | 1 | 30-47.5h |
+| **Step 9** | 削除時影響分析 | 2-4h | 1 | 32-51.5h |
+| **Step 10** | ユーザ動作確認・Phase B3移行可否判断 | 時間不明 | 1 | 32-51.5h + α |
 | **合計（Part 2）** | Phase B機能完成 | **7-12h + α** | **5** | - |
-| **総合計（Phase B-F3全体）** | Part 1 + Part 2 | **26-41.5h + α** | **8-10** | - |
+| **総合計（Phase B-F3全体）** | Part 1 + Part 2 | **32-51.5h + α** | **9-12** | - |
 
 ### マイルストーン
 
@@ -750,6 +829,13 @@
 | **Step 1** | テスト設計・実装 | `Doc/08_Organization/Rules/テスト戦略ガイド.md` | TDD実践セクション | Red-Green-Refactorサイクル適用 |
 | **Step 1** | E2Eテスト作成 | GitHub Issue #52 | E2Eテストシナリオ | ユーザー管理10シナリオ実装指針 |
 | **Step 1** | 既存実装削除 | `src/UbiquitousLanguageManager.Web/Pages/Admin/UserManagement.razor` | 全体（758行） | 仕様乖離確認・削除対象特定 |
+| **Step 1.5** | Index.razor全面書き換え | `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.6節（ユーザー一覧画面） | UI仕様完全準拠・既存コード不信用 |
+| **Step 1.5** | Create.razor全面書き換え | `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.7節（ユーザー登録画面） | UI仕様完全準拠・既存コード不信用 |
+| **Step 1.5** | Edit.razor全面書き換え | `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.8節（ユーザー編集画面） | UI仕様完全準拠・既存コード不信用 |
+| **Step 1.5** | 権限制御実装 | `Doc/02_Design/権限制御テストマトリックス.md` | 全体（4ロール×4機能） | 権限判定ロジック検証 |
+| **Step 1.5** | UIテスト再作成 | `Doc/08_Organization/Rules/テスト戦略ガイド.md` | TDD実践セクション | bUnitテスト全面書き換え |
+| **Step 1.5** | F#↔C#境界パターン | `.claude/skills/fsharp-csharp-bridge.md` | 変換パターン4種 | 型変換・境界コード品質確保 |
+| **Step 1.5** | Clean Architecture準拠 | `.claude/skills/clean-architecture-guardian.md` | 全体 | 層間依存・循環参照防止 |
 | **Step 2** | プロフィール変更画面 | `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.2節（プロフィール変更画面） | UI実装仕様確認 |
 | **Step 2** | パスワードリセットメール送信 | `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.4節（パスワードリセットメール送信） | UI実装仕様確認 |
 | **Step 2** | パスワードリセット実行 | `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.5節（パスワードリセット実行） | UI実装仕様確認 |

@@ -21,7 +21,10 @@ type IUserRepository =
     
     // 🔍 ユーザー検索: IDによる一意検索
     abstract member GetByIdAsync: userId: UserId -> Task<Result<User option, string>>
-    
+
+    // 🔍 ユーザー検索: ASP.NET Identity ID（文字列）による一意検索
+    abstract member GetByIdentityIdAsync: identityId: string -> Task<Result<User option, string>>
+
     // 💾 ユーザー保存: 新規作成・更新の両方に対応
     abstract member SaveAsync: user: User -> Task<Result<User, string>>
     

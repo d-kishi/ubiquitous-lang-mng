@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-20（**Phase B-F2完了・Phase B-F3開始準備完了**）
+**最終更新**: 2025-11-25（**Phase B-F3 Step1.5追加・UI全面リファクタ準備完了**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -17,19 +17,21 @@
 
 ### 現在のPhase/Step状況
 
-✅ **Phase B-F3 Step1開始準備完了**（Section 1-5完了・100%）
-- **状態**: Step1組織設計ファイル作成完了・実行記録テンプレート追加完了・Step開始承認取得完了
+🔄 **Phase B-F3 Step1.5開始準備完了**（Phase_Summary.md更新済み）
+- **状態**: Step1 Stage3で品質問題発生 → Step1.5（UI全面リファクタ）追加決定
 - **Phase目的**: Phase A完全完成（25% → 100%） + Phase B完全完成（100%） + ユーザー動作確認
-- **Phase構成**: Part 1（Step1-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
-- **推定期間**: 26-41.5h + α（8-10セッション）
-- **Step1構成**: 4 Stage（UI実装→bUnitテスト→ユーザー確認→E2Eテスト）、推定9-13h
-- **完了事項**:
-  - step-start Section 2.3（対話的詳細化）初テスト成功
-  - Step組織設計ファイル作成（`Step01_ユーザー管理UI実装.md`、約460行）
-  - 4 Stage構成確定（並列実行方針・推定時間・実行記録テンプレート含む）
-  - 技術調査不要判断（実装対象明確・技術パターン確立済み）
-  - NavMenu.razor導線確認（/admin/usersリンク既存）
-- **次回**: Step1 Stage 1開始（csharp-web-ui Agent、3画面並列実装）
+- **Phase構成**: Part 1（Step1→Step1.5→Step2-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
+- **推定期間**: 32-51.5h + α（9-12セッション）※Step1.5追加で6-10h増加
+- **Step1.5概要**: Index/Create/Edit.razor全面書き換え（Option A: 既存コード不信用・仕様書ベース再実装）
+- **Step1.5背景**:
+  - Step1 Stage3（ユーザー動作確認）でIndex.razor初期表示だけで7件Issue発生
+  - Phase A初期実装（Claude Code v1時代）の品質問題が原因
+  - デバッグ継続より全面リファクタの方が効率的と判断
+- **Phase_Summary.md更新済み**:
+  - Step1.5セクション追加（line 169-242）
+  - Step構成表更新・タイムライン更新
+  - Step間参照マトリックス更新（7エントリ追加）
+- **次回**: step-startコマンドでStep1.5組織設計 → csharp-web-ui Agent実装開始
 
 ### Phase完了状況（サマリ）
 
@@ -118,47 +120,40 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3開始処理（最優先・次回実施）
+### Phase B-F3 Step1 Stage3実施（即座に開始可能）
 
 **優先度**: 🔴 Critical
 
-**実施内容**:
-1. **Phase_Summary.md最終確認**（ユーザー作業・5-10分）
-   - 10 Steps構成の妥当性確認
-   - Step 10のユーザー動作確認項目の適切性確認
-   - Phase B3移行判断基準の明確性確認
+**現在の状態**:
+- ✅ Step1 Stage1完了（UI実装3画面：Index.razor, Create.razor, Edit.razor）
+- ✅ Step1 Stage2完了（bUnitテスト実装：42/48 PASS, 0 FAIL, 6 SKIP）
+- ✅ Stage2実行記録完全文書化完了
+- ✅ Stage2検知問題点記録完了（4問題）
 
-2. **step-startコマンド改善**（Claude作業・1-2時間）
-   - AskUserQuestionツール活用による対話的詳細化導入
-   - phase-start Section 1.5の対話パターン適用
-   - Step実装内容の具体化・SubAgent選択確認プロセス改善
+**次回実施内容**:
+1. ✅ **問題点整理・GitHub Issue検討**（完了 - 2025-11-25）
+   - Stage2検知4問題点を整理・Issue化完了
+   - Issue #62 コメント追加（警告67件現状報告）
+   - Issue #73 新規作成（coverlet.collector導入・Phase B3）
+   - Issue #74 新規作成（F# Result型エラー設計改善・Phase C）
+   - スキップテスト6件: Issue不要（Phase B-F3 Step2で対応予定）
 
-3. **phase-start Section 3-5実施**（Phase_Summary.md承認後・30分-1時間）
-   - Phase固有情報準備（関連仕様書特定・技術基盤継承確認）
-   - 品質保証準備（仕様準拠基準設定・TDD実践計画）
-   - Phase開始前確認・承認（準備完了確認・ユーザー承認）
-
-4. **Phase B-F3 Step1開始**（step-start改善完了後）
-   - Step1内容: Phase A対応漏れ（ユーザー管理UI 3画面実装）
-   - 推定時間: 8-12時間
+2. **Phase B-F3 Step1 Stage3実施**（次回セッション実施予定・推定30-60分）
+   - Stage3内容: ユーザー確認・UIレイアウト調整
+   - アプリケーション起動（Docker + DevContainer）
+   - ユーザー様による3画面手動確認（Index/Create/Edit）
+   - UIレイアウト・操作性フィードバック収集
+   - 必要に応じて調整実施
 
 **読み込み推奨ファイル**:
-- `Doc/08_Organization/Active/Phase_B-F3/Phase_Summary.md`（最終確認用）
-- `.claude/commands/step-start.md`（改善対象）
-- `.claude/commands/phase-start.md`（参考: Section 1.5対話パターン）
-
-**予想時間配分**:
-- Phase_Summary.md確認: 5-10分（ユーザー）
-- step-start改善: 1-2時間
-- phase-start Section 3-5: 30分-1時間
-- Phase B-F3 Step1開始準備: 30分
-- **合計**: 約2-4時間
+- `Doc/08_Organization/Active/Phase_B-F3/Step01_ユーザー管理UI実装.md`（Stage3実施手順）
+- `.serena/memories/technical_learnings.md`（Stage2検知問題点詳細）
 
 **技術的前提条件**:
-- DevContainer環境: 構築済み（Phase B-F2完了）
-- Clean Architecture: 97点維持
-- ビルド状態: 0 Warning / 0 Error
+- DevContainer環境: 構築済み
+- ビルド状態: 0 Error, 67 Warning（既存）
+- テスト状態: 42/48 PASS, 0 FAIL, 6 SKIP
 
 ---
 
-**最終更新**: 2025-11-21（Phase B-F3 phase-start Section 1.5完了）
+**最終更新**: 2025-11-25（Stage2問題点整理・GitHub Issue対応完了・Stage3実施待ち）

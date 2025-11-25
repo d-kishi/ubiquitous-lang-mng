@@ -1,0 +1,590 @@
+@page "/admin/users"
+@using Microsoft.AspNetCore.Authorization
+@using UbiquitousLanguageManager.Contracts.DTOs
+@using UbiquitousLanguageManager.Domain.Common
+@using UbiquitousLanguageManager.Application
+@attribute [Authorize(Roles = "SuperUser")]
+@inject IUserManagementService UserManagementService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>ユーザー管理</PageTitle>
+
+@* 【Blazor初学者向け解説】
+   このコンポーネントは、ユーザー一覧を表示・検索・フィルタ・ページングする画面です。
+   Blazor Serverでは、サーバー側でデータを取得し、SignalR接続を通じてクライアントに送信されます。
+*@
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1><i class="fas fa-users"></i> ユーザー管理</h1>
+        </div>
+    </div>
+
+    @* 検索・フィルタセクション *@
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text"
+                       class="form-control"
+                       placeholder="ユーザー名で検索"
+                       @bind="searchTerm"
+                       @bind:event="oninput"
+                       @bind:after="OnSearchChanged"
+                       data-testid="input-search" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="showDeleted"
+                       checked="@showDeleted"
+                       @onchange="OnShowDeletedChanged"
+                       data-testid="checkbox-show-deleted" />
+                <label class="form-check-label" for="showDeleted">
+                    論理削除済みを表示
+                </label>
+            </div>
+        </div>
+        <div class="col-md-3 text-end">
+            <button class="btn btn-primary"
+                    @onclick="NavigateToCreate"
+                    data-testid="btn-create-user">
+                <i class="fas fa-plus"></i> 新規ユーザー作成
+            </button>
+        </div>
+    </div>
+
+    @* データ読み込み中表示 *@
+    @if (loading)
+    {
+        <div class="text-center my-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">読み込み中...</span>
+            </div>
+            <p class="mt-2">ユーザー一覧を読み込んでいます...</p>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        @* エラーメッセージ表示 *@
+        <div class="alert alert-danger" role="alert" data-testid="error-message">
+            <i class="fas fa-exclamation-triangle"></i> @errorMessage
+        </div>
+    }
+    else
+    {
+        @* ユーザー一覧テーブル *@
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            ユーザー一覧
+                            <span class="badge bg-secondary">@filteredUsers.Count 件</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped" data-testid="table-users">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" @onclick='() => SortBy("Name")' style="cursor: pointer;">
+                                            ユーザー名
+                                            @if (sortColumn == "Name")
+                                            {
+                                                <i class="fas @(sortAscending ? "fa-sort-up" : "fa-sort-down")"></i>
+                                            }
+                                        </th>
+                                        <th scope="col" @onclick='() => SortBy("Email")' style="cursor: pointer;">
+                                            メールアドレス
+                                            @if (sortColumn == "Email")
+                                            {
+                                                <i class="fas @(sortAscending ? "fa-sort-up" : "fa-sort-down")"></i>
+                                            }
+                                        </th>
+                                        <th scope="col" @onclick='() => SortBy("Role")' style="cursor: pointer;">
+                                            ロール
+                                            @if (sortColumn == "Role")
+                                            {
+                                                <i class="fas @(sortAscending ? "fa-sort-up" : "fa-sort-down")"></i>
+                                            }
+                                        </th>
+                                        <th scope="col">割り当てプロジェクト</th>
+                                        <th scope="col" @onclick='() => SortBy("IsActive")' style="cursor: pointer;">
+                                            状態
+                                            @if (sortColumn == "IsActive")
+                                            {
+                                                <i class="fas @(sortAscending ? "fa-sort-up" : "fa-sort-down")"></i>
+                                            }
+                                        </th>
+                                        <th scope="col">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in paginatedUsers)
+                                    {
+                                        <tr data-testid="user-row-@user.Id">
+                                            <td>@user.Name</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                <span class="badge @GetRoleBadgeClass(user.Role)">
+                                                    @GetRoleDisplayName(user.Role)
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (user.ProjectPermissions.Any())
+                                                {
+                                                    <span class="badge bg-info text-dark">
+                                                        @user.ProjectPermissions.Count プロジェクト
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">なし</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge bg-success">有効</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">無効</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary me-2"
+                                                        @onclick="() => NavigateToEdit(user.Id)"
+                                                        data-testid="btn-edit-user-@user.Id">
+                                                    <i class="fas fa-edit"></i> 編集
+                                                </button>
+                                                @if (user.IsActive)
+                                                {
+                                                    <button class="btn btn-sm btn-danger"
+                                                            @onclick="() => DeactivateUser(user.Id)"
+                                                            data-testid="btn-deactivate-user-@user.Id">
+                                                        <i class="fas fa-trash"></i> 無効化
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-sm btn-success"
+                                                            @onclick="() => ActivateUser(user.Id)"
+                                                            data-testid="btn-activate-user-@user.Id">
+                                                        <i class="fas fa-check"></i> 有効化
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        @* ページング *@
+                        @if (totalPages > 1)
+                        {
+                            <nav aria-label="ページネーション" data-testid="pagination">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => GoToPage(currentPage - 1)" data-testid="btn-prev-page">
+                                            前へ
+                                        </button>
+                                    </li>
+                                    @for (int i = 1; i <= totalPages; i++)
+                                    {
+                                        int pageNum = i; // ループ変数のキャプチャ回避
+                                        <li class="page-item @(currentPage == pageNum ? "active" : "")">
+                                            <button class="page-link" @onclick="() => GoToPage(pageNum)" data-testid="@($"btn-page-{pageNum}")">
+                                                @pageNum
+                                            </button>
+                                        </li>
+                                    }
+                                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                        <button class="page-link" @onclick="() => GoToPage(currentPage + 1)" data-testid="btn-next-page">
+                                            次へ
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+
+                            <div class="text-center mt-2">
+                                <div class="btn-group" role="group" aria-label="ページサイズ選択" data-testid="page-size-selector">
+                                    <button type="button"
+                                            class="btn @(pageSize == 50 ? "btn-primary" : "btn-outline-primary")"
+                                            @onclick="() => ChangePageSize(50)"
+                                            data-testid="btn-page-size-50">
+                                        50件
+                                    </button>
+                                    <button type="button"
+                                            class="btn @(pageSize == 100 ? "btn-primary" : "btn-outline-primary")"
+                                            @onclick="() => ChangePageSize(100)"
+                                            data-testid="btn-page-size-100">
+                                        100件
+                                    </button>
+                                    <button type="button"
+                                            class="btn @(pageSize == 200 ? "btn-primary" : "btn-outline-primary")"
+                                            @onclick="() => ChangePageSize(200)"
+                                            data-testid="btn-page-size-200">
+                                        200件
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // 【Blazor初学者向け解説】
+    // @codeブロックは、Blazorコンポーネントのロジックを記述する場所です。
+    // C#のクラスメンバーと同様に、フィールド・プロパティ・メソッドを定義できます。
+
+    // データ
+    private List<UserDto> allUsers = new();
+    private List<UserDto> filteredUsers = new();
+    private List<UserDto> paginatedUsers = new();
+
+    // 検索・フィルタ
+    private string searchTerm = string.Empty;
+    private bool showDeleted = false;
+
+    // ソート
+    private string sortColumn = "Name";
+    private bool sortAscending = true;
+
+    // ページング
+    private int currentPage = 1;
+    private int pageSize = 50;
+    private int totalPages = 1;
+
+    // 状態管理
+    private bool loading = true;
+    private string? errorMessage = null;
+
+    // 操作者情報（ASP.NET Core Identity ID文字列）
+    private string operatorIdentityId = string.Empty;
+
+    // 【Blazor初学者向け解説】
+    // OnInitializedAsync: コンポーネント初期化時に一度だけ実行される非同期メソッド
+    // 画面表示前のデータ取得・認証状態取得に使用します。
+    // Blazor Serverでは、この処理中クライアントは待機状態になります。
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 【Blazor初学者向け解説】
+            // AuthenticationStateProvider: ASP.NET Core Identityの認証状態を取得するサービス
+            // Blazor Serverでは、サーバー側で認証状態が管理されます。
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            // ユーザーIDクレーム取得
+            // 【Blazor初学者向け解説】
+            // ASP.NET Core IdentityはGUID文字列をユーザーIDとして使用します（例: "admin-001"）。
+            // F# Application Serviceが文字列IDを受け取るようになったため、そのまま文字列を保持します。
+            var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && !string.IsNullOrEmpty(userIdClaim.Value))
+            {
+                // ASP.NET Identity string ID を直接保持
+                operatorIdentityId = userIdClaim.Value;
+            }
+
+            await LoadUsersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"初期化エラー: {ex.Message}";
+            loading = false;
+
+            // 【Blazor初学者向け解説】
+            // StateHasChanged(): UIを手動で再描画するメソッド
+            // 非同期処理後、画面に変更を反映させるために明示的に呼び出します。
+            // Blazor ServerはSignalR接続を通じてクライアントに変更を通知します。
+            StateHasChanged();
+        }
+    }
+
+    // ユーザー一覧読み込み
+    private async Task LoadUsersAsync()
+    {
+        loading = true;
+        errorMessage = null;
+        StateHasChanged(); // ローディング状態を即座に反映
+
+        try
+        {
+            // 【Blazor初学者向け解説】
+            // F# Result型のIsOk/ResultValueアクセスパターン
+            // F# Application層から返されるResult型を、C#側で安全に処理します。
+            var result = await UserManagementService.GetAllUsersAsync(new object(), operatorIdentityId);
+
+            // 【Blazor初学者向け解説】
+            // result.IsOk: F# Result型の成功判定プロパティ
+            // 成功時はtrue、失敗時はfalseを返します。
+            if (result.IsOk)
+            {
+                // 【Blazor初学者向け解説】
+                // result.ResultValue: F# Result型から成功値を取得
+                // F#のUserエンティティをC#のUserDtoに変換します。
+                var users = Microsoft.FSharp.Collections.ListModule.ToArray(result.ResultValue);
+                allUsers = users.Select(ConvertToDto).ToList();
+
+                ApplyFilters();
+                loading = false;
+                StateHasChanged();
+            }
+            else
+            {
+                // 【Blazor初学者向け解説】
+                // result.ErrorValue: F# Result型からエラー値を取得
+                // エラー情報をUIに表示します。
+                var error = result.ErrorValue;
+                errorMessage = $"ユーザー一覧取得エラー: {error}";
+                loading = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"予期しないエラーが発生しました: {ex.Message}";
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    // F# User → C# UserDtoへの変換
+    // 【Blazor初学者向け解説】
+    // F#のドメインエンティティをC#のDTO（Data Transfer Object）に変換します。
+    // F#のレコード型は、C#側からプロパティとしてアクセスできます。
+    private UserDto ConvertToDto(UbiquitousLanguageManager.Domain.Authentication.User user)
+    {
+        return new UserDto
+        {
+            Id = user.Id.Value,
+            Email = user.Email.Value,
+            Name = user.Name.Value,
+            Role = user.Role.ToString(),
+            IsActive = user.IsActive,
+            IsFirstLogin = user.IsFirstLogin,
+            CreatedAt = user.CreatedAt,
+            CreatedBy = user.CreatedBy.Value,
+            UpdatedAt = user.UpdatedAt,
+            UpdatedBy = user.UpdatedBy.Value,
+            ProjectPermissions = new List<ProjectPermissionDto>() // TODO: Phase B-F3 Step2で実装
+        };
+    }
+
+    // 検索・フィルタ適用
+    private void ApplyFilters()
+    {
+        // 検索フィルタ
+        filteredUsers = allUsers.Where(u =>
+        {
+            var matchesSearch = string.IsNullOrWhiteSpace(searchTerm) ||
+                                u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+
+            var matchesDeleted = showDeleted || u.IsActive;
+
+            return matchesSearch && matchesDeleted;
+        }).ToList();
+
+        // ソート適用
+        ApplySorting();
+
+        // ページング再計算
+        CalculatePagination();
+    }
+
+    // ソート適用
+    private void ApplySorting()
+    {
+        filteredUsers = sortColumn switch
+        {
+            "Name" => sortAscending ? filteredUsers.OrderBy(u => u.Name).ToList() : filteredUsers.OrderByDescending(u => u.Name).ToList(),
+            "Email" => sortAscending ? filteredUsers.OrderBy(u => u.Email).ToList() : filteredUsers.OrderByDescending(u => u.Email).ToList(),
+            "Role" => sortAscending ? filteredUsers.OrderBy(u => u.Role).ToList() : filteredUsers.OrderByDescending(u => u.Role).ToList(),
+            "IsActive" => sortAscending ? filteredUsers.OrderBy(u => u.IsActive).ToList() : filteredUsers.OrderByDescending(u => u.IsActive).ToList(),
+            _ => filteredUsers
+        };
+    }
+
+    // ページング再計算
+    private void CalculatePagination()
+    {
+        totalPages = (int)Math.Ceiling((double)filteredUsers.Count / pageSize);
+        currentPage = Math.Min(currentPage, Math.Max(1, totalPages));
+
+        paginatedUsers = filteredUsers
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    // 検索変更イベント
+    // 【Blazor初学者向け解説】
+    // @bind:after により、searchTerm バインディング完了後に自動的に呼び出されます
+    // .NET 8 の @bind:after は、bUnit テストとの互換性が高く、
+    // 双方向バインディング完了後に確実にイベントハンドラーが実行されます
+    private void OnSearchChanged()
+    {
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    // 論理削除表示切替イベント
+    // 【Blazor初学者向け解説】
+    // チェックボックスの@onchangeイベントハンドラ
+    // checked属性と@onchangeを組み合わせた手動バインディングパターンです。
+    private void OnShowDeletedChanged(ChangeEventArgs e)
+    {
+        // チェックボックスの値をbool型に変換して更新
+        showDeleted = (bool)(e.Value ?? false);
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    // ソート切替
+    private void SortBy(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+
+        ApplySorting();
+        CalculatePagination();
+        StateHasChanged();
+    }
+
+    // ページ移動
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            CalculatePagination();
+            StateHasChanged();
+        }
+    }
+
+    // ページサイズ変更
+    private void ChangePageSize(int newSize)
+    {
+        pageSize = newSize;
+        currentPage = 1;
+        CalculatePagination();
+        StateHasChanged();
+    }
+
+    // ユーザー無効化
+    private async Task DeactivateUser(long userId)
+    {
+        // 【Blazor初学者向け解説】
+        // IJSRuntime: Blazor ServerとJavaScriptの相互運用を提供するサービス
+        // ブラウザのJavaScript関数を呼び出すことができます。
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"このユーザーを無効化してもよろしいですか？");
+        if (!confirmed) return;
+
+        try
+        {
+            var targetId = UserId.NewUserId(userId);
+            var result = await UserManagementService.DeactivateUserAsync(targetId, operatorIdentityId);
+
+            if (result.IsOk)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "ユーザーを無効化しました");
+                await LoadUsersAsync();
+            }
+            else
+            {
+                var error = result.ErrorValue;
+                await JSRuntime.InvokeVoidAsync("alert", $"無効化エラー: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"エラー: {ex.Message}");
+        }
+    }
+
+    // ユーザー有効化
+    private async Task ActivateUser(long userId)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"このユーザーを有効化してもよろしいですか？");
+        if (!confirmed) return;
+
+        try
+        {
+            var targetId = UserId.NewUserId(userId);
+            var result = await UserManagementService.ActivateUserAsync(targetId, operatorIdentityId);
+
+            if (result.IsOk)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "ユーザーを有効化しました");
+                await LoadUsersAsync();
+            }
+            else
+            {
+                var error = result.ErrorValue;
+                await JSRuntime.InvokeVoidAsync("alert", $"有効化エラー: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"エラー: {ex.Message}");
+        }
+    }
+
+    // ナビゲーション
+    private void NavigateToCreate()
+    {
+        Navigation.NavigateTo("/admin/users/create");
+    }
+
+    private void NavigateToEdit(long userId)
+    {
+        Navigation.NavigateTo($"/admin/users/edit/{userId}");
+    }
+
+    // ロールバッジクラス取得
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "SuperUser" => "bg-danger",
+            "ProjectManager" => "bg-warning text-dark",
+            "DomainApprover" => "bg-info text-dark",
+            "GeneralUser" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    // ロール表示名取得
+    private string GetRoleDisplayName(string role)
+    {
+        return role switch
+        {
+            "SuperUser" => "スーパーユーザー",
+            "ProjectManager" => "プロジェクトマネージャー",
+            "DomainApprover" => "ドメイン承認者",
+            "GeneralUser" => "一般ユーザー",
+            _ => role
+        };
+    }
+}

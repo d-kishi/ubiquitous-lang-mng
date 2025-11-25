@@ -18,6 +18,8 @@
     <Compile Include="ProjectManagement\IProjectManagementService.fs" />
     <Compile Include="ProjectManagement\ProjectManagementService.fs" />
     <Compile Include="AuthenticationServices.fs" />
+    <Compile Include="IUserManagementService.fs" />
+    <Compile Include="UserManagementServices.fs" />
     <Compile Include="ApplicationServices.fs" />
     <Compile Include="UseCases.fs" />
   </ItemGroup>

@@ -734,4 +734,215 @@ git add --renormalize .
 
 ---
 
-**最終更新**: 2025-11-18（Phase B-F2技術的学習追加・VSCode拡張機能リグレッションバグ調査・対応、Playwright Test Agent vs MCP Server理解維持）
+**最終更新**: 2025-11-25（Phase B-F3技術的学習追加・bUnit InputRadioGroup操作パターン・Stage2検知問題点）
+**前回更新**: 2025-11-18（Phase B-F2技術的学習追加・VSCode拡張機能リグレッションバグ調査・対応、Playwright Test Agent vs MCP Server理解維持）
+
+---
+
+## Phase B-F3技術的学習（2025-11-25）
+
+### bUnit InputRadioGroup操作パターン
+
+#### 問題の発見
+
+**現象**: EditTests.cs の`Edit_UpdateRole_Success_RedirectsToUserList`テストが失敗
+**エラー**: UpdateUserAsyncが"GeneralUser"（元の値）で呼ばれ、"ProjectManager"（変更後の値）で呼ばれない
+
+**初期実装（動作しない）**:
+```csharp
+var projectManagerRadio = cut.Find("input[data-testid='radio-role-projectmanager']");
+projectManagerRadio.Change(true);
+```
+
+**根本原因**: bUnitで`InputRadio`（Blazorコンポーネント）を操作する際、`.Change(true)`では`InputRadioGroup`の`@bind-Value`バインディングが更新されない
+
+#### 正しいInputRadioGroup操作パターン
+
+**解決方法**:
+```csharp
+// ロール変更（GeneralUser → ProjectManager）
+// 【bUnitでInputRadioGroup操作の正しい方法】
+// InputRadioGroupの@bind-Valueを更新するには、ValueChangedイベントを明示的に呼び出す
+var inputRadioGroup = cut.FindComponent<InputRadioGroup<string>>();
+
+// ValueChangedイベントコールバックをBlazor Dispatcherコンテキストで実行
+await cut.InvokeAsync(async () =>
+{
+    await inputRadioGroup.Instance.ValueChanged.InvokeAsync("ProjectManager");
+});
+```
+
+**必須変更**:
+1. **usingディレクティブ追加**:
+   ```csharp
+   using System;
+   using Microsoft.AspNetCore.Components.Forms;
+   ```
+
+2. **メソッドシグネチャ変更**:
+   ```csharp
+   public async Task TestMethod()  // void → async Task
+   ```
+
+3. **操作ロジック**:
+   - `.Change()`や`.Click()`ではなく、`FindComponent<InputRadioGroup<string>>()`を使用
+   - `cut.InvokeAsync()`でDispatcherコンテキストで実行
+   - `ValueChanged.InvokeAsync()`で双方向バインディングのイベントコールバックをトリガー
+
+#### 技術的洞察
+
+**Blazorの双方向バインディング実装方式**:
+- `@bind-Value`は内部的に`Value`パラメータと`ValueChanged`イベントコールバックの組み合わせ
+- 単純なDOM操作や`.Change()`メソッドではこのメカニズムをトリガーできない
+- Blazorコンポーネントのイベント処理は`Dispatcher`コンテキストで実行される必要がある
+
+**bUnitとBlazorの複雑な相互作用**:
+- HTMLの`<input type="radio">`を直接操作しても、Blazorのバインディングは更新されない
+- `FindComponent<>`でBlazorコンポーネントを取得し、`Instance`プロパティでアクセス
+- `InvokeAsync()`によるラップでBlazorのDispatcherコンテキストで実行
+
+**適用範囲**:
+- `InputRadioGroup`だけでなく、Blazorの双方向バインディングを持つ他のコンポーネントにも適用可能
+- `InputSelect`, `InputCheckbox`等も同様のパターンが必要な場合がある
+
+**効果**:
+- EditTests修正により全UserManagementテストが成功（42/48 PASS, 0 FAIL, 6 SKIP）
+- 他のテストでも同様の問題を回避可能
+
+**参考**: EditTests.cs line 306-315
+
+### Phase B-F3 Stage2検知問題点（2025-11-25）
+
+#### 問題1: coverlet.collector未導入（テストカバレッジ測定不可）
+
+**現象**: dotnet test --collect:"XPlat Code Coverage"実行時にエラー
+```
+Unable to find a datacollector with friendly name 'XPlat Code Coverage'
+```
+
+**根本原因**: テストプロジェクトにcoverlet.collectorパッケージが未インストール
+
+**影響**:
+- テストカバレッジ測定不可
+- 品質管理指標の欠落
+- 未テストコードの特定困難
+
+**推奨対応**:
+- Phase B3（品質向上フェーズ）でcoverlet.collectorパッケージ導入
+- テストカバレッジ目標設定（目安: 80%以上）
+- CI/CDパイプラインへのカバレッジ測定統合
+
+**参考**: GitHub Issue #62（Phase B3計画）
+
+#### 問題2: F# Result<User, string>とC# string戻り値の型不整合
+
+**現象**: UserManagementServiceMockBuilderで返却値の型不整合
+
+**技術的背景**:
+- F# Application層: `Result<User, string>`型返却
+- C# Infrastructure層（Mock Builder）: `FSharpResult<FSharpDomainUser, string>`型返却
+- 型変換の複雑性: F# Result型 → C# FSharpResult型へのマッピング
+
+**回避策**:
+- F# Application層のエラーメッセージをstring型で統一
+- `Result.NewOk(user)`, `Result.NewError(errorMessage)`パターン使用
+- エラー詳細情報はstring形式で表現
+
+**潜在的問題点**:
+- エラー型情報の損失（型安全性低下）
+- エラーハンドリングの一貫性が文字列パターンマッチングに依存
+- 将来的な構造化エラー導入時の移行コスト
+
+**推奨対応**（Phase C以降）:
+1. **Option A**: F# Result型にカスタムエラー型導入
+   ```fsharp
+   type UserManagementError =
+       | UserNotFound of UserId
+       | ValidationError of string
+       | DatabaseError of string
+   
+   type Result<'T> = Result<'T, UserManagementError>
+   ```
+
+2. **Option B**: Contracts層にエラーDTO導入
+   ```csharp
+   public class UserManagementErrorDto
+   {
+       public string ErrorType { get; set; }
+       public string Message { get; set; }
+       public Dictionary<string, object> Details { get; set; }
+   }
+   ```
+
+3. **Option C**: 現状維持（string型のまま継続）
+   - 理由: シンプルさ優先・現状で問題なし
+   - 条件: エラー種別が限定的・複雑なエラーハンドリング不要
+
+**参考**: UserManagementServiceMockBuilder.cs全体
+
+#### 問題3: 既存コンパイラ警告67件（out of scope）
+
+**現象**: dotnet build実行時に67件のWarningが表示
+
+**警告内容**:
+- Nullable reference type関連（CS8600, CS8625, CS8602, CS8604, CS8620）
+- 未使用変数・パラメータ（CS0168, CS0219）
+- その他のコード品質警告
+
+**現状判断**:
+- ✅ 0 Error（ビルド成功）
+- ⚠️ 67 Warning（品質改善余地）
+- 📊 既存警告のため、Phase B-F3 Scopeには含めない
+
+**推奨対応**（Phase B3以降）:
+1. **Phase B3-Quality**: 警告の体系的解消
+   - Nullable reference type警告の段階的解消
+   - 未使用変数の整理
+   - コード品質向上
+
+2. **CI/CDパイプライン**: 警告数監視
+   - 警告数増加の検出
+   - 新規警告の自動検出
+   - 警告ゼロ目標設定（長期目標）
+
+**参考**: Phase B-F2 Step4で同様の警告を改行コード統一で78件→0件に削減した実績あり
+
+#### 問題4: スキップテスト6件の存在
+
+**現象**: dotnet test実行時に6件のテストがSKIP状態
+
+**スキップテスト一覧**:
+1. Index_NonSuperUser_RedirectsToAccessDenied
+2. Create_NonSuperUser_RedirectsToAccessDenied
+3. Create_PasswordHash_Validation（仕様変更により不要）
+4. Edit_NonSuperUser_RedirectsToAccessDenied
+5. Edit_UpdateUserAsAdmin_WorksForAssignedProject
+6. Edit_UpdateUserAsAdmin_DeniesForNonAssignedProject
+
+**スキップ理由**:
+- **権限テスト（4件）**: Phase B-F3 Step2（プロジェクト割り当て機能）で実装予定
+- **パスワードハッシュ検証（1件）**: 仕様変更により不要（InitialPassword導入）
+- **プロジェクト割り当てテスト（1件）**: Phase B-F3 Step2で実装予定
+
+**現状判断**:
+- ✅ 既知のスキップ（意図的）
+- ✅ Phase B-F3 Step2で実装予定
+- ✅ テストカバレッジ低下は一時的（Phase B-F3 Step2完了時に解消予定）
+
+**推奨対応**:
+- Phase B-F3 Step2実施時に6件のスキップテストを実装
+- テストカバレッジ目標: 48/48 PASS（100%）
+- スキップテスト削減によるテスト品質向上
+
+**参考**:
+- IndexTests.cs: 1件スキップ
+- CreateTests.cs: 2件スキップ
+- EditTests.cs: 3件スキップ
+
+---
+
+**次回セッション対応方針**:
+1. 上記4問題点を整理し、GitHub Issue記録要否を検討
+2. 優先度評価（High/Medium/Low）
+3. Phase振り分け（Phase B3 / Phase C / 長期技術負債）
+4. Stage3作業開始（ユーザー確認・UIレイアウト調整）

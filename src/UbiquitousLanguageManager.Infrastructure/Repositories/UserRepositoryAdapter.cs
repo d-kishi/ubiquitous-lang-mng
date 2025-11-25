@@ -77,12 +77,12 @@ public class UserRepositoryAdapter : IUserRepository
                 return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
             }
 
-            // ApplicationUser → F# User変換（Infrastructure層内変換）
-            var userConversionResult = ConvertToFSharpUser(appUser);
-            
+            // ApplicationUser → F# User変換（Infrastructure層内変換・非同期）
+            var userConversionResult = await ConvertToFSharpUserAsync(appUser);
+
             if (userConversionResult.IsError)
             {
-                _logger.LogError("User conversion failed for email {Email}: {Error}", 
+                _logger.LogError("User conversion failed for email {Email}: {Error}",
                     email.Value, userConversionResult.ErrorValue);
                 return FSharpResult<FSharpOption<User>, string>.NewError(
                     $"ユーザー変換エラー: {userConversionResult.ErrorValue}");
@@ -134,12 +134,12 @@ public class UserRepositoryAdapter : IUserRepository
                 return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
             }
 
-            // ApplicationUser → F# User変換
-            var userConversionResult = ConvertToFSharpUser(appUser);
-            
+            // ApplicationUser → F# User変換（非同期）
+            var userConversionResult = await ConvertToFSharpUserAsync(appUser);
+
             if (userConversionResult.IsError)
             {
-                _logger.LogError("User conversion failed for ID {UserId}: {Error}", 
+                _logger.LogError("User conversion failed for ID {UserId}: {Error}",
                     userId.Item, userConversionResult.ErrorValue);
                 return FSharpResult<FSharpOption<User>, string>.NewError(
                     $"ユーザー変換エラー: {userConversionResult.ErrorValue}");
@@ -152,6 +152,57 @@ public class UserRepositoryAdapter : IUserRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception in GetByIdAsync for ID: {UserId}", userId.Item);
+            return FSharpResult<FSharpOption<User>, string>.NewError(
+                $"データベース検索エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// F#ユーザーID検索（Identity文字列ID版）: ASP.NET Core Identity統合版
+    /// ASP.NET Identity の文字列 ID で直接検索（GetHashCode()不安定問題の回避）
+    /// 【F#初学者向け解説】
+    /// GetHashCode()は.NET Coreでプロセスごとにランダム化されるため、
+    /// ASP.NET IdentityのGUID文字列IDで直接検索する方が安全です。
+    /// </summary>
+    public async Task<FSharpResult<FSharpOption<User>, string>> GetByIdentityIdAsync(string identityId)
+    {
+        if (string.IsNullOrWhiteSpace(identityId))
+        {
+            _logger.LogWarning("GetByIdentityIdAsync called with null or empty identityId");
+            return FSharpResult<FSharpOption<User>, string>.NewError("Identity IDが無効です");
+        }
+
+        try
+        {
+            _logger.LogDebug("Searching user by Identity ID: {IdentityId}", identityId);
+
+            // ASP.NET Core Identity直接検索実行
+            var appUser = await _userManager.FindByIdAsync(identityId);
+
+            if (appUser == null)
+            {
+                _logger.LogInformation("User not found for Identity ID: {IdentityId}", identityId);
+                return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
+            }
+
+            // ApplicationUser → F# User変換（非同期）
+            var userConversionResult = await ConvertToFSharpUserAsync(appUser);
+
+            if (userConversionResult.IsError)
+            {
+                _logger.LogError("User conversion failed for Identity ID {IdentityId}: {Error}",
+                    identityId, userConversionResult.ErrorValue);
+                return FSharpResult<FSharpOption<User>, string>.NewError(
+                    $"ユーザー変換エラー: {userConversionResult.ErrorValue}");
+            }
+
+            _logger.LogInformation("User successfully retrieved for Identity ID: {IdentityId}", identityId);
+            var userOption = FSharpOption<User>.Some(userConversionResult.ResultValue);
+            return FSharpResult<FSharpOption<User>, string>.NewOk(userOption);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception in GetByIdentityIdAsync for Identity ID: {IdentityId}", identityId);
             return FSharpResult<FSharpOption<User>, string>.NewError(
                 $"データベース検索エラー: {ex.Message}");
         }
@@ -328,7 +379,7 @@ public class UserRepositoryAdapter : IUserRepository
             
             foreach (var appUser in activeUsers)
             {
-                var userResult = ConvertToFSharpUser(appUser);
+                var userResult = await ConvertToFSharpUserAsync(appUser);
                 if (userResult.IsOk)
                 {
                     userList.Add(userResult.ResultValue);
@@ -376,7 +427,7 @@ public class UserRepositoryAdapter : IUserRepository
             
             foreach (var appUser in allUsers)
             {
-                var userResult = ConvertToFSharpUser(appUser);
+                var userResult = await ConvertToFSharpUserAsync(appUser);
                 if (userResult.IsOk)
                 {
                     userList.Add(userResult.ResultValue);
@@ -457,7 +508,7 @@ public class UserRepositoryAdapter : IUserRepository
             
             foreach (var appUser in searchResults)
             {
-                var userResult = ConvertToFSharpUser(appUser);
+                var userResult = await ConvertToFSharpUserAsync(appUser);
                 if (userResult.IsOk)
                 {
                     userList.Add(userResult.ResultValue);
@@ -536,10 +587,11 @@ public class UserRepositoryAdapter : IUserRepository
     }
 
     /// <summary>
-    /// Infrastructure層専用 - ApplicationUser → F# User変換
+    /// Infrastructure層専用 - ApplicationUser → F# User変換（非同期版）
     /// Clean Architecture遵守：Infrastructure層内でのみ使用
+    /// 【Issue #7修正】デッドロック問題解決のため非同期化
     /// </summary>
-    private static FSharpResult<User, string> ConvertToFSharpUser(ApplicationUser appUser)
+    private async Task<FSharpResult<User, string>> ConvertToFSharpUserAsync(ApplicationUser appUser)
     {
         if (appUser == null)
         {
@@ -563,8 +615,14 @@ public class UserRepositoryAdapter : IUserRepository
                 return FSharpResult<User, string>.NewError($"無効なユーザー名: {nameResult.ErrorValue}");
             }
 
-            // Role変換（現在は一時的にGeneralUserを設定）
-            var role = Role.GeneralUser;
+            // Role変換: ASP.NET Core Identity Rolesから取得（非同期await使用）
+            var roleResult = await GetUserRoleFromIdentityAsync(appUser);
+            if (roleResult.IsError)
+            {
+                _logger.LogWarning("Role conversion failed for user {Email}: {Error}, defaulting to GeneralUser",
+                    appUser.Email, roleResult.ErrorValue);
+            }
+            var role = roleResult.IsOk ? roleResult.ResultValue : Role.GeneralUser;
 
             // UserId変換（GUID文字列 → F# UserId）
             var userIdValue = (long)appUser.Id.GetHashCode();
@@ -572,15 +630,52 @@ public class UserRepositoryAdapter : IUserRepository
 
             // F# Userエンティティ作成
             var user = User.create(emailResult.ResultValue, nameResult.ResultValue, role, userId);
-            
+
             // 追加プロパティの設定（F# Userはimmutableのため、直接プロパティ設定はできない）
             // F#のUserレコードはcreate時に必要なプロパティを設定する必要がある
-            
+
             return FSharpResult<User, string>.NewOk(user);
         }
         catch (Exception ex)
         {
             return FSharpResult<User, string>.NewError($"ユーザー変換エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// ASP.NET Core Identity からロールを取得してF# Roleに変換
+    /// 優先順位: SuperUser > ProjectManager > DomainApprover > GeneralUser
+    /// </summary>
+    private async Task<FSharpResult<Role, string>> GetUserRoleFromIdentityAsync(ApplicationUser appUser)
+    {
+        try
+        {
+            var roles = await _userManager.GetRolesAsync(appUser);
+
+            if (roles == null || !roles.Any())
+            {
+                _logger.LogWarning("User {UserId} has no roles assigned", appUser.Id);
+                return FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+            }
+
+            // 優先順位に従ってロールを決定
+            if (roles.Contains("SuperUser"))
+                return FSharpResult<Role, string>.NewOk(Role.SuperUser);
+            if (roles.Contains("ProjectManager"))
+                return FSharpResult<Role, string>.NewOk(Role.ProjectManager);
+            if (roles.Contains("DomainApprover"))
+                return FSharpResult<Role, string>.NewOk(Role.DomainApprover);
+            if (roles.Contains("GeneralUser"))
+                return FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+
+            _logger.LogWarning("User {UserId} has unknown roles: {Roles}, defaulting to GeneralUser",
+                appUser.Id, string.Join(", ", roles));
+            return FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting roles for user {UserId}", appUser.Id);
+            return FSharpResult<Role, string>.NewError($"ロール取得エラー: {ex.Message}");
         }
     }
 

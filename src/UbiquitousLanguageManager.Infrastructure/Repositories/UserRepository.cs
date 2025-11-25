@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.FSharp.Core;
@@ -65,7 +66,8 @@ public class UserRepository : IUserRepository
     }
 
     /// <summary>
-    /// 一時的な簡易実装（雛型用）
+    /// ユーザーIDによるユーザー検索
+    /// F#のUserIdとC#のApplicationUser.Idのマッピングを実装
     /// </summary>
     public async Task<FSharpResult<FSharpOption<User>, string>> GetByIdAsync(UserId id)
     {
@@ -74,20 +76,100 @@ public class UserRepository : IUserRepository
         {
             _logger.LogDebug("Starting GetByIdAsync for userId: {UserId}", id.Item);
 
-            await Task.Delay(1); // async警告解消用
-            var option = FSharpOption<User>.None;
+            // データベースから全ユーザーを取得（論理削除されていないユーザーのみ、ロール情報含む）
+            var entities = await _context.Users
+                .Include(u => u.Roles)
+                .Where(u => !u.IsDeleted)
+                .ToListAsync();
 
-            var duration = DateTime.UtcNow - startTime;
+            // 各ユーザーのId.GetHashCode()を計算し、入力UserIdと比較
+            foreach (var entity in entities)
+            {
+                var entityHashId = (long)entity.Id.GetHashCode();
+                if (entityHashId == id.Item)
+                {
+                    // 一致するユーザーが見つかった場合、ToDomainUserで変換
+                    var userResult = ToDomainUser(entity);
+                    if (userResult.IsOk)
+                    {
+                        var duration = DateTime.UtcNow - startTime;
+                        _logger.LogInformation("GetByIdAsync completed successfully for userId: {UserId} in {Duration}ms",
+                            id.Item, duration.TotalMilliseconds);
+
+                        return FSharpResult<FSharpOption<User>, string>.NewOk(
+                            FSharpOption<User>.Some(userResult.ResultValue));
+                    }
+
+                    // 変換エラーの場合
+                    var errorDuration = DateTime.UtcNow - startTime;
+                    _logger.LogError("GetByIdAsync conversion failed for userId: {UserId} after {Duration}ms: {Error}",
+                        id.Item, errorDuration.TotalMilliseconds, userResult.ErrorValue);
+                    return FSharpResult<FSharpOption<User>, string>.NewError(userResult.ErrorValue);
+                }
+            }
+
+            // ユーザーが見つからなかった場合
+            var notFoundDuration = DateTime.UtcNow - startTime;
             _logger.LogInformation("GetByIdAsync completed for userId: {UserId} in {Duration}ms (no user found)",
-                id.Item, duration.TotalMilliseconds);
+                id.Item, notFoundDuration.TotalMilliseconds);
 
-            return FSharpResult<FSharpOption<User>, string>.NewOk(option);
+            return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
         }
         catch (Exception ex)
         {
             var duration = DateTime.UtcNow - startTime;
             _logger.LogError(ex, "GetByIdAsync failed for userId: {UserId} after {Duration}ms",
                 id.Item, duration.TotalMilliseconds);
+            return FSharpResult<FSharpOption<User>, string>.NewError(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// ASP.NET Identity の文字列 ID でユーザーを検索
+    /// GetHashCode()による不安定なマッチングの代替として、Identity ID で直接検索
+    /// </summary>
+    public async Task<FSharpResult<FSharpOption<User>, string>> GetByIdentityIdAsync(string identityId)
+    {
+        var startTime = DateTime.UtcNow;
+        try
+        {
+            _logger.LogDebug("Starting GetByIdentityIdAsync for identityId: {IdentityId}", identityId);
+
+            // Identity ID で直接検索（ロール情報を含めて取得）
+            var entity = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Id == identityId && !u.IsDeleted);
+
+            if (entity == null)
+            {
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("GetByIdentityIdAsync completed for identityId: {IdentityId} in {Duration}ms (no user found)",
+                    identityId, duration.TotalMilliseconds);
+                return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
+            }
+
+            // デバッグログ: Rolesコレクションの状態確認
+            var rolesCount = entity.Roles?.Count ?? -1;
+            _logger.LogWarning("GetByIdentityIdAsync DEBUG - User: {UserId}, Roles loaded: {RolesLoaded}, Count: {RolesCount}",
+                entity.Id, entity.Roles != null, rolesCount);
+
+            var userResult = ToDomainUser(entity);
+            if (userResult.IsOk)
+            {
+                var duration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("GetByIdentityIdAsync completed successfully for identityId: {IdentityId} in {Duration}ms",
+                    identityId, duration.TotalMilliseconds);
+                return FSharpResult<FSharpOption<User>, string>.NewOk(
+                    FSharpOption<User>.Some(userResult.ResultValue));
+            }
+
+            return FSharpResult<FSharpOption<User>, string>.NewError(userResult.ErrorValue);
+        }
+        catch (Exception ex)
+        {
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "GetByIdentityIdAsync failed for identityId: {IdentityId} after {Duration}ms",
+                identityId, duration.TotalMilliseconds);
             return FSharpResult<FSharpOption<User>, string>.NewError(ex.Message);
         }
     }
@@ -161,10 +243,13 @@ public class UserRepository : IUserRepository
     /// C#のApplicationUserをF#のUserドメインエンティティに変換
     /// F#のValue Objectのスマートコンストラクタを使用して安全に変換
     /// Phase A2: ASP.NET Core Identity統合対応版
+    ///
+    /// 【変更履歴】
+    /// - Phase B-F3: static → インスタンスメソッドに変更（ロール取得のためDbContext必要）
     /// </summary>
     /// <param name="entity">C#のApplicationUser（ASP.NET Core Identity対応）</param>
     /// <returns>F#のResult型でラップされたUser</returns>
-    private static FSharpResult<User, string> ToDomainUser(ApplicationUser entity)
+    private FSharpResult<User, string> ToDomainUser(ApplicationUser entity)
     {
         if (entity == null)
         {
@@ -189,8 +274,8 @@ public class UserRepository : IUserRepository
             }
 
             // ASP.NET Core Identity Rolesから判別共用体に変換（設計書準拠）
-            // UserRoleプロパティ削除のため、一時的にGeneralUserとして処理
-            var roleResult = FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+            // ApplicationUser.Roles ナビゲーションプロパティから取得
+            var roleResult = GetUserRoleFromEntity(entity);
             if (roleResult.IsError)
             {
                 return FSharpResult<User, string>.NewError($"Invalid role: {roleResult.ErrorValue}");
@@ -259,6 +344,74 @@ public class UserRepository : IUserRepository
     }
 
     /// <summary>
+    /// ApplicationUserエンティティからF#のRole判別共用体を取得
+    /// ASP.NET Core Identity の UserRoles から実際のロールを取得して変換
+    ///
+    /// 【F#初学者向け解説】
+    /// ASP.NET Core Identityでは、ユーザーは複数のロールを持つことができますが、
+    /// このシステムでは1ユーザー1ロールの設計となっています。
+    /// 優先順位: SuperUser > ProjectManager > DomainApprover > GeneralUser
+    /// </summary>
+    /// <param name="entity">ApplicationUserエンティティ（Rolesナビゲーションプロパティ必須）</param>
+    /// <returns>F#のResult型でラップされたRole</returns>
+    private FSharpResult<Role, string> GetUserRoleFromEntity(ApplicationUser entity)
+    {
+        try
+        {
+            // 【修正】ナビゲーションプロパティが読み込まれていない場合は直接DBからロールを取得
+            // ASP.NET Core IdentityのDbContext継承では、Include()がIdentityUserRole<string>に
+            // 対して正しく機能しない場合があるため、フォールバック処理を追加
+            List<string?> roleNames;
+
+            if (entity.Roles != null && entity.Roles.Any())
+            {
+                // ナビゲーションプロパティが読み込まれている場合
+                var roleIds = entity.Roles.Select(r => r.RoleId).ToList();
+                roleNames = _context.Roles
+                    .Where(r => roleIds.Contains(r.Id))
+                    .Select(r => r.Name)
+                    .ToList();
+            }
+            else
+            {
+                // 【フォールバック】ナビゲーションプロパティが読み込まれていない場合は直接クエリ
+                // AspNetUserRoles + AspNetRoles を直接JOINしてロール名を取得
+                roleNames = (from ur in _context.Set<IdentityUserRole<string>>()
+                            join r in _context.Roles on ur.RoleId equals r.Id
+                            where ur.UserId == entity.Id
+                            select r.Name).ToList();
+
+                if (!roleNames.Any())
+                {
+                    // ロールが未設定の場合はGeneralUserとして扱う
+                    _logger.LogWarning("User {UserId} has no roles assigned, defaulting to GeneralUser", entity.Id);
+                    return FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+                }
+            }
+
+            // 優先順位に従ってロールを決定
+            if (roleNames.Contains("SuperUser"))
+                return FSharpResult<Role, string>.NewOk(Role.SuperUser);
+            if (roleNames.Contains("ProjectManager"))
+                return FSharpResult<Role, string>.NewOk(Role.ProjectManager);
+            if (roleNames.Contains("DomainApprover"))
+                return FSharpResult<Role, string>.NewOk(Role.DomainApprover);
+            if (roleNames.Contains("GeneralUser"))
+                return FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+
+            // 該当するロールがない場合はエラー
+            var rolesString = string.Join(", ", roleNames);
+            _logger.LogWarning("User {UserId} has unknown roles: {Roles}, defaulting to GeneralUser", entity.Id, rolesString);
+            return FSharpResult<Role, string>.NewOk(Role.GeneralUser);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting role for user {UserId}", entity.Id);
+            return FSharpResult<Role, string>.NewError($"ロール取得エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Phase A2: 文字列をF#のRole判別共用体に変換（新権限システム対応）
     /// </summary>
     /// <param name="roleString">ロールの文字列表現</param>
@@ -305,7 +458,9 @@ public class UserRepository : IUserRepository
             // 【Blazor Server・F#初学者向け解説】
             // EF Coreを使用してデータベースからアクティブユーザーを取得
             // Where句でIsActive = trueかつ論理削除されていないユーザーをフィルタリング
+            // Include()でロール情報を一括取得（N+1問題回避）
             var entities = await _context.Users
+                .Include(u => u.Roles)
                 .Where(u => !u.IsDeleted)
                 .OrderBy(u => u.Name)
                 .ToListAsync();
@@ -353,7 +508,9 @@ public class UserRepository : IUserRepository
         try
         {
             // 論理削除されていないユーザーのみ取得（IsActiveは問わない）
+            // Include()でロール情報を一括取得（N+1問題回避）
             var entities = await _context.Users
+                .Include(u => u.Roles)
                 .Where(u => !u.IsDeleted)
                 .OrderBy(u => u.Name)
                 .ToListAsync();
@@ -457,7 +614,9 @@ public class UserRepository : IUserRepository
             // 【PostgreSQL pg_trgm対応】
             // 実際の本格実装では、pg_trgm拡張とGINインデックスを使用した類似検索を行う
             // 現在はLIKE検索で代替実装
+            // Include()でロール情報を一括取得（N+1問題回避）
             var entities = await _context.Users
+                .Include(u => u.Roles)
                 .Where(u => !u.IsDeleted &&
                            (EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
                             EF.Functions.ILike(u.Email ?? "", $"%{normalizedSearchTerm}%")))
@@ -609,7 +768,9 @@ public class UserRepository : IUserRepository
             var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
             // ページング実行とソート（インデックス活用のため、Name順）
+            // Include()でロール情報を一括取得（N+1問題回避）
             var entities = await query
+                .Include(u => u.Roles)
                 .OrderBy(u => u.Name)
                 .ThenBy(u => u.Email)
                 .Skip((pageNumber - 1) * pageSize)
@@ -712,7 +873,9 @@ public class UserRepository : IUserRepository
             // 将来的にUpdatedAtで代替可能
 
             // パフォーマンス最適化：インデックス活用のためソート
+            // Include()でロール情報を一括取得（N+1問題回避）
             var entities = await query
+                .Include(u => u.Roles)
                 .OrderBy(u => u.Name)
                 .ThenBy(u => u.UpdatedAt) // CreatedAt→UpdatedAtに変更
                 .ToListAsync();
@@ -771,9 +934,11 @@ public class UserRepository : IUserRepository
             // 注意：実際の本格運用ではpg_trgm拡張とGINインデックス設定が必要
             var normalizedSearchTerm = searchTerm.Trim().ToLower(CultureInfo.InvariantCulture);
 
+            // Include()でロール情報を一括取得（N+1問題回避）
             var entities = await _context.Users
+                .Include(u => u.Roles)
                 .Where(u => !u.IsDeleted)
-                .Where(u => 
+                .Where(u =>
                     // PostgreSQL similarity関数のEF Core近似実装
                     EF.Functions.ILike(u.Name, $"%{normalizedSearchTerm}%") ||
                     EF.Functions.ILike(u.Email ?? "", $"%{normalizedSearchTerm}%") ||

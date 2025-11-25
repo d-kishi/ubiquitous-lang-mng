@@ -269,8 +269,12 @@ public partial class Program
 
         // 🎯 Application Service実装の登録（F# Application層）
 
-        // 👥 ユーザー管理Application Service（Phase A完成）
-        builder.Services.AddScoped<UbiquitousLanguageManager.Application.UserApplicationService>();
+        // 👥 ユーザー管理Application Service（Phase B-F3完成）
+        // 【F#初学者向け解説】
+        // IUserManagementServiceインターフェースを実装したUserManagementApplicationServiceを登録します。
+        // Interface登録により、Web層でのInterface injection（@inject IUserManagementService）が可能になり、
+        // テスト時にMoqによるモック化も可能になります（F#の明示的インターフェース実装対応）。
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserManagementService, UbiquitousLanguageManager.Application.UserManagementApplicationService>();
 
         // 🔐 認証Application Service（Phase A9完成）
         // 【F#初学者向け解説】

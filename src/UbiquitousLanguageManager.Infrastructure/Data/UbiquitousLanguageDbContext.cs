@@ -155,7 +155,7 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
     /// <summary>
     /// ApplicationUser（ASP.NET Core Identity）の詳細設定
     /// PostgreSQL 固有の最適化と制約設定
-    /// 
+    ///
     /// 【Blazor Server初学者向け解説】
     /// ここで設定したインデックスや制約は、データベースの性能とデータ整合性を保証します。
     /// 特に、Email のユニーク制約により、同じメールアドレスでの重複登録を防ぎます。
@@ -168,46 +168,46 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
             // ASP.NET Core Identity 標準列のコメント設定
             entity.Property(e => e.Id)
                   .HasComment("ユーザーID（主キー、GUID形式）");
-            
+
             entity.Property(e => e.UserName)
                   .HasComment("ユーザー名（ログイン用）");
-            
+
             entity.Property(e => e.NormalizedUserName)
                   .HasComment("正規化ユーザー名（検索用）");
-            
+
             entity.Property(e => e.Email)
                   .HasComment("メールアドレス");
-            
+
             entity.Property(e => e.NormalizedEmail)
                   .HasComment("正規化メールアドレス（検索用）");
-            
+
             entity.Property(e => e.EmailConfirmed)
                   .HasComment("メール確認済みフラグ");
-            
+
             entity.Property(e => e.PasswordHash)
                   .HasComment("パスワードハッシュ値（Identity管理）");
-            
+
             entity.Property(e => e.SecurityStamp)
                   .HasComment("セキュリティスタンプ（パスワード変更時更新）");
-            
+
             entity.Property(e => e.ConcurrencyStamp)
                   .HasComment("同時実行制御スタンプ");
-            
+
             entity.Property(e => e.PhoneNumber)
                   .HasComment("電話番号");
-            
+
             entity.Property(e => e.PhoneNumberConfirmed)
                   .HasComment("電話番号確認済みフラグ");
-            
+
             entity.Property(e => e.TwoFactorEnabled)
                   .HasComment("二要素認証有効フラグ");
-            
+
             entity.Property(e => e.LockoutEnd)
                   .HasComment("ロックアウト終了時間");
-            
+
             entity.Property(e => e.LockoutEnabled)
                   .HasComment("ロックアウト有効フラグ");
-            
+
             entity.Property(e => e.AccessFailedCount)
                   .HasComment("アクセス失敗回数");
 
@@ -251,11 +251,11 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
             // DomainUserIdプロパティは設計書にない余計な実装のため削除
 
             // UserRoleインデックスは削除（ASP.NET Core Identity標準のRoles機能使用）
-            
+
             // Phase A3機能関連インデックス追加
             entity.HasIndex(e => e.PasswordResetToken)
                   .HasDatabaseName("IX_ApplicationUsers_PasswordResetToken");
-                  
+
             entity.HasIndex(e => e.PasswordResetExpiry)
                   .HasDatabaseName("IX_ApplicationUsers_PasswordResetExpiry");
 
@@ -266,6 +266,16 @@ public class UbiquitousLanguageDbContext : IdentityDbContext<ApplicationUser>
                   .HasDatabaseName("IX_ApplicationUsers_UpdatedAt");
 
             // DomainUserIdインデックスは削除（設計書にない実装）
+
+            // 🔐 ASP.NET Core Identity ロール関連のナビゲーションプロパティ設定
+            // 【F#初学者向け解説】
+            // ApplicationUser.Roles プロパティと AspNetUserRoles テーブル（IdentityUserRole<string>）の関連付けを定義します。
+            // これにより、Include(u => u.Roles) で効率的にロール情報を取得できるようになります。
+            // N+1問題（複数ユーザー取得時に毎回ロールクエリが発行される問題）を回避します。
+            entity.HasMany(u => u.Roles)
+                  .WithOne()
+                  .HasForeignKey(ur => ur.UserId)
+                  .IsRequired();
 
             // 🔐 論理削除されたユーザーを除外するグローバルフィルター
             entity.HasQueryFilter(e => !e.IsDeleted);

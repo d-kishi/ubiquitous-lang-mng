@@ -108,10 +108,21 @@ public class ApplicationUser : IdentityUser
     /// UserProjectエンティティを通じた多対多の関係
     /// </summary>
     public virtual ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
-    
+
     /// <summary>
     /// このユーザーがドメイン承認者として設定されている関係
     /// DomainApproverエンティティを通じた多対多の関係
     /// </summary>
     public virtual ICollection<DomainApprover> DomainApprovers { get; set; } = new List<DomainApprover>();
+
+    /// <summary>
+    /// ASP.NET Core Identity ロール関連（ナビゲーションプロパティ）
+    /// EF Core Includeでロール情報を一括取得するために使用
+    ///
+    /// 【F#初学者向け解説】
+    /// ASP.NET Core Identityでは、ユーザーとロールの多対多関係は AspNetUserRoles テーブルで管理されます。
+    /// このナビゲーションプロパティを使用することで、Include()でロール情報を効率的に取得できます。
+    /// N+1問題（複数ユーザー取得時に毎回ロールクエリが発行される問題）を回避できます。
+    /// </summary>
+    public virtual ICollection<IdentityUserRole<string>> Roles { get; set; } = new List<IdentityUserRole<string>>();
 }

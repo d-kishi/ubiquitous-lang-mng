@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AppIProjectManagementService = UbiquitousLanguageManager.Application.ProjectManagement.IProjectManagementService;
+using AppIUserManagementService = UbiquitousLanguageManager.Application.IUserManagementService;
 using UbiquitousLanguageManager.Domain.Common;
 using UbiquitousLanguageManager.Contracts.DTOs;
 using UbiquitousLanguageManager.Infrastructure.Data.Entities;
 // F# Domain型をエイリアスで使用
 using FSharpDomainProject = UbiquitousLanguageManager.Domain.ProjectManagement.Project;
 using FSharpDomainDomain = UbiquitousLanguageManager.Domain.ProjectManagement.Domain;
+using FSharpDomainUser = UbiquitousLanguageManager.Domain.Authentication.User;
 
 namespace UbiquitousLanguageManager.Web.Tests.Infrastructure;
 
@@ -55,6 +57,11 @@ public abstract class BlazorComponentTestBase : TestContext
     protected Mock<AppIProjectManagementService> MockProjectService { get; private set; } = null!;
 
     /// <summary>
+    /// IUserManagementServiceモック（Phase B-F3追加）
+    /// </summary>
+    protected Mock<AppIUserManagementService> MockUserManagementService { get; private set; } = null!;
+
+    /// <summary>
     /// コンストラクタ（共通初期化）
     ///
     /// 【初期化内容】
@@ -72,6 +79,15 @@ public abstract class BlazorComponentTestBase : TestContext
         // IProjectManagementServiceモック作成・登録
         MockProjectService = new Mock<AppIProjectManagementService>();
         Services.AddSingleton(MockProjectService.Object);
+
+        // IUserManagementServiceモック作成・登録（Phase B-F3追加）
+        // 【F#初学者向け解説】
+        // Interface型のモックではコンストラクター引数は不要です。
+        // F#の明示的インターフェース実装により、
+        // C#からはInterface経由でのみアクセス可能になるため、
+        // Interface型のモックを作成することでテスト可能になります。
+        MockUserManagementService = new Mock<AppIUserManagementService>();
+        Services.AddSingleton(MockUserManagementService.Object);
 
         // UserManagerモック作成・登録
         // 【ASP.NET Core Identity初学者向け解説】
@@ -108,6 +124,8 @@ public abstract class BlazorComponentTestBase : TestContext
         JSInterop.SetupVoid("showToast", _ => true).SetVoidResult();
         // confirm dialog モック（ProjectMembers.razorのメンバー削除確認用）
         JSInterop.Setup<bool>("confirm", _ => true).SetResult(true);
+        // alert dialog モック（Index.razorのユーザー有効化・無効化用）
+        JSInterop.SetupVoid("alert", _ => true).SetVoidResult();
     }
 
     #region 権限別ユーザー設定ヘルパー
@@ -230,6 +248,71 @@ public abstract class BlazorComponentTestBase : TestContext
             .BuildMock();
 
         Services.AddSingleton(MockProjectService.Object);
+    }
+
+    #endregion
+
+    #region UserManagementApplicationServiceモックセットアップヘルパー（Phase B-F3追加）
+
+    /// <summary>
+    /// GetAllUsersAsync成功モックセットアップ
+    ///
+    /// 【使用例】
+    /// SetupGetAllUsersSuccess(new List<FSharpDomainUser>
+    /// {
+    ///     CreateTestUser(userId: 1, email: "test@example.com", name: "Test User", role: "GeneralUser")
+    /// });
+    ///
+    /// 【重要】Application層はF# Domain型を使用するため、UserDtoではなくF# Userを受け取ります
+    /// </summary>
+    protected void SetupGetAllUsersSuccess(List<FSharpDomainUser> users)
+    {
+        var builder = new UserManagementServiceMockBuilder();
+        MockUserManagementService = builder
+            .SetupGetAllUsersSuccess(users)
+            .BuildMock();
+
+        // サービス再登録（既存のモックを置き換え）
+        Services.AddSingleton(MockUserManagementService.Object);
+    }
+
+    /// <summary>
+    /// GetAllUsersAsync失敗モックセットアップ
+    /// </summary>
+    protected void SetupGetAllUsersFailure(string errorMessage)
+    {
+        var builder = new UserManagementServiceMockBuilder();
+        MockUserManagementService = builder
+            .SetupGetAllUsersFailure(errorMessage)
+            .BuildMock();
+
+        Services.AddSingleton(MockUserManagementService.Object);
+    }
+
+    /// <summary>
+    /// DeactivateUserAsync成功モックセットアップ
+    /// </summary>
+    protected void SetupDeactivateUserSuccess()
+    {
+        var builder = new UserManagementServiceMockBuilder();
+        MockUserManagementService = builder
+            .SetupDeactivateUserSuccess()
+            .BuildMock();
+
+        Services.AddSingleton(MockUserManagementService.Object);
+    }
+
+    /// <summary>
+    /// ActivateUserAsync成功モックセットアップ
+    /// </summary>
+    protected void SetupActivateUserSuccess()
+    {
+        var builder = new UserManagementServiceMockBuilder();
+        MockUserManagementService = builder
+            .SetupActivateUserSuccess()
+            .BuildMock();
+
+        Services.AddSingleton(MockUserManagementService.Object);
     }
 
     #endregion

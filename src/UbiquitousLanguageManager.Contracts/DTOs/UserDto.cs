@@ -133,10 +133,24 @@ public class CreateUserDto
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
+    /// 初期パスワード（管理者が手動入力）
+    /// Phase B-F3: 手動パスワード設定方式
+    /// </summary>
+    [Required(ErrorMessage = "初期パスワードは必須です")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "パスワードは8文字以上100文字以内で入力してください")]
+    public string InitialPassword { get; set; } = string.Empty;
+
+    /// <summary>
     /// ユーザーロール
     /// </summary>
     [Required(ErrorMessage = "ユーザーロールは必須です")]
     public string Role { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 割り当てプロジェクトID一覧
+    /// Phase B-F3: ユーザー作成時のプロジェクト割り当て
+    /// </summary>
+    public List<long> AssignedProjectIds { get; set; } = new();
 
     /// <summary>
     /// 作成者ID
