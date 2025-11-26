@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-25（**Phase B-F3 Step1.5追加・UI全面リファクタ準備完了**）
+**最終更新**: 2025-11-27（**Phase B-F3 Step1.5組織設計完了・Stage1実施待ち**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -17,8 +17,8 @@
 
 ### 現在のPhase/Step状況
 
-🔄 **Phase B-F3 Step1.5開始準備完了**（Phase_Summary.md更新済み）
-- **状態**: Step1 Stage3で品質問題発生 → Step1.5（UI全面リファクタ）追加決定
+🔄 **Phase B-F3 Step1.5 Stage1実施待ち**（組織設計完了・品質確認完了）
+- **状態**: Step1.5組織設計完了、Stage1（Application層セキュリティ修正）実施待ち
 - **Phase目的**: Phase A完全完成（25% → 100%） + Phase B完全完成（100%） + ユーザー動作確認
 - **Phase構成**: Part 1（Step1→Step1.5→Step2-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
 - **推定期間**: 32-51.5h + α（9-12セッション）※Step1.5追加で6-10h増加
@@ -31,7 +31,7 @@
   - Step1.5セクション追加（line 169-242）
   - Step構成表更新・タイムライン更新
   - Step間参照マトリックス更新（7エントリ追加）
-- **次回**: step-startコマンドでStep1.5組織設計 → csharp-web-ui Agent実装開始
+- **次回**: Step1.5 Stage1実施（fsharp-application Agent） → セキュリティ問題2件修正
 
 ### Phase完了状況（サマリ）
 
@@ -120,40 +120,37 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3 Step1 Stage3実施（即座に開始可能）
+### Phase B-F3 Step1.5 Stage1実施（即座に開始可能）
 
-**優先度**: 🔴 Critical
+**優先度**: 🔴 Critical（セキュリティ問題修正）
 
 **現在の状態**:
-- ✅ Step1 Stage1完了（UI実装3画面：Index.razor, Create.razor, Edit.razor）
-- ✅ Step1 Stage2完了（bUnitテスト実装：42/48 PASS, 0 FAIL, 6 SKIP）
-- ✅ Stage2実行記録完全文書化完了
-- ✅ Stage2検知問題点記録完了（4問題）
+- ✅ Step1.5組織設計完了
+- ✅ 全層品質確認完了（Domain82点/Application72点/Contracts・Infrastructure82点）
+- ✅ 品質確認レポート4件作成済み
 
 **次回実施内容**:
-1. ✅ **問題点整理・GitHub Issue検討**（完了 - 2025-11-25）
-   - Stage2検知4問題点を整理・Issue化完了
-   - Issue #62 コメント追加（警告67件現状報告）
-   - Issue #73 新規作成（coverlet.collector導入・Phase B3）
-   - Issue #74 新規作成（F# Result型エラー設計改善・Phase C）
-   - スキップテスト6件: Issue不要（Phase B-F3 Step2で対応予定）
+1. **Step1.5 Stage1: Application層セキュリティ修正**（推定1-2時間）
+   - Task1: ProjectManager権限フィルタ実装（GetAllUsersAsync）
+   - Task2: 自己ロール変更禁止チェック追加（UpdateUserAsync）
+   - SubAgent: fsharp-application Agent
 
-2. **Phase B-F3 Step1 Stage3実施**（次回セッション実施予定・推定30-60分）
-   - Stage3内容: ユーザー確認・UIレイアウト調整
-   - アプリケーション起動（Docker + DevContainer）
-   - ユーザー様による3画面手動確認（Index/Create/Edit）
-   - UIレイアウト・操作性フィードバック収集
-   - 必要に応じて調整実施
+2. **完了基準**:
+   - ProjectManager権限フィルタが正しく動作
+   - 自己ロール変更時にエラーが返却される
+   - 既存テスト全Pass
+   - ビルド 0 Error / 0 Warning（既存Warning除く）
 
 **読み込み推奨ファイル**:
-- `Doc/08_Organization/Active/Phase_B-F3/Step01_ユーザー管理UI実装.md`（Stage3実施手順）
-- `.serena/memories/technical_learnings.md`（Stage2検知問題点詳細）
+- `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`（組織設計・Stage構成）
+- `Doc/08_Organization/Active/Phase_B-F3/Research/02_Application層品質確認レポート.md`（セキュリティ問題詳細）
+- `src/UbiquitousLanguageManager.Application/UserManagementServices.fs`（修正対象ファイル）
 
 **技術的前提条件**:
 - DevContainer環境: 構築済み
-- ビルド状態: 0 Error, 67 Warning（既存）
-- テスト状態: 42/48 PASS, 0 FAIL, 6 SKIP
+- ビルド状態: 0 Error
+- セキュリティ問題: 2件（🔴最優先修正対象）
 
 ---
 
-**最終更新**: 2025-11-25（Stage2問題点整理・GitHub Issue対応完了・Stage3実施待ち）
+**最終更新**: 2025-11-27（Step1.5組織設計完了・Stage1実施待ち）
