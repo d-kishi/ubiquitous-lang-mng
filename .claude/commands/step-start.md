@@ -94,6 +94,36 @@
 - ❌ 曖昧な計画 → 実装に集中 → "なんとなくOK" → 対応漏れ
 - ✅ 計画に集中 → ゴール明確化 → 実装は計画通り → 100%達成
 
+### 2.4. PlanMode計画策定（🆕 新規追加・条件付き実行）
+
+**条件**: 複雑なStep（3 Stage以上、または3 SubAgent以上並列実行）
+**目的**: 計画ファイルを活用したStep計画の詳細整理・ユーザー対話的策定
+
+- [ ] **複雑度判定**:
+  - Stage数が3以上 → PlanMode推奨
+  - 並列実行SubAgentが3以上 → PlanMode推奨
+  - 技術的リスクが高い作業を含む → PlanMode推奨
+  - 上記に該当しない場合はスキップ可能
+
+- [ ] **PlanMode開始**（該当時）:
+  - EnterPlanModeツール実行
+  - 計画ファイル（`~/.claude/plans/`配下）が自動生成
+
+- [ ] **Stage構成詳細化**:
+  - Stage間依存関係の可視化
+  - SubAgent並列実行計画の詳細化
+  - 技術的リスク・完了基準の明確化
+
+- [ ] **計画ファイル完成**:
+  - ExitPlanModeでユーザー承認取得
+  - 計画ファイルの結論をStep組織設計書に反映
+
+- [ ] **永続化判断**:
+  - 計画ファイルをPlans/またはResearch/ディレクトリに保存するか判断
+  - 保存先: `Doc/08_Organization/Active/Phase_XX/Plans/YYYY-MM-DD_StepXX計画.md`
+
+**参照**: `Doc/08_Organization/Rules/組織管理運用マニュアル.md` - PlanMode活用ガイドライン
+
 ### 2.5 タスク分解・TodoList生成（🆕 新機能追加）
 ```bash
 echo "📋 Step作業のタスク分解・TodoList生成を開始..."

@@ -219,6 +219,160 @@ public class UserRepository : IUserRepository
     }
 
     /// <summary>
+    /// Phase B-F3 Step1.5: 複数プロジェクトに所属するユーザー取得
+    /// ProjectManager権限フィルタ用のメソッド
+    /// 【F#初学者向け解説】
+    /// F#のProjectId listをC#で受け取り、UserProjectsテーブルを使用して
+    /// 指定プロジェクトに所属するユーザー一覧を取得します。
+    /// </summary>
+    /// <param name="projectIds">F#のProjectIdリスト</param>
+    /// <returns>F#のResult型でラップされたユーザーリスト</returns>
+    public async Task<FSharpResult<FSharpList<User>, string>> GetUsersByProjectIdsAsync(FSharpList<ProjectId> projectIds)
+    {
+        var startTime = DateTime.UtcNow;
+        try
+        {
+            // F# listからC# IEnumerableに変換してlong値を抽出
+            var projectIdValues = projectIds.Select(p => p.Item).ToList();
+
+            if (!projectIdValues.Any())
+            {
+                // プロジェクトIDが空の場合は空リストを返す
+                return FSharpResult<FSharpList<User>, string>.NewOk(FSharpList<User>.Empty);
+            }
+
+            _logger.LogDebug("Starting GetUsersByProjectIdsAsync for {Count} projects", projectIdValues.Count);
+
+            // UserProjectsテーブルをJOINして、指定プロジェクトに所属するユーザーを取得
+            // 重複排除のためDistinctを使用
+            var userIds = await _context.Set<UserProject>()
+                .Where(up => projectIdValues.Contains(up.ProjectId))
+                .Select(up => up.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            if (!userIds.Any())
+            {
+                // 該当ユーザーがいない場合は空リストを返す
+                var emptyDuration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("GetUsersByProjectIdsAsync completed in {Duration}ms (no users found)",
+                    emptyDuration.TotalMilliseconds);
+                return FSharpResult<FSharpList<User>, string>.NewOk(FSharpList<User>.Empty);
+            }
+
+            // ユーザー情報を取得（ロール情報含む）
+            var entities = await _context.Users
+                .Include(u => u.Roles)
+                .Where(u => userIds.Contains(u.Id) && !u.IsDeleted)
+                .OrderBy(u => u.Name)
+                .ToListAsync();
+
+            var users = new List<User>();
+            var errors = new List<string>();
+
+            foreach (var entity in entities)
+            {
+                var userResult = ToDomainUser(entity);
+                if (userResult.IsOk)
+                {
+                    users.Add(userResult.ResultValue);
+                }
+                else
+                {
+                    errors.Add($"User ID {entity.Id}: {userResult.ErrorValue}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                _logger.LogWarning("Some users could not be converted: {Errors}", string.Join(", ", errors));
+            }
+
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogInformation("GetUsersByProjectIdsAsync completed successfully in {Duration}ms. Projects: {ProjectCount}, Users: {UserCount}",
+                duration.TotalMilliseconds, projectIdValues.Count, users.Count);
+
+            var fsharpList = ListModule.OfSeq(users);
+            return FSharpResult<FSharpList<User>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "GetUsersByProjectIdsAsync failed after {Duration}ms", duration.TotalMilliseconds);
+            return FSharpResult<FSharpList<User>, string>.NewError($"プロジェクトユーザー取得エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase B-F3 Step1.5: ユーザーが所属するプロジェクトID一覧取得
+    /// ProjectManager権限フィルタ用のメソッド
+    /// 【F#初学者向け解説】
+    /// F#のUserIdからC#のApplicationUser.Idをマッピングし、
+    /// UserProjectsテーブルから該当ユーザーのプロジェクトID一覧を取得します。
+    /// GetHashCode()によるマッピングを使用しているため、ハッシュ衝突のリスクがあります。
+    /// </summary>
+    /// <param name="userId">F#のUserId</param>
+    /// <returns>F#のResult型でラップされたProjectIdリスト</returns>
+    public async Task<FSharpResult<FSharpList<ProjectId>, string>> GetProjectIdsByUserIdAsync(UserId userId)
+    {
+        var startTime = DateTime.UtcNow;
+        try
+        {
+            _logger.LogDebug("Starting GetProjectIdsByUserIdAsync for userId: {UserId}", userId.Item);
+
+            // UserProjectsテーブルから該当ユーザーのプロジェクトIDを取得
+            // UserIdはGetHashCode()で変換されているため、ApplicationUserのIdで検索
+
+            // まずUserId（long）に一致するApplicationUserを検索
+            var entities = await _context.Users
+                .Where(u => !u.IsDeleted)
+                .ToListAsync();
+
+            string? matchingUserId = null;
+            foreach (var entity in entities)
+            {
+                var entityHashId = (long)entity.Id.GetHashCode();
+                if (entityHashId == userId.Item)
+                {
+                    matchingUserId = entity.Id;
+                    break;
+                }
+            }
+
+            if (matchingUserId == null)
+            {
+                var notFoundDuration = DateTime.UtcNow - startTime;
+                _logger.LogInformation("GetProjectIdsByUserIdAsync completed in {Duration}ms (user not found)",
+                    notFoundDuration.TotalMilliseconds);
+                return FSharpResult<FSharpList<ProjectId>, string>.NewOk(FSharpList<ProjectId>.Empty);
+            }
+
+            // UserProjectsテーブルからプロジェクトIDを取得
+            var projectIds = await _context.Set<UserProject>()
+                .Where(up => up.UserId == matchingUserId)
+                .Select(up => up.ProjectId)
+                .Distinct()
+                .ToListAsync();
+
+            // long → F# ProjectIdに変換
+            var fsharpProjectIds = projectIds.Select(id => ProjectId.NewProjectId(id)).ToList();
+            var fsharpList = ListModule.OfSeq(fsharpProjectIds);
+
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogInformation("GetProjectIdsByUserIdAsync completed successfully in {Duration}ms. Projects: {Count}",
+                duration.TotalMilliseconds, fsharpProjectIds.Count);
+
+            return FSharpResult<FSharpList<ProjectId>, string>.NewOk(fsharpList);
+        }
+        catch (Exception ex)
+        {
+            var duration = DateTime.UtcNow - startTime;
+            _logger.LogError(ex, "GetProjectIdsByUserIdAsync failed after {Duration}ms", duration.TotalMilliseconds);
+            return FSharpResult<FSharpList<ProjectId>, string>.NewError($"プロジェクトID取得エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// 一時的な簡易実装（雛型用）
     /// </summary>
     public async Task<FSharpResult<Unit, string>> DeleteAsync(UserId id)

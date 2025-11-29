@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-27（**Phase B-F3 Step1.5組織設計完了・Stage1実施待ち**）
+**最終更新**: 2025-11-29（**Phase B-F3 Step1.5 Stage1完了・Stage2実施待ち**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -17,21 +17,21 @@
 
 ### 現在のPhase/Step状況
 
-🔄 **Phase B-F3 Step1.5 Stage1実施待ち**（組織設計完了・品質確認完了）
-- **状態**: Step1.5組織設計完了、Stage1（Application層セキュリティ修正）実施待ち
+🔄 **Phase B-F3 Step1.5 Stage1完了・Stage2実施待ち**（組織設計更新完了）
+- **状態**: Step1.5 Stage1完了（セキュリティ問題2件修正）、Stage2（Web層再実装）待ち
 - **Phase目的**: Phase A完全完成（25% → 100%） + Phase B完全完成（100%） + ユーザー動作確認
 - **Phase構成**: Part 1（Step1→Step1.5→Step2-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
 - **推定期間**: 32-51.5h + α（9-12セッション）※Step1.5追加で6-10h増加
-- **Step1.5概要**: Index/Create/Edit.razor全面書き換え（Option A: 既存コード不信用・仕様書ベース再実装）
-- **Step1.5背景**:
-  - Step1 Stage3（ユーザー動作確認）でIndex.razor初期表示だけで7件Issue発生
-  - Phase A初期実装（Claude Code v1時代）の品質問題が原因
-  - デバッグ継続より全面リファクタの方が効率的と判断
-- **Phase_Summary.md更新済み**:
-  - Step1.5セクション追加（line 169-242）
-  - Step構成表更新・タイムライン更新
-  - Step間参照マトリックス更新（7エントリ追加）
-- **次回**: Step1.5 Stage1実施（fsharp-application Agent） → セキュリティ問題2件修正
+- **Step1.5 Stage1完了成果**（2025-11-29）:
+  - ProjectManager権限フィルタ実装（IUserRepository拡張含む）
+  - 自己ロール変更禁止チェック追加
+  - ビルド・テスト全Pass
+- **Step1.5 Stage2-4計画最適化**（2025-11-29）:
+  - PhaseB2成果活用版に更新（参考可否マトリックス追加）
+  - data-testid属性を必須要件に格上げ
+  - テストアーキテクチャ基盤活用（BlazorComponentTestBase等）
+  - Playwright Test Generator/Healer Agents活用
+- **次回**: Step1.5 Stage2実施（csharp-web-ui Agent × 3並列） → Index/Create/Edit.razor全面書き換え
 
 ### Phase完了状況（サマリ）
 
@@ -120,37 +120,39 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3 Step1.5 Stage1実施（即座に開始可能）
+### Phase B-F3 Step1.5 Stage2実施（即座に開始可能）
 
-**優先度**: 🔴 Critical（セキュリティ問題修正）
+**優先度**: 🟡 High（Web層全面書き換え）
 
 **現在の状態**:
-- ✅ Step1.5組織設計完了
-- ✅ 全層品質確認完了（Domain82点/Application72点/Contracts・Infrastructure82点）
-- ✅ 品質確認レポート4件作成済み
+- ✅ Stage1完了（セキュリティ問題2件修正・ビルドテスト全Pass）
+- ✅ Stage2-4計画最適化完了（PhaseB2成果活用版）
+- ✅ 組織設計書更新完了
 
 **次回実施内容**:
-1. **Step1.5 Stage1: Application層セキュリティ修正**（推定1-2時間）
-   - Task1: ProjectManager権限フィルタ実装（GetAllUsersAsync）
-   - Task2: 自己ロール変更禁止チェック追加（UpdateUserAsync）
-   - SubAgent: fsharp-application Agent
+1. **Step1.5 Stage2: Web層再実装**（推定2-3時間）
+   - Task 2-1: Index.razor再実装
+   - Task 2-2: Create.razor再実装
+   - Task 2-3: Edit.razor再実装
+   - SubAgent: csharp-web-ui Agent × 3（並列実行）
 
 2. **完了基準**:
-   - ProjectManager権限フィルタが正しく動作
-   - 自己ロール変更時にエラーが返却される
-   - 既存テスト全Pass
-   - ビルド 0 Error / 0 Warning（既存Warning除く）
+   - UI設計書3.6-3.8節の全要素実装完了
+   - F# Result型/Option型ハンドリング正常動作
+   - data-testid属性全コンポーネントに付与
+   - 初期表示エラー0件
+   - ビルド 0 Error
 
 **読み込み推奨ファイル**:
 - `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`（組織設計・Stage構成）
-- `Doc/08_Organization/Active/Phase_B-F3/Research/02_Application層品質確認レポート.md`（セキュリティ問題詳細）
-- `src/UbiquitousLanguageManager.Application/UserManagementServices.fs`（修正対象ファイル）
+- `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` 3.6-3.8節（UI仕様）
+- `Components/Pages/ProjectManagement/ProjectList.razor`（参考パターン・PhaseB2成果）
 
 **技術的前提条件**:
 - DevContainer環境: 構築済み
 - ビルド状態: 0 Error
-- セキュリティ問題: 2件（🔴最優先修正対象）
+- Stage1成果: セキュリティ問題修正済み
 
 ---
 
-**最終更新**: 2025-11-27（Step1.5組織設計完了・Stage1実施待ち）
+**最終更新**: 2025-11-29（Step1.5 Stage1完了・Stage2実施待ち）

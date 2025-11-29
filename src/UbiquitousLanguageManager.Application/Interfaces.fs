@@ -36,7 +36,51 @@ type IUserRepository =
     
     // 📋 ユーザー一覧: プロジェクト単位でのユーザー取得
     abstract member GetByProjectIdAsync: projectId: ProjectId -> Task<Result<User list, string>>
-    
+
+    // 📋 ユーザー一覧: 複数プロジェクトに所属するユーザー取得
+    // 【F#初学者向け解説】
+    // ProjectManager権限フィルタ用のメソッドです。
+    // 操作者が管理するプロジェクトのIDリストを渡すと、
+    // それらのプロジェクトに所属するユーザーの一覧を返します。
+    // 重複排除された結果を返すため、同じユーザーが複数プロジェクトに所属していても1回のみ含まれます。
+    //
+    // 【パラメータ】
+    // - projectIds: ProjectId list - 検索対象のプロジェクトIDリスト（F#のlist型）
+    //
+    // 【戻り値】
+    // - Task<Result<User list, string>>
+    //   - Ok (User list): 取得成功時、重複排除されたユーザーリスト
+    //   - Error string: 取得失敗時のエラーメッセージ
+    //
+    // 【使用例】
+    // let projectIds = [ProjectId.create "proj-1"; ProjectId.create "proj-2"]
+    // let! result = userRepository.GetUsersByProjectIdsAsync(projectIds)
+    // match result with
+    // | Ok users -> // ユーザーリスト処理
+    // | Error msg -> // エラー処理
+    abstract member GetUsersByProjectIdsAsync: projectIds: ProjectId list -> Task<Result<User list, string>>
+
+    // 📋 ユーザーが所属するプロジェクトID一覧取得
+    // 【F#初学者向け解説】
+    // ProjectManager権限フィルタ用のメソッドです。
+    // 指定ユーザーが所属（管理）するプロジェクトのID一覧を取得します。
+    // UserProjectsテーブルを参照して、ユーザーに割り当てられたプロジェクトを返します。
+    //
+    // 【パラメータ】
+    // - userId: UserId - 検索対象のユーザーID
+    //
+    // 【戻り値】
+    // - Task<Result<ProjectId list, string>>
+    //   - Ok (ProjectId list): 取得成功時、プロジェクトIDリスト（F#のlist型）
+    //   - Error string: 取得失敗時のエラーメッセージ
+    //
+    // 【使用例】
+    // let! result = userRepository.GetProjectIdsByUserIdAsync(currentUserId)
+    // match result with
+    // | Ok projectIds -> // projectIds: ProjectId list を使用
+    // | Error msg -> // エラー処理
+    abstract member GetProjectIdsByUserIdAsync: userId: UserId -> Task<Result<ProjectId list, string>>
+
     // 📋 ロール別ユーザー一覧: 特定のロールを持つユーザー取得
     abstract member GetByRoleAsync: role: Role -> Task<Result<User list, string>>
     

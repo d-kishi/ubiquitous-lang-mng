@@ -78,13 +78,37 @@ type UserManagementApplicationService(
 
                             | ProjectManager ->
                                 // ProjectManager: 自分が管理するプロジェクトのユーザーのみ
-                                // TODO: プロジェクト別ユーザー取得ロジック実装（Phase B-F3 Step2）
-                                let! _ = logger.LogInformationAsync($"プロジェクト管理者によるユーザー一覧取得 - 操作者ASP.NET Core Identity ID: {operatorIdentityId}")
-                                let! usersResult = userRepository.GetAllActiveUsersAsync()
+                                // 【F#初学者向け解説】
+                                // ProjectManagerは全ユーザーを参照する権限がないため、
+                                // 自分が管理するプロジェクトに所属するユーザーのみを返します。
+                                // 1. 操作者のプロジェクトID一覧を取得
+                                // 2. そのプロジェクトに所属するユーザーを取得
+                                // 仕様根拠: 機能仕様書2.2節「ProjectManager: 担当プロジェクトのユーザーのみ参照可能」
+                                let! _ = logger.LogInformationAsync($"プロジェクト管理者によるユーザー一覧取得 - 操作者ID: {operator.Id.Value}")
 
-                                match usersResult with
-                                | Error err -> return Error err
-                                | Ok users -> return Ok users
+                                // Step 2a: 操作者のプロジェクトID一覧を取得
+                                let! projectIdsResult = userRepository.GetProjectIdsByUserIdAsync(operator.Id)
+
+                                match projectIdsResult with
+                                | Error err ->
+                                    let! _ = logger.LogErrorAsync($"プロジェクトID取得エラー: {err}", None)
+                                    return Error err
+                                | Ok projectIds ->
+                                    // Step 2b: プロジェクトにユーザーが割り当てられていない場合
+                                    if projectIds.IsEmpty then
+                                        let! _ = logger.LogInformationAsync("操作者にプロジェクトが割り当てられていません - 空リスト返却")
+                                        return Ok []
+                                    else
+                                        // Step 2c: プロジェクトに所属するユーザーを取得
+                                        let! usersResult = userRepository.GetUsersByProjectIdsAsync(projectIds)
+
+                                        match usersResult with
+                                        | Error err ->
+                                            let! _ = logger.LogErrorAsync($"プロジェクトユーザー取得エラー: {err}", None)
+                                            return Error err
+                                        | Ok users ->
+                                            let! _ = logger.LogInformationAsync($"プロジェクトユーザー一覧取得成功 - 件数: {users.Length}")
+                                            return Ok users
 
                             | _ ->
                                 // DomainApprover / GeneralUser: ユーザー一覧参照権限なし
@@ -306,31 +330,47 @@ type UserManagementApplicationService(
                                                 return Error "このロールに変更する権限がありません"
                                             else
 
-                                                // Step 7: ドメインロジック適用（ユーザー更新）
+                                                // Step 6.5: 自己ロール変更禁止チェック
                                                 // 【F#初学者向け解説】
-                                                // ドメインエンティティのメソッドを呼び出してビジネスルールを適用します。
-                                                // F#のレコード型更新構文（with式）を使用して、不変性を保ちながら更新します。
-                                                let updatedUser =
-                                                    { existingUser with
-                                                        Name = validName
-                                                        Role = newRole
-                                                        IsActive = isActive
-                                                        UpdatedAt = System.DateTime.UtcNow
-                                                        UpdatedBy = operator.Id }
+                                                // セキュリティ対策として、ユーザーが自分自身のロールを変更できないようにします。
+                                                // これにより、権限昇格攻撃（一般ユーザーが自分を管理者に変更する等）を防ぎます。
+                                                // 仕様根拠: 機能仕様書2.2.2節「自分自身のロール変更不可（権限昇格防止）」
+                                                //
+                                                // F#の型システム補足:
+                                                // - userId: UserId型（ドメインオブジェクト）
+                                                // - operator.Id: UserId型（ドメインオブジェクト）
+                                                // - UserId型は等価性比較をサポートしているため、直接 = で比較可能
+                                                // - newRole <> existingUser.Role: ロールが実際に変更されようとしているかをチェック
+                                                if userId = operator.Id && newRole <> existingUser.Role then
+                                                    let! _ = logger.LogWarningAsync($"自己ロール変更試行 - ユーザーID: {userId.Value}")
+                                                    return Error "自分自身のロールを変更することはできません"
+                                                else
 
-                                                // Step 8: 永続化
-                                                let! saveResult = userRepository.SaveAsync(updatedUser)
+                                                    // Step 7: ドメインロジック適用（ユーザー更新）
+                                                    // 【F#初学者向け解説】
+                                                    // ドメインエンティティのメソッドを呼び出してビジネスルールを適用します。
+                                                    // F#のレコード型更新構文（with式）を使用して、不変性を保ちながら更新します。
+                                                    let updatedUser =
+                                                        { existingUser with
+                                                            Name = validName
+                                                            Role = newRole
+                                                            IsActive = isActive
+                                                            UpdatedAt = System.DateTime.UtcNow
+                                                            UpdatedBy = operator.Id }
 
-                                                match saveResult with
-                                                | Error saveErr ->
-                                                    let! _ = logger.LogErrorAsync($"ユーザー更新保存エラー: {saveErr}", None)
-                                                    return Error saveErr
-                                                | Ok savedUser ->
+                                                    // Step 8: 永続化
+                                                    let! saveResult = userRepository.SaveAsync(updatedUser)
 
-                                                    // TODO: Step 9: プロジェクト割り当て更新（Phase B-F3 Step2）
+                                                    match saveResult with
+                                                    | Error saveErr ->
+                                                        let! _ = logger.LogErrorAsync($"ユーザー更新保存エラー: {saveErr}", None)
+                                                        return Error saveErr
+                                                    | Ok savedUser ->
 
-                                                    let! _ = logger.LogInformationAsync($"ユーザー更新成功 - ユーザーID: {userId.Value}")
-                                                    return Ok savedUser
+                                                        // TODO: Step 9: プロジェクト割り当て更新（Phase B-F3 Step2）
+
+                                                        let! _ = logger.LogInformationAsync($"ユーザー更新成功 - ユーザーID: {userId.Value}")
+                                                        return Ok savedUser
 
                 with
                 | ex ->

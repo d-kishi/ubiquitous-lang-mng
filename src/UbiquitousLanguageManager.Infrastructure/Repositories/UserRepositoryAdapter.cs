@@ -286,11 +286,11 @@ public class UserRepositoryAdapter : IUserRepository
         try
         {
             _logger.LogDebug("Getting users by project ID: {ProjectId} (not implemented)", projectId.Item);
-            
+
             // プロジェクト機能未実装のため、空リストを返す
             await Task.Delay(1); // async警告解消
             var emptyList = Microsoft.FSharp.Collections.FSharpList<User>.Empty;
-            
+
             return FSharpResult<Microsoft.FSharp.Collections.FSharpList<User>, string>.NewOk(emptyList);
         }
         catch (Exception ex)
@@ -298,6 +298,68 @@ public class UserRepositoryAdapter : IUserRepository
             _logger.LogError(ex, "Exception in GetByProjectIdAsync for project: {ProjectId}", projectId.Item);
             return FSharpResult<Microsoft.FSharp.Collections.FSharpList<User>, string>.NewError(
                 $"プロジェクト別ユーザー検索エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase B-F3 Step1.5: 複数プロジェクトに所属するユーザー取得
+    /// ProjectManager権限フィルタ用のメソッド
+    /// 【注意】現在のバージョンでは、プロジェクト・ユーザー関連付けが未実装のため、
+    /// 空のリストを返します。将来的なプロジェクト管理機能実装時に対応予定です。
+    /// 【F#初学者向け解説】
+    /// F#のProjectId listをC#で受け取り、UserProjectsテーブルを使用して
+    /// 指定プロジェクトに所属するユーザー一覧を取得する予定です。
+    /// </summary>
+    /// <param name="projectIds">F#のProjectIdリスト</param>
+    /// <returns>F#のResult型でラップされたユーザーリスト</returns>
+    public async Task<FSharpResult<Microsoft.FSharp.Collections.FSharpList<User>, string>> GetUsersByProjectIdsAsync(Microsoft.FSharp.Collections.FSharpList<ProjectId> projectIds)
+    {
+        try
+        {
+            _logger.LogDebug("Getting users by project IDs (not implemented)");
+
+            // プロジェクト機能未実装のため、空リストを返す
+            await Task.Delay(1); // async警告解消
+            var emptyList = Microsoft.FSharp.Collections.FSharpList<User>.Empty;
+
+            return FSharpResult<Microsoft.FSharp.Collections.FSharpList<User>, string>.NewOk(emptyList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception in GetUsersByProjectIdsAsync");
+            return FSharpResult<Microsoft.FSharp.Collections.FSharpList<User>, string>.NewError(
+                $"プロジェクト別ユーザー検索エラー: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Phase B-F3 Step1.5: ユーザーが所属するプロジェクトID一覧取得
+    /// ProjectManager権限フィルタ用のメソッド
+    /// 【注意】現在のバージョンでは、プロジェクト・ユーザー関連付けが未実装のため、
+    /// 空のリストを返します。将来的なプロジェクト管理機能実装時に対応予定です。
+    /// 【F#初学者向け解説】
+    /// F#のUserIdからC#のApplicationUser.Idをマッピングし、
+    /// UserProjectsテーブルから該当ユーザーのプロジェクトID一覧を取得する予定です。
+    /// </summary>
+    /// <param name="userId">F#のUserId</param>
+    /// <returns>F#のResult型でラップされたProjectIdリスト</returns>
+    public async Task<FSharpResult<Microsoft.FSharp.Collections.FSharpList<ProjectId>, string>> GetProjectIdsByUserIdAsync(UserId userId)
+    {
+        try
+        {
+            _logger.LogDebug("Getting project IDs by user ID: {UserId} (not implemented)", userId.Item);
+
+            // プロジェクト機能未実装のため、空リストを返す
+            await Task.Delay(1); // async警告解消
+            var emptyList = Microsoft.FSharp.Collections.FSharpList<ProjectId>.Empty;
+
+            return FSharpResult<Microsoft.FSharp.Collections.FSharpList<ProjectId>, string>.NewOk(emptyList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception in GetProjectIdsByUserIdAsync for user: {UserId}", userId.Item);
+            return FSharpResult<Microsoft.FSharp.Collections.FSharpList<ProjectId>, string>.NewError(
+                $"プロジェクトID取得エラー: {ex.Message}");
         }
     }
 

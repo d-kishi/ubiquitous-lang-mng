@@ -101,6 +101,36 @@
 - ❌ 曖昧な計画 → 実装に集中 → "なんとなくOK" → 対応漏れ（37.5%完成）
 - ✅ 計画に集中 → ゴール明確化 → 実装は計画通り → 100%達成
 
+### 1.6. PlanMode計画策定（🆕 新規追加・条件付き実行）
+
+**条件**: 複雑なPhase（5 Step以上、または複数の技術決定が必要）
+**目的**: 計画ファイルを活用したPhase計画の詳細整理・ユーザー対話的策定
+
+- [ ] **複雑度判定**:
+  - Step数が5以上 → PlanMode推奨
+  - 重要な技術決定が2件以上 → PlanMode推奨
+  - 複数SubAgent並列パターンが予想される → PlanMode推奨
+  - 上記に該当しない場合はスキップ可能
+
+- [ ] **PlanMode開始**（該当時）:
+  - EnterPlanModeツール実行
+  - 計画ファイル（`~/.claude/plans/`配下）が自動生成
+
+- [ ] **Phase計画詳細化**:
+  - Step構成・依存関係の可視化
+  - 技術的リスク・課題の洗い出し
+  - SubAgent構成パターンの事前検討
+
+- [ ] **計画ファイル完成**:
+  - ExitPlanModeでユーザー承認取得
+  - 計画ファイルの結論をPhase_Summary.mdに反映
+
+- [ ] **永続化判断**:
+  - 計画ファイルをPlans/ディレクトリに保存するか判断
+  - 保存先: `Doc/08_Organization/Active/Phase_XX/Plans/YYYY-MM-DD_Phase計画.md`
+
+**参照**: `Doc/08_Organization/Rules/組織管理運用マニュアル.md` - PlanMode活用ガイドライン
+
 ### 2. Phase開始前ディレクトリ・ファイル準備（必須）
 - [ ] **Phaseディレクトリ作成**: `/Doc/08_Organization/Active/Phase_XX/` ディレクトリ作成
 - [ ] **Phase_Summary.md作成**: Phase概要・成功基準・基本組織方針記録
