@@ -122,7 +122,8 @@
       "Bash(uvx:*)",
       "Bash(nul)",
       "mcp__serena__activate_project",
-      "mcp__serena__edit_memory"
+      "mcp__serena__edit_memory",
+      "mcp__serena__initial_instructions"
     ],
     "deny": [],
     "ask": [],
@@ -134,14 +135,14 @@
     "playwright"
   ],
   "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
     "network": {
       "allowUnixSockets": [
         "/var/run/docker.sock"
       ],
       "allowLocalBinding": true
     },
-    "excludedCommands": [],
-    "autoAllowBashIfSandboxed": true,
-    "enabled": true
+    "excludedCommands": []
   }
 }

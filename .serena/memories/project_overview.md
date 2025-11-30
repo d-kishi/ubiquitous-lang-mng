@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-29（**Phase B-F3 Step1.5 Stage1完了・Stage2実施待ち**）
+**最終更新**: 2025-11-30（**Phase B-F3 Step1.5 Stage1完了・Stage2-5再構成完了**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -17,8 +17,8 @@
 
 ### 現在のPhase/Step状況
 
-🔄 **Phase B-F3 Step1.5 Stage1完了・Stage2実施待ち**（組織設計更新完了）
-- **状態**: Step1.5 Stage1完了（セキュリティ問題2件修正）、Stage2（Web層再実装）待ち
+🔄 **Phase B-F3 Step1.5 Stage1完了・5Stage構成再構成完了**（全層調査・計画改訂完了）
+- **状態**: Step1.5 Stage1完了（セキュリティ問題2件修正）、5Stage構成へ改訂完了、Stage2（Infrastructure層）実施待ち
 - **Phase目的**: Phase A完全完成（25% → 100%） + Phase B完全完成（100%） + ユーザー動作確認
 - **Phase構成**: Part 1（Step1→Step1.5→Step2-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
 - **推定期間**: 32-51.5h + α（9-12セッション）※Step1.5追加で6-10h増加
@@ -31,19 +31,23 @@
   - data-testid属性を必須要件に格上げ
   - テストアーキテクチャ基盤活用（BlazorComponentTestBase等）
   - Playwright Test Generator/Healer Agents活用
-- **次回**: Step1.5 Stage2実施（csharp-web-ui Agent × 3並列） → Index/Create/Edit.razor全面書き換え
+- **Step1.5 5Stage構成改訂**（2025-11-30）:
+  - 全層調査でUserRepositoryスケルトン実装問題特定
+  - 4Stage → 5Stage再構成（Infrastructure/Application層追加）
+  - 推定時間11-15h（2-3セッション）
+- **次回**: Step1.5 Stage2実施（csharp-infrastructure Agent） → UserRepository完全実装
 
 ### Phase完了状況（サマリ）
 
-| Phase | 状態 | 完了度 |
-|-------|------|--------|
-| **Phase A**（ユーザー管理） | 完了 | 100% ✅ |
-| **Phase B1**（プロジェクト基本CRUD） | 完了 | 100% ✅ |
-| **Phase B-F1**（テストアーキテクチャ基盤） | 完了 | 100% ✅ |
-| **Phase B2**（ユーザー・プロジェクト関連） | 完了 | 93/100点 ✅ |
-| **Phase B-F2**（技術負債・E2E基盤強化） | 完了 | 100% ✅（一部Step7未完了・Phase B3対応） |
-| **Phase B3-B5**（プロジェクト管理完成） | 未着手 | 計画中 📋 |
-| **Phase C-D**（ドメイン・ユビキタス言語） | 未着手 | 計画中 📋 |
+| Phase                                      | 状態   | 完了度                                  |
+| ------------------------------------------ | ------ | --------------------------------------- |
+| **Phase A**（ユーザー管理）                | 完了   | 100% ✅                                  |
+| **Phase B1**（プロジェクト基本CRUD）       | 完了   | 100% ✅                                  |
+| **Phase B-F1**（テストアーキテクチャ基盤） | 完了   | 100% ✅                                  |
+| **Phase B2**（ユーザー・プロジェクト関連） | 完了   | 93/100点 ✅                              |
+| **Phase B-F2**（技術負債・E2E基盤強化）    | 完了   | 100% ✅（一部Step7未完了・Phase B3対応） |
+| **Phase B3-B5**（プロジェクト管理完成）    | 未着手 | 計画中 📋                                |
+| **Phase C-D**（ドメイン・ユビキタス言語）  | 未着手 | 計画中 📋                                |
 
 ### 全体進捗率
 
@@ -122,37 +126,58 @@
 
 ### Phase B-F3 Step1.5 Stage2実施（即座に開始可能）
 
-**優先度**: 🟡 High（Web層全面書き換え）
+**優先度**: 🔴 Critical（Infrastructure層完全実装）
 
 **現在の状態**:
 - ✅ Stage1完了（セキュリティ問題2件修正・ビルドテスト全Pass）
-- ✅ Stage2-4計画最適化完了（PhaseB2成果活用版）
-- ✅ 組織設計書更新完了
+- ✅ 5Stage構成再構成完了（2025-11-30）
+- ✅ 全層調査レポート・リファクタ計画作成完了
+
+**新Stage構成**（4→5Stage改訂）:
+```
+Stage 1: セキュリティ問題修正      ✅完了
+Stage 2: Infrastructure層完全実装  🆕追加（3-4h）← 次回実施
+Stage 3: Application層権限フィルタ  🆕追加（2-3h）
+Stage 4: Web層全画面リファクタ     元Stage2（4-5h）
+Stage 5: テスト                   元Stage3-4統合（2-3h）
+```
 
 **次回実施内容**:
-1. **Step1.5 Stage2: Web層再実装**（推定2-3時間）
-   - Task 2-1: Index.razor再実装
-   - Task 2-2: Create.razor再実装
-   - Task 2-3: Edit.razor再実装
-   - SubAgent: csharp-web-ui Agent × 3（並列実行）
+1. **Step1.5 Stage2: Infrastructure層 UserRepository完全実装**（推定3-4時間）
+   - Task 2-1: ID変換問題の解決（GetHashCode()廃止）
+   - Task 2-2: GetByEmailAsync完全実装
+   - Task 2-3: SaveAsync完全実装
+   - Task 2-4: DeleteAsync実装（論理削除）
+   - Task 2-5: GetByRoleAsync実装
+   - SubAgent: csharp-infrastructure Agent
 
 2. **完了基準**:
-   - UI設計書3.6-3.8節の全要素実装完了
-   - F# Result型/Option型ハンドリング正常動作
-   - data-testid属性全コンポーネントに付与
-   - 初期表示エラー0件
-   - ビルド 0 Error
+   - 全メソッドがDB操作を正しく実行
+   - GetByEmailAsync: 既存メールで正しくユーザー取得
+   - SaveAsync: INSERT/UPDATE動作確認
+   - DeleteAsync: 論理削除動作確認
+   - dotnet build成功（0 Error）
 
-**読み込み推奨ファイル**:
-- `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`（組織設計・Stage構成）
+**読み込み推奨ファイル（🔴必須）**:
 - `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` 3.6-3.8節（UI仕様）
-- `Components/Pages/ProjectManagement/ProjectList.razor`（参考パターン・PhaseB2成果）
+- `Doc/08_Organization/Active/Phase_B-F3/Research/UserManagement_全層調査レポート.md`（🆕重大問題詳細）
+- `Doc/08_Organization/Active/Phase_B-F3/Research/UserManagement_リファクタ計画.md`（🆕詳細タスク分割）
+- `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`（組織設計・5Stage構成）
+
+**読み込み推奨ファイル（参照用）**:
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs`（実装対象）
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/IUserRepository.cs`（インターフェース）
+- `src/UbiquitousLanguageManager.Infrastructure/Data/Entities/ApplicationUser.cs`（Identityエンティティ）
 
 **技術的前提条件**:
 - DevContainer環境: 構築済み
 - ビルド状態: 0 Error
 - Stage1成果: セキュリティ問題修正済み
 
+**重要発見事項**:
+- UserRepository: スケルトン実装（GetHashCode()ハッシュ衝突リスク、SaveAsync永続化なし）
+- UIだけ書き換えても動作しない根本原因特定済み
+
 ---
 
-**最終更新**: 2025-11-29（Step1.5 Stage1完了・Stage2実施待ち）
+**最終更新**: 2025-11-30（Step1.5 Stage1完了・5Stage構成改訂・Stage2実施待ち）
