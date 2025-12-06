@@ -89,6 +89,9 @@
 
   // 環境変数設定（DevContainer内）
   "remoteEnv": {
+    // ホットリロード有効化（Windowsホスト→Linuxコンテナ間のファイル変更検知）
+    "DOTNET_USE_POLLING_FILE_WATCHER": "1",
+
     // PostgreSQL接続文字列（docker-compose service名参照）
     "ConnectionStrings__DefaultConnection": "Host=postgres;Port=5432;Database=ubiquitous_lang_db;Username=ubiquitous_lang_user;Password=ubiquitous_lang_password",
 

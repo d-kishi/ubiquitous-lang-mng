@@ -1,3 +1,9 @@
+---
+name: db-schema-management
+description: EF Migrationsによるデータベーススキーマ変更の実装パターンをガイド。新規テーブル追加・列変更・CHECK制約追加・データベース設計書同期時に使用。
+allowed-tools: Read, Edit, Bash
+---
+
 # db-schema-management Skill
 
 **目的**: EF Migrationsによるデータベーススキーマ変更の実装パターンをガイド

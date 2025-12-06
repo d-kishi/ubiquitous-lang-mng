@@ -81,8 +81,9 @@ type UserApplicationService(
                                 let! createResult = authService.CreateUserWithPasswordAsync(email, name, role, password, operatorUser.Id)
                                 
                                 match createResult with
-                                | Ok createdUser ->
+                                | Ok (createdUser, _identityId) ->
                                     // 📧 ウェルカムメール送信（非同期）
+                                    // _identityId はプロジェクト割り当てが不要なこのフローでは使用しない
                                     let! _ = notificationService.SendWelcomeEmailAsync(createdUser.Email)
                                     return Ok createdUser
                                 | Error err -> return Error err
@@ -324,10 +325,13 @@ type UserApplicationService(
             match UserDomainService.validateUserManagementOperation operatorUser None "view_users" with
             | Error err -> return Error err
             | Ok () ->
-                // 🔍 ユーザー一覧取得
-                if includeInactive then 
-                    return! userRepository.GetAllUsersAsync()
-                else 
+                // 🔍 ユーザー一覧取得（削除済みユーザー制御対応）
+                // 【F#初学者向け解説】
+                // includeInactiveパラメータをGetAllUsersAsyncに渡します。
+                // trueの場合は論理削除ユーザーも含め、falseの場合はアクティブユーザーのみを取得します。
+                if includeInactive then
+                    return! userRepository.GetAllUsersAsync(true)  // 削除済み含む
+                else
                     return! userRepository.GetAllActiveUsersAsync()
         }
     

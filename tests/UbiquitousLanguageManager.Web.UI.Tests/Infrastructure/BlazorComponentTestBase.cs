@@ -255,21 +255,27 @@ public abstract class BlazorComponentTestBase : TestContext
     #region UserManagementApplicationServiceモックセットアップヘルパー（Phase B-F3追加）
 
     /// <summary>
-    /// GetAllUsersAsync成功モックセットアップ
+    /// GetAllUsersWithIdentityAsync成功モックセットアップ
     ///
     /// 【使用例】
-    /// SetupGetAllUsersSuccess(new List<FSharpDomainUser>
+    /// SetupGetAllUsersWithIdentitySuccess(new List<Tuple<FSharpDomainUser, string>>
     /// {
-    ///     CreateTestUser(userId: 1, email: "test@example.com", name: "Test User", role: "GeneralUser")
+    ///     Tuple.Create(CreateTestUser(userId: 1, email: "test@example.com", name: "Test User", role: "GeneralUser"), "identity-id-123")
     /// });
     ///
-    /// 【重要】Application層はF# Domain型を使用するため、UserDtoではなくF# Userを受け取ります
+    /// 【重要】Phase B-F3リファクタリングによりシグネチャ変更
+    /// - 旧: SetupGetAllUsersSuccess(List<User>) → User list を返す
+    /// - 新: SetupGetAllUsersWithIdentitySuccess(List<Tuple<User, string>>) → (User * IdentityId) list を返す
+    ///
+    /// 【F#初学者向け解説】
+    /// - F#タプル型 (User * string) は、C#ではTuple<User, string>として扱います
+    /// - Application層はF# Domain型を使用するため、UserDtoではなくF# Userを受け取ります
     /// </summary>
-    protected void SetupGetAllUsersSuccess(List<FSharpDomainUser> users)
+    protected void SetupGetAllUsersWithIdentitySuccess(List<Tuple<FSharpDomainUser, string>> userTuples)
     {
         var builder = new UserManagementServiceMockBuilder();
         MockUserManagementService = builder
-            .SetupGetAllUsersSuccess(users)
+            .SetupGetAllUsersWithIdentitySuccess(userTuples)
             .BuildMock();
 
         // サービス再登録（既存のモックを置き換え）
@@ -277,39 +283,30 @@ public abstract class BlazorComponentTestBase : TestContext
     }
 
     /// <summary>
-    /// GetAllUsersAsync失敗モックセットアップ
+    /// GetAllUsersWithIdentityAsync失敗モックセットアップ
     /// </summary>
-    protected void SetupGetAllUsersFailure(string errorMessage)
+    protected void SetupGetAllUsersWithIdentityFailure(string errorMessage)
     {
         var builder = new UserManagementServiceMockBuilder();
         MockUserManagementService = builder
-            .SetupGetAllUsersFailure(errorMessage)
+            .SetupGetAllUsersWithIdentityFailure(errorMessage)
             .BuildMock();
 
         Services.AddSingleton(MockUserManagementService.Object);
     }
 
     /// <summary>
-    /// DeactivateUserAsync成功モックセットアップ
+    /// DeleteUserAsync成功モックセットアップ
+    ///
+    /// 【重要】Phase B-F3リファクタリングによりシグネチャ変更
+    /// - 旧: DeleteUserAsync(userId: UserId, ...) → UserId型
+    /// - 新: DeleteUserAsync(targetIdentityId: string, ...) → string型（IdentityId）
     /// </summary>
-    protected void SetupDeactivateUserSuccess()
+    protected void SetupDeleteUserSuccess()
     {
         var builder = new UserManagementServiceMockBuilder();
         MockUserManagementService = builder
-            .SetupDeactivateUserSuccess()
-            .BuildMock();
-
-        Services.AddSingleton(MockUserManagementService.Object);
-    }
-
-    /// <summary>
-    /// ActivateUserAsync成功モックセットアップ
-    /// </summary>
-    protected void SetupActivateUserSuccess()
-    {
-        var builder = new UserManagementServiceMockBuilder();
-        MockUserManagementService = builder
-            .SetupActivateUserSuccess()
+            .SetupDeleteUserSuccess()
             .BuildMock();
 
         Services.AddSingleton(MockUserManagementService.Object);

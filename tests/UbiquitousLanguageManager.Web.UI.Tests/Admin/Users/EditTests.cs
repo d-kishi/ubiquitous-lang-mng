@@ -77,9 +77,10 @@ public class EditTests : BlazorComponentTestBase
             .BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act - Editコンポーネントレンダリング（UserId=1）
+        // Act - Editコンポーネントレンダリング（IdentityId指定）
+        // Phase B-F3リファクタ対応: Id (UserId) → IdentityId (string)
         var cut = RenderComponent<Edit>(parameters => parameters
-            .Add(p => p.Id, 1L));
+            .Add(p => p.IdentityId, "identity-id-1"));
 
         // Assert - メールアドレス表示確認（読み取り専用）
         var emailInput = cut.Find("input[data-testid='input-email-readonly']");
@@ -122,8 +123,8 @@ public class EditTests : BlazorComponentTestBase
         var mockService = builder.SetupGetUserByIdSuccess(existingUser).BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // Assert - 4つのロール選択肢が存在
         var superUserRadio = cut.Find("input[data-testid='radio-role-superuser']");
@@ -161,8 +162,8 @@ public class EditTests : BlazorComponentTestBase
         var mockService = builder.SetupGetUserByIdSuccess(existingUser).BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // Assert - プロジェクト選択領域が存在
         var projectList = cut.Find("[data-testid='project-list']");
@@ -200,8 +201,8 @@ public class EditTests : BlazorComponentTestBase
         var mockService = builder.SetupGetUserByIdSuccess(inactiveUser).BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // Assert - 非アクティブ状態確認
         var activeCheckbox = cut.Find("input[data-testid='checkbox-is-active']");
@@ -244,8 +245,8 @@ public class EditTests : BlazorComponentTestBase
             .BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act - コンポーネントレンダリング
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act - コンポーネントレンダリング（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // ユーザー名変更
         var nameInput = cut.Find("input[data-testid='input-name']");
@@ -259,10 +260,10 @@ public class EditTests : BlazorComponentTestBase
         var navMan = Services.GetRequiredService<NavigationManager>();
         navMan.Uri.Should().EndWith("/admin/users", "更新成功時にユーザー一覧へリダイレクト");
 
-        // UpdateUserAsync呼び出し確認
+        // UpdateUserAsync呼び出し確認（Phase B-F3リファクタ対応: 第1引数がstring型に変更）
         mockService.Verify(
             s => s.UpdateUserAsync(
-                It.IsAny<FSharpUserId>(),
+                It.IsAny<string>(),  // targetIdentityId (変更: UserId → string)
                 "変更後の名前",
                 It.IsAny<string>(),
                 It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(),
@@ -300,8 +301,8 @@ public class EditTests : BlazorComponentTestBase
             .BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // ロール変更（GeneralUser → ProjectManager）
         // 【bUnitでInputRadioGroup操作の正しい方法】
@@ -322,9 +323,10 @@ public class EditTests : BlazorComponentTestBase
         var navMan = Services.GetRequiredService<NavigationManager>();
         navMan.Uri.Should().EndWith("/admin/users", "ロール変更成功");
 
+        // Phase B-F3リファクタ対応: 第1引数がstring型に変更
         mockService.Verify(
             s => s.UpdateUserAsync(
-                It.IsAny<FSharpUserId>(),
+                It.IsAny<string>(),  // targetIdentityId (変更: UserId → string)
                 It.IsAny<string>(),
                 "ProjectManager",
                 It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(),
@@ -362,8 +364,8 @@ public class EditTests : BlazorComponentTestBase
             .BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // アクティブ状態変更（true → false）
         var activeCheckbox = cut.Find("input[data-testid='checkbox-is-active']");
@@ -377,9 +379,10 @@ public class EditTests : BlazorComponentTestBase
         var navMan = Services.GetRequiredService<NavigationManager>();
         navMan.Uri.Should().EndWith("/admin/users", "ステータス変更成功");
 
+        // Phase B-F3リファクタ対応: 第1引数がstring型に変更
         mockService.Verify(
             s => s.UpdateUserAsync(
-                It.IsAny<FSharpUserId>(),
+                It.IsAny<string>(),  // targetIdentityId (変更: UserId → string)
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(),
@@ -413,8 +416,8 @@ public class EditTests : BlazorComponentTestBase
         var mockService = builder.SetupGetUserByIdSuccess(existingUser).BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // ユーザー名を空欄にする
         var nameInput = cut.Find("input[data-testid='input-name']");
@@ -432,9 +435,9 @@ public class EditTests : BlazorComponentTestBase
         var navMan = Services.GetRequiredService<NavigationManager>();
         navMan.Uri.Should().NotEndWith("/admin/users", "バリデーションエラー時はリダイレクトされない");
 
-        // UpdateUserAsyncが呼び出されない
+        // UpdateUserAsyncが呼び出されない（Phase B-F3リファクタ対応: 第1引数がstring型に変更）
         mockService.Verify(
-            s => s.UpdateUserAsync(It.IsAny<FSharpUserId>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(), It.IsAny<bool>(), It.IsAny<string>()),
+            s => s.UpdateUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(), It.IsAny<bool>(), It.IsAny<string>()),
             Times.Never,
             "バリデーションエラー時はUpdateUserAsyncが呼び出されない"
         );
@@ -467,8 +470,8 @@ public class EditTests : BlazorComponentTestBase
         // JSRuntimeモック設定（alert呼び出し確認用）
         JSInterop.SetupVoid("alert", _ => true).SetVoidResult();
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         var nameInput = cut.Find("input[data-testid='input-name']");
         nameInput.Change("変更後の名前");
@@ -527,8 +530,8 @@ public class EditTests : BlazorComponentTestBase
         var mockService = builder.SetupGetUserByIdSuccess(existingUser).BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
         // 8文字未満のパスワード入力
         var passwordInput = cut.Find("input[data-testid='input-new-password']");
@@ -590,8 +593,8 @@ public class EditTests : BlazorComponentTestBase
             .BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 999L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-999"));
 
         var nameInput = cut.Find("input[data-testid='input-name']");
         nameInput.Change("Updated Name");
@@ -623,13 +626,13 @@ public class EditTests : BlazorComponentTestBase
 
     #endregion
 
-    #region キャンセル処理テスト
+    #region 戻るボタン処理テスト
 
     /// <summary>
-    /// キャンセルボタン押下 → ユーザー一覧画面へリダイレクト
+    /// 戻るボタン押下 → ユーザー一覧画面へリダイレクト
     ///
     /// 【検証内容】
-    /// - キャンセルボタン押下
+    /// - 戻るボタン押下
     /// - NavigationManager.Uri == "/admin/users"
     ///
     /// 【期待結果】
@@ -637,7 +640,7 @@ public class EditTests : BlazorComponentTestBase
     /// - ユーザー一覧画面へリダイレクト
     /// </summary>
     [Fact]
-    public void Edit_ClickCancel_RedirectsToUserList()
+    public void Edit_ClickGoBack_RedirectsToUserList()
     {
         // Arrange
         SetupSuperUser("admin@test.com");
@@ -647,21 +650,21 @@ public class EditTests : BlazorComponentTestBase
         var mockService = builder.SetupGetUserByIdSuccess(existingUser).BuildMock();
         Services.AddSingleton(mockService.Object);
 
-        // Act
-        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.Id, 1L));
+        // Act（Phase B-F3リファクタ対応: IdentityId指定）
+        var cut = RenderComponent<Edit>(parameters => parameters.Add(p => p.IdentityId, "identity-id-1"));
 
-        var cancelButton = cut.Find("button[data-testid='btn-cancel']");
-        cancelButton.Click();
+        var backButton = cut.Find("button[data-testid='back-button']");
+        backButton.Click();
 
         // Assert
         var navMan = Services.GetRequiredService<NavigationManager>();
-        navMan.Uri.Should().EndWith("/admin/users", "キャンセル時にユーザー一覧へリダイレクト");
+        navMan.Uri.Should().EndWith("/admin/users", "戻るボタン押下時にユーザー一覧へリダイレクト");
 
-        // UpdateUserAsyncが呼び出されない
+        // UpdateUserAsyncが呼び出されない（Phase B-F3リファクタ対応: 第1引数がstring型に変更）
         mockService.Verify(
-            s => s.UpdateUserAsync(It.IsAny<FSharpUserId>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(), It.IsAny<bool>(), It.IsAny<string>()),
+            s => s.UpdateUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Microsoft.FSharp.Collections.FSharpList<long>>(), It.IsAny<bool>(), It.IsAny<string>()),
             Times.Never,
-            "キャンセル時はUpdateUserAsyncが呼び出されない"
+            "戻るボタン押下時はUpdateUserAsyncが呼び出されない"
         );
     }
 

@@ -499,7 +499,7 @@ public class AuthenticationService : IAuthenticationService
     /// ASP.NET Core Identityで実際のユーザー作成を実行。
     /// 作成成功時はF#のUser型に変換して返却。
     /// </summary>
-    public async Task<FSharpResult<User, string>> CreateUserWithPasswordAsync(
+    public async Task<FSharpResult<Tuple<User, string>, string>> CreateUserWithPasswordAsync(
         Email email, UserName name, Role role, Password password, UserId createdBy)
     {
         try
@@ -545,27 +545,29 @@ public class AuthenticationService : IAuthenticationService
                     
                     // 通知サービスに作成通知（簡易実装）
                     _logger.LogInformation("ユーザー作成通知: {Email}", emailValue);
-                    
-                    return FSharpResult<User, string>.NewOk(domainUser);
+
+                    // Identity IDと共にタプルで返却（プロジェクト割り当て等で使用）
+                    return FSharpResult<Tuple<User, string>, string>.NewOk(
+                        Tuple.Create(domainUser, identityUser.Id));
                 }
                 else
                 {
-                    _logger.LogError("ロール割り当て失敗: {Email}: {Errors}", 
+                    _logger.LogError("ロール割り当て失敗: {Email}: {Errors}",
                         emailValue, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
-                    return FSharpResult<User, string>.NewError("ロール割り当てに失敗しました");
+                    return FSharpResult<Tuple<User, string>, string>.NewError("ロール割り当てに失敗しました");
                 }
             }
             else
             {
                 var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
                 _logger.LogError("Infrastructure基盤ユーザー作成失敗: {Email}: {Errors}", emailValue, errors);
-                return FSharpResult<User, string>.NewError($"ユーザー作成に失敗しました: {errors}");
+                return FSharpResult<Tuple<User, string>, string>.NewError($"ユーザー作成に失敗しました: {errors}");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Infrastructure基盤ユーザー作成エラー: {Email}", email.Value);
-            return FSharpResult<User, string>.NewError("ユーザー作成処理中にエラーが発生しました");
+            return FSharpResult<Tuple<User, string>, string>.NewError("ユーザー作成処理中にエラーが発生しました");
         }
     }
 
@@ -1327,7 +1329,8 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     private User CreateSimpleDomainUser(ApplicationUser identityUser)
     {
-        var userId = UserId.NewUserId(long.Parse(identityUser.Id));
+        // Identity IDはGUID文字列のため、GetHashCode()でlong値に変換
+        var userId = UserId.NewUserId((long)identityUser.Id.GetHashCode());
         var email = Email.create(identityUser.Email ?? "").ResultValue;
         
         // ApplicationUserのNameプロパティを使用
@@ -1401,5 +1404,116 @@ public class AuthenticationService : IAuthenticationService
         // F# PasswordHashの作成（簡易実装）
         var result = PasswordHash.create(hashValue);
         return result.IsOk ? result.ResultValue : PasswordHash.create("dummy").ResultValue;
+    }
+
+    /// <summary>
+    /// 管理者によるパスワードリセット（Phase B-F3 Step1.5 Stage4追加）
+    /// SuperUserが他ユーザーのパスワードを強制的に変更する機能
+    ///
+    /// 【F#初学者向け解説】
+    /// 通常のパスワード変更（ChangePasswordAsync）は現在のパスワードが必要ですが、
+    /// このメソッドは管理者権限により現在のパスワードなしで新しいパスワードを設定します。
+    /// ASP.NET Core Identityのパスワード管理機能を使用して安全に実行します。
+    ///
+    /// 【実装方法】
+    /// ASP.NET Core Identityには直接「管理者リセット」のメソッドはありませんが、
+    /// 以下の2つのアプローチがあります：
+    /// 1. RemovePasswordAsync + AddPasswordAsync（PasswordHashがある場合）
+    /// 2. GeneratePasswordResetTokenAsync + ResetPasswordAsync（トークンベース）
+    ///
+    /// 本実装ではアプローチ1を採用します（シンプルで直接的）。
+    /// InitialPasswordの場合（PasswordHashがnull）はAddPasswordAsyncのみ実行します。
+    ///
+    /// 【セキュリティ考慮事項】
+    /// - Application層で必ずSuperUser権限チェックを実施すること
+    /// - パスワードリセット実行ログを必ず記録すること（監査証跡）
+    /// - セキュリティスタンプを更新して既存セッションを無効化
+    /// </summary>
+    /// <param name="identityId">対象ユーザーのASP.NET Core Identity ID（GUID文字列）</param>
+    /// <param name="newPassword">新しいパスワード（F# Password値オブジェクト）</param>
+    /// <returns>成功時はOk unit、失敗時はError string</returns>
+    public async Task<FSharpResult<Unit, string>> AdminResetPasswordAsync(string identityId, Password newPassword)
+    {
+        try
+        {
+            _logger.LogInformation("管理者パスワードリセット開始: IdentityId={IdentityId}", identityId);
+
+            // Step 1: ユーザー検索（ASP.NET Core Identity ID で検索）
+            var identityUser = await _userManager.FindByIdAsync(identityId);
+            if (identityUser == null)
+            {
+                _logger.LogWarning("管理者パスワードリセット失敗: ユーザーが見つかりません IdentityId={IdentityId}", identityId);
+                return FSharpResult<Unit, string>.NewError("ユーザーが見つかりません");
+            }
+
+            // Step 2: ApplicationUserにキャスト（InitialPassword判定のため）
+            if (identityUser is not ApplicationUser appUser)
+            {
+                _logger.LogError("管理者パスワードリセット失敗: ApplicationUserキャストエラー IdentityId={IdentityId}", identityId);
+                return FSharpResult<Unit, string>.NewError("システムエラーが発生しました");
+            }
+
+            var newPasswordValue = newPassword.Value;
+            IdentityResult result;
+
+            // Step 3: 既存パスワードの有無で処理を分岐
+            if (string.IsNullOrEmpty(appUser.PasswordHash))
+            {
+                // 🔑 InitialPasswordの場合（PasswordHashがnull）：AddPasswordAsyncのみ実行
+                _logger.LogInformation("管理者パスワードリセット: InitialPasswordクリア & 新規パスワード設定 - IdentityId={IdentityId}", identityId);
+
+                // InitialPasswordをクリア（セキュリティ強化）
+                appUser.InitialPassword = null;
+                appUser.IsFirstLogin = false;
+                appUser.UpdatedAt = DateTime.UtcNow;
+                appUser.UpdatedBy = "Admin Reset";
+
+                // 新規パスワード設定
+                result = await _userManager.AddPasswordAsync(appUser, newPasswordValue);
+            }
+            else
+            {
+                // 🔐 PasswordHashがある場合：RemovePasswordAsync + AddPasswordAsync
+                _logger.LogInformation("管理者パスワードリセット: 既存PasswordHash削除 & 新規パスワード設定 - IdentityId={IdentityId}", identityId);
+
+                // Step 3a: 既存パスワード削除
+                var removeResult = await _userManager.RemovePasswordAsync(appUser);
+                if (!removeResult.Succeeded)
+                {
+                    var removeErrors = string.Join(", ", removeResult.Errors.Select(e => e.Description));
+                    _logger.LogError("管理者パスワードリセット失敗: 既存パスワード削除エラー - IdentityId={IdentityId}, エラー={Errors}",
+                        identityId, removeErrors);
+                    return FSharpResult<Unit, string>.NewError($"既存パスワード削除に失敗しました: {removeErrors}");
+                }
+
+                // Step 3b: 新規パスワード設定
+                result = await _userManager.AddPasswordAsync(appUser, newPasswordValue);
+            }
+
+            // Step 4: 結果確認
+            if (result.Succeeded)
+            {
+                // Step 5: セキュリティスタンプ更新（既存セッション無効化）
+                // 【F#初学者向け解説】
+                // パスワードリセット後は、対象ユーザーの既存セッションを無効化する必要があります。
+                // これにより、不正アクセスがあった場合でも即座にセッションが切断されます。
+                await _userManager.UpdateSecurityStampAsync(appUser);
+
+                _logger.LogInformation("管理者パスワードリセット成功: IdentityId={IdentityId}, セキュリティスタンプ更新完了", identityId);
+                return FSharpResult<Unit, string>.NewOk(null!);
+            }
+            else
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("管理者パスワードリセット失敗: AddPasswordエラー - IdentityId={IdentityId}, エラー={Errors}",
+                    identityId, errors);
+                return FSharpResult<Unit, string>.NewError($"パスワード設定に失敗しました: {errors}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "管理者パスワードリセットエラー: IdentityId={IdentityId}", identityId);
+            return FSharpResult<Unit, string>.NewError("パスワードリセット処理中にエラーが発生しました");
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 ## 概要
 
-このディレクトリには、Claude Codeが自律的に使用するAgent Skillsが含まれています。Phase 1（2025-10-21）でF#↔C#相互運用とClean Architecture準拠性、Phase 2（2025-11-01）でTDD実践・仕様準拠・ADR知見・SubAgent組み合わせ・テストアーキテクチャ、Phase B-F2（2025-11-15）でGitHub Issues運用の計8個のSkillsを導入しました。
+このディレクトリには、Claude Codeが自律的に使用するAgent Skillsが含まれています。Phase 1（2025-10-21）でF#↔C#相互運用とClean Architecture準拠性、Phase 2（2025-11-01）でTDD実践・仕様準拠・ADR知見・SubAgent組み合わせ・テストアーキテクチャ、Phase B-F2（2025-11-15）でGitHub Issues運用、Phase B-F3（2025-12-06）でDevContainer Webアプリ管理・UI確認・DBスキーマ管理の計11個のSkillsを導入しました。
 
 ## 導入日
 
@@ -10,7 +10,7 @@
 - **Phase 2導入日**: 2025-11-01
 - **Phase B-F2追加**: 2025-11-15
 
-## Skill一覧（全8個）
+## Skill一覧（全11個）
 
 ### Phase 1 Skills（2個）
 
@@ -216,6 +216,80 @@
 
 ---
 
+### Phase B-F3 Skills（3個）
+
+### 9. devcontainer-web-app
+
+**目的**: DevContainer環境でのWebアプリ起動/停止管理・ホットリロード有効化
+
+**使用タイミング**:
+- 動作確認フェーズ開始時
+- UI変更確認時（ユーザーとの視覚的コミュニケーション）
+- デバッグ・調査時
+
+**提供パターン**:
+1. Webアプリ起動/停止/再起動/状態確認スクリプト
+2. ホットリロード vs 再起動の判断基準
+3. トラブルシューティングガイド
+
+**Phase B-F3成果**:
+- ホットリロード有効化: DOTNET_USE_POLLING_FILE_WATCHER設定
+- 起動効率化: 複数ターン消費→1コマンド
+- プロセス管理: 累積問題解消
+
+**詳細**: [devcontainer-web-app/SKILL.md](./devcontainer-web-app/SKILL.md)
+
+---
+
+### 10. playwright-ui-verification
+
+**目的**: Playwright MCPを活用したUI確認手順・ユーザーとの視覚的コミュニケーション支援
+
+**使用タイミング**:
+- UI/デザイン変更確認時（シーンA）
+- E2Eテスト作成前検証時（シーンB）
+- バグ再現・調査時（シーンC）
+
+**提供パターン**:
+1. シーンA: UI/デザイン変更確認フロー
+2. シーンB: E2Eテスト作成前検証フロー
+3. シーンC: バグ再現・調査フロー
+
+**Phase B-F3成果**:
+- 視覚的コミュニケーション品質向上
+- デザイン変更フィードバックサイクル短縮
+- 3シーン対応の標準化されたフロー確立
+
+**詳細**: [playwright-ui-verification/SKILL.md](./playwright-ui-verification/SKILL.md)
+
+---
+
+### 11. db-schema-management
+
+**目的**: EF Migrationsによるデータベーススキーマ変更の実装パターンをガイド
+
+**使用タイミング**:
+- 新規テーブル追加時
+- 列追加・変更時
+- CHECK制約追加時
+- データベース設計書更新時
+- PostgreSQL固有機能使用時
+
+**提供パターン**:
+1. ef-migrations-workflow.md: スキーマ変更5ステップ手順
+2. check-constraint-pattern.md: CHECK制約追加パターン
+3. manual-sql-pattern.md: 手動SQL追加パターン（GINインデックス等）
+4. db-doc-sync-checklist.md: データベース設計書同期チェックリスト
+
+**Phase B-F3成果**:
+- EF Migrations手順の標準化
+- PostgreSQL固有機能活用パターン確立
+- データベース設計書同期プロセス明確化
+
+**詳細**: [db-schema-management/SKILL.md](./db-schema-management/SKILL.md)
+
+---
+
 ## ADR・Rulesからの移行
 
 ### Phase 1移行（2025-10-21）
@@ -410,12 +484,32 @@ Phase 1の効果は以下のドキュメントで測定されます：
 │       ├── test-project-naming-convention.md
 │       └── test-project-reference-rules.md
 │
-└── github-issues-management/                    # Phase B-F2
+├── github-issues-management/                    # Phase B-F2
+│   ├── SKILL.md
+│   ├── label-selection-guide.md
+│   ├── issue-template-patterns.md
+│   ├── creation-criteria.md
+│   └── label-reference.md
+│
+├── devcontainer-web-app/                        # Phase B-F3
+│   ├── SKILL.md
+│   └── patterns/
+│       └── hot-reload-decision.md
+│
+├── playwright-ui-verification/                  # Phase B-F3
+│   ├── SKILL.md
+│   └── patterns/
+│       ├── scene-a-ui-verification.md
+│       ├── scene-b-pre-e2e.md
+│       └── scene-c-bug-investigation.md
+│
+└── db-schema-management/                        # Phase B-F3
     ├── SKILL.md
-    ├── label-selection-guide.md
-    ├── issue-template-patterns.md
-    ├── creation-criteria.md
-    └── label-reference.md
+    └── patterns/
+        ├── ef-migrations-workflow.md
+        ├── check-constraint-pattern.md
+        ├── manual-sql-pattern.md
+        └── db-doc-sync-checklist.md
 ```
 
 ---
@@ -437,7 +531,9 @@ Phase 1の効果は以下のドキュメントで測定されます：
 | 2025-10-26 | Phase B2 | Agent Skills作成判断基準セクション追加・ADR vs Skills使い分けガイド統合 | Claude Code |
 | 2025-11-01 | Phase 2 | Phase 2完了・5つのSkills追加（tdd/spec-compliance/adr-knowledge/subagent/test-architecture）・計7個のSkills体系完成 | Claude Code |
 | 2025-11-15 | Phase B-F2 | github-issues-management追加・GitHub Issues運用規則の自律的適用実現・計8個のSkills体系完成 | Claude Code |
+| 2025-12-06 | Phase B-F3 | devcontainer-web-app・playwright-ui-verification追加・DevContainer Webアプリ管理・UI確認フロー標準化・計10個のSkills体系完成 | Claude Code |
+| 2025-12-07 | Phase B-F3 | db-schema-management追加・EF Migrations手順標準化・Front Matter修正（github-issues-management, db-schema-management）・計11個のSkills体系完成 | Claude Code |
 
 ---
 
-**最終更新**: 2025-11-15（Phase B-F2・github-issues-management追加・計8個）
+**最終更新**: 2025-12-07（Phase B-F3・db-schema-management追加・計11個）

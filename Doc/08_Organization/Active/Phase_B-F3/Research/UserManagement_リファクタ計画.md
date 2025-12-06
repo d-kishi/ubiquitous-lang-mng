@@ -1,19 +1,53 @@
 # ユーザー管理機能 リファクタ計画
 
 **作成日**: 2025-11-30
+**最終更新**: 2025-11-30
 **対象Phase**: Phase B-F3 Step1.5 Stage2-5
 **方針**: 最初から作り直すつもりで下位層から積み上げ実装
+
+---
+
+## 🔴 重要発見事項（2025-11-30追記）
+
+### IUserRepository実装ファイルの誤認識を修正
+
+| ファイル | 状態 | DI登録 |
+|---------|------|--------|
+| **UserRepositoryAdapter.cs** (780行) | ✅ 本番使用中 | `AddScoped<IUserRepository, UserRepositoryAdapter>` |
+| UserRepository.cs (1220行) | ⚠️ レガシー・未使用 | なし |
+
+**調査根拠**:
+- Program.cs 210行目: `builder.Services.AddScoped<IUserRepository, UserRepositoryAdapter>()`
+- UserRepository.csはDI登録されていない
+
+**結論**:
+- Stage2の作業対象は **UserRepositoryAdapter.cs**
+- **UserRepository.csは削除する**（テストファイル修正後）
+
+### UserRepository.cs 削除判断
+
+**参照箇所**:
+- `DependencyInjectionUnitTests.cs`: 2箇所（テスト内DI登録）→ 修正必要
+- ドキュメント: 複数のMDファイル → Stage完了後に更新
+
+**削除理由**:
+1. Program.csでDI登録されていない
+2. UserRepositoryAdapterが全機能を提供
+3. 1220行のレガシーコードがメンテナンス負担
 
 ---
 
 ## 1. リファクタ対象範囲
 
 ### 対象
-| 層 | 対象ファイル | 作業内容 |
-|---|-------------|----------|
-| **Infrastructure層** | `UserRepository.cs` | 全メソッド完全実装 |
-| **Application層** | `UserManagementServices.fs` | 権限フィルタ・プロジェクト割り当て |
-| **Web層** | `Index.razor`, `Create.razor`, `Edit.razor` | 全画面書き換え |
+| 層 | 対象ファイル | 作業内容 | 状態 |
+|---|-------------|----------|------|
+| **Infrastructure層** | `UserRepository.cs` | 6メソッド修正 + DbContext追加 + リネーム | ✅ Stage2完了 |
+| **Infrastructure層** | ~~旧UserRepository.cs~~ | 削除（レガシー・未使用） | ✅ 削除完了 |
+| **Application層** | `UserManagementServices.fs` | 権限フィルタ・プロジェクト割り当て | Stage3予定 |
+| **Web層** | `Index.razor`, `Create.razor`, `Edit.razor` | 全画面書き換え | Stage4予定 |
+
+**注**: UserRepositoryAdapter.cs → UserRepository.cs にリネーム完了（命名一貫性のため）
 
 ### 対象外
 - ログイン、ログアウト、パスワード変更機能
@@ -25,121 +59,123 @@
 ## 2. Step1.5 新Stage構成
 
 ```
-Stage 1: セキュリティ問題修正 ← ✅完了（変更なし）
-Stage 2: Infrastructure層 UserRepository完全実装 ← 新規
-Stage 3: Application層 権限フィルタ・プロジェクト割り当て ← 新規
-Stage 4: Web層 全画面リファクタ ← 元Stage 2
-Stage 5: テスト（単体/統合/E2E） ← 元Stage 3-4統合
+Stage 1: セキュリティ問題修正 ← ✅完了
+Stage 2: Infrastructure層 UserRepositoryAdapter修正 ← ✅完了（2025-11-30）
+Stage 3: Application層 権限フィルタ・プロジェクト割り当て ← 次回実施
+Stage 4: Web層 全画面リファクタ
+Stage 5: テスト（単体/統合/E2E）
 ```
 
 ---
 
-## 3. Stage 2: Infrastructure層 UserRepository完全実装
+## 3. Stage 2: Infrastructure層 UserRepositoryAdapter修正
 
-**推定時間**: 3-4時間
+**推定時間**: 7-8時間
 **SubAgent**: `csharp-infrastructure`
+**対象ファイル**: `UserRepositoryAdapter.cs`（本番使用中の実装）
 
-### Task 2-1: ID変換問題の解決
+### 正常動作しているメソッド（変更不要）
+- `GetByEmailAsync` (58-102行) - UserManager.FindByEmailAsync使用
+- `GetByIdentityIdAsync` (167-209行) - Identity ID直接検索
+- `GetAllActiveUsersAsync` (428-471行) - IsDeleted=false フィルタ
+- `GetAllUsersAsync` (476-519行) - 論理削除除外
+- `SearchUsersAsync` (548-600行) - 部分一致検索
 
-**現状**:
+### Task 2-1: DeleteAsync バグ修正 🔴
+
+**現状のバグ** (411行):
 ```csharp
-var entityHashId = (long)entity.Id.GetHashCode();  // ハッシュ衝突リスク
+// SUCCESS時に ERROR を返している！
+return FSharpResult<Unit, string>.NewError("Delete completed successfully");
 ```
 
-**対策**:
-- `GetHashCode()`廃止
-- `GetByIdentityIdAsync`を主軸検索メソッドに統一
-- `GetByIdAsync`は`GetByIdentityIdAsync`へのラッパーとして再実装
-
-**実装方針**:
-1. ApplicationUser.Id（GUID文字列）を直接使用
-2. 既存の`GetByIdentityIdAsync`（動作確認済み）を活用
-3. 内部マッピング不要（Identity ID直接参照）
-
-### Task 2-2: GetByEmailAsync完全実装
-
-**現状**: ハードコードでダミーユーザー返却
-
-**実装内容**:
+**修正内容**:
 ```csharp
-public async Task<FSharpResult<FSharpOption<User>, string>> GetByEmailAsync(Email email)
-{
-    var normalizedEmail = email.Value.ToUpperInvariant();
-    var entity = await _context.Users
-        .Include(u => u.Roles)
-        .Include(u => u.UserProjects)
-        .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
-
-    if (entity == null)
-        return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.None);
-
-    var user = ToDomainUser(entity);
-    return FSharpResult<FSharpOption<User>, string>.NewOk(FSharpOption<User>.Some(user));
-}
+return FSharpResult<Unit, string>.NewOk(default(Unit));
 ```
 
-### Task 2-3: SaveAsync完全実装
+**完了基準**: 論理削除成功時に `Result.Ok(unit)` を返す
 
-**現状**: `Task.Delay(1)`のみ、永続化なし
+### Task 2-2: GetByRoleAsync 完全実装 🔴
 
-**実装内容**:
-1. **新規ユーザー作成**:
-   - `UserManager.CreateAsync()`でIdentityユーザー作成
-   - `UserManager.AddToRoleAsync()`でロール割り当て
-   - UserProjectsテーブルへのINSERT
-
-2. **既存ユーザー更新**:
-   - 変更検出（Name, Role, IsActive等）
-   - `UserManager.UpdateAsync()`で更新
-   - ロール変更時は`RemoveFromRoleAsync` + `AddToRoleAsync`
-
-### Task 2-4: DeleteAsync実装（論理削除）
+**現状** (525-542行): 空リスト返却
 
 **実装内容**:
 ```csharp
-public async Task<FSharpResult<Unit, string>> DeleteAsync(UserId id)
-{
-    var entity = await GetEntityByIdAsync(id);
-    if (entity == null)
-        return FSharpResult<Unit, string>.NewError("User not found");
-
-    entity.IsDeleted = true;
-    entity.UpdatedAt = DateTime.UtcNow;
-    entity.UpdatedBy = /* 操作者ID */;
-
-    await _context.SaveChangesAsync();
-    return FSharpResult<Unit, string>.NewOk(default);
-}
-```
-
-### Task 2-5: GetByRoleAsync実装
-
-**実装内容**:
-```csharp
-public async Task<FSharpResult<List<User>, string>> GetByRoleAsync(Role role)
+public async Task<FSharpResult<FSharpList<User>, string>> GetByRoleAsync(Role role)
 {
     var roleName = role.ToString();
-    var userIds = await _context.UserRoles
-        .Where(ur => ur.Role.Name == roleName)
-        .Select(ur => ur.UserId)
-        .ToListAsync();
-
-    var entities = await _context.Users
-        .Where(u => userIds.Contains(u.Id) && !u.IsDeleted)
-        .Include(u => u.UserProjects)
-        .ToListAsync();
-
-    var users = entities.Select(ToDomainUser).ToList();
-    return FSharpResult<List<User>, string>.NewOk(users);
+    var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+    var activeUsers = usersInRole.Where(u => !u.IsDeleted).ToList();
+    // F# User変換...
 }
 ```
 
-### 完了基準
-- [ ] 全メソッドがDB操作を正しく実行
-- [ ] GetByEmailAsync: 既存メールで正しくユーザー取得
-- [ ] SaveAsync: INSERT/UPDATE動作確認
-- [ ] DeleteAsync: 論理削除動作確認
-- [ ] dotnet build成功（0 Error）
+### Task 2-3: SaveAsync ロール同期追加 🟡
+
+**現状** (219-276行): ユーザー属性は更新されるがロール変更は永続化されない
+
+**追加実装**:
+- ロール同期: 現在ロール取得 → 変更があれば削除・追加
+- ヘルパーメソッド `ConvertRoleToString(Role role)` 追加
+
+### Task 2-4: GetUsersByProjectIdsAsync 実装 🟡
+
+**現状** (315-333行): 空リスト返却
+
+**実装内容**:
+- DbContext依存追加が必要
+- UserProjectsテーブルをクエリしてプロジェクト所属ユーザー取得
+
+### Task 2-5: GetProjectIdsByUserIdAsync 実装 🟡
+
+**現状** (346-363行): 空リスト返却
+
+**実装内容**:
+- UserProjectsテーブルからユーザーの所属プロジェクトID取得
+
+### Task 2-6: ID変換問題のドキュメント化 🟢
+
+**現状の問題** (645-648行):
+```csharp
+return new Guid((int)(userId.Item % int.MaxValue), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
+```
+
+**対応方針**:
+1. `GetByIdAsync` に警告ログ追加
+2. `GetByIdentityIdAsync` を推奨する旨のコメント追加
+3. 根本解決は将来Phase（DB設計変更が必要）
+
+### 前提条件: DbContext依存追加
+Task 2-4, 2-5 実装のため、コンストラクタに `UbiquitousLanguageDbContext` 追加
+
+### UserRepository.cs 削除 ✅完了
+- DependencyInjectionUnitTests.cs修正後に削除
+- 1220行のレガシーコードを完全削除
+
+### Task 2-7: UserRepositoryAdapter → UserRepository リネーム ✅完了（2025-11-30追加）
+
+**背景**:
+- Stage2でUserRepository.cs（レガシー）を削除
+- ProjectRepositoryとの命名一貫性のため、UserRepositoryAdapterをUserRepositoryにリネーム
+
+**実施内容**:
+1. クラス名変更: `UserRepositoryAdapter` → `UserRepository`
+2. ファイル名変更: `UserRepositoryAdapter.cs` → `UserRepository.cs`
+3. DI登録変更: `Program.cs`
+4. テストファイル変更: `DependencyInjectionUnitTests.cs`
+5. コメント更新: `TypeConverters.cs`
+
+### 完了基準 ✅全達成
+- [x] dotnet build成功（0 Error）
+- [x] DeleteAsync: 成功時 `Result.Ok(unit)` を返す
+- [x] GetByRoleAsync: 指定ロールのユーザーを返す
+- [x] SaveAsync: ロール変更が永続化される
+- [x] GetUsersByProjectIdsAsync: プロジェクトユーザーを返す
+- [x] GetProjectIdsByUserIdAsync: ユーザーのプロジェクトIDを返す
+- [x] 既存テスト全Pass（Domain/Application/Contracts/Infrastructure）
+- [x] UserRepository.cs削除完了
+- [x] UserRepositoryAdapter → UserRepository リネーム完了
 
 ---
 
@@ -331,32 +367,36 @@ user-cancel-button
 
 ## 7. 推定時間・セッション分割
 
-| Stage | 推定時間 | セッション |
-|-------|----------|-----------|
-| Stage 2 | 3-4h | 次回セッション |
-| Stage 3 | 2-3h | 次々回前半 |
-| Stage 4 | 4-5h | 次々回後半〜3回目 |
-| Stage 5 | 2-3h | 3回目 |
+| Stage | 推定時間 | 状態 |
+|-------|----------|------|
+| Stage 1 | - | ✅完了 |
+| Stage 2 | 3-4h | ✅完了（2025-11-30） |
+| Stage 3 | 2-3h | 次回セッション |
+| Stage 4 | 4-5h | 次々回 |
+| Stage 5 | 2-3h | 次々回〜3回目 |
 
-**合計**: 11-15時間（2-3セッション）
+**残り合計**: 8-11時間（1-2セッション）
 
 ---
 
 ## 8. Critical Files
 
 ### 実装対象（優先度順）
-1. `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs`
-2. `src/UbiquitousLanguageManager.Infrastructure/Repositories/IUserRepository.cs`（メソッド追加時）
-3. `src/UbiquitousLanguageManager.Application/UserManagementServices.fs`
-4. `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Index.razor`
-5. `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Create.razor`
-6. `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Edit.razor`
+1. `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs` ← **✅ Stage2完了（リネーム後）**
+2. ~~旧UserRepository.cs（レガシー）~~ ← **✅ 削除完了（Stage2で1220行削除）**
+3. `src/UbiquitousLanguageManager.Application/UserManagementServices.fs` ← **Stage3対象**
+4. `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Index.razor` ← **Stage4対象**
+5. `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Create.razor` ← **Stage4対象**
+6. `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Edit.razor` ← **Stage4対象**
+
+**リネーム実施**: UserRepositoryAdapter.cs → UserRepository.cs（命名一貫性のため）
 
 ### 参照必須
 - `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md`（3.6-3.8章）
 - `src/UbiquitousLanguageManager.Infrastructure/Data/Entities/ApplicationUser.cs`
 - `src/UbiquitousLanguageManager.Infrastructure/Data/Entities/UserProject.cs`
 - `src/UbiquitousLanguageManager.Domain/Authentication/AuthenticationEntities.fs`
+- `src/UbiquitousLanguageManager.Web/Program.cs` (210行目: DI登録確認)
 
 ---
 

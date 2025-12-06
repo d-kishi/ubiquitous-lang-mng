@@ -207,7 +207,7 @@ public partial class Program
         // Repository実装の登録
 
         // 👥 認証・ユーザー管理Repository（Phase A9完成）
-        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepositoryAdapter>();
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepository>();
 
         // 📁 プロジェクト管理Repository（Phase B1 Step6 - 実装準備完了）
         // 【F#初学者向け解説】
@@ -220,12 +220,19 @@ public partial class Program
         // 【Phase B1 Step6 実装状況】
         // ✅ Application層: IProjectManagementService完全実装済み（Repository統合完了）
         // ✅ Application層: IProjectRepository定義済み（IProjectManagementService.fs 行137-201）
-        // ⏳ Infrastructure層: ProjectRepository実装中（Stage 3-1並列実行）
-        // ⏳ Infrastructure層: DomainRepository実装予定（別Stage）
+        // ✅ Infrastructure層: ProjectRepository実装完了（Application層IProjectRepository実装追加）
+        // ✅ Infrastructure層: DomainRepository実装完了（Phase B-F3 Step1.5 Stage3.5）
         //
-        // 実装完了後、以下のコメントを解除してDI設定を有効化してください:
-        // builder.Services.AddScoped<UbiquitousLanguageManager.Application.IProjectRepository, UbiquitousLanguageManager.Infrastructure.Repositories.ProjectRepository>();
-        // builder.Services.AddScoped<UbiquitousLanguageManager.Application.IDomainRepository, UbiquitousLanguageManager.Infrastructure.Repositories.DomainRepository>();
+        // IProjectRepository + IDomainRepository DI登録を有効化（Stage3.5完了）
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IProjectRepository, UbiquitousLanguageManager.Infrastructure.Repositories.ProjectRepository>();
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.IDomainRepository, UbiquitousLanguageManager.Infrastructure.Repositories.DomainRepository>();
+
+        // 🎯 Phase B-F3 Stage3.5: ProjectManagementService用DI登録
+        // 【重要】ProjectManagementServiceは Application.ProjectManagement 名前空間の
+        // IProjectRepository/IDomainRepository/IUserRepository を要求します（Application直下とは異なるインターフェース）
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.ProjectManagement.IProjectRepository, UbiquitousLanguageManager.Infrastructure.Repositories.ProjectRepository>();
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.ProjectManagement.IDomainRepository, UbiquitousLanguageManager.Infrastructure.Repositories.DomainRepository>();
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.ProjectManagement.IUserRepository, UbiquitousLanguageManager.Infrastructure.Repositories.UserRepository>();
 
         // 🔤 ユビキタス言語管理Repository（将来の拡張用）
         // builder.Services.AddScoped<IUbiquitousLanguageRepository, UbiquitousLanguageRepository>();
@@ -292,10 +299,11 @@ public partial class Program
         // ✅ Application層: ProjectManagementService.fs完全実装済み
         // ✅ Railway-oriented Programming統合済み
         // ✅ 権限制御マトリックス完全実装済み
-        // ⏳ Infrastructure層: Repository実装待ち（Stage 3-1並列実行中）
+        // ✅ Infrastructure層: ProjectRepository実装完了（Phase B1 Step7 Stage3.5）
         //
-        // Repository実装完了後、以下のコメントを解除してDI設定を有効化してください:
-        // builder.Services.AddScoped<UbiquitousLanguageManager.Application.ProjectManagement.ProjectManagementService>();
+        // ProjectManagementService DI登録を有効化（Phase B1 Step7 Stage3.5完了）
+        // Phase B-F3 Step1.5 Stage4: IProjectManagementServiceインターフェース登録追加
+        builder.Services.AddScoped<UbiquitousLanguageManager.Application.ProjectManagement.IProjectManagementService, UbiquitousLanguageManager.Application.ProjectManagement.ProjectManagementService>();
 
         // 🔤 ユビキタス言語管理Application Service（将来の拡張用）
         // builder.Services.AddScoped<UbiquitousLanguageApplicationService>();

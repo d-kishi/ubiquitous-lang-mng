@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-11-30（**Phase B-F3 Step1.5 Stage1完了・Stage2-5再構成完了**）
+**最終更新**: 2025-12-07（**Phase B-F3 Step1.5 Stage4 Step 7動作確認中 - Issue #79（ID体系統一リファクタリング）作成・次回対応**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -17,25 +17,24 @@
 
 ### 現在のPhase/Step状況
 
-🔄 **Phase B-F3 Step1.5 Stage1完了・5Stage構成再構成完了**（全層調査・計画改訂完了）
-- **状態**: Step1.5 Stage1完了（セキュリティ問題2件修正）、5Stage構成へ改訂完了、Stage2（Infrastructure層）実施待ち
+🔄 **Phase B-F3 Step1.5 Stage4作業中**（Web層リファクタ・動作確認中）
+- **状態**: Step1.5 Stage4 Step 1-6完了、Step 7動作確認3/25項目完了
 - **Phase目的**: Phase A完全完成（25% → 100%） + Phase B完全完成（100%） + ユーザー動作確認
 - **Phase構成**: Part 1（Step1→Step1.5→Step2-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
 - **推定期間**: 32-51.5h + α（9-12セッション）※Step1.5追加で6-10h増加
-- **Step1.5 Stage1完了成果**（2025-11-29）:
-  - ProjectManager権限フィルタ実装（IUserRepository拡張含む）
-  - 自己ロール変更禁止チェック追加
-  - ビルド・テスト全Pass
-- **Step1.5 Stage2-4計画最適化**（2025-11-29）:
-  - PhaseB2成果活用版に更新（参考可否マトリックス追加）
-  - data-testid属性を必須要件に格上げ
-  - テストアーキテクチャ基盤活用（BlazorComponentTestBase等）
-  - Playwright Test Generator/Healer Agents活用
-- **Step1.5 5Stage構成改訂**（2025-11-30）:
-  - 全層調査でUserRepositoryスケルトン実装問題特定
-  - 4Stage → 5Stage再構成（Infrastructure/Application層追加）
-  - 推定時間11-15h（2-3セッション）
-- **次回**: Step1.5 Stage2実施（csharp-infrastructure Agent） → UserRepository完全実装
+- **Step1.5 Stage4進捗**（2025-12-03）:
+  - ✅ Step 1-6完了（Application/Infrastructure/Web層リファクタ、ビルド0 Error、UI設計書修正）
+  - ✅ バグ修正: 「削除済み表示」チェックボックス（Global Query Filter問題→IgnoreQueryFilters対処）
+  - ✅ バグ修正: GetHashCode()問題解決（IdentityId追加・9ファイル修正・削除機能正常化）
+  - 🔄 Step 7動作確認: Index.razor 9/9項目完了、Create.razor 0/7項目、Edit.razor 0/9項目
+- **Issue #77,78**: 実装完了・クローズ済み
+- **Issue #79**: ID体系統一リファクタリング（約20-25h）作成済み・次回対応
+  - 根本原因: ASP.NET Core Identity ID（string）vs F# UserId（long）の二重体系
+  - InitialDataの人間可読ID（admin-001等）がGUID前提コードと不整合
+  - 影響範囲: 認証・ユーザー管理・プロジェクト管理全体（40+箇所）
+- **次回**: Issue #79対応（ID体系統一リファクタリング実施）
+- **次々回**: Stage4 Step 7再実施（全機能再確認）→ Stage5テスト
+- **読込推奨**: GitHub Issue #79、`Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md`（3.6-3.8章）
 
 ### Phase完了状況（サマリ）
 
@@ -89,18 +88,19 @@
 
 ## 📅 週次振り返り実施状況
 
-### 最新振り返り: 2025年第46週（11/10-11/16）
+### 最新振り返り: 2025年第48週（11/25-11/30）
 
 **主要成果**:
-- ✅ Phase B-F2 Step6完了（Playwright Test Agents効果測定・40-50%時間削減）
-- ✅ Agent Skills Phase 2拡充（計8個Skills確立）
-- ✅ VSCode C# Dev Kitエラー解決・技術基盤安定化
+- ✅ Phase B-F3 Step1.5 Stage1-3完了（セキュリティ修正・Infrastructure層・Application層）
+- ✅ UserRepository完全実装・リネーム（旧1220行レガシー削除）
+- ✅ 品質確認レポート4件作成・根本原因分析実施
+- ✅ GitHub Issue 2件作成（#73 coverlet、#74 F# Result型）
 
-**定量的成果**: E2Eテスト成功率 6/6（100%）、Step完了率 95.2%
+**定量的成果**: Core層テスト341 Pass、Stage 3.5/6完了（58%）
 
-**次週重点事項**: Phase B-F2 Step8開始（Agent SDK Phase 1検証）
+**次週重点事項**: Phase B-F3 Step1.5 Stage4-6実施（Web層・テスト・改善）
 
-**詳細**: `Doc/04_Daily/2025-11/週次総括_2025-W46.md`
+**詳細**: `Doc/04_Daily/2025-11/週次総括_2025-W48.md`
 
 ---
 
@@ -124,60 +124,54 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3 Step1.5 Stage2実施（即座に開始可能）
+### Phase B-F3 Step1.5 Stage4継続（即座に開始可能）
 
-**優先度**: 🔴 Critical（Infrastructure層完全実装）
+**優先度**: 🔴 Critical（動作確認継続）
 
 **現在の状態**:
-- ✅ Stage1完了（セキュリティ問題2件修正・ビルドテスト全Pass）
-- ✅ 5Stage構成再構成完了（2025-11-30）
-- ✅ 全層調査レポート・リファクタ計画作成完了
-
-**新Stage構成**（4→5Stage改訂）:
-```
-Stage 1: セキュリティ問題修正      ✅完了
-Stage 2: Infrastructure層完全実装  🆕追加（3-4h）← 次回実施
-Stage 3: Application層権限フィルタ  🆕追加（2-3h）
-Stage 4: Web層全画面リファクタ     元Stage2（4-5h）
-Stage 5: テスト                   元Stage3-4統合（2-3h）
-```
+- ✅ Stage1完了（セキュリティ問題2件修正）
+- ✅ Stage2完了（UserRepository完全実装・リネーム完了）
+- ✅ Stage3完了（権限フィルタ・プロジェクト割り当て実装完了）
+- ✅ Stage3.5完了（ProjectManagementService DI解決）
+- 🔄 **Stage4作業中**（Step 1-6完了、Step 7動作確認3/25項目完了）
 
 **次回実施内容**:
-1. **Step1.5 Stage2: Infrastructure層 UserRepository完全実装**（推定3-4時間）
-   - Task 2-1: ID変換問題の解決（GetHashCode()廃止）
-   - Task 2-2: GetByEmailAsync完全実装
-   - Task 2-3: SaveAsync完全実装
-   - Task 2-4: DeleteAsync実装（論理削除）
-   - Task 2-5: GetByRoleAsync実装
-   - SubAgent: csharp-infrastructure Agent
 
-2. **完了基準**:
-   - 全メソッドがDB操作を正しく実行
-   - GetByEmailAsync: 既存メールで正しくユーザー取得
-   - SaveAsync: INSERT/UPDATE動作確認
-   - DeleteAsync: 論理削除動作確認
-   - dotnet build成功（0 Error）
+1. **Step 7: 動作確認継続**（22項目残り）
 
-**読み込み推奨ファイル（🔴必須）**:
-- `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` 3.6-3.8節（UI仕様）
-- `Doc/08_Organization/Active/Phase_B-F3/Research/UserManagement_全層調査レポート.md`（🆕重大問題詳細）
-- `Doc/08_Organization/Active/Phase_B-F3/Research/UserManagement_リファクタ計画.md`（🆕詳細タスク分割）
-- `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`（組織設計・5Stage構成）
+   **Index.razor（6項目残り）**:
+   - PMログインで担当プロジェクトユーザーのみ表示
+   - 検索機能動作（氏名部分一致）
+   - ページング動作（50/100/200件）
+   - 編集ボタン→Edit画面遷移
+   - 無効化/有効化ボタン動作
+   - FullHDレイアウト確認
 
-**読み込み推奨ファイル（参照用）**:
-- `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs`（実装対象）
-- `src/UbiquitousLanguageManager.Infrastructure/Repositories/IUserRepository.cs`（インターフェース）
-- `src/UbiquitousLanguageManager.Infrastructure/Data/Entities/ApplicationUser.cs`（Identityエンティティ）
+   **Create.razor（7項目）**:
+   - SuperUserで全ロール選択可能
+   - PMで一般/承認者のみ選択可能
+   - SuperUserでプロジェクト選択欄が非表示
+   - PMでプロジェクト選択欄が表示・担当プロジェクトのみ
+   - バリデーション動作（必須・パスワード強度）
+   - 登録成功→一覧画面遷移
+   - FullHDレイアウト確認
 
-**技術的前提条件**:
-- DevContainer環境: 構築済み
-- ビルド状態: 0 Error
-- Stage1成果: セキュリティ問題修正済み
+   **Edit.razor（9項目）**:
+   - 既存ユーザー情報正しく表示
+   - **既存プロジェクト割り当てチェック状態復元**（重要）
+   - SuperUserでプロジェクト選択欄が非表示
+   - PM/一般/承認者でプロジェクト選択欄が表示
+   - ロール選択制限（Create同様）
+   - ステータス変更動作
+   - **パスワードリセット動作**（重要）
+   - 更新成功→一覧画面遷移
+   - FullHDレイアウト確認
 
-**重要発見事項**:
-- UserRepository: スケルトン実装（GetHashCode()ハッシュ衝突リスク、SaveAsync永続化なし）
-- UIだけ書き換えても動作しない根本原因特定済み
+2. **Step 9: Stage実行記録完成**
+
+**読み込み必須ファイル（🔴CRITICAL）**:
+- `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`（Stage4実行記録・チェックリスト）
 
 ---
 
-**最終更新**: 2025-11-30（Step1.5 Stage1完了・5Stage構成改訂・Stage2実施待ち）
+**最終更新**: 2025-12-02（Step1.5 Stage4作業中・動作確認3/25項目完了）

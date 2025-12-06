@@ -217,7 +217,8 @@ type AuthenticationApplicationService(
                         | Error creationError ->
                             let! _ = logger.LogErrorAsync($"ユーザー作成失敗: 認証サービスエラー - {creationError}", None)
                             return Error (SystemError (System.Exception(creationError)))
-                        | Ok createdUser ->
+                        | Ok (createdUser, _identityId) ->
+                            // _identityId はこのフローでは使用しない
                             let! _ = logger.LogInformationAsync($"ユーザー作成成功 - {email.Value}")
                             return Ok createdUser
                             
@@ -267,7 +268,7 @@ type AuthenticationApplicationService(
                                 
                                 // ドメインロジック適用（パスワード変更）
                                 // 【F#初学者向け解説】
-                                // ドメインエンティティのメソッドを呼び出してビジネスルールを適用します。
+                                // ドメインエンテhttps://localhost:5001/loginィティのメソッドを呼び出してビジネスルールを適用します。
                                 // パスワード変更時のセキュリティスタンプ更新なども自動的に処理されます。
                                 match user.changePassword passwordHash userId with
                                 | Error domainError ->

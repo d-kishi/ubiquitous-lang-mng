@@ -1,6 +1,6 @@
 # 技術スタック・規約
 
-**最終更新**: 2025-11-18（**Phase B-F2完了・DevContainer環境確立・Agent Skills Phase 2展開完了**）
+**最終更新**: 2025-12-06（**Phase B-F3進行中・Agent Skills 10個に拡張・DevContainer制約対応完了**）
 
 ---
 
@@ -54,9 +54,10 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **認証**: ASP.NET Core Identity
 - **テスト**: xUnit + FsUnit + Moq + WebApplicationFactory + bUnit (Blazor Component Testing)
 - **E2Eテスト**: TypeScript/Playwright Test（Phase B-F2 Step6でTypeScript移行完了）
-- **⭐Agent Skills**: Phase 1-2展開完了（計8個Skills確立・自律適用確認済み）
+- **⭐Agent Skills**: Phase 1-3展開完了（計10個Skills確立・自律適用確認済み）
   - **Phase 1 Skills（3個）**: fsharp-csharp-bridge, clean-architecture-guardian, playwright-e2e-patterns
   - **Phase 2 Skills（5個）**: tdd-red-green-refactor, spec-compliance-auto, adr-knowledge-base, subagent-patterns, test-architecture
+  - **Phase 3 Skills（2個）**: devcontainer-web-app, playwright-ui-verification
 
 ---
 
@@ -81,12 +82,15 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 - **.devcontainer/Dockerfile**: .NET 8.0 + F# 8.0 + Node.js 24 + bubblewrap環境
 - **.devcontainer/docker-compose.yml**: Container orchestration設定
 - **.devcontainer/scripts/setup-https.sh**: HTTPS証明書検証スクリプト
+- **.devcontainer/scripts/web-app.sh**: Webアプリ起動/停止/再起動管理スクリプト（Issue #77）
 - **.claude/settings.local.json**: Sandboxモード有効化
 
 **重要な技術発見**:
 - **改行コード混在問題**: CRLF vs LFがC# nullable reference type解析に影響（`.gitattributes`設定で解決）
 - **HTTPS証明書管理**: ボリュームマウント方式により環境再現性100%確保
 - **Windows Sandboxモード**: 非対応判明（Issue #63で継続追跡）
+- **⭐docker exec時remoteEnv非適用**: devcontainer.jsonのremoteEnv設定はdocker exec経由では適用されない → スクリプト内で環境変数フォールバック設定必須
+- **⭐DevContainerでlsof/ps/pkill不可**: コンテナにプロセス管理ツール未搭載 → /procファイルシステム活用で代替
 
 **詳細ドキュメント**:
 - `Doc/99_Others/Claude_Code_Sandbox_DevContainer技術解説.md` - 技術解説
@@ -114,7 +118,19 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ---
 
-## F#↔C# 型変換パターン（Phase B1 Step7確立・2025-10-05）
+## F#↔C# 型変換パターン（Phase B1 Step7確立・2025-10-05・2025-12-03追記）
+
+### 🔴 GetHashCode()使用禁止（ID変換）
+
+**問題**: .NET CoreのGetHashCode()はプロセス毎にランダム化されるため、ID変換に使用不可
+
+**事例**: ASP.NET Core Identity ID（GUID文字列）→ F# UserId（int64）変換でGetHashCode()使用
+- 結果: ユーザー削除時に「削除対象のユーザーが見つかりません」エラー
+- 原因: 一覧取得時と削除時でGetHashCode()値が異なる
+
+**解決策**: IdentityId（文字列）をそのまま保持・使用
+
+---
 
 **重要**: 詳細は`.claude/skills/fsharp-csharp-bridge/`に移行（Phase 1・2025-10-21）
 

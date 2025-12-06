@@ -319,3 +319,4 @@ CoverageReport/
 .serena/serena_config.yml
 .serena/*.db
 .serena/logs/
+.playwright-mcp/

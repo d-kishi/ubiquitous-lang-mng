@@ -3,29 +3,38 @@
 @using UbiquitousLanguageManager.Contracts.DTOs
 @using UbiquitousLanguageManager.Domain.Common
 @using UbiquitousLanguageManager.Application
+@using UbiquitousLanguageManager.Application.ProjectManagement
+@using UbiquitousLanguageManager.Domain.ProjectManagement
 @using System.ComponentModel.DataAnnotations
-@attribute [Authorize(Roles = "SuperUser")]
+@using System.Security.Claims
+@attribute [Authorize(Roles = "SuperUser,ProjectManager")]
 @inject IUserManagementService UserManagementService
+@inject IProjectManagementService ProjectService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
-<PageTitle>ユーザー作成</PageTitle>
+<PageTitle>ユーザー新規登録</PageTitle>
 
 @* 【Blazor初学者向け解説】
-   このコンポーネントは、新規ユーザーを作成する画面です。
-   EditFormコンポーネントを使用して、入力検証と送信処理を実装します。
-   DataAnnotationsValidatorにより、DTOに定義されたバリデーション属性が自動適用されます。
+   このコンポーネントは、新規ユーザーを登録する画面です。
+   UI設計書3.7章「ユーザー新規登録画面」に準拠して実装されています。
+
+   主要機能:
+   1. ロール選択制限: SuperUserは全ロール選択可、PMはGeneralUser/DomainApproverのみ
+   2. プロジェクト表示条件: SuperUser作成時は非表示、それ以外は表示
+   3. FullHDレイアウト対応（col-12フル幅 + 2カラムレイアウト）
+   4. EditForm + DataAnnotationsValidatorによる入力検証
 *@
 
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-12">
-            <h1><i class="fas fa-user-plus"></i> 新規ユーザー作成</h1>
+            <h1><i class="fas fa-user-plus"></i> ユーザー新規登録</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="/admin/users">ユーザー管理</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">新規作成</li>
+                    <li class="breadcrumb-item active" aria-current="page">新規登録</li>
                 </ol>
             </nav>
         </div>
@@ -42,20 +51,19 @@
     }
     else
     {
-        <div class="row">
-            <div class="col-lg-8 col-xl-6">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">ユーザー情報入力</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-plus"></i> ユーザー情報入力</h5>
                     </div>
                     <div class="card-body">
                         @* 【Blazor初学者向け解説】
                            EditForm: Blazorのフォームバリデーション機能を提供するコンポーネント
                            Model属性でバインドするモデルを指定します。
                            OnValidSubmit: バリデーション成功時のイベントハンドラー
-                           OnInvalidSubmit: バリデーション失敗時のイベントハンドラー
                         *@
-                        <EditForm Model="@model" OnValidSubmit="CreateUser" OnInvalidSubmit="OnInvalidSubmit">
+                        <EditForm Model="@model" OnValidSubmit="CreateUser">
                             @* 【Blazor初学者向け解説】
                                DataAnnotationsValidator: DataAnnotations属性を使用した自動検証コンポーネント
                                [Required]、[StringLength]、[EmailAddress]などの属性が自動的に評価されます。
@@ -65,49 +73,73 @@
                             @* 【Blazor初学者向け解説】
                                ValidationSummary: すべてのバリデーションエラーを一覧表示するコンポーネント
                             *@
+                            @if (errorMessage != null)
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert" data-testid="validation-error-summary">
+                                    <i class="fas fa-exclamation-triangle"></i> @errorMessage
+                                    <button type="button" class="btn-close" @onclick="@(() => errorMessage = null)"></button>
+                                </div>
+                            }
                             <ValidationSummary class="alert alert-danger" />
+
+                            @* 【Blazor初学者向け解説】
+                               1列構成レイアウト:
+                               - 各入力フィールドは縦に配置され、見やすさを重視
+                               - フォーム全体は全幅表示（col-12）
+                            *@
 
                             @* メールアドレス *@
                             <div class="mb-3">
-                                <label for="email" class="form-label">メールアドレス <span class="text-danger">*</span></label>
+                                <label for="email" class="form-label fw-bold fs-6">📧 メールアドレス <span class="text-danger">*</span></label>
                                 <InputText id="email"
                                           class="form-control"
                                           @bind-Value="model.Email"
                                           placeholder="user@example.com"
-                                          data-testid="input-email" />
-                                <ValidationMessage For="() => model.Email" class="text-danger" />
+                                          data-testid="email-input" />
+                                <ValidationMessage For="() => model.Email" class="text-danger" data-testid="validation-error-email" />
                                 <div class="form-text">ログインIDとして使用されます</div>
                             </div>
 
-                            @* ユーザー名 *@
+                            @* 氏名 *@
                             <div class="mb-3">
-                                <label for="name" class="form-label">ユーザー名 <span class="text-danger">*</span></label>
+                                <label for="name" class="form-label fw-bold fs-6">👤 氏名 <span class="text-danger">*</span></label>
                                 <InputText id="name"
                                           class="form-control"
                                           @bind-Value="model.Name"
                                           placeholder="山田 太郎"
-                                          data-testid="input-name" />
-                                <ValidationMessage For="() => model.Name" class="text-danger" />
-                                <div class="form-text">画面表示に使用される名前（50文字以内）</div>
+                                          data-testid="name-input" />
+                                <ValidationMessage For="() => model.Name" class="text-danger" data-testid="validation-error-name" />
+                                <div class="form-text">1文字以上100文字以内で入力してください</div>
                             </div>
 
-                            @* 初期パスワード *@
+                            @* パスワード *@
                             <div class="mb-3">
-                                <label for="password" class="form-label">初期パスワード <span class="text-danger">*</span></label>
+                                <label for="password" class="form-label fw-bold fs-6">🔑 パスワード <span class="text-danger">*</span></label>
                                 <InputText id="password"
                                           type="password"
                                           class="form-control"
-                                          @bind-Value="model.InitialPassword"
+                                          @bind-Value="model.Password"
                                           placeholder="8文字以上"
-                                          data-testid="input-password" />
-                                <ValidationMessage For="() => model.InitialPassword" class="text-danger" />
+                                          data-testid="password-input" />
+                                <ValidationMessage For="() => model.Password" class="text-danger" data-testid="validation-error-password" />
                                 <div class="form-text">
-                                    <i class="fas fa-info-circle"></i> 8文字以上100文字以内で入力してください
+                                    <i class="fas fa-info-circle"></i> 8文字以上で、英大文字・小文字・数字・記号を含む必要があります
                                 </div>
                             </div>
 
-                            @* ロール選択 *@
+                            @* ───────────────────────────────────────────────
+                               セクション区切り: 基本情報 → 権限設定
+                            ─────────────────────────────────────────────── *@
+                            <hr class="my-4" />
+
                             @* 【Blazor Server初学者向け解説】
+                               ロール選択制限の実装:
+                               - SuperUser: 全4ロール選択可能（SuperUser, ProjectManager, DomainApprover, GeneralUser）
+                               - ProjectManager: GeneralUser, DomainApproverのみ選択可能
+
+                               InputRadioGroup/InputRadioを使用してラジオボタン選択を実装。
+                               @bind-Value:after属性でロール変更時にプロジェクト表示/非表示を制御します。
+
                                InputRadio<TValue>のValue属性はTValue型（この場合string）
                                Value="SuperUser"と書くと変数SuperUserを探す
                                Value="@("SuperUser")"と書くと文字列リテラル"SuperUser"として解釈される
@@ -115,38 +147,48 @@
                                InputRadioGroup の Name 属性について:
                                - InputRadio に name 属性を指定する場合、親の InputRadioGroup にも同じ Name 属性が必要です
                                - これにより、HTML の <input type="radio" name="role"> が正しくグループ化されます
-                               - Name 属性がないと、Blazor Server は InvalidOperationException をスローします *@
+                               - Name 属性がないと、Blazor Server は InvalidOperationException をスローします
+                            *@
+                            @* ロール *@
                             <div class="mb-3">
-                                <label class="form-label">ユーザーロール <span class="text-danger">*</span></label>
-                                <InputRadioGroup @bind-Value="model.Role" Name="role">
-                                    <div class="form-check">
-                                        <InputRadio id="role-superuser"
-                                                   class="form-check-input"
-                                                   name="role"
-                                                   Value="@("SuperUser")"
-                                                   data-testid="radio-role-superuser" />
-                                        <label class="form-check-label" for="role-superuser">
-                                            <span class="badge bg-danger">スーパーユーザー</span>
-                                            - 全機能・全プロジェクトへのアクセス権限
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <InputRadio id="role-projectmanager"
-                                                   class="form-check-input"
-                                                   name="role"
-                                                   Value="@("ProjectManager")"
-                                                   data-testid="radio-role-projectmanager" />
-                                        <label class="form-check-label" for="role-projectmanager">
-                                            <span class="badge bg-warning text-dark">プロジェクトマネージャー</span>
-                                            - 割り当てプロジェクトの管理権限
-                                        </label>
-                                    </div>
+                                <label class="form-label fw-bold fs-6">
+                                    🎭 ロール <span class="text-danger">*</span>
+                                </label>
+                                <InputRadioGroup @bind-Value="model.Role" @bind-Value:after="OnRoleChanged" Name="role">
+                                    @* SuperUser選択肢: SuperUserのみ表示 *@
+                                    @if (currentUserRole == "SuperUser")
+                                    {
+                                        <div class="form-check">
+                                            <InputRadio id="role-superuser"
+                                                       class="form-check-input"
+                                                       name="role"
+                                                       Value="@("SuperUser")"
+                                                       data-testid="role-dropdown-superuser" />
+                                            <label class="form-check-label" for="role-superuser">
+                                                <span class="badge bg-danger">スーパーユーザー</span>
+                                                - 全機能・全プロジェクトへのアクセス権限
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <InputRadio id="role-projectmanager"
+                                                       class="form-check-input"
+                                                       name="role"
+                                                       Value="@("ProjectManager")"
+                                                       data-testid="role-dropdown-projectmanager" />
+                                            <label class="form-check-label" for="role-projectmanager">
+                                                <span class="badge bg-warning text-dark">プロジェクトマネージャー</span>
+                                                - 割り当てプロジェクトの管理権限
+                                            </label>
+                                        </div>
+                                    }
+
+                                    @* ProjectManager/SuperUser共通選択肢 *@
                                     <div class="form-check">
                                         <InputRadio id="role-domainapprover"
                                                    class="form-check-input"
                                                    name="role"
                                                    Value="@("DomainApprover")"
-                                                   data-testid="radio-role-domainapprover" />
+                                                   data-testid="role-dropdown-domainapprover" />
                                         <label class="form-check-label" for="role-domainapprover">
                                             <span class="badge bg-info text-dark">ドメイン承認者</span>
                                             - ユビキタス言語の承認権限
@@ -157,63 +199,87 @@
                                                    class="form-check-input"
                                                    name="role"
                                                    Value="@("GeneralUser")"
-                                                   data-testid="radio-role-generaluser" />
+                                                   data-testid="role-dropdown-generaluser" />
                                         <label class="form-check-label" for="role-generaluser">
                                             <span class="badge bg-secondary">一般ユーザー</span>
                                             - 基本的な参照・編集権限
                                         </label>
                                     </div>
                                 </InputRadioGroup>
-                                <ValidationMessage For="() => model.Role" class="text-danger" />
+                                <ValidationMessage For="() => model.Role" class="text-danger" data-testid="validation-error-role" />
+
+                                @* ProjectManager権限制限の説明 *@
+                                @if (currentUserRole == "ProjectManager")
+                                {
+                                    <div class="form-text text-info">
+                                        <i class="fas fa-info-circle"></i> プロジェクトマネージャーは、一般ユーザーとドメイン承認者のみ選択できます
+                                    </div>
+                                }
                             </div>
 
+                            @* 【Blazor初学者向け解説】
+                               プロジェクト表示条件の実装（UI設計書3.7章準拠）:
+                               - SuperUser作成時: 非表示（SuperUserはプロジェクト所属不要・全プロジェクト参照可能）
+                               - それ以外のロール作成時: 表示
+
+                               showProjectSelection変数で表示/非表示を制御します。
+                               ロール変更時（OnRoleChangedメソッド）でshowProjectSelectionを更新し、
+                               StateHasChanged()でUI再描画します。
+
+                               プロジェクト一覧の取得:
+                               - SuperUser: 全プロジェクト表示
+                               - ProjectManager: 担当プロジェクトのみ表示
+                            *@
                             @* プロジェクト割り当て *@
-                            <div class="mb-3">
-                                <label class="form-label">割り当てプロジェクト（任意）</label>
-                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;" data-testid="project-list">
-                                    @if (availableProjects.Any())
-                                    {
-                                        @foreach (var project in availableProjects)
+                            @if (showProjectSelection)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold fs-6">📁 所属プロジェクト（任意）</label>
+                                    <div class="border rounded p-3 d-flex flex-wrap gap-3" style="max-height: 250px; overflow-y: auto;" data-testid="project-list">
+                                        @if (availableProjects.Any())
                                         {
-                                            <div class="form-check">
-                                                <input type="checkbox"
-                                                       class="form-check-input"
-                                                       id="project-@project.Id"
-                                                       value="@project.Id"
-                                                       checked="@model.AssignedProjectIds.Contains(project.Id)"
-                                                       @onchange="e => ToggleProject(project.Id, e)"
-                                                       data-testid="checkbox-project-@project.Id" />
-                                                <label class="form-check-label" for="project-@project.Id">
-                                                    @project.Name
-                                                </label>
-                                            </div>
+                                            @foreach (var project in availableProjects)
+                                            {
+                                                <div class="form-check">
+                                                    <input type="checkbox"
+                                                           class="form-check-input"
+                                                           id="project-@project.Id"
+                                                           value="@project.Id"
+                                                           checked="@model.AssignedProjectIds.Contains(project.Id)"
+                                                           @onchange="e => ToggleProject(project.Id, e)"
+                                                           data-testid="project-checkbox-@project.Id" />
+                                                    <label class="form-check-label" for="project-@project.Id">
+                                                        @project.Name
+                                                    </label>
+                                                </div>
+                                            }
                                         }
-                                    }
-                                    else
-                                    {
-                                        <p class="text-muted mb-0">プロジェクトがありません</p>
-                                    }
+                                        else
+                                        {
+                                            <p class="text-muted mb-0">プロジェクトがありません</p>
+                                        }
+                                    </div>
+                                    <div class="form-text">
+                                        ユーザーがアクセスできるプロジェクトを選択してください
+                                    </div>
                                 </div>
-                                <div class="form-text">
-                                    ユーザーがアクセスできるプロジェクトを選択してください（Phase B-F3 Step2で実装予定）
-                                </div>
-                            </div>
+                            }
 
-                            @* 送信ボタン *@
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button type="button" class="btn btn-secondary" @onclick="Cancel" data-testid="btn-cancel">
-                                    <i class="fas fa-times"></i> キャンセル
+                            @* ボタン（右寄せ） *@
+                            <div class="text-end mt-4">
+                                <button type="button" class="btn btn-secondary me-2" @onclick="GoBack" data-testid="back-button">
+                                    <i class="fas fa-arrow-left"></i> 戻る
                                 </button>
-                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting" data-testid="btn-submit">
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting" data-testid="submit-button">
                                     @if (isSubmitting)
                                     {
                                         <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>作成中...</span>
+                                        <span>登録中...</span>
                                     }
                                     else
                                     {
                                         <i class="fas fa-save"></i>
-                                        <span>作成</span>
+                                        <span>登録</span>
                                     }
                                 </button>
                             </div>
@@ -228,28 +294,43 @@
 @code {
     // 【Blazor初学者向け解説】
     // フォーム入力データを保持するモデルクラス
-    // DataAnnotations属性によるバリデーションルールを定義します。
+    // UI設計書3.7章準拠のバリデーションルールを定義します。
     public class CreateUserModel
     {
         [Required(ErrorMessage = "メールアドレスは必須です")]
         [EmailAddress(ErrorMessage = "有効なメールアドレス形式で入力してください")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "ユーザー名は必須です")]
-        [StringLength(50, ErrorMessage = "ユーザー名は50文字以内で入力してください")]
+        [Required(ErrorMessage = "氏名は必須です")]
+        [StringLength(100, MinimumLength = 1, ErrorMessage = "氏名は1文字以上100文字以内で入力してください")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "初期パスワードは必須です")]
+        [Required(ErrorMessage = "パスワードは必須です")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "パスワードは8文字以上100文字以内で入力してください")]
-        public string InitialPassword { get; set; } = string.Empty;
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage = "パスワードは英大文字・小文字・数字・記号を含む必要があります")]
+        public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "ロールを選択してください")]
-        public string Role { get; set; } = "GeneralUser"; // デフォルト値
+        public string Role { get; set; } = string.Empty;
 
         public List<long> AssignedProjectIds { get; set; } = new();
     }
 
+    // ロール選択肢DTO
+    // 【Blazor初学者向け解説】
+    // ドロップダウン表示用のロール情報を保持します。
+    // DisplayName: 画面表示用の日本語名
+    // Value: 実際のロール値（SuperUser, ProjectManager等）
+    public class RoleOption
+    {
+        public string DisplayName { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+    }
+
     // プロジェクト選択用の簡易DTO
+    // 【Blazor初学者向け解説】
+    // F# Domain層のProject型を、C# UIで扱いやすい形に変換したDTOです。
     public class ProjectSelectionDto
     {
         public long Id { get; set; }
@@ -258,53 +339,200 @@
 
     // データ
     private CreateUserModel model = new();
+    private List<RoleOption> availableRoles = new();
     private List<ProjectSelectionDto> availableProjects = new();
 
     // 状態管理
     private bool loading = true;
     private bool isSubmitting = false;
+    private bool showProjectSelection = false; // プロジェクト選択表示制御
+    private string? errorMessage = null;
 
-    // 操作者情報（ASP.NET Core Identity ID）
-    // 【Blazor初学者向け解説】
-    // ASP.NET Core IdentityのユーザーID（文字列）を保持します。
-    // GetHashCode()による変換は不安定なため、Identity IDを直接使用します。
-    private string operatorIdentityId = string.Empty;
+    // 現在ユーザー情報
+    private string currentUserRole = string.Empty; // SuperUser or ProjectManager
+    private string operatorIdentityId = string.Empty; // ASP.NET Core Identity ID
 
     // 【Blazor初学者向け解説】
     // OnInitializedAsync: コンポーネント初期化時の非同期処理
+    // 1. 認証情報取得（AuthenticationStateProvider）
+    // 2. ロール選択肢の設定（権限に応じた制限）
+    // 3. プロジェクト一覧取得（権限フィルタ適用済み）
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
+            // 認証情報取得
+            var (identityId, role) = await GetCurrentUserAsync();
+            operatorIdentityId = identityId;
+            currentUserRole = role;
 
-            // NameIdentifier claim から Identity ID（文字列）を取得
-            var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && !string.IsNullOrEmpty(userIdClaim.Value))
-            {
-                operatorIdentityId = userIdClaim.Value;
-            }
+            // ロール選択肢の設定（権限制限）
+            SetAvailableRoles();
 
-            // TODO: Phase B-F3 Step2でプロジェクト一覧取得API実装
-            // 現時点ではダミーデータ
-            availableProjects = new List<ProjectSelectionDto>();
+            // プロジェクト一覧取得（権限フィルタ適用済み）
+            await LoadProjectsAsync();
 
             loading = false;
 
             // 【Blazor初学者向け解説】
             // StateHasChanged(): UI再描画を明示的に指示
+            // 非同期処理完了後、loading=falseの状態を画面に反映させます。
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"初期化エラー: {ex.Message}");
+            errorMessage = $"初期化エラー: {ex.Message}";
             loading = false;
             StateHasChanged();
         }
     }
 
+    // 現在ユーザー情報取得
+    // 【Blazor初学者向け解説】
+    // AuthenticationStateProviderからログインユーザーの情報を取得します。
+    // - NameIdentifier claim: ASP.NET Core Identity ID（Guid文字列）
+    // - Role claim: ロール（SuperUser or ProjectManager）
+    private async Task<(string identityId, string role)> GetCurrentUserAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var identityId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+        var role = user.FindFirst(ClaimTypes.Role)?.Value ?? "GeneralUser";
+
+        return (identityId, role);
+    }
+
+    // ロール選択肢の設定
+    // 【Blazor初学者向け解説】
+    // UI設計書3.7章準拠のロール選択制限を実装します。
+    // - SuperUser: 全4ロール選択可能
+    // - ProjectManager: GeneralUser, DomainApproverのみ選択可能
+    private void SetAvailableRoles()
+    {
+        if (currentUserRole == "SuperUser")
+        {
+            // SuperUser: 全ロール選択可能
+            availableRoles = new List<RoleOption>
+            {
+                new RoleOption { DisplayName = "スーパーユーザー（全機能・全プロジェクトアクセス）", Value = "SuperUser" },
+                new RoleOption { DisplayName = "プロジェクトマネージャー（プロジェクト管理）", Value = "ProjectManager" },
+                new RoleOption { DisplayName = "ドメイン承認者（ユビキタス言語承認）", Value = "DomainApprover" },
+                new RoleOption { DisplayName = "一般ユーザー（基本参照・編集）", Value = "GeneralUser" }
+            };
+        }
+        else
+        {
+            // ProjectManager: GeneralUser, DomainApproverのみ
+            availableRoles = new List<RoleOption>
+            {
+                new RoleOption { DisplayName = "ドメイン承認者（ユビキタス言語承認）", Value = "DomainApprover" },
+                new RoleOption { DisplayName = "一般ユーザー（基本参照・編集）", Value = "GeneralUser" }
+            };
+        }
+    }
+
+    // ロール変更時の処理
+    // 【Blazor初学者向け解説】
+    // InputSelectの@bind-Value:after属性で指定されたメソッド
+    // ロール変更時に呼び出され、プロジェクト選択の表示/非表示を制御します。
+    //
+    // UI設計書3.7章準拠のプロジェクト表示条件:
+    // - SuperUser作成時: 非表示（SuperUserはプロジェクト所属不要・全プロジェクト参照可能）
+    // - それ以外のロール: 表示
+    private void OnRoleChanged()
+    {
+        // SuperUser作成時はプロジェクト選択を非表示
+        showProjectSelection = model.Role != "SuperUser" && !string.IsNullOrEmpty(model.Role);
+
+        // プロジェクト選択が非表示になった場合、選択済みプロジェクトをクリア
+        if (!showProjectSelection)
+        {
+            model.AssignedProjectIds.Clear();
+        }
+
+        // 【Blazor初学者向け解説】
+        // StateHasChanged(): UI再描画を明示的に指示
+        // ロール変更によるプロジェクト選択の表示/非表示を画面に反映させます。
+        StateHasChanged();
+    }
+
+    // プロジェクト一覧取得処理
+    // 【Blazor初学者向け解説】
+    // IProjectManagementService.GetProjectsAsyncメソッドを呼び出し、
+    // 現在ユーザーの権限に応じたプロジェクト一覧を取得します。
+    // - SuperUser: 全プロジェクト
+    // - ProjectManager: 担当プロジェクトのみ
+    private async Task LoadProjectsAsync()
+    {
+        try
+        {
+            // Identity ID（Guid文字列）をGuidに変換（失敗時はGuid.Emptyで継続）
+            var userGuid = Guid.TryParse(operatorIdentityId, out var guid) ? guid : Guid.Empty;
+
+            // Role文字列をF# Role型に変換
+            var userRole = currentUserRole switch
+            {
+                "SuperUser" => Role.SuperUser,
+                "ProjectManager" => Role.ProjectManager,
+                "DomainApprover" => Role.DomainApprover,
+                "GeneralUser" => Role.GeneralUser,
+                _ => Role.GeneralUser
+            };
+
+            // GetProjectsQuery構築
+            // 【Blazor初学者向け解説】
+            // F#レコードはC#からは位置引数で構築します（名前付き引数NG）。
+            // パラメータ順序: UserId, UserRole, PageNumber, PageSize, IncludeInactive, SearchKeyword
+            var query = new GetProjectsQuery(
+                userGuid,       // UserId: Guid
+                userRole,       // UserRole: Role
+                1,              // PageNumber: int
+                100,            // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）
+                false,          // IncludeInactive: bool
+                Microsoft.FSharp.Core.FSharpOption<string>.None  // SearchKeyword: string option
+            );
+
+            // プロジェクト一覧取得（権限フィルタ適用済み）
+            var result = await ProjectService.GetProjectsAsync(query);
+
+            // 【Blazor初学者向け解説】
+            // F# Result型のパターンマッチング:
+            // - IsOk: 成功時、ResultValueからプロジェクト一覧を取得
+            // - IsError: 失敗時、ErrorValueからエラーメッセージを取得
+            if (result.IsOk)
+            {
+                var pagedResult = result.ResultValue;
+
+                // F# List<Project>をC# List<ProjectSelectionDto>に変換
+                availableProjects = pagedResult.Projects
+                    .Select(project => new ProjectSelectionDto
+                    {
+                        Id = project.Id.Value,
+                        Name = project.Name.Value
+                    })
+                    .ToList();
+
+                Console.WriteLine($"プロジェクト一覧取得成功: {availableProjects.Count}件");
+            }
+            else
+            {
+                var errorMsg = result.ErrorValue;
+                Console.WriteLine($"プロジェクト一覧取得エラー: {errorMsg}");
+                availableProjects = new List<ProjectSelectionDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"プロジェクト一覧取得例外: {ex.Message}");
+            availableProjects = new List<ProjectSelectionDto>();
+        }
+    }
+
     // プロジェクト選択トグル
+    // 【Blazor初学者向け解説】
+    // チェックボックスのonchangeイベントで呼び出されます。
+    // チェック状態に応じて、model.AssignedProjectIdsリストに追加/削除します。
     private void ToggleProject(long projectId, ChangeEventArgs e)
     {
         if (e.Value is bool isChecked)
@@ -323,24 +551,28 @@
         }
     }
 
-    // ユーザー作成処理
+    // ユーザー登録処理
     // 【Blazor初学者向け解説】
     // EditFormのOnValidSubmit属性で指定されたメソッド
     // バリデーション成功時に呼び出されます。
+    //
+    // F# Application層のIUserManagementService.CreateUserAsyncを呼び出して
+    // ユーザー登録を実行します。
     private async Task CreateUser()
     {
         isSubmitting = true;
+        errorMessage = null;
         StateHasChanged();
 
         try
         {
             // 【Blazor初学者向け解説】
             // F# Application層のCreateUserAsyncメソッドを呼び出します。
-            // operatorIdentityId（ASP.NET Core Identity ID）を直接文字列として渡します。
+            // AssignedProjectIds（C# List<long>）をF# list<int64>に変換します。
             var result = await UserManagementService.CreateUserAsync(
                 model.Email,
                 model.Name,
-                model.InitialPassword,
+                model.Password,
                 model.Role,
                 Microsoft.FSharp.Collections.ListModule.OfSeq(model.AssignedProjectIds),
                 operatorIdentityId
@@ -351,35 +583,27 @@
             if (result.IsOk)
             {
                 // 成功: ユーザー一覧画面に遷移
-                await JSRuntime.InvokeVoidAsync("alert", "ユーザーを作成しました");
+                await JSRuntime.InvokeVoidAsync("alert", "ユーザーを登録しました");
                 Navigation.NavigateTo("/admin/users");
             }
             else
             {
                 // 失敗: エラーメッセージ表示
-                var error = result.ErrorValue;
-                await JSRuntime.InvokeVoidAsync("alert", $"作成エラー: {error}");
+                errorMessage = result.ErrorValue;
                 isSubmitting = false;
                 StateHasChanged();
             }
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"予期しないエラー: {ex.Message}");
+            errorMessage = $"予期しないエラー: {ex.Message}";
             isSubmitting = false;
             StateHasChanged();
         }
     }
 
-    // バリデーションエラー時の処理
-    private void OnInvalidSubmit()
-    {
-        // ValidationSummaryが自動的にエラーを表示するため、特に処理不要
-        // 必要に応じてログ出力などを追加
-    }
-
-    // キャンセル処理
-    private void Cancel()
+    // 戻る処理（ユーザー一覧画面へ遷移）
+    private void GoBack()
     {
         Navigation.NavigateTo("/admin/users");
     }

@@ -168,6 +168,23 @@ public class UserDto
 
 ## 5. Infrastructure層（C#）- 完成度: ❌50%
 
+### 🔴 重要発見事項（2025-11-30追記）
+
+**IUserRepository実装が2ファイル存在**:
+
+| ファイル | 状態 | DI登録 |
+|---------|------|--------|
+| **UserRepositoryAdapter.cs** (780行) | ✅ 本番使用中 | `AddScoped<IUserRepository, UserRepositoryAdapter>` |
+| UserRepository.cs (1220行) | ⚠️ レガシー・未使用 | なし |
+
+**調査根拠**:
+- Program.cs 210行目: `builder.Services.AddScoped<IUserRepository, UserRepositoryAdapter>()`
+- UserRepository.csはDI登録されていない
+
+**結論**:
+- **UserRepositoryAdapter.cs が本番で使用されている実装**
+- UserRepository.csは削除対象（テストファイル修正後）
+
 ### ファイル構成
 ```
 src/UbiquitousLanguageManager.Infrastructure/
@@ -177,72 +194,91 @@ src/UbiquitousLanguageManager.Infrastructure/
 │   │   └── UserProject.cs          # ユーザー・プロジェクト多対多
 │   └── UbiquitousLanguageDbContext.cs
 ├── Repositories/
-│   ├── IUserRepository.cs
-│   └── UserRepository.cs           # ⚠️簡易実装のまま
+│   ├── IUserRepository.cs          # F# インターフェース（Application層に定義）
+│   ├── UserRepositoryAdapter.cs    # ✅ 本番使用中（780行）
+│   └── UserRepository.cs           # ⚠️ レガシー・削除対象（1220行）
 └── Services/
     └── AuthenticationService.cs
 ```
 
-### UserRepository.cs - 重大問題
+### UserRepositoryAdapter.cs - 問題点（本番使用中の実装）
 
-#### 問題1: GetHashCode()によるID変換（致命的）
+#### 正常動作しているメソッド（変更不要）
+- `GetByEmailAsync` (58-102行) - UserManager.FindByEmailAsync使用 ✅
+- `GetByIdentityIdAsync` (167-209行) - Identity ID直接検索 ✅
+- `GetAllActiveUsersAsync` (428-471行) - IsDeleted=false フィルタ ✅
+- `GetAllUsersAsync` (476-519行) - 論理削除除外 ✅
+- `SearchUsersAsync` (548-600行) - 部分一致検索 ✅
+
+#### 問題1: DeleteAsync - 成功時にエラーを返すバグ（致命的） 🔴
 ```csharp
-// 現状のコード
-var entityHashId = (long)entity.Id.GetHashCode();  // ⚠️ハッシュ衝突リスク
-if (entityHashId == id.Item) { ... }
+// 現状のコード（411行）
+return FSharpResult<Unit, string>.NewError("Delete completed successfully");
+// ↑ SUCCESS時に ERROR を返している！
 ```
 
 **影響**:
-- ハッシュ衝突により誤ったユーザーを返却するリスク
-- 実行環境依存で不安定な動作
+- 論理削除は実行されるが、呼び出し元にはエラーとして返却される
+- UI上でエラー表示される
 
-#### 問題2: GetByEmailAsync - ハードコード（致命的）
+#### 問題2: GetByRoleAsync - 空リスト返却 🔴
 ```csharp
-// 現状のコード（概要）
-public async Task<...> GetByEmailAsync(Email email)
-{
-    await Task.Delay(1);  // DB検索なし
-    var user = User.create(...);  // ダミーユーザー返却
-    return ...;
-}
+// 現状のコード（525-542行）
+await Task.Delay(1); // async警告解消
+var emptyList = FSharpList<User>.Empty;
+return FSharpResult<FSharpList<User>, string>.NewOk(emptyList);
 ```
 
 **影響**:
-- 実データがDBから取得されない
-- 常に同じダミーユーザーが返却される
+- ロール別ユーザー取得が機能しない
 
-#### 問題3: SaveAsync - 永続化なし（致命的）
+#### 問題3: SaveAsync - ロール変更が永続化されない 🟡
 ```csharp
-// 現状のコード（概要）
-public async Task<...> SaveAsync(User user)
-{
-    await Task.Delay(1);  // 実際の保存処理なし
-    return FSharpResult<User, string>.NewOk(user);
-}
+// 現状のコード（219-276行）
+// ユーザー属性は更新されるが、ロール変更はAspNetUserRolesテーブルに反映されない
 ```
 
 **影響**:
-- ユーザー作成・更新がDBに保存されない
-- アプリケーション再起動でデータ消失
+- ユーザーのロール変更がDBに保存されない
 
-#### 問題4: DeleteAsync - 未実装
+#### 問題4: GetUsersByProjectIdsAsync - 空リスト返却 🟡
 ```csharp
-// 現状のコード
-public async Task<...> DeleteAsync(UserId id)
-{
-    return FSharpResult<Unit, string>.NewError("Not implemented");
-}
+// 現状のコード（315-333行）
+return FSharpResult<FSharpList<User>, string>.NewOk(FSharpList<User>.Empty);
 ```
 
-#### 問題5: GetByRoleAsync - 空リスト返却
+**影響**:
+- プロジェクト所属ユーザー取得が機能しない
+- ProjectManager権限フィルタが正しく動作しない
+
+#### 問題5: GetProjectIdsByUserIdAsync - 空リスト返却 🟡
 ```csharp
-// 現状のコード
-public async Task<...> GetByRoleAsync(Role role)
-{
-    await Task.Delay(1);
-    return FSharpResult<List<User>, string>.NewOk(new List<User>());
-}
+// 現状のコード（346-363行）
+return FSharpResult<FSharpList<ProjectId>, string>.NewOk(FSharpList<ProjectId>.Empty);
 ```
+
+**影響**:
+- ユーザーの所属プロジェクト取得が機能しない
+
+#### 問題6: ID変換 - 合成GUIDによる情報損失 🟢
+```csharp
+// 現状のコード（645-648行）
+return new Guid((int)(userId.Item % int.MaxValue), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
+```
+
+**影響**:
+- 合成GUIDによる衝突リスク
+- 将来的なDB設計変更で対応予定
+
+---
+
+### UserRepository.cs - レガシー実装（削除対象）
+
+**削除理由**:
+1. Program.csでDI登録されていない（未使用）
+2. UserRepositoryAdapterが全機能を提供
+3. 1220行のレガシーコードがメンテナンス負担
+4. DependencyInjectionUnitTests.csで参照されているが、テスト修正後に削除可能
 
 ### IUserRepository インターフェース
 ```csharp

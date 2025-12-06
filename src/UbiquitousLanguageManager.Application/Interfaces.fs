@@ -31,8 +31,11 @@ type IUserRepository =
     // 📋 アクティブユーザー一覧: 有効なユーザーのみ取得
     abstract member GetAllActiveUsersAsync: unit -> Task<Result<User list, string>>
     
-    // 📋 全ユーザー一覧: 無効化されたユーザーも含めて取得
-    abstract member GetAllUsersAsync: unit -> Task<Result<User list, string>>
+    // 📋 全ユーザー一覧: 無効化されたユーザーも含めて取得（削除済み含む制御）
+    // 【F#初学者向け解説】
+    // includeDeleted: trueの場合は論理削除（IsActive=false）ユーザーも含めて取得します。
+    // falseの場合はアクティブなユーザーのみを返します。
+    abstract member GetAllUsersAsync: includeDeleted: bool -> Task<Result<User list, string>>
     
     // 📋 ユーザー一覧: プロジェクト単位でのユーザー取得
     abstract member GetByProjectIdAsync: projectId: ProjectId -> Task<Result<User list, string>>
@@ -81,6 +84,98 @@ type IUserRepository =
     // | Error msg -> // エラー処理
     abstract member GetProjectIdsByUserIdAsync: userId: UserId -> Task<Result<ProjectId list, string>>
 
+    // 📋 Email指定プロジェクトID一覧: EmailからIdentityIdを取得し、プロジェクト一覧取得
+    // 【F#初学者向け解説】
+    // GetProjectIdsByUserIdAsyncの合成GUID問題を回避するため、Emailベースで検索します。
+    // 内部的にEmailでApplicationUserを検索し、そのIdentity IDでUserProjectsを検索します。
+    abstract member GetProjectIdsByEmailAsync: email: Email -> Task<Result<ProjectId list, string>>
+
+    // 📋 Identity IDベースのプロジェクトID一覧取得（PM権限フィルタ用）
+    // 【F#初学者向け解説】
+    // Phase B-F3 Step1.5: GetProjectIdsByUserIdAsyncの合成GUID問題を回避するため、
+    // ASP.NET Core Identity ID（文字列）を直接使用してUserProjectsテーブルを検索します。
+    // PMがユーザー一覧を取得する際、このメソッドで操作者のプロジェクト範囲を正確に特定できます。
+    //
+    // 【パラメータ】
+    // - identityId: ASP.NET Core Identity ID（GUID形式の文字列）
+    //
+    // 【戻り値】
+    // - Ok ProjectId list: 操作者が所属するプロジェクトIDのリスト
+    // - Error string: 取得失敗時のエラーメッセージ
+    abstract member GetProjectIdsByIdentityIdAsync:
+        identityId: string -> Task<Result<ProjectId list, string>>
+
+    // 📋 IdentityId付きユーザー一覧取得
+    // 【F#初学者向け解説】
+    // Phase B-F3 Step1.5 Stage5: Web層でIdentityIdを使用するため、
+    // タプル(User * string)のリストを返します。
+    // これにより、GetHashCode()使用による不安定なID変換を回避し、
+    // Web層からの削除・更新操作で安定したID管理が可能になります。
+    //
+    // 【パラメータ】
+    // - includeDeleted: bool - trueの場合は論理削除ユーザーも含めて取得
+    //
+    // 【戻り値】
+    // - Task<Result<(User * string) list, string>>
+    //   - Ok (User * string) list: 取得成功時、ユーザー・IdentityIdペアのリスト
+    //     - User: F# Domainエンティティ
+    //     - string: ASP.NET Core Identity ID（GUID文字列）
+    //   - Error string: 取得失敗時のエラーメッセージ
+    //
+    // 【使用例】
+    // let! result = userRepository.GetAllUsersWithIdentityAsync(includeDeleted = true)
+    // match result with
+    // | Ok userPairs ->
+    //     userPairs |> List.iter (fun (user, identityId) ->
+    //         printfn "User: %s, IdentityId: %s" user.Name.Value identityId)
+    // | Error msg -> // エラー処理
+    abstract member GetAllUsersWithIdentityAsync: includeDeleted: bool -> Task<Result<(User * string) list, string>>
+
+    // 🗑️ IdentityIdによる削除: ASP.NET Core Identity IDでユーザーを論理削除
+    // 【F#初学者向け解説】
+    // Phase B-F3 Step1.5 Stage5: GetHashCode()変換を回避し、
+    // Web層から渡されたIdentityIdを直接使用して削除します。
+    //
+    // 【パラメータ】
+    // - identityId: string - 削除対象ユーザーのASP.NET Core Identity ID（GUID文字列）
+    //
+    // 【戻り値】
+    // - Task<Result<unit, string>>
+    //   - Ok unit: 削除成功
+    //   - Error string: 削除失敗時のエラーメッセージ
+    //
+    // 【処理内容】
+    // 1. IdentityIdでApplicationUserを検索
+    // 2. 対応するF# Domain UserエンティティのIsActiveをfalseに設定
+    // 3. 論理削除完了
+    abstract member DeleteByIdentityIdAsync: identityId: string -> Task<Result<unit, string>>
+
+    // ✏️ IdentityIdによる更新: ASP.NET Core Identity IDでユーザー情報を更新
+    // 【F#初学者向け解説】
+    // Phase B-F3 Step1.5 Stage5: GetHashCode()変換を回避し、
+    // Web層から渡されたIdentityIdを直接使用して更新します。
+    //
+    // 【パラメータ】
+    // - identityId: string - 更新対象ユーザーのASP.NET Core Identity ID（GUID文字列）
+    // - name: string - 新しいユーザー名（バリデーション前の文字列）
+    // - role: Role - 新しいロール（F# Domain Role型）
+    // - isActive: bool - 新しいアクティブ状態
+    //
+    // 【戻り値】
+    // - Task<Result<User, string>>
+    //   - Ok User: 更新成功時、更新されたF# Domain Userエンティティ
+    //   - Error string: 更新失敗時のエラーメッセージ
+    //
+    // 【処理内容】
+    // 1. IdentityIdでApplicationUserを検索
+    // 2. 対応するF# Domain Userエンティティを取得
+    // 3. 名前・ロール・IsActiveを更新
+    // 4. 更新されたUserエンティティを返す
+    //
+    // 【注意】
+    // プロジェクト割り当ての更新は、既存のUpdateUserProjectsAsyncを使用します。
+    abstract member UpdateByIdentityIdAsync: identityId: string * name: string * role: Role * isActive: bool -> Task<Result<User, string>>
+
     // 📋 ロール別ユーザー一覧: 特定のロールを持つユーザー取得
     abstract member GetByRoleAsync: role: Role -> Task<Result<User list, string>>
     
@@ -89,9 +184,73 @@ type IUserRepository =
     
     // 🗑️ ユーザー削除: 論理削除（IsActiveをfalseに設定）
     abstract member DeleteAsync: userId: UserId -> Task<Result<unit, string>>
-    
+
     // 📊 ユーザー統計: アクティブユーザー数・ロール別統計など
     abstract member GetUserStatisticsAsync: unit -> Task<Result<obj, string>> // 具体的な統計型は後で定義
+
+    // 📋 プロジェクト割り当て: ユーザーにプロジェクトを割り当て
+    // 【F#初学者向け解説】
+    // ユーザー作成時にプロジェクトを割り当てるためのメソッドです。
+    // UserProjectsテーブルにレコードを追加します。
+    // ProjectManager権限チェックはApplication層で実施します。
+    //
+    // 【パラメータ】
+    // - userId: UserId - 割り当て対象のユーザーID
+    // - projectIds: int64 list - 割り当てるプロジェクトIDリスト（F#のlist型）
+    //
+    // 【戻り値】
+    // - Task<Result<unit, string>>
+    //   - Ok unit: 割り当て成功
+    //   - Error string: 割り当て失敗時のエラーメッセージ
+    abstract member AssignProjectsToUserAsync: userId: UserId * projectIds: int64 list -> Task<Result<unit, string>>
+
+    // 📋 プロジェクト割り当て（Identity IDベース）: ユーザー作成時のプロジェクト割り当て
+    // 【F#初学者向け解説】
+    // ユーザー作成直後のプロジェクト割り当てに使用します。
+    // ASP.NET Core IdentityのID（GUID文字列）を直接使用してUserProjectsテーブルに挿入します。
+    // UserId（F#）からGUIDへの変換による不一致問題を回避するための専用メソッドです。
+    //
+    // 【パラメータ】
+    // - identityId: string - AspNetUsers.Id（Identity ID、GUID文字列）
+    // - projectIds: int64 list - 割り当てるプロジェクトIDリスト（F#のlist型）
+    //
+    // 【戻り値】
+    // - Task<Result<unit, string>>
+    //   - Ok unit: 割り当て成功
+    //   - Error string: 割り当て失敗時のエラーメッセージ
+    abstract member AssignProjectsToUserByIdentityIdAsync: identityId: string * projectIds: int64 list -> Task<Result<unit, string>>
+
+    // 📋 プロジェクト割り当て更新: ユーザーのプロジェクト割り当てを更新
+    // 【F#初学者向け解説】
+    // ユーザー更新時にプロジェクト割り当てを更新するためのメソッドです。
+    // 既存のUserProjectsレコードを削除し、新しいレコードを追加します。
+    // ProjectManager権限チェックはApplication層で実施します。
+    //
+    // 【パラメータ】
+    // - userId: UserId - 更新対象のユーザーID
+    // - projectIds: int64 list - 新しいプロジェクトIDリスト（F#のlist型）
+    //
+    // 【戻り値】
+    // - Task<Result<unit, string>>
+    //   - Ok unit: 更新成功
+    //   - Error string: 更新失敗時のエラーメッセージ
+    abstract member UpdateUserProjectsAsync: userId: UserId * projectIds: int64 list -> Task<Result<unit, string>>
+
+    // 📋 Identity IDベースのプロジェクト割り当て更新: ユーザーのプロジェクト割り当てを更新（編集時用）
+    // 【F#初学者向け解説】
+    // AssignProjectsToUserByIdentityIdAsyncと同様の背景で追加されたメソッドです。
+    // ASP.NET Core IdentityのID（GUID文字列）を直接使用してプロジェクト割り当てを更新します。
+    // ConvertUserIdToGuid()による合成GUID問題を回避するため、Identity IDを直接使用します。
+    //
+    // 【パラメータ】
+    // - identityId: string - ASP.NET Core Identity のユーザーID（GUID文字列）
+    // - projectIds: int64 list - 新しいプロジェクトIDリスト（F#のlist型）
+    //
+    // 【戻り値】
+    // - Task<Result<unit, string>>
+    //   - Ok unit: 更新成功
+    //   - Error string: 更新失敗時のエラーメッセージ
+    abstract member UpdateUserProjectsByIdentityIdAsync: identityId: string * projectIds: int64 list -> Task<Result<unit, string>>
 
 // 📁 プロジェクトリポジトリインターフェース: プロジェクトデータの永続化抽象化  
 type IProjectRepository =
@@ -153,7 +312,8 @@ type IAuthenticationService =
     abstract member LoginAsync: email: Email * password: string -> Task<Result<User, string>>
     
     // 👥 認証ユーザー作成: パスワードハッシュ化を含む完全なユーザー作成（新権限システム対応）
-    abstract member CreateUserWithPasswordAsync: email: Email * name: UserName * role: Role * password: Password * createdBy: UserId -> Task<Result<User, string>>
+    // 戻り値: (User, IdentityId) - IdentityIdはプロジェクト割り当て等で使用
+    abstract member CreateUserWithPasswordAsync: email: Email * name: UserName * role: Role * password: Password * createdBy: UserId -> Task<Result<User * string, string>>
     
     // 🔐 パスワード変更: セキュアなパスワード更新（Password値オブジェクト対応）
     abstract member ChangePasswordAsync: userId: UserId * oldPassword: string * newPassword: Password -> Task<Result<PasswordHash, string>>
@@ -207,6 +367,34 @@ type IAuthenticationService =
 
     // パスワードリセットトークン無効化: 使用済みトークンの無効化
     abstract member InvalidatePasswordResetTokenAsync: email: Email * token: string -> Task<unit>
+
+    // 🔐 Phase B-F3 Step1.5 Stage4: 管理者によるパスワードリセット機能追加
+    // 管理者リセット: SuperUserが他ユーザーのパスワードを強制変更
+    // 【F#初学者向け解説】
+    // このメソッドは、管理者がユーザーのパスワードを強制的にリセットするためのものです。
+    // 通常のパスワード変更と異なり、現在のパスワードを知らなくても新しいパスワードを設定できます。
+    // Infrastructure層でASP.NET Core IdentityのRemovePasswordAsync + AddPasswordAsyncを使用します。
+    //
+    // 【パラメータ】
+    // - identityId: string - 対象ユーザーのASP.NET Core Identity ID（GUID文字列）
+    // - newPassword: Password - 新しいパスワード（Password値オブジェクト）
+    //
+    // 【戻り値】
+    // - Task<Result<unit, string>>
+    //   - Ok unit: パスワードリセット成功
+    //   - Error string: リセット失敗時のエラーメッセージ（ユーザー不存在、Identityエラー等）
+    //
+    // 【使用例】
+    // let! result = authService.AdminResetPasswordAsync(targetIdentityId, newPassword)
+    // match result with
+    // | Ok () -> // リセット成功
+    // | Error msg -> // エラー処理
+    //
+    // 【セキュリティ考慮事項】
+    // - Application層で権限チェック（SuperUserのみ実行可能）を必ず実施すること
+    // - パスワードリセット実行ログを必ず記録すること（監査証跡）
+    // - 対象ユーザーへの通知メール送信を推奨（セキュリティ通知）
+    abstract member AdminResetPasswordAsync: identityId: string * newPassword: Password -> Task<Result<unit, string>>
 
 // 📧 Phase A2: 通知サービスインターフェース（ユーザー管理通知対応）
 // 【F#初学者向け解説】

@@ -1,11 +1,14 @@
-@page "/admin/users/edit/{id:long}"
+@page "/admin/users/edit/{IdentityId}"
 @using Microsoft.AspNetCore.Authorization
 @using UbiquitousLanguageManager.Contracts.DTOs
 @using UbiquitousLanguageManager.Domain.Common
 @using UbiquitousLanguageManager.Application
+@using UbiquitousLanguageManager.Application.ProjectManagement
+@using UbiquitousLanguageManager.Domain.ProjectManagement
 @using System.ComponentModel.DataAnnotations
-@attribute [Authorize(Roles = "SuperUser")]
+@attribute [Authorize(Roles = "SuperUser,ProjectManager")]
 @inject IUserManagementService UserManagementService
+@inject IProjectManagementService ProjectService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -13,9 +16,15 @@
 <PageTitle>ユーザー編集</PageTitle>
 
 @* 【Blazor初学者向け解説】
-   このコンポーネントは、既存ユーザー情報を編集する画面です。
-   ルートパラメータ（{id:long}）から対象ユーザーIDを取得し、
-   OnInitializedAsyncで初期データを読み込みます。
+   このコンポーネントは、既存ユーザー情報を編集する画面です（UI設計書3.8章準拠）。
+   Phase B-F3 Step1.5 Stage4で全面リファクタを実施しました。
+
+   主要機能:
+   1. AssignedProjectIds復元: GetProjectIdsByUserIdAsyncでチェックボックス初期状態を復元
+   2. パスワードリセット: ResetPasswordAsyncでSuperUserが強制変更可能
+   3. プロジェクト表示条件: SuperUserは非表示、それ以外は表示
+   4. ロール選択制限: ProjectManagerはGeneralUser/DomainApproverのみ選択可能
+   5. FullHDレイアウト: container-fluid + col-12ベース、入力フィールド2カラム配置
 *@
 
 <div class="container-fluid mt-4">
@@ -33,64 +42,92 @@
 
     @if (loading)
     {
-        <div class="text-center my-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">読み込み中...</span>
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary" role="status" data-testid="loading-spinner">
+                        <span class="visually-hidden">読み込み中...</span>
+                    </div>
+                    <p class="mt-2">ユーザー情報を読み込んでいます...</p>
+                </div>
             </div>
-            <p class="mt-2">ユーザー情報を読み込んでいます...</p>
         </div>
     }
     else if (errorMessage != null)
     {
-        <div class="alert alert-danger" role="alert" data-testid="error-message">
-            <i class="fas fa-exclamation-triangle"></i> @errorMessage
-            <br />
-            <button class="btn btn-secondary mt-2" @onclick="GoBack">
-                <i class="fas fa-arrow-left"></i> 戻る
-            </button>
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert" data-testid="error-message">
+                    <i class="fas fa-exclamation-triangle"></i> @errorMessage
+                    <br />
+                    <button class="btn btn-secondary mt-2" @onclick="GoBack" data-testid="error-back-button">
+                        <i class="fas fa-arrow-left"></i> 戻る
+                    </button>
+                </div>
+            </div>
         </div>
     }
     else
     {
-        <div class="row">
-            <div class="col-lg-8 col-xl-6">
+        @* UI設計書3.8章準拠: FullHDレイアウト（センタリング・1カラム配置） *@
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">ユーザー情報編集</h5>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-edit"></i> ユーザー情報編集</h5>
                     </div>
                     <div class="card-body">
                         <EditForm Model="@model" OnValidSubmit="UpdateUser" OnInvalidSubmit="OnInvalidSubmit">
                             <DataAnnotationsValidator />
                             <ValidationSummary class="alert alert-danger" />
 
-                            @* メールアドレス（表示のみ） *@
+                            @* UI設計書3.8章準拠: 1カラムレイアウト *@
+                            @* メールアドレス（表示のみ・変更不可） *@
+                            @* 【Blazor初学者向け解説】
+                               UI設計書3.8章: メールアドレスは表示のみ（変更不可）
+                               disabledとreadonlyの両方を指定することで、完全に変更不可とします。
+                            *@
                             <div class="mb-3">
-                                <label for="email" class="form-label">メールアドレス</label>
+                                <label for="email" class="form-label fw-bold fs-6">
+                                    📧 メールアドレス（変更不可）
+                                </label>
                                 <input type="text"
-                                       class="form-control"
+                                       class="form-control bg-light"
                                        id="email"
                                        value="@model.Email"
                                        readonly
                                        disabled
-                                       data-testid="input-email-readonly" />
+                                       data-testid="email-display" />
                                 <div class="form-text">
-                                    <i class="fas fa-lock"></i> メールアドレスは変更できません
+                                    <i class="fas fa-lock text-warning"></i> メールアドレスは変更できません
                                 </div>
                             </div>
 
-                            @* ユーザー名 *@
+                            @* ユーザー名（必須） *@
                             <div class="mb-3">
-                                <label for="name" class="form-label">ユーザー名 <span class="text-danger">*</span></label>
+                                <label for="name" class="form-label fw-bold fs-6">
+                                    👤 氏名 <span class="text-danger">*</span>
+                                </label>
                                 <InputText id="name"
                                           class="form-control"
                                           @bind-Value="model.Name"
-                                          data-testid="input-name" />
+                                          placeholder="田中太郎"
+                                          data-testid="name-input" />
                                 <ValidationMessage For="() => model.Name" class="text-danger" />
                                 <div class="form-text">画面表示に使用される名前（50文字以内）</div>
                             </div>
 
-                            @* ロール選択 *@
+                            @* ───────────────────────────────────────────────
+                               セクション区切り: 基本情報 → 権限設定
+                            ─────────────────────────────────────────────── *@
+                            <hr class="my-4" />
+
+                            @* ロール選択（必須） *@
                             @* 【Blazor Server初学者向け解説】
+                               UI設計書3.8章: ロール選択制限
+                               - SuperUser: 全4ロール選択可能
+                               - ProjectManager: GeneralUser, DomainApproverのみ選択可能
+
                                InputRadio<TValue>のValue属性はTValue型（この場合string）
                                Value="SuperUser"と書くと変数SuperUserを探す
                                Value="@("SuperUser")"と書くと文字列リテラル"SuperUser"として解釈される
@@ -98,38 +135,47 @@
                                InputRadioGroup の Name 属性について:
                                - InputRadio に name 属性を指定する場合、親の InputRadioGroup にも同じ Name 属性が必要です
                                - これにより、HTML の <input type="radio" name="role"> が正しくグループ化されます
-                               - Name 属性がないと、Blazor Server は InvalidOperationException をスローします *@
+                               - Name 属性がないと、Blazor Server は InvalidOperationException をスローします
+                            *@
                             <div class="mb-3">
-                                <label class="form-label">ユーザーロール <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold fs-6">
+                                    🎭 ユーザーロール <span class="text-danger">*</span>
+                                </label>
                                 <InputRadioGroup @bind-Value="model.Role" Name="role">
-                                    <div class="form-check">
-                                        <InputRadio id="role-superuser"
-                                                   class="form-check-input"
-                                                   name="role"
-                                                   Value="@("SuperUser")"
-                                                   data-testid="radio-role-superuser" />
-                                        <label class="form-check-label" for="role-superuser">
-                                            <span class="badge bg-danger">スーパーユーザー</span>
-                                            - 全機能・全プロジェクトへのアクセス権限
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <InputRadio id="role-projectmanager"
-                                                   class="form-check-input"
-                                                   name="role"
-                                                   Value="@("ProjectManager")"
-                                                   data-testid="radio-role-projectmanager" />
-                                        <label class="form-check-label" for="role-projectmanager">
-                                            <span class="badge bg-warning text-dark">プロジェクトマネージャー</span>
-                                            - 割り当てプロジェクトの管理権限
-                                        </label>
-                                    </div>
+                                    @* SuperUser選択肢: SuperUserのみ表示 *@
+                                    @if (operatorRole == "SuperUser")
+                                    {
+                                        <div class="form-check">
+                                            <InputRadio id="role-superuser"
+                                                       class="form-check-input"
+                                                       name="role"
+                                                       Value="@("SuperUser")"
+                                                       data-testid="role-dropdown-superuser" />
+                                            <label class="form-check-label" for="role-superuser">
+                                                <span class="badge bg-danger">スーパーユーザー</span>
+                                                - 全機能・全プロジェクトへのアクセス権限
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <InputRadio id="role-projectmanager"
+                                                       class="form-check-input"
+                                                       name="role"
+                                                       Value="@("ProjectManager")"
+                                                       data-testid="role-dropdown-projectmanager" />
+                                            <label class="form-check-label" for="role-projectmanager">
+                                                <span class="badge bg-warning text-dark">プロジェクトマネージャー</span>
+                                                - 割り当てプロジェクトの管理権限
+                                            </label>
+                                        </div>
+                                    }
+
+                                    @* ProjectManager/SuperUser共通選択肢 *@
                                     <div class="form-check">
                                         <InputRadio id="role-domainapprover"
                                                    class="form-check-input"
                                                    name="role"
                                                    Value="@("DomainApprover")"
-                                                   data-testid="radio-role-domainapprover" />
+                                                   data-testid="role-dropdown-domainapprover" />
                                         <label class="form-check-label" for="role-domainapprover">
                                             <span class="badge bg-info text-dark">ドメイン承認者</span>
                                             - ユビキタス言語の承認権限
@@ -140,7 +186,7 @@
                                                    class="form-check-input"
                                                    name="role"
                                                    Value="@("GeneralUser")"
-                                                   data-testid="radio-role-generaluser" />
+                                                   data-testid="role-dropdown-generaluser" />
                                         <label class="form-check-label" for="role-generaluser">
                                             <span class="badge bg-secondary">一般ユーザー</span>
                                             - 基本的な参照・編集権限
@@ -148,96 +194,159 @@
                                     </div>
                                 </InputRadioGroup>
                                 <ValidationMessage For="() => model.Role" class="text-danger" />
+
+                                @* ProjectManager権限制限の説明 *@
+                                @if (operatorRole == "ProjectManager")
+                                {
+                                    <div class="form-text text-info">
+                                        <i class="fas fa-info-circle"></i> プロジェクトマネージャーは、一般ユーザーとドメイン承認者のみ選択できます
+                                    </div>
+                                }
                             </div>
 
                             @* プロジェクト割り当て *@
-                            <div class="mb-3">
-                                <label class="form-label">割り当てプロジェクト（任意）</label>
-                                <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;" data-testid="project-list">
-                                    @if (availableProjects.Any())
-                                    {
-                                        @foreach (var project in availableProjects)
-                                        {
-                                            <div class="form-check">
-                                                <input type="checkbox"
-                                                       class="form-check-input"
-                                                       id="project-@project.Id"
-                                                       value="@project.Id"
-                                                       checked="@model.AssignedProjectIds.Contains(project.Id)"
-                                                       @onchange="e => ToggleProject(project.Id, e)"
-                                                       data-testid="checkbox-project-@project.Id" />
-                                                <label class="form-check-label" for="project-@project.Id">
-                                                    @project.Name
-                                                </label>
-                                            </div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <p class="text-muted mb-0">プロジェクトがありません</p>
-                                    }
-                                </div>
-                                <div class="form-text">
-                                    ユーザーがアクセスできるプロジェクトを選択してください（Phase B-F3 Step2で実装予定）
-                                </div>
-                            </div>
+                            @* 【Blazor初学者向け解説】
+                               UI設計書3.8章: プロジェクト表示条件
+                               - SuperUser: 非表示（SuperUserはプロジェクト所属不要・全プロジェクト参照可能）
+                               - GeneralUser/DomainApprover/ProjectManager: 表示（プロジェクト所属必須）
 
-                            @* アクティブ状態 *@
+                               AssignedProjectIds復元（Phase B-F3 Stage4実装完了）:
+                               - LoadUserAsync内でGetProjectIdsByUserIdAsyncを呼び出し
+                               - 既存のプロジェクト割り当て情報を取得してmodel.AssignedProjectIdsに格納
+                               - チェックボックスのchecked属性で初期状態を復元
+                            *@
+                            @if (model.Role != "SuperUser")
+                            {
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold fs-6">
+                                            📁 所属プロジェクト（任意）
+                                        </label>
+                                        <div class="border rounded p-3 d-flex flex-wrap gap-3" style="max-height: 300px; overflow-y: auto;">
+                                            @if (availableProjects.Any())
+                                            {
+                                                @foreach (var project in availableProjects)
+                                                {
+                                                    <div class="form-check">
+                                                        <input type="checkbox"
+                                                               class="form-check-input"
+                                                               id="project-@project.Id"
+                                                               value="@project.Id"
+                                                               checked="@model.AssignedProjectIds.Contains(project.Id)"
+                                                               @onchange="e => ToggleProject(project.Id, e)"
+                                                               data-testid="project-checkbox-@project.Id" />
+                                                        <label class="form-check-label" for="project-@project.Id">
+                                                            @project.Name
+                                                        </label>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <p class="text-muted mb-0">プロジェクトがありません</p>
+                                            }
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle"></i> SuperUserはプロジェクト所属不要（全プロジェクトアクセス可能）
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @* ───────────────────────────────────────────────
+                               セクション区切り: 権限設定 → 状態管理
+                            ─────────────────────────────────────────────── *@
+                            <hr class="my-4" />
+
+                            @* ステータス（アクティブ/非アクティブ） *@
+                            @* 【Blazor初学者向け解説】
+                               UI設計書3.8章: ステータス変更（アクティブ/非アクティブ切り替え）
+                               トグルスイッチ（form-switch）で視覚的に分かりやすく表示
+                            *@
                             <div class="mb-3">
-                                <label class="form-label">ユーザー状態</label>
+                                <label class="form-label fw-bold fs-6">📊 ユーザー状態</label>
                                 <div class="form-check form-switch">
                                     <InputCheckbox id="isActive"
                                                   class="form-check-input"
                                                   @bind-Value="model.IsActive"
-                                                  data-testid="checkbox-is-active" />
+                                                  data-testid="status-toggle" />
                                     <label class="form-check-label" for="isActive">
                                         @if (model.IsActive)
                                         {
-                                            <span class="badge bg-success">有効</span>
+                                            <span class="badge bg-success">✅ アクティブ</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">無効</span>
+                                            <span class="badge bg-secondary">❌ 非アクティブ</span>
                                         }
                                     </label>
                                 </div>
                                 <div class="form-text">
-                                    無効化されたユーザーはログインできません
+                                    <i class="fas fa-exclamation-triangle text-warning"></i> 非アクティブに設定すると、ログインできなくなります
                                 </div>
                             </div>
 
-                            @* パスワードリセット（オプション） *@
-                            <div class="mb-3">
-                                <label for="newPassword" class="form-label">新しいパスワード（オプション）</label>
-                                <InputText id="newPassword"
-                                          type="password"
-                                          class="form-control"
-                                          @bind-Value="model.NewPassword"
-                                          placeholder="変更する場合のみ入力"
-                                          data-testid="input-new-password" />
-                                <ValidationMessage For="() => model.NewPassword" class="text-danger" />
-                                <div class="form-text">
-                                    <i class="fas fa-info-circle"></i> 空欄の場合はパスワードを変更しません。変更する場合は8文字以上100文字以内で入力してください。
+                            @* ───────────────────────────────────────────────
+                               セクション区切り: 状態管理 → 管理操作
+                            ─────────────────────────────────────────────── *@
+                            @* パスワードリセット（SuperUserのみ表示） *@
+                            @* 【Blazor初学者向け解説】
+                               UI設計書3.8章: パスワードリセット機能
+                               SuperUserが他ユーザーのパスワードを強制的に変更できます。
+                               ボタンクリックでモーダルを表示し、新パスワードを入力します。
+                               ResetPasswordAsyncメソッドを使用して実装完了（Phase B-F3 Stage4）
+                            *@
+                            @if (operatorRole == "SuperUser")
+                            {
+                                <hr class="my-4" />
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label fw-bold fs-6">🔄 パスワードリセット</label>
+                                        <div class="card border-warning">
+                                            <div class="card-body">
+                                                <p class="card-text">
+                                                    <i class="fas fa-key text-warning"></i> 管理者として、このユーザーのパスワードを強制的に変更できます
+                                                </p>
+                                                <button type="button"
+                                                        class="btn btn-warning"
+                                                        @onclick="ShowPasswordResetModal"
+                                                        data-testid="password-reset-button">
+                                                    <i class="fas fa-unlock-alt"></i> 新しいパスワードを設定
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            }
 
-                            @* 送信ボタン *@
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button type="button" class="btn btn-secondary" @onclick="Cancel" data-testid="btn-cancel">
-                                    <i class="fas fa-times"></i> キャンセル
-                                </button>
-                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting" data-testid="btn-submit">
-                                    @if (isSubmitting)
-                                    {
-                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>更新中...</span>
-                                    }
-                                    else
-                                    {
-                                        <i class="fas fa-save"></i>
-                                        <span>更新</span>
-                                    }
-                                </button>
+                            @* 送信・戻るボタン（右寄せ） *@
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="text-end mt-4">
+                                        <button type="button"
+                                                class="btn btn-secondary me-2"
+                                                @onclick="GoBack"
+                                                disabled="@isSubmitting"
+                                                data-testid="back-button">
+                                            <i class="fas fa-arrow-left"></i> 戻る
+                                        </button>
+                                        <button type="submit"
+                                                class="btn btn-primary"
+                                                disabled="@isSubmitting"
+                                                data-testid="submit-button">
+                                            @if (isSubmitting)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>更新中...</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-save"></i>
+                                                <span>更新</span>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </EditForm>
                     </div>
@@ -247,19 +356,109 @@
     }
 </div>
 
+@* パスワードリセットモーダル（Bootstrap 5 Modal） *@
+@* 【Blazor初学者向け解説】
+   Bootstrap 5のモーダルコンポーネントを使用してパスワードリセットUIを実装します。
+   show/hideはJavaScript（IJSRuntime）で制御します。
+*@
+<div class="modal fade" id="passwordResetModal" tabindex="-1" aria-labelledby="passwordResetModalLabel" aria-hidden="true" data-testid="password-reset-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="passwordResetModalLabel">
+                    <i class="fas fa-key"></i> パスワードリセット
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@passwordResetModel" OnValidSubmit="ExecutePasswordReset">
+                    <DataAnnotationsValidator />
+
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>@model.Name</strong> のパスワードを強制的に変更します
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label fw-bold">
+                            🔐 新しいパスワード <span class="text-danger">*</span>
+                        </label>
+                        <InputText id="newPassword"
+                                  type="password"
+                                  class="form-control"
+                                  @bind-Value="passwordResetModel.NewPassword"
+                                  placeholder="8文字以上"
+                                  data-testid="new-password-input" />
+                        <ValidationMessage For="() => passwordResetModel.NewPassword" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label fw-bold">
+                            ✅ パスワード（確認） <span class="text-danger">*</span>
+                        </label>
+                        <InputText id="confirmPassword"
+                                  type="password"
+                                  class="form-control"
+                                  @bind-Value="passwordResetModel.ConfirmPassword"
+                                  placeholder="確認のため再入力"
+                                  data-testid="confirm-password-input" />
+                        <ValidationMessage For="() => passwordResetModel.ConfirmPassword" class="text-danger" />
+                    </div>
+
+                    @if (passwordResetError != null)
+                    {
+                        <div class="alert alert-danger" role="alert" data-testid="password-reset-error">
+                            <i class="fas fa-exclamation-circle"></i> @passwordResetError
+                        </div>
+                    }
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal"
+                                disabled="@isResettingPassword">
+                            <i class="fas fa-times"></i> キャンセル
+                        </button>
+                        <button type="submit"
+                                class="btn btn-warning"
+                                disabled="@isResettingPassword"
+                                data-testid="execute-reset-button">
+                            @if (isResettingPassword)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>リセット中...</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-unlock-alt"></i>
+                                <span>リセット実行</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
 @code {
     // 【Blazor初学者向け解説】
     // [Parameter]属性: ルートパラメータをコンポーネントプロパティにバインドします。
-    // {id:long}で定義されたルートパラメータが、このIdプロパティに自動的に設定されます。
+    // {IdentityId}で定義されたルートパラメータが、このIdentityIdプロパティに自動的に設定されます。
+    //
+    // 【Phase B-F3 修正】
+    // UserId（long型）からIdentityId（GUID文字列）に変更しました。
+    // これにより、GetHashCode()による不安定な変換を回避し、確実にユーザーを特定できます。
     [Parameter]
-    public long Id { get; set; }
+    public string IdentityId { get; set; } = string.Empty;
 
     // 【Blazor初学者向け解説】
     // フォーム入力データを保持するモデルクラス
+    // UI設計書3.8章に準拠した入力項目を定義
     public class EditUserModel
     {
         public string UserId { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty; // 表示のみ
+        public string Email { get; set; } = string.Empty; // 表示のみ（変更不可）
 
         [Required(ErrorMessage = "ユーザー名は必須です")]
         [StringLength(50, ErrorMessage = "ユーザー名は50文字以内で入力してください")]
@@ -271,12 +470,27 @@
         public List<long> AssignedProjectIds { get; set; } = new();
 
         public bool IsActive { get; set; } = true;
+    }
 
+    // 【Blazor初学者向け解説】
+    // パスワードリセット用のモデルクラス
+    // モーダルフォーム内で使用
+    public class PasswordResetModel
+    {
+        [Required(ErrorMessage = "新しいパスワードは必須です")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "パスワードは8文字以上100文字以内で入力してください")]
-        public string? NewPassword { get; set; } // オプション
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "パスワード確認は必須です")]
+        [Compare(nameof(NewPassword), ErrorMessage = "パスワードが一致しません")]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 
     // プロジェクト選択用の簡易DTO
+    // 【Blazor初学者向け解説】
+    // F# Domain層のProject型を、C# UIで扱いやすい形に変換したDTOです。
+    // Project.Id.Value（ProjectId型のValue）とProject.Name.Value（ProjectName型のValue）を
+    // 取り出して、シンプルなC#型に変換します。
     public class ProjectSelectionDto
     {
         public long Id { get; set; }
@@ -285,22 +499,27 @@
 
     // データ
     private EditUserModel model = new();
+    private PasswordResetModel passwordResetModel = new();
     private List<ProjectSelectionDto> availableProjects = new();
 
     // 状態管理
     private bool loading = true;
     private bool isSubmitting = false;
+    private bool isResettingPassword = false;
     private string? errorMessage = null;
+    private string? passwordResetError = null;
 
     // 操作者情報（ASP.NET Core Identity ID）
     // 【Blazor初学者向け解説】
     // ASP.NET Core IdentityのユーザーID（文字列）を保持します。
     // GetHashCode()による変換は不安定なため、Identity IDを直接使用します。
     private string operatorIdentityId = string.Empty;
+    private string operatorRole = string.Empty; // "SuperUser" or "ProjectManager"
 
     // 【Blazor初学者向け解説】
     // OnInitializedAsync: コンポーネント初期化時に呼び出される非同期メソッド
     // ルートパラメータで指定されたユーザーIDを使用して、対象ユーザー情報を取得します。
+    // Phase B-F3 Stage4: AssignedProjectIds復元を実装
     protected override async Task OnInitializedAsync()
     {
         try
@@ -315,11 +534,19 @@
                 operatorIdentityId = userIdClaim.Value;
             }
 
+            // Role claim取得
+            var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role);
+            if (roleClaim != null && !string.IsNullOrEmpty(roleClaim.Value))
+            {
+                operatorRole = roleClaim.Value;
+            }
+
             // 対象ユーザー情報取得
             await LoadUserAsync();
 
-            // TODO: Phase B-F3 Step2でプロジェクト一覧取得API実装
-            availableProjects = new List<ProjectSelectionDto>();
+            // プロジェクト一覧取得（権限フィルタ適用済み）
+            // UI設計書3.8章: SuperUserは全プロジェクト、ProjectManagerは担当プロジェクトのみ
+            await LoadProjectsAsync();
 
             loading = false;
             StateHasChanged();
@@ -332,26 +559,154 @@
         }
     }
 
-    // ユーザー情報読み込み
+    // プロジェクト一覧取得処理
+    // 【Blazor初学者向け解説】
+    // ProjectManagementServiceのGetProjectsAsyncメソッドを呼び出し、
+    // 現在ユーザーの権限に応じたプロジェクト一覧を取得します。
+    // SuperUserは全プロジェクト、ProjectManagerは担当プロジェクトのみが返されます。
+    private async Task LoadProjectsAsync()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            // NameIdentifier claim から ASP.NET Core Identity ID（文字列）を取得
+            var identityIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (identityIdClaim == null || string.IsNullOrEmpty(identityIdClaim.Value))
+            {
+                Console.WriteLine("警告: Identity IDを取得できませんでした");
+                availableProjects = new List<ProjectSelectionDto>();
+                return;
+            }
+
+            // Role claim取得（ProjectManagementService権限フィルタ用）
+            var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role);
+            if (roleClaim == null || string.IsNullOrEmpty(roleClaim.Value))
+            {
+                Console.WriteLine("警告: ロール情報を取得できませんでした");
+                availableProjects = new List<ProjectSelectionDto>();
+                return;
+            }
+
+            // 【Blazor初学者向け解説】
+            // F# Application層のGetProjectsQuery型を構築します。
+            // UserId: Guid型で渡す（ASP.NET Core Identity IDをGuid.Parseで変換）
+            // UserRole: F#のRole型（string→Role変換が必要）
+            // SearchKeyword: F#のOption型（Microsoft.FSharp.Core.FSharpOption.None）
+
+            // ASP.NET Core Identity ID（文字列）をGuidに変換（失敗時はGuid.Emptyで継続）
+            var userGuid = Guid.TryParse(identityIdClaim.Value, out var guid) ? guid : Guid.Empty;
+
+            // Role文字列をF# Role型に変換
+            var userRole = roleClaim.Value switch
+            {
+                "SuperUser" => UbiquitousLanguageManager.Domain.Common.Role.SuperUser,
+                "ProjectManager" => UbiquitousLanguageManager.Domain.Common.Role.ProjectManager,
+                "DomainApprover" => UbiquitousLanguageManager.Domain.Common.Role.DomainApprover,
+                "GeneralUser" => UbiquitousLanguageManager.Domain.Common.Role.GeneralUser,
+                _ => UbiquitousLanguageManager.Domain.Common.Role.GeneralUser
+            };
+
+            // GetProjectsQuery構築
+            // 【Blazor初学者向け解説】
+            // F#レコードはC#からは位置引数で構築します。
+            // パラメータ順序: UserId, UserRole, PageNumber, PageSize, IncludeInactive, SearchKeyword
+            var query = new GetProjectsQuery(
+                userGuid,       // UserId: Guid
+                userRole,       // UserRole: Role
+                1,              // PageNumber: int
+                100,            // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）
+                false,          // IncludeInactive: bool
+                Microsoft.FSharp.Core.FSharpOption<string>.None  // SearchKeyword: string option
+            );
+
+            // 【Blazor初学者向け解説】
+            // IProjectManagementServiceのGetProjectsAsyncを呼び出して
+            // 権限フィルタ適用済みのプロジェクト一覧を取得します。
+            // - SuperUser: 全プロジェクト表示
+            // - ProjectManager: 担当プロジェクトのみ表示
+            var result = await ProjectService.GetProjectsAsync(query);
+
+            // 【Blazor初学者向け解説】
+            // F# Result型のパターンマッチング:
+            // - IsOk: 成功時、ResultValueからプロジェクト一覧（PagedResult<Project>）を取得
+            // - IsError: 失敗時、ErrorValueからエラーメッセージを取得
+            if (result.IsOk)
+            {
+                var pagedResult = result.ResultValue;
+
+                // 【Blazor初学者向け解説】
+                // F# List<Project>をC# List<ProjectSelectionDto>に変換します。
+                // ProjectListResultDtoのProjectsフィールドからプロジェクト一覧を取得。
+                // Microsoft.FSharp.Collections.FSharpList<T>はLINQメソッドを使用できます。
+                // Project.Id.Value: ProjectId型のValue（long）
+                // Project.Name.Value: ProjectName型のValue（string）
+                availableProjects = pagedResult.Projects
+                    .Select(project => new ProjectSelectionDto
+                    {
+                        Id = project.Id.Value,
+                        Name = project.Name.Value
+                    })
+                    .ToList();
+
+                Console.WriteLine($"プロジェクト一覧取得成功: {availableProjects.Count}件");
+            }
+            else
+            {
+                var errorMsg = result.ErrorValue;
+                Console.WriteLine($"プロジェクト一覧取得エラー: {errorMsg}");
+
+                // エラー時は空リスト
+                availableProjects = new List<ProjectSelectionDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"プロジェクト一覧取得例外: {ex.Message}");
+            availableProjects = new List<ProjectSelectionDto>();
+        }
+    }
+
+    // ユーザー情報読み込み + AssignedProjectIds復元
+    // 【Blazor初学者向け解説】
+    // Phase B-F3 Stage4実装: GetProjectIdsByUserIdAsyncでプロジェクト割り当て情報を復元
+    // これにより、チェックボックスの初期状態が正しく表示されます。
+    //
+    // 【Phase B-F3 修正】
+    // IdentityId（GUID文字列）ベースでユーザーを取得します。
+    // Application層にGetUserByIdentityIdAsyncメソッドがないため、
+    // 一時的な回避策として、GetAllUsersWithIdentityAsyncで全ユーザーを取得し、
+    // IdentityIdでフィルタして対象ユーザーを特定します。
     private async Task LoadUserAsync()
     {
         try
         {
-            // 【Blazor初学者向け解説】
-            // F# UserId型の生成: UserId.NewUserId()を使用してF#のUserId型を作成します。
-            var targetId = UserId.NewUserId(Id);
-
-            // 【Blazor初学者向け解説】
-            // F# Application層のGetUserByIdAsyncメソッドを呼び出します。
-            // Result型で返されるため、IsOkプロパティで成功/失敗を判定します。
-            // operatorIdentityId（ASP.NET Core Identity ID）を文字列として直接渡します。
-            var result = await UserManagementService.GetUserByIdAsync(targetId, operatorIdentityId);
+            // 【Phase B-F3 修正】
+            // GetAllUsersWithIdentityAsyncで全ユーザー（IdentityId付き）を取得
+            // 返却値: Result<(User * string) list, string>
+            var result = await UserManagementService.GetAllUsersWithIdentityAsync(new object(), operatorIdentityId, true);
 
             if (result.IsOk)
             {
-                // 【Blazor初学者向け解説】
-                // result.ResultValue: F# Result型から成功値（Userエンティティ）を取得
-                var user = result.ResultValue;
+                // F# list → C# array変換
+                var userTuples = Microsoft.FSharp.Collections.ListModule.ToArray(result.ResultValue);
+
+                // IdentityIdで対象ユーザーをフィルタ
+                // タプル: t.Item1 = User, t.Item2 = IdentityId
+                // 【C#初学者向け解説】
+                // FirstOrDefault: 条件に一致する最初の要素を返す。なければdefault（参照型の場合はnull）
+                var targetUserTuple = userTuples.FirstOrDefault(t => t.Item2 == IdentityId);
+
+                // 【null安全性チェック】
+                // タプル自体がnull（ユーザーが見つからない場合）をチェック
+                if (targetUserTuple == null)
+                {
+                    errorMessage = "指定されたユーザーが見つかりませんでした";
+                    return;
+                }
+
+                var user = targetUserTuple.Item1;
 
                 // EditUserModelに変換
                 model.UserId = user.Id.Value.ToString();
@@ -359,7 +714,27 @@
                 model.Name = user.Name.Value;
                 model.Role = user.Role.ToString();
                 model.IsActive = user.IsActive;
-                model.AssignedProjectIds = new List<long>(); // TODO: Phase B-F3 Step2で実装
+
+                // 🎯 Phase B-F3 Stage4: AssignedProjectIds復元
+                // 【Blazor初学者向け解説】
+                // IUserManagementService.GetProjectIdsByUserIdAsyncを使用して、
+                // 既存のプロジェクト割り当て情報を取得します。
+                // これにより、チェックボックスの初期状態が正しく復元されます。
+                var projectIdsResult = await UserManagementService.GetProjectIdsByUserIdAsync(user.Id);
+                if (projectIdsResult.IsOk)
+                {
+                    // 【Blazor初学者向け解説】
+                    // F# Result型の成功値（ResultValue）からプロジェクトID一覧（FSharpList<long>）を取得します。
+                    // F# list → C# List変換: Microsoft.FSharp.Collections.FSharpListはIEnumerableを実装しているため、
+                    // LINQのToList()で直接変換できます。
+                    var projectIds = projectIdsResult.ResultValue;
+                    model.AssignedProjectIds = projectIds.ToList();
+                }
+                else
+                {
+                    // プロジェクトID取得失敗時は空リストで初期化（エラーログは既にApplication層で記録済み）
+                    model.AssignedProjectIds = new List<long>();
+                }
             }
             else
             {
@@ -393,6 +768,85 @@
         }
     }
 
+    // パスワードリセットモーダル表示
+    // 【Blazor初学者向け解説】
+    // Bootstrap 5のモーダルをJavaScript経由で表示します。
+    // IJSRuntimeを使用してブラウザのJavaScript APIを呼び出します。
+    private async Task ShowPasswordResetModal()
+    {
+        passwordResetModel = new PasswordResetModel(); // フォームリセット
+        passwordResetError = null;
+        await JSRuntime.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('passwordResetModal')).show()");
+    }
+
+    // パスワードリセット実行
+    // 【Blazor初学者向け解説】
+    // Phase B-F3 Stage4実装: IUserManagementService.ResetPasswordAsyncを使用
+    // SuperUserが他ユーザーのパスワードを強制的に変更します。
+    // シグネチャ: ResetPasswordAsync(targetUserId: UserId, newPassword: string, operatorIdentityId: string) -> Task<Result<unit, string>>
+    //
+    // 【注意】
+    // ResetPasswordAsyncはUserId（long）ベースのままです。
+    // modelに保存されているUserIdを使用します。
+    private async Task ExecutePasswordReset()
+    {
+        isResettingPassword = true;
+        passwordResetError = null;
+        StateHasChanged();
+
+        try
+        {
+            // 【Blazor初学者向け解説】
+            // F# UserId型の生成
+            // modelに保存されているUserIdを使用（LoadUserAsyncで設定済み）
+            if (!long.TryParse(model.UserId, out var userId))
+            {
+                passwordResetError = "ユーザーIDが無効です";
+                isResettingPassword = false;
+                StateHasChanged();
+                return;
+            }
+
+            var targetId = UserId.NewUserId(userId);
+
+            // 【Blazor初学者向け解説】
+            // IUserManagementService.ResetPasswordAsyncを呼び出します。
+            // - targetUserId: 対象ユーザーID（F# Domain UserId型）
+            // - newPassword: 新しいパスワード（バリデーション前の文字列）
+            // - operatorIdentityId: 操作者のASP.NET Core Identity ID（文字列）
+            // 権限チェックはApplication層で実施されます（SuperUserのみ実行可能）
+            var result = await UserManagementService.ResetPasswordAsync(
+                targetId,
+                passwordResetModel.NewPassword,
+                operatorIdentityId
+            );
+
+            if (result.IsOk)
+            {
+                // 成功: モーダルを閉じる
+                await JSRuntime.InvokeVoidAsync("eval", "bootstrap.Modal.getInstance(document.getElementById('passwordResetModal')).hide()");
+                await JSRuntime.InvokeVoidAsync("alert", "パスワードをリセットしました");
+
+                isResettingPassword = false;
+                StateHasChanged();
+            }
+            else
+            {
+                // エラー: モーダル内にエラーメッセージ表示
+                var error = result.ErrorValue;
+                passwordResetError = error;
+                isResettingPassword = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            passwordResetError = $"予期しないエラー: {ex.Message}";
+            isResettingPassword = false;
+            StateHasChanged();
+        }
+    }
+
     // ユーザー更新処理
     private async Task UpdateUser()
     {
@@ -403,11 +857,13 @@
         {
             // 【Blazor初学者向け解説】
             // F# Application層のUpdateUserAsyncメソッドを呼び出します。
-            var targetId = UserId.NewUserId(Id);
-
-            // operatorIdentityId（ASP.NET Core Identity ID）を文字列として直接渡します。
+            //
+            // 【Phase B-F3 修正】
+            // UpdateUserAsyncはIdentityId（GUID文字列）ベースに変更されました。
+            // IUserManagementService.UpdateUserAsync:
+            //   targetIdentityId * name * role * assignedProjectIds * isActive * operatorIdentityId -> Task<Result<User, string>>
             var result = await UserManagementService.UpdateUserAsync(
-                targetId,
+                IdentityId,  // ASP.NET Core Identity ID（GUID文字列）
                 model.Name,
                 model.Role,
                 Microsoft.FSharp.Collections.ListModule.OfSeq(model.AssignedProjectIds),
@@ -417,13 +873,6 @@
 
             if (result.IsOk)
             {
-                // パスワード変更処理（オプション）
-                // TODO: Phase B-F3 Step2でパスワード変更API実装
-                if (!string.IsNullOrWhiteSpace(model.NewPassword))
-                {
-                    // パスワード変更処理を実装予定
-                }
-
                 await JSRuntime.InvokeVoidAsync("alert", "ユーザー情報を更新しました");
                 Navigation.NavigateTo("/admin/users");
             }
@@ -449,13 +898,7 @@
         // ValidationSummaryが自動的にエラーを表示
     }
 
-    // キャンセル処理
-    private void Cancel()
-    {
-        Navigation.NavigateTo("/admin/users");
-    }
-
-    // 一覧に戻る
+    // 戻る処理（ユーザー一覧画面へ遷移）
     private void GoBack()
     {
         Navigation.NavigateTo("/admin/users");

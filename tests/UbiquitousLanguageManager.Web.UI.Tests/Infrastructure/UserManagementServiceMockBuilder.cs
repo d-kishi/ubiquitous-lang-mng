@@ -41,44 +41,51 @@ public class UserManagementServiceMockBuilder
         _mockService = new Mock<AppIUserManagementService>();
     }
 
-    #region GetAllUsersAsync モックセットアップ
+    #region GetAllUsersWithIdentityAsync モックセットアップ
 
     /// <summary>
-    /// GetAllUsersAsync成功モックセットアップ
+    /// GetAllUsersWithIdentityAsync成功モックセットアップ
     ///
     /// 【引数】
-    /// - users: 返却するユーザーリスト（F# Domain型）
+    /// - userTuples: 返却するユーザーリスト（F# Domain型User * IdentityIdタプル）
     ///
     /// 【戻り値】
-    /// FSharpResult&lt;User list, string&gt;.NewOk
+    /// FSharpResult&lt;(User * string) list, string&gt;.NewOk
     ///
-    /// 【重要】Application層はF# Domain型を使用するため、UserDtoではなくF# Userを受け取ります
+    /// 【重要】Phase B-F3リファクタリングによりシグネチャ変更
+    /// - 旧: GetAllUsersAsync → User list を返す
+    /// - 新: GetAllUsersWithIdentityAsync → (User * IdentityId) list を返す
+    ///
+    /// 【F#初学者向け解説】
+    /// - F#タプル型 (User * string) は、C#ではTuple<User, string>として扱います
+    /// - タプルは2つの値をペアで保持する不変データ構造です
+    /// - F# list型はImmutableなので、ListModule.OfSeqで変換が必要です
     /// </summary>
-    public UserManagementServiceMockBuilder SetupGetAllUsersSuccess(List<FSharpDomainUser> users)
+    public UserManagementServiceMockBuilder SetupGetAllUsersWithIdentitySuccess(List<Tuple<FSharpDomainUser, string>> userTuples)
     {
-        // C# List<User> → F# list<User> への変換
+        // C# List<Tuple<User, string>> → F# list<User * string> への変換
         // F#のlist型はImmutableなので、ListModule.OfSeqで変換が必要
-        var fsharpUserList = Microsoft.FSharp.Collections.ListModule.OfSeq(users);
+        var fsharpTupleList = Microsoft.FSharp.Collections.ListModule.OfSeq(userTuples);
 
-        // FSharpResult<list<User>, string> を作成
-        var fsharpResult = FSharpResult<FSharpList<FSharpDomainUser>, string>.NewOk(fsharpUserList);
+        // FSharpResult<list<User * string>, string> を作成
+        var fsharpResult = FSharpResult<FSharpList<Tuple<FSharpDomainUser, string>>, string>.NewOk(fsharpTupleList);
 
         _mockService
-            .Setup(s => s.GetAllUsersAsync(It.IsAny<object>(), It.IsAny<string>()))
+            .Setup(s => s.GetAllUsersWithIdentityAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<bool>()))
             .ReturnsAsync(fsharpResult);
 
         return this;
     }
 
     /// <summary>
-    /// GetAllUsersAsync失敗モックセットアップ
+    /// GetAllUsersWithIdentityAsync失敗モックセットアップ
     /// </summary>
-    public UserManagementServiceMockBuilder SetupGetAllUsersFailure(string errorMessage)
+    public UserManagementServiceMockBuilder SetupGetAllUsersWithIdentityFailure(string errorMessage)
     {
-        var fsharpResult = FSharpResult<FSharpList<FSharpDomainUser>, string>.NewError(errorMessage);
+        var fsharpResult = FSharpResult<FSharpList<Tuple<FSharpDomainUser, string>>, string>.NewError(errorMessage);
 
         _mockService
-            .Setup(s => s.GetAllUsersAsync(It.IsAny<object>(), It.IsAny<string>()))
+            .Setup(s => s.GetAllUsersWithIdentityAsync(It.IsAny<object>(), It.IsAny<string>(), It.IsAny<bool>()))
             .ReturnsAsync(fsharpResult);
 
         return this;
@@ -210,6 +217,10 @@ public class UserManagementServiceMockBuilder
     ///
     /// 【戻り値】
     /// FSharpResult&lt;User, string&gt;.NewOk
+    ///
+    /// 【重要】Phase B-F3リファクタリングによりシグネチャ変更
+    /// - 旧: UpdateUserAsync(userId: UserId, ...) → UserId型
+    /// - 新: UpdateUserAsync(targetIdentityId: string, ...) → string型（IdentityId）
     /// </summary>
     public UserManagementServiceMockBuilder SetupUpdateUserSuccess(FSharpDomainUser updatedUser)
     {
@@ -218,7 +229,7 @@ public class UserManagementServiceMockBuilder
 
         _mockService
             .Setup(s => s.UpdateUserAsync(
-                It.IsAny<FSharpUserId>(),    // userId
+                It.IsAny<string>(),          // targetIdentityId (変更: UserId → string)
                 It.IsAny<string>(),          // name
                 It.IsAny<string>(),          // role
                 It.IsAny<FSharpList<long>>(), // assignedProjectIds
@@ -239,7 +250,7 @@ public class UserManagementServiceMockBuilder
 
         _mockService
             .Setup(s => s.UpdateUserAsync(
-                It.IsAny<FSharpUserId>(),
+                It.IsAny<string>(),          // targetIdentityId (変更: UserId → string)
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<FSharpList<long>>(),
@@ -253,75 +264,44 @@ public class UserManagementServiceMockBuilder
 
     #endregion
 
-    #region DeactivateUserAsync モックセットアップ
+    #region DeleteUserAsync モックセットアップ
 
     /// <summary>
-    /// DeactivateUserAsync成功モックセットアップ
+    /// DeleteUserAsync成功モックセットアップ
     ///
     /// 【戻り値】
     /// FSharpResult&lt;unit, string&gt;.NewOk（F# unit型）
     ///
-    /// 【重要】F# unit型は構造体（値型）のため、default(unit)で有効な値を生成
+    /// 【重要】Phase B-F3リファクタリングによりシグネチャ変更
+    /// - 旧: DeleteUserAsync(userId: UserId, ...) → UserId型
+    /// - 新: DeleteUserAsync(targetIdentityId: string, ...) → string型（IdentityId）
+    ///
+    /// 【F#初学者向け解説】
+    /// - F# unit型は構造体（値型）のため、default(Unit)で有効な値を生成します
+    /// - unit型は「戻り値なし」を表す型（C#のvoidに相当しますが、型として扱えます）
     /// </summary>
-    public UserManagementServiceMockBuilder SetupDeactivateUserSuccess()
+    public UserManagementServiceMockBuilder SetupDeleteUserSuccess()
     {
         // F# unit型は値型（struct）のため、default(Unit)で生成
         var unitValue = default(Unit);
         var fsharpResult = FSharpResult<Unit, string>.NewOk(unitValue);
 
         _mockService
-            .Setup(s => s.DeactivateUserAsync(It.IsAny<FSharpUserId>(), It.IsAny<string>()))
+            .Setup(s => s.DeleteUserAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(fsharpResult);
 
         return this;
     }
 
     /// <summary>
-    /// DeactivateUserAsync失敗モックセットアップ
+    /// DeleteUserAsync失敗モックセットアップ
     /// </summary>
-    public UserManagementServiceMockBuilder SetupDeactivateUserFailure(string errorMessage)
+    public UserManagementServiceMockBuilder SetupDeleteUserFailure(string errorMessage)
     {
         var fsharpResult = FSharpResult<Unit, string>.NewError(errorMessage);
 
         _mockService
-            .Setup(s => s.DeactivateUserAsync(It.IsAny<FSharpUserId>(), It.IsAny<string>()))
-            .ReturnsAsync(fsharpResult);
-
-        return this;
-    }
-
-    #endregion
-
-    #region ActivateUserAsync モックセットアップ
-
-    /// <summary>
-    /// ActivateUserAsync成功モックセットアップ
-    ///
-    /// 【戻り値】
-    /// FSharpResult&lt;unit, string&gt;.NewOk（F# unit型）
-    /// </summary>
-    public UserManagementServiceMockBuilder SetupActivateUserSuccess()
-    {
-        // F# unit型は値型（struct）のため、default(Unit)で生成
-        var unitValue = default(Unit);
-        var fsharpResult = FSharpResult<Unit, string>.NewOk(unitValue);
-
-        _mockService
-            .Setup(s => s.ActivateUserAsync(It.IsAny<FSharpUserId>(), It.IsAny<string>()))
-            .ReturnsAsync(fsharpResult);
-
-        return this;
-    }
-
-    /// <summary>
-    /// ActivateUserAsync失敗モックセットアップ
-    /// </summary>
-    public UserManagementServiceMockBuilder SetupActivateUserFailure(string errorMessage)
-    {
-        var fsharpResult = FSharpResult<Unit, string>.NewError(errorMessage);
-
-        _mockService
-            .Setup(s => s.ActivateUserAsync(It.IsAny<FSharpUserId>(), It.IsAny<string>()))
+            .Setup(s => s.DeleteUserAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(fsharpResult);
 
         return this;

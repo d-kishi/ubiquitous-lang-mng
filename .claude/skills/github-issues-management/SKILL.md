@@ -1,3 +1,9 @@
+---
+name: github-issues-management
+description: GitHub Issue作成時のラベル判断・運用規則の自律的適用を実現。Issue作成時・技術的負債記録時・課題管理時に使用。Phase B-F2で確立したラベル体系・テンプレート活用パターンを適用。
+allowed-tools: Read, Bash
+---
+
 # github-issues-management
 
 **バージョン**: 1.0.0

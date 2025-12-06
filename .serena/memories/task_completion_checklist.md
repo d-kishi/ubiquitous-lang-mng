@@ -61,15 +61,23 @@ ${1}2025-11-18（**Phase B-F2完了・品質スコア85%達成・次回Phase B3�
   - [x] **Phase_Summary.md完成**: 841行・10 Steps構成詳細計画・完成基準明確化
 - [x] **Phase B-F3: Step1 Stage1-3完了**（ユーザー管理UI実装・品質問題7件発生→Step1.5追加）
 - [x] **Phase B-F3: Step1.5組織設計完了**（✅2025-11-27・全層品質確認実施・レポート4件作成・セキュリティ問題2件特定）
-- [ ] **Phase B-F3: Step1.5 Stage1実施待ち**（Application層セキュリティ修正・fsharp-application Agent）
+- [x] **Phase B-F3: Step1.5 Stage1完了**（✅2025-11-29・セキュリティ問題2件修正・ビルドテスト全Pass）
+- [x] **Phase B-F3: Step1.5 Stage2完了**（✅2025-11-30・UserRepository完全実装・リネーム完了）
+- [x] **Phase B-F3: Step1.5 Stage3完了**（✅2025-12-01・権限フィルタ・プロジェクト割り当て実装完了）
+- [x] **Phase B-F3: Step1.5 Stage3.5完了**（✅2025-12-02・ProjectManagementService DI解決・Application.ProjectManagement.*インターフェース実装・申し送り事項5項目）
+- [~] **Phase B-F3: Step1.5 Stage4実施中**（Web層全画面リファクタ - Issue #79対応後に再開）
   - [x] step-start実施・組織設計ファイル作成完了（4 Stage構成・実行記録テンプレート）
   - [x] 対話的詳細化実施（3質問・SubAgent選択・並列実行方針確定）
   - [x] 技術調査不要判断（実装対象明確・技術パターン確立済み）
   - [x] NavMenu.razor導線確認（/admin/usersリンク既存）
-  - [ ] Stage 1: UI実装（csharp-web-ui Agent、3画面並列）
-  - [ ] Stage 2: bUnitテスト実装（unit-test Agent、3テスト並列）
-  - [ ] Stage 3: ユーザー手動確認・UIレイアウト調整
-  - [ ] Stage 4: E2Eテスト実装（e2e-test Agent、10シナリオ）
+  - [x] Stage 1-6: UI実装・bUnitテスト・修正完了
+  - [x] Stage 7: Index.razor動作確認 9/9項目完了
+  - [~] Stage 7: Create/Edit.razor動作確認中 → Issue #79発見で一時中断
+  - [!] **Issue #79: ID体系統一リファクタリング**（約20-25h・次回セッション対応）
+    - 根本原因: ASP.NET Core Identity ID（string）vs F# UserId（long）の二重体系
+    - InitialDataの人間可読ID（admin-001等）がGUID前提コードと不整合
+    - 影響範囲: 認証・ユーザー管理・プロジェクト管理全体（40+箇所）
+    - 対応後: Stage 7 Create/Edit確認再開 → Stage 8 E2Eテスト
   - [ ] **Step2: Phase A対応漏れ（認証補助機能UI）**（5-8h）
     - プロフィール変更・パスワードリセット送信・実行画面実装
     - E2Eテスト拡張（authentication.spec.ts 9/9シナリオ）
@@ -155,6 +163,7 @@ $2
 - [x] **Phase B-F2完了処理**（✅2025-11-18完了・Phase総括レポート作成・ディレクトリ移動（Active→Completed）・Serenaメモリー4種類更新）
 - [x] **週次振り返り実施（Week 44）**（✅2025-11-04完了・10/29-11/02対象・週次総括文書作成・Serenaメモリー4種類更新・daily_sessions統合削除完了）
 - [x] **週次振り返り実施（Week 46）**（✅2025-11-17完了・11/10-11/16対象・週次総括文書作成・Serenaメモリー4種類更新）
+- [x] **週次振り返り実施（Week 48）**（✅2025-12-02完了・11/25-11/30対象・週次総括文書作成・Serenaメモリー更新）
 
 ### 🟡 高優先度（Issue対応完了後・Phase B2実装準備）
 - [ ] **技術負債整理完了確認**（Phase A/B1技術負債の対応状況確認・残存リスク評価）

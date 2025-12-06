@@ -79,6 +79,19 @@ type User = {
         UpdatedBy = createdBy
     }
 
+    /// 🔧 データベースからの復元用ファクトリーメソッド
+    /// 【F#初学者向け解説】
+    /// データベースから読み込んだユーザー情報をF# Userレコードに変換する際に使用します。
+    /// IsActive値を明示的に受け取ることで、データベースのIsDeletedフラグを正しく反映できます。
+    /// 通常のcreateはIsActive=trueをデフォルトにしますが、このメソッドはDB状態を忠実に復元します。
+    static member createFromDatabase
+        (email: Email)
+        (name: UserName)
+        (role: Role)
+        (createdBy: UserId)
+        (isActive: bool) : User =
+        { User.create email name role createdBy with IsActive = isActive }
+
     // 🔧 ID付きユーザー作成: テスト用・完全指定のファクトリーメソッド（Phase A2拡張版）
     // 【F#初学者向け解説】
     // TypeConvertersのテストで使用するため、IDを明示的に指定できるメソッドを追加

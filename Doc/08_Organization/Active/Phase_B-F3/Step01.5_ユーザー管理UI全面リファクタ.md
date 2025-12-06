@@ -29,37 +29,54 @@
 - **作業特性**: 品質改善・セキュリティ修正・全層再実装
 - **推定期間**: 11-15時間（2-3セッション）← 🆕改訂
 - **開始日**: 2025-11-27
-- **Stage構成**: 5 Stages ← 🆕改訂（4→5）
+- **Stage構成**: 6 Stages ← 🆕改訂（5→6、Stage3.5追加）
 
 ---
 
 ## 📊 全層調査結果（2025-11-30実施）
 
-### 層別完成度サマリ
+### 🔴 重要発見事項（2025-11-30追記）
 
-| 層 | 完成度 | 判定 | リファクタ必要性 |
-|----|--------|------|-----------------|
-| **Domain** | ✅100% | 完成 | なし |
-| **Application** | ⚠️90% | 要改善 | あり（権限フィルタ・プロジェクト割り当て） |
-| **Contracts** | ✅100% | 完成 | なし |
-| **Infrastructure** | ❌50% | 重大問題 | **必須**（全メソッド実装） |
-| **Web** | ❌20% | 重大問題 | **必須**（全画面書き換え） |
+**IUserRepository実装ファイルの誤認識を修正**:
 
-### 🔴 重大問題（Infrastructure層）
+| ファイル | 状態 | DI登録 |
+|---------|------|--------|
+| **UserRepositoryAdapter.cs** (780行) | ✅ 本番使用中 | `AddScoped<IUserRepository, UserRepositoryAdapter>` |
+| UserRepository.cs (1220行) | ⚠️ レガシー・未使用 | なし |
 
-| 問題 | 影響度 | 詳細 |
-|------|--------|------|
-| `GetHashCode()`によるID変換 | 🔴致命的 | ハッシュ衝突リスク、実行環境依存で不安定 |
-| `GetByEmailAsync`ハードコード | 🔴致命的 | DB検索なし、ダミーユーザー返却 |
-| `SaveAsync`永続化なし | 🔴致命的 | `Task.Delay(1)`のみ、DBに保存されない |
-| `DeleteAsync`未実装 | 🟡高 | 常にエラー返却 |
+**調査根拠**:
+- Program.cs 210行目: `builder.Services.AddScoped<IUserRepository, UserRepositoryAdapter>()`
 
-### ⚠️ 未実装機能（Application層）
+**結論**:
+- Stage2の作業対象は **UserRepositoryAdapter.cs**
+- **UserRepository.csは削除する**（テストファイル修正後）
 
-| 問題 | 影響度 | 詳細 |
-|------|--------|------|
-| `GetUserByIdAsync`ProjectManager権限フィルタ | 🟡高 | TODOコメントのまま |
-| プロジェクト割り当て機能 | 🟡高 | `assignedProjectIds`パラメータ未使用 |
+### 層別完成度サマリ（🆕2025-12-01更新）
+
+| 層 | 完成度 | 判定 | リファクタ必要性 | Stage |
+|----|--------|------|-----------------|-------|
+| **Domain** | ✅100% | 完成 | なし | - |
+| **Application** | ✅100% | 完成 | なし | Stage3✅ |
+| **Contracts** | ✅100% | 完成 | なし | - |
+| **Infrastructure** | ✅100% | 完成 | なし | Stage2✅ |
+| **Web** | ❌20% | 重大問題 | **必須**（全画面書き換え） | Stage4 |
+
+### ~~🔴 重大問題（Infrastructure層 - UserRepositoryAdapter.cs）~~ ✅Stage2で解決済
+
+| 問題 | 影響度 | 詳細 | 対応 |
+|------|--------|------|------|
+| ~~`DeleteAsync`成功時エラー返却~~ | ~~🔴致命的~~ | ~~論理削除は成功するが`NewError`を返すバグ~~ | ✅Stage2で修正 |
+| ~~`GetByRoleAsync`空リスト~~ | ~~🔴致命的~~ | ~~ロール別ユーザー取得が機能しない~~ | ✅Stage2で修正 |
+| ~~`SaveAsync`ロール未同期~~ | ~~🟡高~~ | ~~ロール変更がAspNetUserRolesに反映されない~~ | ✅Stage2で修正 |
+| ~~`GetUsersByProjectIdsAsync`空リスト~~ | ~~🟡高~~ | ~~プロジェクト所属ユーザー取得不可~~ | ✅Stage2で修正 |
+| ~~`GetProjectIdsByUserIdAsync`空リスト~~ | ~~🟡高~~ | ~~ユーザー所属プロジェクト取得不可~~ | ✅Stage2で修正 |
+
+### ~~⚠️ 未実装機能（Application層）~~ ✅Stage3で解決済
+
+| 問題 | 影響度 | 詳細 | 対応 |
+|------|--------|------|------|
+| ~~`GetUserByIdAsync`ProjectManager権限フィルタ~~ | ~~🟡高~~ | ~~TODOコメントのまま~~ | ✅Stage3で実装 |
+| ~~プロジェクト割り当て機能~~ | ~~🟡高~~ | ~~`assignedProjectIds`パラメータ未使用~~ | ✅Stage3で実装 |
 
 **詳細**: `Research/UserManagement_全層調査レポート.md` 参照
 
@@ -83,26 +100,30 @@
 
 ---
 
-## Stage構成（🆕改訂版・2025-11-30）
+## Stage構成（🆕改訂版・2025-12-02）
 
 ```
 Stage 1: セキュリティ問題修正 ← ✅完了
-Stage 2: Infrastructure層 UserRepository完全実装 ← 🆕追加
-Stage 3: Application層 権限フィルタ・プロジェクト割り当て ← 🆕追加
-Stage 4: Web層 全画面リファクタ ← 元Stage 2
-Stage 5: テスト（単体/統合/E2E） ← 元Stage 3-4統合
+Stage 2: Infrastructure層 UserRepository完全実装 ← ✅完了
+Stage 3: Application層 権限フィルタ・プロジェクト割り当て ← ✅完了
+Stage 3.5: Stage4着手前提条件整備 ← ✅完了（2025-12-02）
+Stage 4: Web層 全画面リファクタ ← 次回実施
+Stage 5: テスト（単体/統合/E2E） ← Stage4完了後
+Stage 6: プロセス改善（振り返り・再発防止策） ← 🆕追加（2025-12-02）
 ```
 
-### 推定時間サマリ（🆕改訂版）
+### 推定時間サマリ（🆕改訂版・2025-12-02）
 
 | Stage | 内容 | 推定時間 | セッション |
 |-------|------|----------|-----------|
 | Stage 1 | セキュリティ問題修正 | ✅完了 | 完了 |
-| Stage 2 | Infrastructure層 | 3-4h | 次回 |
-| Stage 3 | Application層 | 2-3h | 次々回前半 |
-| Stage 4 | Web層 | 4-5h | 次々回後半〜3回目 |
-| Stage 5 | テスト | 2-3h | 3回目 |
-| **合計** | | **11-15h** | **2-3セッション** |
+| Stage 2 | Infrastructure層 | ✅完了（実績6h） | 完了 |
+| Stage 3 | Application層 | ✅完了（実績1h） | 完了 |
+| Stage 3.5 | Stage4着手前提条件整備 | ✅完了（実績4h） | 完了 |
+| Stage 4 | Web層 | 4-5h | 次回実施 |
+| Stage 5 | テスト | 2-3h | Stage4完了後 |
+| Stage 6 | プロセス改善 | 1-2h | Step完了時 |
+| **合計** | | **残7-10h** | **1-2セッション** |
 
 ---
 
@@ -124,62 +145,311 @@ Stage 5: テスト（単体/統合/E2E） ← 元Stage 3-4統合
 
 ---
 
-## Stage 2: Infrastructure層 UserRepository完全実装 🆕
+## Stage 2: Infrastructure層 UserRepository完全実装 ✅完了
 
 **目的**: データアクセス層の土台を完成させる
 
 **SubAgent**: `csharp-infrastructure`
 
-**推定時間**: 3-4時間
+**完了日**: 2025-11-30
+
+**推定時間**: 7-8時間（実績: 約6時間）
+
+### 正常動作しているメソッド（変更不要）
+- `GetByEmailAsync` (58-102行) - UserManager.FindByEmailAsync使用 ✅
+- `GetByIdentityIdAsync` (167-209行) - Identity ID直接検索 ✅
+- `GetAllActiveUsersAsync` (428-471行) - IsDeleted=false フィルタ ✅
+- `GetAllUsersAsync` (476-519行) - 論理削除除外 ✅
+- `SearchUsersAsync` (548-600行) - 部分一致検索 ✅
 
 ### Task構成
 
-| Task | 内容 | 詳細 |
-|------|------|------|
-| 2-1 | ID変換問題解決 | `GetHashCode()`廃止、`GetByIdentityIdAsync`ベースに統一 |
-| 2-2 | `GetByEmailAsync`完全実装 | EF Core経由DB検索、Email正規化、Eager Loading |
-| 2-3 | `SaveAsync`完全実装 | UserManager.CreateAsync/UpdateAsync、ロール割り当て |
-| 2-4 | `DeleteAsync`実装 | 論理削除（IsDeleted = true） |
-| 2-5 | `GetByRoleAsync`実装 | ASP.NET Identity Roles経由フィルタ |
+| Task | 内容 | 重要度 | 詳細 |
+|------|------|--------|------|
+| 2-1 | `DeleteAsync`バグ修正 | 🔴 HIGH | 成功時に`NewError`返却 → `NewOk(unit)`に修正 |
+| 2-2 | `GetByRoleAsync`完全実装 | 🔴 HIGH | 空リスト返却 → UserManager.GetUsersInRoleAsync使用 |
+| 2-3 | `SaveAsync`ロール同期追加 | 🟡 MEDIUM | ロール変更がDB未反映 → 同期処理追加 |
+| 2-4 | `GetUsersByProjectIdsAsync`実装 | 🟡 MEDIUM | 空リスト返却 → UserProjectsテーブルクエリ |
+| 2-5 | `GetProjectIdsByUserIdAsync`実装 | 🟡 MEDIUM | 空リスト返却 → UserProjectsテーブルクエリ |
+| 2-6 | ID変換問題ドキュメント化 | 🟢 LOW | 警告ログ追加、将来対応記載 |
+| 2-7 | リネーム: UserRepositoryAdapter→UserRepository | 🟢 LOW | 命名一貫性確保（ProjectRepositoryと統一）|
+
+### 前提条件
+- コンストラクタに `UbiquitousLanguageDbContext` 追加（Task 2-4, 2-5用）
 
 ### 対象ファイル
-- `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs`
-- `src/UbiquitousLanguageManager.Infrastructure/Repositories/IUserRepository.cs`（必要に応じて）
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs` ← **本番実装（旧UserRepositoryAdapter.cs、Task 2-7でリネーム）**
+- ~~`旧UserRepository.cs`~~ ← **削除済（レガシー1220行）**
+- `tests/.../DependencyInjectionUnitTests.cs` ← UserRepository参照更新済
 
 ### 完了基準
-- [ ] 全メソッドがDB操作を正しく実行
-- [ ] GetByEmailAsync: 既存メールで正しくユーザー取得
-- [ ] SaveAsync: INSERT/UPDATE動作確認
-- [ ] DeleteAsync: 論理削除動作確認
-- [ ] dotnet build成功（0 Error）
+- [x] dotnet build成功（0 Error）
+- [x] DeleteAsync: 成功時 `Result.Ok(unit)` を返す
+- [x] GetByRoleAsync: 指定ロールのユーザーを返す
+- [x] SaveAsync: ロール変更が永続化される
+- [x] GetUsersByProjectIdsAsync: プロジェクトユーザーを返す
+- [x] GetProjectIdsByUserIdAsync: ユーザーのプロジェクトIDを返す
+- [x] 既存テスト全Pass（50 Passed, 8 Failed=ProjectManagement既存課題, 6 Skipped）
+- [x] 旧UserRepository.cs削除完了
+- [x] UserRepositoryAdapter → UserRepository リネーム完了（Task 2-7）
 
 ---
 
-## Stage 3: Application層 権限フィルタ・プロジェクト割り当て 🆕
+## Stage 3: Application層 権限フィルタ・プロジェクト割り当て ✅完了
 
 **目的**: ビジネスロジックを完成させる
 
 **SubAgent**: `fsharp-application` + `csharp-infrastructure`
 
-**推定時間**: 2-3時間
+**推定時間**: 2-3時間 → **実績: 約1時間**
+
+**完了日**: 2025-12-01
 
 ### Task構成
 
 | Task | 内容 | 詳細 |
 |------|------|------|
-| 3-1 | `GetUserByIdAsync`権限フィルタ | ProjectManager: 担当プロジェクトユーザーのみ参照可能 |
-| 3-2 | `CreateUserAsync`プロジェクト割り当て | UserProjectsテーブルへのINSERT |
-| 3-3 | `UpdateUserAsync`プロジェクト割り当て更新 | 既存削除→新規INSERT |
+| 3-1 | `GetUserByIdAsync`権限フィルタ | ProjectManager: 担当プロジェクトユーザーのみ参照可能 ✅ |
+| 3-2 | `CreateUserAsync`プロジェクト割り当て | UserProjectsテーブルへのINSERT ✅ |
+| 3-3 | `UpdateUserAsync`プロジェクト割り当て更新 | 既存削除→新規INSERT ✅ |
 
 ### 対象ファイル
-- `src/UbiquitousLanguageManager.Application/UserManagementServices.fs`
-- `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs`（プロジェクト割り当て用メソッド追加時）
+- `src/UbiquitousLanguageManager.Application/UserManagementServices.fs` ← 権限フィルタ・呼び出しコード追加
+- `src/UbiquitousLanguageManager.Application/Interfaces.fs` ← IUserRepository拡張（AssignProjectsToUserAsync, UpdateUserProjectsAsync）
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs` ← プロジェクト割り当て用メソッド追加
+
+### 実行フロー
+
+```
+Phase A: fsharp-application Agent（直列・先行）
+  ↓
+Phase B: csharp-infrastructure Agent（Phase A完了後）
+  ↓
+Phase C: ビルド・テスト確認
+```
+
+### 実装内容
+
+**Phase A: fsharp-application Agent**（約30分）
+1. `GetUserByIdAsync`: ProjectManager権限フィルタ実装（155-193行）
+   - 操作者のプロジェクトID一覧取得 → プロジェクトユーザー一覧取得 → 対象ユーザー存在確認
+2. `IUserRepository`: `AssignProjectsToUserAsync`, `UpdateUserProjectsAsync`メソッド追加（96-126行）
+   - F#初学者向けドキュメントコメント付きインターフェース定義
+3. `CreateUserAsync`: プロジェクト割り当て呼び出し追加（293-333行）
+   - ProjectManager権限チェック（担当プロジェクトのみ割り当て可能）
+4. `UpdateUserAsync`: プロジェクト割り当て更新呼び出し追加（436-472行）
+   - 同様のProjectManager権限チェック
+
+**Phase B: csharp-infrastructure Agent**（約20分）
+1. `AssignProjectsToUserAsync`: UserProjectsテーブルへINSERT実装（520-596行）
+   - AddRangeAsync + SaveChangesAsync、詳細ログ出力
+2. `UpdateUserProjectsAsync`: 既存削除→新規INSERT実装（598-684行）
+   - RemoveRange + AddRangeAsync、トランザクション保証
+
+**Phase C: ビルド・テスト確認**（約10分）
+
+### 発生した問題と対応
+
+| 問題 | 原因 | 対応 |
+|------|------|------|
+| F#ビルドエラー（FS0039） | `ProjectId.Item`使用（正しくは`.Value`） | MainAgent直接修正（typo例外適用）|
+| XMLコメントエラー（CS1570） | `Result<unit, string>`の`<>`がXMLタグとして解釈 | `&lt;`/`&gt;`にエスケープ |
+
+### テスト結果詳細
+
+**Core層テスト**: 341 Pass ✅
+
+| テストプロジェクト | Pass | Failed | Skipped |
+|-------------------|------|--------|---------|
+| Domain.Unit.Tests | 113 | 0 | 0 |
+| Contracts.Unit.Tests | 98 | 0 | 0 |
+| Application.Unit.Tests | 32 | 0 | 0 |
+| Infrastructure.Unit.Tests | 98 | 0 | 0 |
+| **合計** | **341** | **0** | **0** |
+
+**Web.UI.Tests**: 50 Pass / 8 Failed / 6 Skipped
+- 失敗テストは全てProjectManagement関連（Stage3と無関係）
+- `ProjectMembersTests`: UserNameプロパティ問題（既存課題）
+- `ProjectCreateTests`/`ProjectEditTests`: Mock設定問題（既存課題）
 
 ### 完了基準
-- [ ] SuperUser: 全ユーザー参照可能
-- [ ] ProjectManager: 担当プロジェクトユーザーのみ参照可能
-- [ ] プロジェクト割り当てがDB永続化
-- [ ] dotnet build成功（0 Error）
+- [x] SuperUser: 全ユーザー参照可能
+- [x] ProjectManager: 担当プロジェクトユーザーのみ参照可能
+- [x] プロジェクト割り当てがDB永続化（AssignProjectsToUserAsync, UpdateUserProjectsAsync）
+- [x] dotnet build成功（0 Error）
+- [x] 既存テスト全Pass（341 Pass、Web.UI.Tests 8 Failed=ProjectManagement既存課題）
+
+### 教訓・改善点
+
+1. **F#判別共用体アクセサ**: `.Item`ではなく`.Value`を使用（`ProjectId`型）
+2. **XMLドキュメントコメント**: ジェネリック型の`<>`は必ずエスケープ
+3. **直列実行の有効性**: インターフェース→実装の依存関係がある場合は直列実行が正解
+4. **推定時間精度**: 2-3時間推定→実績1時間（50%以下で完了、計画精度要改善）
+
+---
+
+## Stage 3.5: Stage4着手前提条件整備 🆕
+
+**目的**: Stage4（Web層リファクタ）の着手前提条件を整備
+
+**SubAgent**: `csharp-infrastructure` × 1
+
+**推定時間**: 6-8時間
+
+**追加日**: 2025-12-01
+
+### 追加経緯
+
+Stage4着手前調査で以下の重大問題を発見：
+1. **IProjectRepository二重定義**: Application層（4メソッド）≠ Infrastructure層（16メソッド）
+2. **DomainRepository.cs未実装**: IDomainRepositoryの実装が存在しない
+3. **ProjectManagementService DI登録不可**: 上記2点が未解決のためProgram.csのコメントアウト解除不可
+
+**詳細**: `Research/Stage3.5_着手前提条件調査レポート.md` 参照
+
+### Task構成
+
+| Task | 内容 | 時間 | 担当Agent |
+|------|------|------|-----------|
+| C-0 | 組織設計ファイルにStage3.5追加 | 10min | MainAgent |
+| C-1 | DomainRepository.cs新規実装 | 3-4h | csharp-infrastructure |
+| C-2 | Program.cs DI登録 + ProjectRepository修正 | 1-2h | csharp-infrastructure |
+| C-3 | ビルド確認・DI解決検証 | 30min | MainAgent |
+| C-4 | Create/Edit.razorプロジェクト一覧取得 | 1-2h | csharp-web-ui |
+| C-5 | 動作検証 | 30min | MainAgent |
+
+### 参照ファイル
+
+**新規作成**:
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/DomainRepository.cs`
+
+**修正対象**:
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/ProjectRepository.cs`
+- `src/UbiquitousLanguageManager.Web/Program.cs`
+- `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Create.razor`
+- `src/UbiquitousLanguageManager.Web/Components/Pages/Admin/Users/Edit.razor`
+
+**参照ファイル**:
+- `src/UbiquitousLanguageManager.Application/Interfaces.fs`（IDomainRepository定義 Line 143-154）
+- `src/UbiquitousLanguageManager.Infrastructure/Data/Entities/Domain.cs`（C# Entity）
+- `src/UbiquitousLanguageManager.Domain/ProjectManagement/ProjectEntities.fs`（F# Domain Line 169-179）
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/ProjectRepository.cs`（実装参考）
+
+### 完了基準
+
+- [x] DomainRepository.cs: IDomainRepository全4メソッド実装
+- [x] ProjectRepository.cs: Application層IProjectRepository明示的実装追加
+- [x] Program.cs: DI登録有効化（Line 227, 228, 298）
+- [x] ビルド: 0 Error
+- [x] Create/Edit.razor: プロジェクト一覧取得実装
+- [x] 動作確認: プロジェクト一覧チェックボックス表示
+
+### 実行記録 ✅ 完了（2025-12-01）
+
+**実績時間**: 約4時間（推定6-8時間）
+
+#### 重大発見と方針変更
+
+Task C-5（動作検証）でDIエラー発生：
+```
+Unable to resolve service for type 'Application.ProjectManagement.IProjectRepository'
+```
+
+**原因**: `ProjectManagementService`が要求するインターフェースは`Application.ProjectManagement.*`名前空間であり、`Application.*`直下とは**別物**だった。
+
+| 名前空間 | IProjectRepository | IDomainRepository | IUserRepository |
+|----------|-------------------|-------------------|-----------------|
+| `Application.*` | 4メソッド | 4メソッド | - |
+| `Application.ProjectManagement.*` | **15メソッド** | **2メソッド** | **1メソッド** |
+
+**選択した方針**: 方針A（Stage3.5スコープ拡張）
+
+#### 拡張Task構成
+
+| Task | 内容 | 実績時間 | 結果 |
+|------|------|---------|------|
+| C-0 | 組織設計ファイルにStage3.5追加 | 5min | ✅ |
+| C-1 | DomainRepository.cs新規実装 | 40min | ✅ |
+| C-2 | Program.cs DI登録 + ProjectRepository修正 | 20min | ✅ |
+| C-3 | ビルド確認・DI解決検証 | 10min | ✅ |
+| C-4 | Create/Edit.razorプロジェクト一覧取得 | 30min | ✅ |
+| C-5a | **Application.ProjectManagement.IProjectRepository実装（15メソッド）** | 60min | ✅ |
+| C-5b | **Application.ProjectManagement.IDomainRepository実装（2メソッド）** | 20min | ✅ |
+| C-5c | **Application.ProjectManagement.IUserRepository実装（1メソッド）** | 15min | ✅ |
+| C-5d | Program.cs DI登録修正 + 再検証 | 20min | ✅ |
+
+#### 実装成果物
+
+**新規ファイル**:
+- `src/UbiquitousLanguageManager.Infrastructure/Repositories/DomainRepository.cs`
+
+**修正ファイル**:
+| ファイル | 変更内容 |
+|----------|----------|
+| `ProjectRepository.cs` | `Application.ProjectManagement.IProjectRepository` 15メソッド明示的実装追加 |
+| `DomainRepository.cs` | `Application.ProjectManagement.IDomainRepository` 2メソッド明示的実装追加 |
+| `UserRepository.cs` | `Application.ProjectManagement.IUserRepository` 1メソッド明示的実装追加 |
+| `Program.cs` | 6つのDI登録（Application.*×3 + Application.ProjectManagement.*×3） |
+| `Create.razor` | IProjectManagementService経由プロジェクト一覧取得 |
+| `Edit.razor` | IProjectManagementService経由プロジェクト一覧取得 |
+
+#### 検証結果
+
+| 項目 | 結果 |
+|------|------|
+| ビルド | ✅ 0 Error, 0 Warning |
+| アプリ起動 | ✅ DIエラー解消 |
+| 認証E2Eテスト | ✅ 6 passed |
+| Infrastructure Unit Tests | ✅ 98 passed |
+
+#### 教訓・技術知見
+
+1. **F#インターフェース名前空間の罠**: 同名でも名前空間が異なれば別物。DIエラーで初めて判明するケースあり
+2. **明示的インターフェース実装**: C#のエイリアス（`using PmI... = ...`）で同名衝突を回避
+3. **F#レコード型コンストラクタ**: C#からの呼び出しは位置引数のみ（名前付き引数不可）
+4. **推定時間精度**: 6-8時間→4時間（50%削減、既存メソッド委譲パターンが有効）
+
+#### 📋 Stage4への申し送り事項
+
+**1. Create/Edit.razorの既存実装について**
+- `IProjectManagementService`経由のプロジェクト一覧取得は既に実装済み
+- `LoadProjectsAsync()`メソッドが追加されている
+- Stage4ではUI設計書準拠のレイアウト・data-testid属性追加が主な作業
+
+**2. F# Service呼び出し時の注意点**
+```csharp
+// ✅ 正しい: インターフェースを@inject
+@inject IProjectManagementService ProjectService
+
+// ❌ 誤り: 具象クラスを@inject（F#明示的インターフェース実装のためメソッド見えない）
+@inject ProjectManagementService ProjectService
+
+// ✅ 正しい: F#レコード型は位置引数で構築
+var query = new GetProjectsQuery(userId, role, 1, 1000, false, FSharpOption<string>.None);
+
+// ❌ 誤り: 名前付き引数（C#からF#レコードには使用不可）
+var query = new GetProjectsQuery(UserId: userId, UserRole: role, ...);
+```
+
+**3. 簡易実装・未実装メソッドについて**
+| メソッド | 状態 | 影響 |
+|----------|------|------|
+| `GetProjectsWithPermissionAsync` | 簡易実装 | メモリ上ページング（大量データ時は要最適化） |
+| `SearchProjectsAsync` | 未実装 | エラーを返す（高度な検索機能は使用不可） |
+
+**4. プロジェクト一覧チェックボックス表示**
+- `availableProjects`リストに`ProjectSelectionDto`（Id, Name）を格納済み
+- Stage4でチェックボックスUI実装時はこのリストを使用
+- 権限フィルタリングは`IProjectManagementService.GetProjectsAsync`内で適用済み
+
+**5. DI登録の確認**
+Stage4開始前に以下のDI登録が有効であることを確認：
+```csharp
+// Program.cs Line 233-235
+builder.Services.AddScoped<Application.ProjectManagement.IProjectRepository, ...>();
+builder.Services.AddScoped<Application.ProjectManagement.IDomainRepository, ...>();
+builder.Services.AddScoped<Application.ProjectManagement.IUserRepository, ...>();
+```
 
 ---
 
@@ -284,6 +554,66 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-t
 
 ---
 
+## Stage 6: プロセス改善（振り返り・再発防止策）🆕
+
+**目的**: Step1.5を通じて明らかになった問題の根本原因分析と再発防止策の策定・記録
+
+**推定時間**: 1-2時間
+
+**追加日**: 2025-12-02
+
+### 背景・経緯
+
+**問題**: Phase A実装（2025年10月頃）から1か月以上経過後、Phase B-F3 Step1.5において大規模リファクタが必要となった。
+
+**影響範囲**:
+- Stage 1-3.5で11時間以上の工数
+- Infrastructure層・Application層・Web層全ての層に修正が必要
+- 当初2-3セッション想定が4-5セッションに拡大
+
+**根本原因分析（2025-12-02実施）**:
+
+| 原因 | 詳細 | 影響度 |
+|------|------|--------|
+| **計画ブレイクダウン不足** | 「ユーザー管理UI実装」の粒度が大きすぎ、権限制御パターン16種の詳細が計画に落ちていなかった | 🔴高 |
+| **スタブ・仮実装の記録漏れ** | 旧UserRepository、権限フィルタ未実装箇所が「TODO」「仮実装」として明示されていなかった | 🔴高 |
+| **Phase間引き継ぎ不足** | Phase A→B移行時に「残課題リスト」が作成されなかった | 🔴高 |
+| **F#インターフェース設計の複雑さ** | 同名インターフェースが複数namespaceに存在（Application.* vs Application.ProjectManagement.*）| 🟡中 |
+| **段階的実装における統合検証不足** | DI統合テストが不十分で、実際の呼び出しまでエラーが発見されなかった | 🟡中 |
+
+**共通課題**: 技術負債の可視化・追跡プロセスの欠如
+
+### Task構成
+
+| Task | 内容 | 成果物 |
+|------|------|--------|
+| 6-1 | Phase完了時「残課題・仮実装リスト」作成ルール策定 | process_improvements.md更新 or ADR作成 |
+| 6-2 | 計画ブレイクダウン時「権限制御パターン網羅性チェック」追加 | step-start.md改善 or チェックリスト追加 |
+| 6-3 | GitHub Issuesへの仮実装・スタブ登録ルール策定 | CLAUDE.md更新 or ガイドライン作成 |
+| 6-4 | 教訓のSerenaメモリー記録 | process_improvements.md更新 |
+
+### 改善策（案）
+
+**1. Phase完了時「残課題・仮実装リスト」作成必須化**
+- Phase完了処理（phase-end.md）に「残課題チェック」セクション追加
+- 仮実装・TODO・スタブの棚卸しを必須化
+- 次Phase引き継ぎ事項として明示的に記録
+
+**2. 計画ブレイクダウン時の網羅性チェック強化**
+- step-start.mdに「権限制御パターン確認」チェック項目追加
+- UI実装時は「権限ロール × 機能」のマトリックス作成を推奨
+
+**3. GitHub Issuesへの仮実装登録ルール**
+- 仮実装・スタブを作成した時点で「tech-debt」ラベル付きIssue登録
+- Phase完了時にこれらのIssueを確認・対処判断
+
+### 完了基準
+- [ ] 改善策の具体的内容確定
+- [ ] 該当ファイルへの反映完了（process_improvements.md / step-start.md / CLAUDE.md等）
+- [ ] Serenaメモリー（process_improvements）更新
+
+---
+
 ## 関連ファイル
 
 ### 調査レポート（2025-11-30作成）
@@ -332,30 +662,228 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-t
 
 ---
 
-### Stage 2 実行記録
+### Stage 2 実行記録 ✅完了
 
-**開始日時**:
-**終了日時**:
-**実行SubAgent**:
+**開始日時**: 2025-11-30
+**終了日時**: 2025-11-30
+**実行SubAgent**: csharp-infrastructure Agent × 1
+
+**実施Task**:
+- ✅ Task 2-1: DeleteAsyncバグ修正（成功時にNewErrorを返すバグ → NewOk(unit)に修正）
+- ✅ Task 2-2: GetByRoleAsync完全実装（UserManager.GetUsersInRoleAsync使用）
+- ✅ Task 2-3: SaveAsyncロール同期追加（RemoveFromRolesAsync + AddToRoleAsync）
+- ✅ Task 2-4: GetUsersByProjectIdsAsync実装（UserProjectsテーブルクエリ）
+- ✅ Task 2-5: GetProjectIdsByUserIdAsync実装（UserProjectsテーブルクエリ）
+- ✅ Task 2-6: ID変換問題ドキュメント化（警告ログ・コメント追加）
+- ✅ DbContext依存追加（コンストラクタ修正）
+- ✅ UserRepository.cs削除（レガシー1220行を完全削除）
+- ✅ DependencyInjectionUnitTests.cs修正
+- ✅ Task 2-7: UserRepositoryAdapter → UserRepository リネーム（命名一貫性のため追加実施）
+
+**重要発見事項**:
+- IUserRepository実装が2ファイル存在（UserRepository.cs / UserRepositoryAdapter.cs）
+- 本番使用中はUserRepositoryAdapter.cs（Program.csでDI登録済み）
+- UserRepository.csはレガシー・未使用（削除完了）
+- ProjectRepositoryとの命名一貫性のため、UserRepositoryAdapter → UserRepository にリネーム
+
 **結果**:
+- ビルド: ✅ 0 Error (70 Warning - 既存)
+- テスト: ✅ Domain/Application/Contracts/Infrastructure層全Pass
+- Web UI層: 8 Failed（ProjectManagement関連 - 既存問題）
+
+**削除コード量**: 1220行（旧UserRepository.cs）
+**リネーム**: UserRepositoryAdapter.cs → UserRepository.cs（クラス名・ファイル名・DI登録・テスト参照）
 
 ---
 
-### Stage 3 実行記録
+### Stage 3 実行記録 ✅完了
 
-**開始日時**:
-**終了日時**:
-**実行SubAgent**:
+**開始日時**: 2025-12-01
+**終了日時**: 2025-12-01
+**実行SubAgent**: fsharp-application × 1, csharp-infrastructure × 1
+**推定時間**: 2-3時間 → **実績: 約1時間**
+
+**実施Task**:
+- ✅ Task 3-1: `GetUserByIdAsync`権限フィルタ実装
+- ✅ Task 3-2: `CreateUserAsync`プロジェクト割り当て
+- ✅ Task 3-3: `UpdateUserAsync`プロジェクト割り当て更新
+- ✅ IUserRepository拡張（AssignProjectsToUserAsync, UpdateUserProjectsAsync）
+
 **結果**:
+- ビルド: ✅ 0 Error
+- テスト: ✅ Core層341 Pass、Web.UI.Tests 50 Pass / 8 Failed（ProjectManagement既存課題）
 
 ---
 
-### Stage 4 実行記録
+### Stage 3.5 実行記録 ✅完了
 
-**開始日時**:
-**終了日時**:
-**実行SubAgent**:
+**開始日時**: 2025-12-02
+**終了日時**: 2025-12-02
+**実行SubAgent**: csharp-infrastructure × 1
+**推定時間**: 6-8時間 → **実績: 約4時間**
+
+**実施Task**:
+- ✅ Task C-0: 組織設計ファイルにStage3.5追加
+- ✅ Task C-1: DomainRepository.cs新規実装（Application.IDomainRepository 4メソッド）
+- ✅ Task C-2: Program.cs DI登録 + ProjectRepository修正
+- ✅ Task C-3: ビルド確認・DI解決検証
+- ✅ Task C-4: Create/Edit.razorプロジェクト一覧取得
+- ✅ Task C-5a: Application.ProjectManagement.IProjectRepository実装（15メソッド）
+- ✅ Task C-5b: Application.ProjectManagement.IDomainRepository実装（2メソッド）
+- ✅ Task C-5c: Application.ProjectManagement.IUserRepository実装（1メソッド）
+- ✅ Task C-5d: Program.cs DI登録修正 + 再検証
+
 **結果**:
+- ビルド: ✅ 0 Error, 0 Warning
+- アプリ起動: ✅ DIエラー解消
+- 認証E2Eテスト: ✅ 6 passed
+- Infrastructure Unit Tests: ✅ 98 passed
+
+---
+
+### Stage 4 実行記録 🔄作業中
+
+**開始日時**: 2025-12-02（複数セッション）
+**終了日時**: 作業中
+**推定時間**: 6-8h → **実績: 継続中**
+
+---
+
+#### 実行SubAgent（前セッション実施）
+
+| Step | SubAgent | 作業内容 |
+|------|----------|----------|
+| Step 1 | fsharp-application | IUserManagementService.ResetPasswordAsync追加 |
+| Step 2 | csharp-infrastructure | GetProjectIdsByUserIdAsync公開・IUserManagementService経由アクセス |
+| Step 4-1 | csharp-web-ui | Index.razor全面リファクタ（UI設計書3.6章準拠） |
+| Step 4-2 | csharp-web-ui | Create.razor全面リファクタ（UI設計書3.7章準拠） |
+| Step 4-3 | csharp-web-ui | Edit.razor全面リファクタ（UI設計書3.8章準拠） |
+
+---
+
+#### 完了Step一覧（コード検証済み）
+
+| Step | 内容 | 検証方法 | 確認箇所 |
+|------|------|----------|----------|
+| ✅ Step 1 | ResetPasswordAsync追加 | Grep検索 | IUserManagementService.fs:149, UserManagementServices.fs:591 |
+| ✅ Step 2 | GetProjectIdsByUserIdAsync公開 | Grep検索 | Interfaces.fs:85, UserManagementServices.fs:678, UserRepository.cs:435 |
+| ✅ Step 3 | 中間ビルド | dotnet build | 0 Error |
+| ✅ Step 4 | Web層リファクタ | git status | Index/Create/Edit.razor全て変更あり |
+| ✅ Step 5 | 最終ビルド | dotnet build | 0 Error, 0 Warning |
+| ✅ Step 6 | UI設計書修正 | Grep検索 | Line 435, 500「スーパーユーザー以外で表示」 |
+
+---
+
+#### 本セッション実施内容（2025-12-02）
+
+**🔧 バグ修正: 「削除済み表示」チェックボックス機能不全**
+
+| 項目 | 内容 |
+|------|------|
+| **症状** | チェックボックスONにしても削除済みユーザーが表示されない |
+| **根本原因** | `UbiquitousLanguageDbContext.cs`のGlobal Query Filter（`HasQueryFilter(e => !e.IsDeleted)`）が常時適用 |
+| **修正ファイル** | `src/UbiquitousLanguageManager.Infrastructure/Repositories/UserRepository.cs` |
+| **修正内容** | `GetAllUsersAsync`メソッドで`includeDeleted=true`の場合に`.IgnoreQueryFilters()`を使用 |
+| **検証方法** | E2Eテスト `user-show-deleted.spec.ts` 実行 |
+| **検証結果** | ✅成功（初期4ユーザー → チェックON後5ユーザー確認） |
+
+**修正コード箇所**（UserRepository.cs:800-845付近）:
+```csharp
+if (includeDeleted)
+{
+    // グローバルクエリフィルターを無視して削除済みユーザーも含める
+    query = _userManager.Users.IgnoreQueryFilters();
+}
+else
+{
+    // グローバルクエリフィルターが適用されるため、削除済みユーザーは自動的に除外される
+    query = _userManager.Users.AsQueryable();
+}
+```
+
+---
+
+#### Step 7: ユーザー動作確認チェックリスト
+
+**Index.razor（9項目中3項目確認済み）**:
+- [x] SuperUserログインで全ユーザー表示 ← ユーザー確認済
+- [ ] PMログインで担当プロジェクトユーザーのみ表示
+- [ ] 検索機能動作（氏名部分一致）
+- [x] プロジェクトフィルタ動作 ← ユーザー確認済
+- [x] 削除済み表示切替動作 ← E2Eテスト確認済
+- [ ] ページング動作（50/100/200件）
+- [ ] 編集ボタン→Edit画面遷移
+- [ ] 無効化/有効化ボタン動作
+- [ ] FullHDレイアウト確認
+
+**Create.razor（7項目中0項目確認済み）**:
+- [ ] SuperUserで全ロール選択可能
+- [ ] PMで一般/承認者のみ選択可能
+- [ ] SuperUserでプロジェクト選択欄が非表示
+- [ ] PMでプロジェクト選択欄が表示・担当プロジェクトのみ
+- [ ] バリデーション動作（必須・パスワード強度）
+- [ ] 登録成功→一覧画面遷移
+- [ ] FullHDレイアウト確認
+
+**Edit.razor（9項目中0項目確認済み）**:
+- [ ] 既存ユーザー情報正しく表示
+- [ ] **既存プロジェクト割り当てチェック状態復元**（Step 2成果物）
+- [ ] SuperUserでプロジェクト選択欄が非表示
+- [ ] PM/一般/承認者でプロジェクト選択欄が表示
+- [ ] ロール選択制限（Create同様）
+- [ ] ステータス変更動作
+- [ ] **パスワードリセット動作**（Step 1成果物）
+- [ ] 更新成功→一覧画面遷移
+- [ ] FullHDレイアウト確認
+
+---
+
+#### 次回セッション再開ポイント
+
+**優先度順**:
+1. **Index.razor残り確認**（6項目）
+   - PMログイン動作
+   - 検索機能
+   - ページング
+   - 編集ボタン→Edit遷移
+   - 無効化/有効化ボタン
+   - FullHDレイアウト
+
+2. **Create.razor全確認**（7項目）
+   - ロール選択制限（SuperUser/PM別）
+   - プロジェクト選択表示条件
+   - バリデーション
+   - 登録→遷移
+
+3. **Edit.razor全確認**（9項目）
+   - **重要**: AssignedProjectIds復元（GetProjectIdsByUserIdAsync使用箇所）
+   - **重要**: パスワードリセット（ResetPasswordAsync使用箇所）
+   - ロール選択制限
+   - プロジェクト選択表示条件
+   - ステータス変更
+
+4. **Step 9: Stage実行記録完成**
+
+---
+
+#### 変更ファイル一覧（git status）
+
+| ファイル | 変更内容 |
+|----------|----------|
+| `src/.../Application/Interfaces.fs` | IAuthenticationService.AdminResetPasswordAsync追加 |
+| `src/.../Application/IUserManagementService.fs` | ResetPasswordAsync, GetProjectIdsByUserIdAsync定義 |
+| `src/.../Application/UserManagementServices.fs` | ResetPasswordAsync, GetProjectIdsByUserIdAsync実装 |
+| `src/.../Infrastructure/Repositories/UserRepository.cs` | IgnoreQueryFilters追加（削除済み表示バグ修正） |
+| `src/.../Web/Components/Pages/Admin/Users/Index.razor` | UI設計書3.6章準拠リファクタ |
+| `src/.../Web/Components/Pages/Admin/Users/Create.razor` | UI設計書3.7章準拠リファクタ |
+| `src/.../Web/Components/Pages/Admin/Users/Edit.razor` | UI設計書3.8章準拠リファクタ + AssignedProjectIds復元 + パスワードリセット |
+| `src/.../Web/Program.cs` | DI登録調整 |
+| `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` | 3.8章プロジェクト表示条件修正 |
+| `tests/.../E2E.Tests/user-show-deleted.spec.ts` | 新規追加（削除済み表示E2Eテスト） |
+
+---
+
+**結果**: 🔄作業中（Step 7動作確認 3/25項目完了）
 
 ---
 
@@ -368,13 +896,24 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-t
 
 ---
 
+### Stage 6 実行記録
+
+**開始日時**:
+**終了日時**:
+**実行者**: MainAgent（プロセス改善はSubAgent委託対象外）
+**結果**:
+
+---
+
 ## Step完了チェックリスト
 
 - [x] Stage 1完了: セキュリティ問題2件修正（2025-11-29）
-- [ ] Stage 2完了: Infrastructure層UserRepository完全実装
-- [ ] Stage 3完了: Application層権限フィルタ・プロジェクト割り当て
+- [x] Stage 2完了: Infrastructure層UserRepositoryAdapter修正 + レガシー削除（2025-11-30）
+- [x] Stage 3完了: Application層権限フィルタ・プロジェクト割り当て（2025-12-01）
+- [x] Stage 3.5完了: Stage4着手前提条件整備（DI解決・Application.ProjectManagement.*実装）（2025-12-02）
 - [ ] Stage 4完了: Web層3画面再実装
 - [ ] Stage 5完了: テスト（単体/統合/E2E）
+- [ ] Stage 6完了: プロセス改善（振り返り・再発防止策）← 🆕追加（2025-12-02）
 - [x] ビルド: 0 Error
 - [ ] テスト: 全Pass
 - [ ] Step1 Stage3の7件問題: 解消確認

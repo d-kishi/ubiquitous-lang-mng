@@ -16,6 +16,17 @@ public class UserDto
     public long Id { get; set; }
 
     /// <summary>
+    /// ASP.NET Core Identity ID（GUID文字列）
+    /// 削除・編集操作時にこのIDを使用してユーザーを特定します。
+    ///
+    /// 【Phase B-F3 修正】
+    /// F# UserId（int64）とASP.NET Core Identity ID（GUID文字列）の双方向変換が
+    /// GetHashCode()使用により不安定だったため、IdentityIdを直接保持します。
+    /// これにより、削除・編集操作でユーザーを確実に特定できます。
+    /// </summary>
+    public string IdentityId { get; set; } = string.Empty;
+
+    /// <summary>
     /// メールアドレス（ログインID）
     /// </summary>
     [Required(ErrorMessage = "メールアドレスは必須です")]

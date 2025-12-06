@@ -74,8 +74,12 @@ public class IndexTests : BlazorComponentTestBase
             )
         };
 
-        // GetAllUsersAsyncモックセットアップ
-        SetupGetAllUsersSuccess(testUsers);
+        // GetAllUsersWithIdentityAsyncモックセットアップ（Phase B-F3リファクタ対応）
+        // F#タプル (User * IdentityId) のリストを作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -149,8 +153,8 @@ public class IndexTests : BlazorComponentTestBase
         // Arrange - SuperUser権限設定
         SetupSuperUser("admin@test.com");
 
-        // 空リスト
-        SetupGetAllUsersSuccess(new List<FSharpDomainUser>());
+        // 空リスト（Phase B-F3リファクタ対応）
+        SetupGetAllUsersWithIdentitySuccess(new List<Tuple<FSharpDomainUser, string>>());
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -212,7 +216,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 4L, email: "gu@test.com", name: "GU", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -256,7 +264,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 2L, email: "user2@test.com", name: "テストユーザー", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -294,7 +306,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 2L, email: "user2@test.com", name: "ユーザー2", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -332,7 +348,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 2L, email: "inactive@test.com", name: "無効ユーザー", role: FSharpRole.GeneralUser, isActive: false)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -395,7 +415,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 3L, email: "b@test.com", name: "B User", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -440,7 +464,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 3L, email: "active2@test.com", name: "Active 2", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -492,7 +520,11 @@ public class IndexTests : BlazorComponentTestBase
             ));
         }
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -545,7 +577,11 @@ public class IndexTests : BlazorComponentTestBase
             ));
         }
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -587,7 +623,11 @@ public class IndexTests : BlazorComponentTestBase
             ));
         }
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -623,8 +663,8 @@ public class IndexTests : BlazorComponentTestBase
         // Arrange - SuperUser権限設定
         SetupSuperUser("admin@test.com");
 
-        // 空リスト
-        SetupGetAllUsersSuccess(new List<FSharpDomainUser>());
+        // 空リスト（Phase B-F3リファクタ対応）
+        SetupGetAllUsersWithIdentitySuccess(new List<Tuple<FSharpDomainUser, string>>());
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -655,7 +695,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 1L, email: "user1@test.com", name: "User 1", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -686,7 +730,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 1L, email: "active@test.com", name: "Active User", role: FSharpRole.GeneralUser, isActive: true)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -717,7 +765,11 @@ public class IndexTests : BlazorComponentTestBase
             CreateTestUser(id: 1L, email: "inactive@test.com", name: "Inactive User", role: FSharpRole.GeneralUser, isActive: false)
         };
 
-        SetupGetAllUsersSuccess(testUsers);
+        // Phase B-F3リファクタ対応: (User * IdentityId) タプルリスト作成
+        var userTuples = testUsers.Select((user, index) =>
+            Tuple.Create(user, $"identity-id-{user.Id.Value}")
+        ).ToList();
+        SetupGetAllUsersWithIdentitySuccess(userTuples);
 
         // 論理削除済みも表示
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -748,8 +800,8 @@ public class IndexTests : BlazorComponentTestBase
         // Arrange - SuperUser権限設定
         SetupSuperUser("admin@test.com");
 
-        // 空リスト
-        SetupGetAllUsersSuccess(new List<FSharpDomainUser>());
+        // 空リスト（Phase B-F3リファクタ対応）
+        SetupGetAllUsersWithIdentitySuccess(new List<Tuple<FSharpDomainUser, string>>());
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();
@@ -784,8 +836,8 @@ public class IndexTests : BlazorComponentTestBase
         // Arrange - SuperUser権限設定
         SetupSuperUser("admin@test.com");
 
-        // GetAllUsersAsyncモック失敗
-        SetupGetAllUsersFailure("データベース接続エラー");
+        // GetAllUsersWithIdentityAsyncモック失敗（Phase B-F3リファクタ対応）
+        SetupGetAllUsersWithIdentityFailure("データベース接続エラー");
 
         // Act - Indexコンポーネントレンダリング
         var cut = RenderComponent<UbiquitousLanguageManager.Web.Components.Pages.Admin.Users.Index>();

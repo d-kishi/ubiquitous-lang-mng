@@ -1038,5 +1038,5 @@ public static class TypeConverters
     // =================================================================
     // 【Clean Architecture遵守】
     // Contracts層からInfrastructure層への直接参照は依存方向違反のため削除
-    // UserRepositoryAdapterで必要な変換は、Infrastructure層内で実装
+    // UserRepositoryで必要な変換は、Infrastructure層内で実装
 }

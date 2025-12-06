@@ -20,6 +20,10 @@ using EntityProject = UbiquitousLanguageManager.Infrastructure.Data.Entities.Pro
 using EntityDomain = UbiquitousLanguageManager.Infrastructure.Data.Entities.Domain;
 using EntityUserProject = UbiquitousLanguageManager.Infrastructure.Data.Entities.UserProject;
 
+// Application.ProjectManagement層の型参照（Phase B-F3）
+using ProjectListResultDto = UbiquitousLanguageManager.Application.ProjectManagement.ProjectListResultDto;
+using SearchProjectsQuery = UbiquitousLanguageManager.Application.ProjectManagement.SearchProjectsQuery;
+
 namespace UbiquitousLanguageManager.Infrastructure.Repositories;
 
 /// <summary>
@@ -38,8 +42,12 @@ namespace UbiquitousLanguageManager.Infrastructure.Repositories;
 /// - BeginTransaction: 原子性保証（複数操作の全成功/全失敗）
 ///
 /// Phase B1 Step6: プロジェクト管理機能の基盤実装
+/// Phase B-F3 Step1.5: ProjectManagementService用インターフェース実装追加
 /// </summary>
-public class ProjectRepository : IProjectRepository
+public class ProjectRepository :
+    IProjectRepository, // Infrastructure層のインターフェース
+    Application.IProjectRepository, // Application層のインターフェース（明示的実装）
+    Application.ProjectManagement.IProjectRepository // ProjectManagementService用（Phase B-F3）
 {
     private readonly UbiquitousLanguageDbContext _context;
     private readonly ILogger<ProjectRepository> _logger;
@@ -381,15 +389,16 @@ public class ProjectRepository : IProjectRepository
             // 【F#初学者向け解説】
             // F# の判別共用体（Role型）は、IsSuperUser、IsProjectManager等のプロパティで
             // 各ケースを判定できます。これはパターンマッチングの代替として使用できます。
-            if (role.IsSuperUser || role.IsProjectManager)
+            if (role.IsSuperUser)
             {
-                // SuperUser・ProjectManager: 全プロジェクト取得
+                // SuperUser: 全プロジェクト取得
                 // フィルタなし
                 _logger.LogDebug("全プロジェクトアクセス権限: Role={Role}", RoleToString(role));
             }
-            else if (role.IsDomainApprover)
+            else if (role.IsProjectManager || role.IsDomainApprover)
             {
-                // DomainApprover: 割り当てられたプロジェクトのみ
+                // ProjectManager・DomainApprover: 割り当てられたプロジェクトのみ
+                // 【UI設計書3.6章準拠】PMは担当プロジェクトのみ取得
                 // 【EF Core最適化ポイント】
                 // Include()でUserProjectsを明示的に読み込み、N+1問題を回避
                 _logger.LogDebug("割り当てプロジェクトフィルタ適用: UserId={UserId}", userId.Item);
@@ -1358,4 +1367,210 @@ public class ProjectRepository : IProjectRepository
         if (role.IsGeneralUser) return "GeneralUser";
         return "Unknown";
     }
+
+    // =================================================================
+    // 🔌 Application層IProjectRepository明示的インターフェース実装
+    // =================================================================
+
+    /// <summary>
+    /// Application層IProjectRepository.GetByIdAsync明示的実装
+    /// Infrastructure層の既存メソッドへ委譲
+    /// </summary>
+    async Task<FSharpResult<FSharpOption<DomainProject>, string>> Application.IProjectRepository.GetByIdAsync(ProjectId projectId)
+        => await this.GetByIdAsync(projectId);
+
+    /// <summary>
+    /// Application層IProjectRepository.GetActiveProjectsAsync明示的実装
+    /// Infrastructure層のGetAllAsync()へ委譲（論理削除フィルター適用済み）
+    /// </summary>
+    async Task<FSharpResult<FSharpList<DomainProject>, string>> Application.IProjectRepository.GetActiveProjectsAsync()
+        => await this.GetAllAsync();
+
+    /// <summary>
+    /// Application層IProjectRepository.SaveAsync明示的実装
+    /// Infrastructure層のCreateAsync()へ委譲
+    ///
+    /// 【設計判断】
+    /// Application層のSaveAsyncは「新規作成・更新の両方に対応」する仕様ですが、
+    /// 現在のInfrastructure層はCreateAsync/UpdateAsyncを分離しています。
+    /// ここではCreateAsyncに委譲し、更新処理は別途対応する方針とします。
+    /// </summary>
+    async Task<FSharpResult<DomainProject, string>> Application.IProjectRepository.SaveAsync(DomainProject project)
+        => await this.CreateAsync(project);
+
+    /// <summary>
+    /// Application層IProjectRepository.DeleteAsync明示的実装
+    /// Infrastructure層の既存メソッドへ委譲
+    /// </summary>
+    async Task<FSharpResult<Unit, string>> Application.IProjectRepository.DeleteAsync(ProjectId projectId)
+        => await this.DeleteAsync(projectId);
+
+    // =================================================================
+    // 🎯 Application.ProjectManagement.IProjectRepository 明示的実装
+    // ProjectManagementService (F#) からの依存解決用（Phase B-F3 Step1.5）
+    // =================================================================
+
+    /// <summary>
+    /// SaveAsync: 既存のCreateAsyncに委譲
+    /// 【設計判断】
+    /// Application層のSaveAsyncは「新規作成・更新の両方に対応」する仕様ですが、
+    /// 現在のInfrastructure層はCreateAsync/UpdateAsyncを分離しています。
+    /// ここではCreateAsyncに委譲し、更新処理は別途対応する方針とします。
+    /// </summary>
+    async Task<FSharpResult<DomainProject, string>> Application.ProjectManagement.IProjectRepository.SaveAsync(DomainProject project)
+        => await this.CreateAsync(project);
+
+    /// <summary>
+    /// SaveProjectWithDefaultDomainAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<Tuple<DomainProject, DomainDomain>, string>> Application.ProjectManagement.IProjectRepository.SaveProjectWithDefaultDomainAsync(DomainProject project, DomainDomain defaultDomain)
+        => await this.CreateProjectWithDefaultDomainAsync(project, defaultDomain);
+
+    /// <summary>
+    /// GetByIdAsync: 既存メソッドに委譲（Option版）
+    /// </summary>
+    async Task<FSharpResult<FSharpOption<DomainProject>, string>> Application.ProjectManagement.IProjectRepository.GetByIdAsync(ProjectId id)
+        => await this.GetByIdAsync(id);
+
+    /// <summary>
+    /// GetByOwnerAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<FSharpList<DomainProject>, string>> Application.ProjectManagement.IProjectRepository.GetByOwnerAsync(UserId ownerId)
+        => await this.GetByOwnerAsync(ownerId);
+
+    /// <summary>
+    /// GetProjectsWithPermissionAsync: 簡易実装
+    /// 【TODO Phase B-F3 Stage2】
+    /// 本格的なページング・検索実装は後続Stageで対応
+    /// 現時点では既存GetProjectsByUserAsyncを活用した簡易実装
+    /// </summary>
+    async Task<FSharpResult<ProjectListResultDto, string>> Application.ProjectManagement.IProjectRepository.GetProjectsWithPermissionAsync(
+        UserId userId, Role userRole, int pageNumber, int pageSize, bool includeInactive)
+    {
+        try
+        {
+            _logger.LogDebug("GetProjectsWithPermissionAsync開始: UserId={UserId}, Role={Role}, Page={PageNumber}, Size={PageSize}",
+                userId.Item, RoleToString(userRole), pageNumber, pageSize);
+
+            // 既存GetProjectsByUserAsyncを活用（権限フィルタリング済み）
+            var projectsResult = await this.GetProjectsByUserAsync(userId, userRole);
+
+            if (projectsResult.IsError)
+            {
+                return FSharpResult<ProjectListResultDto, string>.NewError(projectsResult.ErrorValue);
+            }
+
+            // F# list → C# List変換
+            var projects = ListModule.ToArray(projectsResult.ResultValue).ToList();
+
+            // 簡易ページング処理
+            var totalCount = projects.Count;
+            var pagedProjects = projects
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // F# レコード型の構築（名前付き引数不可のため、位置指定で構築）
+            var resultDto = new ProjectListResultDto(
+                ListModule.OfSeq(pagedProjects),  // Projects: Project list
+                totalCount,                       // TotalCount: int
+                pageNumber,                       // PageNumber: int
+                pageSize,                         // PageSize: int
+                (pageNumber * pageSize) < totalCount,  // HasNextPage: bool
+                pageNumber > 1                    // HasPreviousPage: bool
+            );
+
+            _logger.LogInformation("GetProjectsWithPermissionAsync成功: TotalCount={TotalCount}, PagedCount={PagedCount}",
+                totalCount, pagedProjects.Count);
+
+            return FSharpResult<ProjectListResultDto, string>.NewOk(resultDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetProjectsWithPermissionAsyncでエラー発生");
+            return FSharpResult<ProjectListResultDto, string>.NewError($"プロジェクト一覧取得に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// GetAllActiveAsync: 既存GetAllAsyncに委譲
+    /// </summary>
+    async Task<FSharpResult<FSharpList<DomainProject>, string>> Application.ProjectManagement.IProjectRepository.GetAllActiveAsync()
+        => await this.GetAllAsync();
+
+    /// <summary>
+    /// GetRelatedDataCountAsync: 既存メソッド活用
+    /// 【Phase B2拡張版】
+    /// GetRelatedDataCountAsync(ProjectId)は(Domains, Languages, Members)のTuple3を返すため、
+    /// 単純なint合計値に変換して返却
+    /// </summary>
+    async Task<FSharpResult<int, string>> Application.ProjectManagement.IProjectRepository.GetRelatedDataCountAsync(ProjectId projectId)
+    {
+        try
+        {
+            var result = await this.GetRelatedDataCountAsync(projectId);
+
+            if (result.IsError)
+            {
+                return FSharpResult<int, string>.NewError(result.ErrorValue);
+            }
+
+            var (domainCount, languageCount, memberCount) = result.ResultValue;
+            var totalCount = domainCount + languageCount + memberCount;
+
+            return FSharpResult<int, string>.NewOk(totalCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetRelatedDataCountAsyncでエラー発生: ProjectId={ProjectId}", projectId.Item);
+            return FSharpResult<int, string>.NewError($"関連データ件数取得に失敗しました: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// SearchProjectsAsync: 未実装（Phase B-F3 Stage2以降で対応）
+    /// 【TODO Phase B-F3 Stage2】
+    /// 高度な検索機能は後続Stageで実装予定
+    /// </summary>
+    Task<FSharpResult<ProjectListResultDto, string>> Application.ProjectManagement.IProjectRepository.SearchProjectsAsync(SearchProjectsQuery searchQuery)
+    {
+        _logger.LogWarning("SearchProjectsAsync未実装: Phase B-F3 Stage2以降で対応予定");
+        return Task.FromResult(FSharpResult<ProjectListResultDto, string>.NewError("SearchProjectsAsync機能は未実装です"));
+    }
+
+    /// <summary>
+    /// AddUserToProjectAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<Unit, string>> Application.ProjectManagement.IProjectRepository.AddUserToProjectAsync(UserId userId, ProjectId projectId, UserId updatedBy)
+        => await this.AddUserToProjectAsync(userId, projectId, updatedBy);
+
+    /// <summary>
+    /// RemoveUserFromProjectAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<Unit, string>> Application.ProjectManagement.IProjectRepository.RemoveUserFromProjectAsync(UserId userId, ProjectId projectId)
+        => await this.RemoveUserFromProjectAsync(userId, projectId);
+
+    /// <summary>
+    /// GetProjectMembersAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<FSharpList<UserId>, string>> Application.ProjectManagement.IProjectRepository.GetProjectMembersAsync(ProjectId projectId)
+        => await this.GetProjectMembersAsync(projectId);
+
+    /// <summary>
+    /// IsUserProjectMemberAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<bool, string>> Application.ProjectManagement.IProjectRepository.IsUserProjectMemberAsync(UserId userId, ProjectId projectId)
+        => await this.IsUserProjectMemberAsync(userId, projectId);
+
+    /// <summary>
+    /// GetProjectMemberCountAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<int, string>> Application.ProjectManagement.IProjectRepository.GetProjectMemberCountAsync(ProjectId projectId)
+        => await this.GetProjectMemberCountAsync(projectId);
+
+    /// <summary>
+    /// SaveProjectWithDefaultDomainAndOwnerAsync: 既存メソッドに委譲
+    /// </summary>
+    async Task<FSharpResult<Tuple<DomainProject, DomainDomain>, string>> Application.ProjectManagement.IProjectRepository.SaveProjectWithDefaultDomainAndOwnerAsync(DomainProject project, DomainDomain defaultDomain, UserId ownerId)
+        => await this.SaveProjectWithDefaultDomainAndOwnerAsync(project, defaultDomain, ownerId);
 }
