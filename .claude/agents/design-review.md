@@ -1,5 +1,6 @@
 ---
 name: design-review
+model: opus
 description: "システム設計・データベース設計の整合性確認・Clean Architectureパターン準拠確認の専門Agent"
 tools: Read, mcp__serena__get_symbols_overview, mcp__serena__find_symbol, Grep
 ---

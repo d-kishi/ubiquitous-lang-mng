@@ -1,5 +1,6 @@
 ---
 name: tech-research
+model: sonnet
 description: "Gemini連携による技術調査・最新情報収集・ベストプラクティス調査の専門Agent"
 tools: Bash, WebSearch, WebFetch, Read, Grep, Glob
 ---

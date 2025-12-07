@@ -26,5 +26,5 @@ public record CreateProjectDto
     /// 認証済みユーザーIDがセットされる
     /// </summary>
     [Required(ErrorMessage = "プロジェクト所有者IDは必須です")]
-    public long OwnerId { get; init; }
+    public string OwnerId { get; init; } = string.Empty;
 }

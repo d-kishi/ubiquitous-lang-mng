@@ -467,8 +467,9 @@
     {
         try
         {
-            // Identity ID（Guid文字列）をGuidに変換（失敗時はGuid.Emptyで継続）
-            var userGuid = Guid.TryParse(operatorIdentityId, out var guid) ? guid : Guid.Empty;
+            // 【Issue #79 根本修正】ASP.NET Core Identity IDはstring型のまま使用
+            // Guid変換は不要（GetProjectsQueryがstring型Identity IDを受け取るため）
+            var operatorUserId = operatorIdentityId ?? string.Empty;
 
             // Role文字列をF# Role型に変換
             var userRole = currentUserRole switch
@@ -485,7 +486,7 @@
             // F#レコードはC#からは位置引数で構築します（名前付き引数NG）。
             // パラメータ順序: UserId, UserRole, PageNumber, PageSize, IncludeInactive, SearchKeyword
             var query = new GetProjectsQuery(
-                userGuid,       // UserId: Guid
+                operatorUserId, // UserId: string（ASP.NET Core Identity ID）
                 userRole,       // UserRole: Role
                 1,              // PageNumber: int
                 100,            // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）

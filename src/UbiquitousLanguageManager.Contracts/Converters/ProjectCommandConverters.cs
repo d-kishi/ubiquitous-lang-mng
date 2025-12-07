@@ -51,7 +51,7 @@ public static class ProjectCommandConverters
     /// </summary>
     /// <param name="dto">C#のCreateProjectCommandDto</param>
     /// <returns>F#のResult型（成功時はタプル、失敗時はエラーメッセージ）</returns>
-    public static Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, long>, string> ToFSharpCreateProjectParams(
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, string>, string> ToFSharpCreateProjectParams(
         CreateProjectCommandDto dto)
     {
         try
@@ -59,7 +59,7 @@ public static class ProjectCommandConverters
             if (dto == null)
             {
                 _logger?.LogError("CreateProjectCommandDto→F#パラメータ変換失敗: DTOがnull");
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, long>, string>.NewError("プロジェクト作成データがnullです");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, string>, string>.NewError("プロジェクト作成データがnullです");
             }
 
             _logger?.LogDebug("CreateProjectCommandDto→F#パラメータ変換開始 Name: {Name}, OwnerId: {OwnerId}",
@@ -68,12 +68,12 @@ public static class ProjectCommandConverters
             // 入力値の基本検証
             if (string.IsNullOrWhiteSpace(dto.Name))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, long>, string>.NewError("プロジェクト名は必須です");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, string>, string>.NewError("プロジェクト名は必須です");
             }
 
-            if (dto.OwnerId <= 0)
+            if (string.IsNullOrWhiteSpace(dto.OwnerId))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, long>, string>.NewError("有効な所有者IDを指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, string>, string>.NewError("有効な所有者IDを指定してください");
             }
 
             // F#パラメータタプルを作成
@@ -86,12 +86,12 @@ public static class ProjectCommandConverters
             _logger?.LogInformation("CreateProjectCommandDto→F#パラメータ変換成功 Name: {Name}",
                 dto.Name);
 
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, long>, string>.NewOk(parameters);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, string>, string>.NewOk(parameters);
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "CreateProjectCommandDto→F#パラメータ変換で予期しないエラーが発生");
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, long>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string?, string>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
         }
     }
 
@@ -103,7 +103,7 @@ public static class ProjectCommandConverters
     /// </summary>
     /// <param name="dto">C#のUpdateProjectCommandDto</param>
     /// <returns>F#のResult型（成功時はタプル、失敗時はエラーメッセージ）</returns>
-    public static Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, long>, string> ToFSharpUpdateProjectParams(
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string>, string> ToFSharpUpdateProjectParams(
         UpdateProjectCommandDto dto)
     {
         try
@@ -111,7 +111,7 @@ public static class ProjectCommandConverters
             if (dto == null)
             {
                 _logger?.LogError("UpdateProjectCommandDto→F#パラメータ変換失敗: DTOがnull");
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, long>, string>.NewError("プロジェクト更新データがnullです");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string>, string>.NewError("プロジェクト更新データがnullです");
             }
 
             _logger?.LogDebug("UpdateProjectCommandDto→F#パラメータ変換開始 ProjectId: {ProjectId}, UserId: {UserId}",
@@ -120,12 +120,12 @@ public static class ProjectCommandConverters
             // 入力値の基本検証
             if (dto.ProjectId <= 0)
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, long>, string>.NewError("有効なプロジェクトIDを指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string>, string>.NewError("有効なプロジェクトIDを指定してください");
             }
 
-            if (dto.UserId <= 0)
+            if (string.IsNullOrWhiteSpace(dto.UserId))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, long>, string>.NewError("有効なユーザーIDを指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string>, string>.NewError("有効なユーザーIDを指定してください");
             }
 
             // F#パラメータタプルを作成
@@ -138,12 +138,12 @@ public static class ProjectCommandConverters
             _logger?.LogInformation("UpdateProjectCommandDto→F#パラメータ変換成功 ProjectId: {ProjectId}",
                 dto.ProjectId);
 
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, long>, string>.NewOk(parameters);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string>, string>.NewOk(parameters);
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "UpdateProjectCommandDto→F#パラメータ変換で予期しないエラーが発生");
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, long>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
         }
     }
 
@@ -153,7 +153,7 @@ public static class ProjectCommandConverters
     /// </summary>
     /// <param name="dto">C#のDeleteProjectCommandDto</param>
     /// <returns>F#のResult型（成功時はタプル、失敗時はエラーメッセージ）</returns>
-    public static Microsoft.FSharp.Core.FSharpResult<Tuple<long, long, string?>, string> ToFSharpDeleteProjectParams(
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string?>, string> ToFSharpDeleteProjectParams(
         DeleteProjectCommandDto dto)
     {
         try
@@ -161,7 +161,7 @@ public static class ProjectCommandConverters
             if (dto == null)
             {
                 _logger?.LogError("DeleteProjectCommandDto→F#パラメータ変換失敗: DTOがnull");
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, long, string?>, string>.NewError("プロジェクト削除データがnullです");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string?>, string>.NewError("プロジェクト削除データがnullです");
             }
 
             _logger?.LogDebug("DeleteProjectCommandDto→F#パラメータ変換開始 ProjectId: {ProjectId}, UserId: {UserId}",
@@ -170,12 +170,12 @@ public static class ProjectCommandConverters
             // 入力値の基本検証
             if (dto.ProjectId <= 0)
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, long, string?>, string>.NewError("有効なプロジェクトIDを指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string?>, string>.NewError("有効なプロジェクトIDを指定してください");
             }
 
-            if (dto.UserId <= 0)
+            if (string.IsNullOrWhiteSpace(dto.UserId))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, long, string?>, string>.NewError("有効なユーザーIDを指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string?>, string>.NewError("有効なユーザーIDを指定してください");
             }
 
             // F#パラメータタプルを作成
@@ -188,12 +188,12 @@ public static class ProjectCommandConverters
             _logger?.LogInformation("DeleteProjectCommandDto→F#パラメータ変換成功 ProjectId: {ProjectId}",
                 dto.ProjectId);
 
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, long, string?>, string>.NewOk(parameters);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string?>, string>.NewOk(parameters);
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "DeleteProjectCommandDto→F#パラメータ変換で予期しないエラーが発生");
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, long, string?>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, string?>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
         }
     }
 
@@ -209,7 +209,7 @@ public static class ProjectCommandConverters
     /// </summary>
     /// <param name="dto">C#のGetProjectsQueryDto</param>
     /// <returns>F#のResult型（成功時はタプル、失敗時はエラーメッセージ）</returns>
-    public static Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string> ToFSharpGetProjectsParams(
+    public static Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string> ToFSharpGetProjectsParams(
         GetProjectsQueryDto dto)
     {
         try
@@ -217,39 +217,39 @@ public static class ProjectCommandConverters
             if (dto == null)
             {
                 _logger?.LogError("GetProjectsQueryDto→F#パラメータ変換失敗: DTOがnull");
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError("プロジェクト一覧取得データがnullです");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError("プロジェクト一覧取得データがnullです");
             }
 
             _logger?.LogDebug("GetProjectsQueryDto→F#パラメータ変換開始 UserId: {UserId}, UserRole: {UserRole}",
                 dto.UserId, dto.UserRole);
 
             // 入力値の基本検証
-            if (dto.UserId <= 0)
+            if (string.IsNullOrWhiteSpace(dto.UserId))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError("有効なユーザーIDを指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError("有効なユーザーIDを指定してください");
             }
 
             if (string.IsNullOrWhiteSpace(dto.UserRole))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError("ユーザーロールは必須です");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError("ユーザーロールは必須です");
             }
 
             // ロール値の検証
             var validRoles = new[] { "SuperUser", "ProjectManager", "DomainApprover", "GeneralUser" };
             if (!validRoles.Contains(dto.UserRole))
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError($"無効なユーザーロールです: {dto.UserRole}");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError($"無効なユーザーロールです: {dto.UserRole}");
             }
 
             // ページング値の検証
             if (dto.PageNumber < 1)
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError("ページ番号は1以上を指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError("ページ番号は1以上を指定してください");
             }
 
             if (dto.PageSize < 1 || dto.PageSize > 100)
             {
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError("ページサイズは1-100の範囲で指定してください");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError("ページサイズは1-100の範囲で指定してください");
             }
 
             // SuperUser以外でIncludeInactive=trueは権限エラー
@@ -257,7 +257,7 @@ public static class ProjectCommandConverters
             {
                 _logger?.LogWarning("非SuperUserによる非アクティブプロジェクト取得要求 UserId: {UserId}, Role: {UserRole}",
                     dto.UserId, dto.UserRole);
-                return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError("非アクティブなプロジェクトを含める権限がありません");
+                return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError("非アクティブなプロジェクトを含める権限がありません");
             }
 
             // F#パラメータタプルを作成
@@ -273,12 +273,12 @@ public static class ProjectCommandConverters
             _logger?.LogInformation("GetProjectsQueryDto→F#パラメータ変換成功 UserId: {UserId}, Role: {UserRole}",
                 dto.UserId, dto.UserRole);
 
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewOk(parameters);
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewOk(parameters);
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "GetProjectsQueryDto→F#パラメータ変換で予期しないエラーが発生");
-            return Microsoft.FSharp.Core.FSharpResult<Tuple<long, string, int, int, bool, string?>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
+            return Microsoft.FSharp.Core.FSharpResult<Tuple<string, string, int, int, bool, string?>, string>.NewError($"変換処理でエラーが発生しました: {ex.Message}");
         }
     }
 
@@ -294,7 +294,7 @@ public static class ProjectCommandConverters
     /// <param name="description">説明</param>
     /// <param name="ownerId">所有者ID</param>
     /// <returns>C#のCreateProjectCommandDto</returns>
-    public static CreateProjectCommandDto FromFSharpCreateProjectParams(string name, string? description, long ownerId)
+    public static CreateProjectCommandDto FromFSharpCreateProjectParams(string name, string? description, string ownerId)
     {
         return new CreateProjectCommandDto
         {
@@ -311,7 +311,7 @@ public static class ProjectCommandConverters
     /// <param name="description">説明</param>
     /// <param name="userId">実行ユーザーID</param>
     /// <returns>C#のUpdateProjectCommandDto</returns>
-    public static UpdateProjectCommandDto FromFSharpUpdateProjectParams(long projectId, string description, long userId)
+    public static UpdateProjectCommandDto FromFSharpUpdateProjectParams(long projectId, string description, string userId)
     {
         return new UpdateProjectCommandDto
         {
@@ -328,7 +328,7 @@ public static class ProjectCommandConverters
     /// <param name="userId">実行ユーザーID</param>
     /// <param name="reason">削除理由</param>
     /// <returns>C#のDeleteProjectCommandDto</returns>
-    public static DeleteProjectCommandDto FromFSharpDeleteProjectParams(long projectId, long userId, string? reason)
+    public static DeleteProjectCommandDto FromFSharpDeleteProjectParams(long projectId, string userId, string? reason)
     {
         return new DeleteProjectCommandDto
         {
@@ -349,7 +349,7 @@ public static class ProjectCommandConverters
     /// <param name="searchKeyword">検索キーワード</param>
     /// <returns>C#のGetProjectsQueryDto</returns>
     public static GetProjectsQueryDto FromFSharpGetProjectsParams(
-        long userId, string userRole, int pageNumber, int pageSize, bool includeInactive, string? searchKeyword)
+        string userId, string userRole, int pageNumber, int pageSize, bool includeInactive, string? searchKeyword)
     {
         return new GetProjectsQueryDto
         {
@@ -399,7 +399,7 @@ public static class ProjectCommandConverters
         }
 
         // 所有者ID検証
-        if (dto.OwnerId <= 0)
+        if (string.IsNullOrWhiteSpace(dto.OwnerId))
         {
             errors.Add(new ValidationErrorDto(nameof(dto.OwnerId), "有効な所有者IDを指定してください"));
         }
@@ -424,7 +424,7 @@ public static class ProjectCommandConverters
         }
 
         // ユーザーID検証
-        if (dto.UserId <= 0)
+        if (string.IsNullOrWhiteSpace(dto.UserId))
         {
             errors.Add(new ValidationErrorDto(nameof(dto.UserId), "有効なユーザーIDを指定してください"));
         }

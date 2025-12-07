@@ -1,5 +1,6 @@
 ---
 name: csharp-web-ui
+model: sonnet
 description: "Blazor Serverコンポーネント・Razor・フロントエンドUI・認証UI統合・リアルタイム機能実装の専門Agent"
 tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__get_symbols_overview, mcp__serena__find_referencing_symbols, Read, Write, Edit, MultiEdit
 ---

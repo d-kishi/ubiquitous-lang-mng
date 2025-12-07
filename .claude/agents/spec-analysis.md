@@ -1,5 +1,6 @@
 ---
 name: spec-analysis
+model: opus
 description: "要件定義書・仕様書の詳細分析・仕様準拠マトリックス作成の専門Agent"
 tools: Read, Grep, mcp__serena__search_for_pattern, WebFetch
 ---

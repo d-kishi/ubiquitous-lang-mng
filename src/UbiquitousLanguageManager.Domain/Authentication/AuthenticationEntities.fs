@@ -53,7 +53,7 @@ type User = {
     // static member create は C# の static メソッドに相当します。
     // ファクトリーメソッドパターンにより、適切に初期化されたUserを作成します。
     static member create (email: Email) (name: UserName) (role: Role) (createdBy: UserId) : User = {
-        Id = UserId.create 0L  // 🔄 実際のIDはInfrastructure層で設定
+        Id = UserId.create ""  // 🔄 実際のIDはInfrastructure層で設定（空文字列は仮のID）
         Email = email
         Name = name
         Role = role
@@ -127,7 +127,7 @@ type User = {
     // 🔐 認証用ユーザー作成: パスワードハッシュを含む完全な作成（Phase A2拡張版）
     static member createWithAuthentication (email: Email) (name: UserName) (role: Role)
                                          (passwordHash: PasswordHash) (createdBy: UserId) : User = {
-        Id = UserId.create 0L
+        Id = UserId.create ""  // 🔄 実際のIDはInfrastructure層で設定（空文字列は仮のID）
         Email = email
         Name = name
         Role = role
@@ -403,9 +403,9 @@ type User = {
     // 🆔 ASP.NET Core Identity連携用ID取得: string形式での ID 取得
     // 【F#初学者向け解説】
     // ASP.NET Core Identityではユーザー ID を string として扱います。
-    // F#のUserId型から文字列への変換を行うヘルパーメソッドです。
+    // UserId型はすでにstring型を内包しているため、.Valueで直接取得できます。
     member this.getIdentityId () : string =
-        this.Id.Value.ToString()
+        this.Id.Value
 
     // 🔧 システム管理者作成: UseCase層での仮の管理者ユーザー作成
     // 【F#初学者向け解説】
@@ -425,7 +425,7 @@ type User = {
             | Error _ -> failwith "システム管理者名作成に失敗"
 
         {
-            Id = UserId.create 1L  // システム管理者用の固定ID
+            Id = UserId.create "system"  // システム管理者用の固定ID（GUID文字列ではなく識別子）
             Email = systemEmail
             Name = systemName
             Role = SuperUser
@@ -444,7 +444,7 @@ type User = {
             TwoFactorEnabled = false
             LockoutEnabled = false  // システム管理者はロックアウト無効
             CreatedAt = DateTime.UtcNow
-            CreatedBy = UserId.create 1L  // 自己参照
+            CreatedBy = UserId.create "system"  // 自己参照
             UpdatedAt = DateTime.UtcNow
-            UpdatedBy = UserId.create 1L
+            UpdatedBy = UserId.create "system"
         }

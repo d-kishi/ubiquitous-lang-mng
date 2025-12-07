@@ -28,11 +28,12 @@
         "formulahendry.dotnet-test-explorer",
         "editorconfig.editorconfig",
 
-        // 開発効率向上（5個）
+        // 開発効率向上（6個）
         "eamodio.gitlens",
         "ms-azuretools.vscode-docker",
         "christian-kohler.path-intellisense",
         "yzhang.markdown-all-in-one",
+        "bierner.markdown-mermaid",
         "ms-ceintl.vscode-language-pack-ja",
 
         // AI支援（2個）

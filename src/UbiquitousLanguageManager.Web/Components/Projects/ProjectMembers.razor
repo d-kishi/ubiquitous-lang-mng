@@ -152,7 +152,7 @@
     /// <summary>
     /// 選択されたユーザーID
     /// </summary>
-    private Guid? selectedUserId = null;
+    private string? selectedUserId = null;
 
     /// <summary>
     /// ローディング状態
@@ -181,7 +181,7 @@
     /// <summary>
     /// 現在のユーザーID
     /// </summary>
-    private Guid currentUserId;
+    private string currentUserId = string.Empty;
 
     /// <summary>
     /// 現在のユーザーロール
@@ -217,9 +217,9 @@
 
             // ユーザーIDとロールを取得
             var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+            if (userIdClaim != null)
             {
-                currentUserId = userId;
+                currentUserId = userIdClaim.Value ?? string.Empty;
             }
 
             // ロール判定
@@ -338,7 +338,7 @@
     /// 【イベント駆動パターン】
     /// ProjectMemberSelectorコンポーネントから選択されたユーザーIDを受け取ります。
     /// </summary>
-    private void HandleMemberSelected(Guid? userId)
+    private void HandleMemberSelected(string? userId)
     {
         selectedUserId = userId;
         StateHasChanged();
@@ -373,7 +373,7 @@
             //   - オブジェクト初期化子構文（{ ... }）は使用不可
             var command = new AddMemberToProjectCommand(
                 projectId: ProjectId,
-                userId: selectedUserId.Value,
+                userId: selectedUserId,
                 operatorUserId: currentUserId,
                 operatorRole: currentUserRole
             );
@@ -433,9 +433,8 @@
 
             // F# Application層のCommand実行
             // 【F#型変換パターン】
-            // F# UserId型のItemプロパティからint64値を取得し、GuidのHashCodeを使用して変換します
-            // 注意: この変換はTDD段階の一時的な実装です。本番環境では適切な変換ロジックが必要です
-            var userGuid = Guid.NewGuid(); // TODO: 実際のユーザーGUIDを取得
+            // UserId.Itemプロパティから取得したstring値をそのまま使用
+            var userIdString = userId.Item.ToString();
 
             // 【F#初学者向け解説】
             // F# Record型（RemoveMemberFromProjectCommand）のコンストラクタベース初期化パターン。
@@ -445,7 +444,7 @@
             //   - オブジェクト初期化子構文（{ ... }）は読み取り専用プロパティのため使用不可
             var command = new RemoveMemberFromProjectCommand(
                 projectId: ProjectId,
-                userId: userGuid,
+                userId: userIdString,
                 operatorUserId: currentUserId,
                 operatorRole: currentUserRole
             );

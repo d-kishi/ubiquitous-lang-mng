@@ -13,7 +13,7 @@ public class UserDto
     /// <summary>
     /// ユーザーID（主キー）
     /// </summary>
-    public long Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     /// <summary>
     /// ASP.NET Core Identity ID（GUID文字列）
@@ -110,7 +110,7 @@ public class UserDto
     /// <summary>
     /// 作成者ID
     /// </summary>
-    public long CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
 
     /// <summary>
     /// 最終更新日時（UTC）
@@ -120,7 +120,7 @@ public class UserDto
     /// <summary>
     /// 最終更新者ID
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -166,7 +166,7 @@ public class CreateUserDto
     /// <summary>
     /// 作成者ID
     /// </summary>
-    public long CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -198,7 +198,7 @@ public class ChangePasswordDto
     /// <summary>
     /// ユーザーID
     /// </summary>
-    public long UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// 現在のパスワード
@@ -284,7 +284,7 @@ public class ChangeUserRoleDto
     /// <summary>
     /// 対象ユーザーID
     /// </summary>
-    public long UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// 新しいロール
@@ -308,7 +308,7 @@ public class ChangeEmailDto
     /// <summary>
     /// 対象ユーザーID
     /// </summary>
-    public long UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// 新しいメールアドレス

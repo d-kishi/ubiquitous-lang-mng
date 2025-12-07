@@ -1,5 +1,6 @@
 ---
 name: integration-test
+model: sonnet
 description: "WebApplicationFactory統合テスト・APIテスト・データベース統合テスト・テスト環境管理の専門Agent（Infrastructure.Integration.Tests専任・ADR_024準拠）"
 tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__get_symbols_overview, Bash, Read, Write, Edit, MultiEdit
 ---

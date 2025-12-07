@@ -277,7 +277,8 @@
     private string? errorMessage = null;
 
     // 操作者情報
-    private UserId currentUserId = UserId.NewUserId(0);
+    // 【Issue #79 根本修正】UserId型はstring型に変更されました
+    private UserId currentUserId = UserId.NewUserId("0");
     private Role currentRole = Role.GeneralUser;
     private string operatorIdentityId = string.Empty;
 
@@ -339,8 +340,9 @@
         };
 
         // UserID取得（カスタムクレーム）
+        // 【Issue #79 根本修正】UserId型はstring型に変更されたため、TryParseは不要
         var userIdString = user.FindFirst("UserId")?.Value ?? "0";
-        var userId = long.TryParse(userIdString, out var id) ? UserId.NewUserId(id) : UserId.NewUserId(0);
+        var userId = UserId.NewUserId(userIdString);
 
         return (userId, role, identityId);
     }
@@ -353,15 +355,16 @@
     {
         try
         {
-            // ASP.NET Core Identity ID（文字列）をGuidに変換
-            var userGuid = Guid.TryParse(operatorIdentityId, out var guid) ? guid : Guid.Empty;
+            // 【Issue #79 根本修正】ASP.NET Core Identity IDはstring型のまま使用
+            // Guid変換は不要（GetProjectsQueryがstring型Identity IDを受け取るため）
+            var operatorUserId = operatorIdentityId ?? string.Empty;
 
             // GetProjectsQuery構築
             // 【Blazor初学者向け解説】
             // F#レコードはC#からは位置引数で構築します（名前付き引数NG）。
             // パラメータ順序: UserId, UserRole, PageNumber, PageSize, IncludeInactive, SearchKeyword
             var query = new GetProjectsQuery(
-                userGuid,       // UserId: Guid
+                operatorUserId, // UserId: string（ASP.NET Core Identity ID）
                 currentRole,    // UserRole: Role
                 1,              // PageNumber: int
                 100,            // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）
@@ -393,7 +396,7 @@
                     OwnerId = p.OwnerId.Item,          // UserId → long
                     IsActive = p.IsActive,
                     CreatedAt = p.CreatedAt,
-                    UpdatedBy = 0,  // 一覧画面では不要
+                    UpdatedBy = "0",  // 【Issue #79 根本修正】string型に変更
                     UpdatedAt = Microsoft.FSharp.Core.FSharpOption<DateTime>.get_IsSome(p.UpdatedAt)
                         ? p.UpdatedAt.Value : (DateTime?)null
                 }).ToList();

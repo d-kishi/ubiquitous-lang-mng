@@ -84,7 +84,7 @@ public static class AuthenticationMapper
     /// ChangePasswordRequestDtoをF#のChangePasswordCommandに変換
     /// </summary>
     public static UbiquitousLanguageManager.Application.ChangePasswordCommand ToChangePasswordCommand(
-        ChangePasswordRequestDto dto, long userId)
+        ChangePasswordRequestDto dto, string userId)
     {
         return new UbiquitousLanguageManager.Application.ChangePasswordCommand(
             userId,

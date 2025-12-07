@@ -1,5 +1,6 @@
 ---
 name: unit-test
+model: sonnet
 description: "TDD Red-Green-Refactor実践・単体テスト設計実装・テストカバレッジ管理・テスタブルコード設計の専門Agent"
 tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__get_symbols_overview, Read, Write, Edit, MultiEdit, Grep, Glob, Bash
 ---

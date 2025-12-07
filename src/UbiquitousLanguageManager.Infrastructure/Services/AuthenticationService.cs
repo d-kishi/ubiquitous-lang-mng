@@ -230,7 +230,7 @@ public class AuthenticationService : IAuthenticationService
                 // 認証済みユーザーDTO作成
                 var authenticatedUser = new UbiquitousLanguageManager.Contracts.DTOs.Authentication.AuthenticatedUserDto
                 {
-                    Id = user.Id.GetHashCode(),
+                    Id = user.Id,  // IdentityUser.IdはすでにstringなのでValueプロパティ不要
                     Email = user.Email ?? string.Empty,
                     Name = GetNameFromUser(user),
                     Role = "GeneralUser",
@@ -1329,16 +1329,16 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     private User CreateSimpleDomainUser(ApplicationUser identityUser)
     {
-        // Identity IDはGUID文字列のため、GetHashCode()でlong値に変換
-        var userId = UserId.NewUserId((long)identityUser.Id.GetHashCode());
+        // Identity IDはGUID文字列のため、UserId.createで直接変換
+        var userId = UserId.create(identityUser.Id);
         var email = Email.create(identityUser.Email ?? "").ResultValue;
         
         // ApplicationUserのNameプロパティを使用
         var userName = UserName.create(identityUser.Name ?? "Unknown").ResultValue;
-        
+
         var role = Role.GeneralUser; // 簡易実装
-        var createdBy = UserId.NewUserId(1); // 簡易実装
-        
+        var createdBy = UserId.create("system");  // システムユーザー識別子（string型に変更）
+
         return User.create(email, userName, role, createdBy);
     }
 

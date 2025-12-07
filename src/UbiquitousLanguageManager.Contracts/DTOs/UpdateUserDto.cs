@@ -46,5 +46,5 @@ public class UpdateUserDto
     /// 更新者ID
     /// 変更を実行したユーザーのID（監査ログ用）
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 }

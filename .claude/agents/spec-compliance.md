@@ -1,5 +1,6 @@
 ---
 name: spec-compliance
+model: opus
 description: "実装の仕様準拠確認監査・仕様準拠マトリックス検証・仕様逸脱リスク特定対策・受け入れ基準達成確認の専門Agent"
 tools: Read, Grep, WebFetch, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__search_for_pattern
 ---

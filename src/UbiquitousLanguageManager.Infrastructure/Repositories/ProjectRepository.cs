@@ -401,15 +401,15 @@ public class ProjectRepository :
                 // 【UI設計書3.6章準拠】PMは担当プロジェクトのみ取得
                 // 【EF Core最適化ポイント】
                 // Include()でUserProjectsを明示的に読み込み、N+1問題を回避
-                _logger.LogDebug("割り当てプロジェクトフィルタ適用: UserId={UserId}", userId.Item);
+                _logger.LogDebug("割り当てプロジェクトフィルタ適用: UserId={UserId}", userId.Value);
                 query = query.Include(p => p.UserProjects)
-                             .Where(p => p.UserProjects.Any(up => up.UserId == userId.Item.ToString()));
+                             .Where(p => p.UserProjects.Any(up => up.UserId == userId.Value));
             }
             else // GeneralUser
             {
                 // GeneralUser: 自分が所有するプロジェクトのみ
-                _logger.LogDebug("所有プロジェクトフィルタ適用: UserId={UserId}", userId.Item);
-                query = query.Where(p => p.UpdatedBy == userId.Item.ToString());
+                _logger.LogDebug("所有プロジェクトフィルタ適用: UserId={UserId}", userId.Value);
+                query = query.Where(p => p.UpdatedBy == userId.Value);
             }
 
             var projectEntities = await query
@@ -781,13 +781,13 @@ public class ProjectRepository :
                 $"Invalid project description in database: {descriptionResult.ErrorValue}");
         }
 
-        // UserId: string → long → F# UserId
+        // UserId: string → F# UserId
         // 【Blazor Server初学者向け解説】
-        // データベースでは UpdatedBy が string型（ASP.NET Core Identity互換）ですが、
-        // F# Domain層では long型の UserId を使用するため変換が必要です。
-        var ownerId = long.TryParse(entity.UpdatedBy, out var ownerIdLong)
-            ? UserId.NewUserId(ownerIdLong)
-            : UserId.NewUserId(1L); // パース失敗時はデフォルト値
+        // データベースでは UpdatedBy が string型（ASP.NET Core Identity互換）で、
+        // F# Domain層でもstring型の UserId を使用するようになりました。
+        var ownerId = !string.IsNullOrEmpty(entity.UpdatedBy)
+            ? UserId.create(entity.UpdatedBy)
+            : UserId.create("system"); // デフォルト値
 
         // ✅ 修正: F# Projectレコード型を直接生成（UpdatedAtを正しく反映）
         // createWithIdメソッドはUpdatedAt=Noneで固定されてしまうため、
@@ -840,10 +840,10 @@ public class ProjectRepository :
         // ProjectId: long → F# ProjectId
         var projectId = ProjectId.NewProjectId(entity.ProjectId);
 
-        // UserId: string → long → F# UserId
-        var ownerId = long.TryParse(entity.UpdatedBy, out var ownerIdLong)
-            ? UserId.NewUserId(ownerIdLong)
-            : UserId.NewUserId(1L);
+        // UserId: string → F# UserId
+        var ownerId = !string.IsNullOrEmpty(entity.UpdatedBy)
+            ? UserId.create(entity.UpdatedBy)
+            : UserId.create("system");
 
         // F# Domain レコード型を直接構築（IsDefaultフラグを正しく設定）
         // 【F#初学者向け解説】
@@ -881,16 +881,16 @@ public class ProjectRepository :
         try
         {
             _logger.LogDebug("プロジェクトメンバー追加開始: UserId={UserId}, ProjectId={ProjectId}",
-                userId.Item, projectId.Item);
+                userId.Value, projectId.Item);
 
             // 1. 重複チェック（複合一意制約）
             var existingUserProject = await _context.Set<EntityUserProject>()
-                .FirstOrDefaultAsync(up => up.UserId == userId.Item.ToString() && up.ProjectId == projectId.Item);
+                .FirstOrDefaultAsync(up => up.UserId == userId.Value && up.ProjectId == projectId.Item);
 
             if (existingUserProject != null)
             {
                 _logger.LogWarning("UserProjects重複: UserId={UserId}, ProjectId={ProjectId}",
-                    userId.Item, projectId.Item);
+                    userId.Value, projectId.Item);
                 return FSharpResult<Unit, string>.NewError(
                     "このユーザーは既にプロジェクトのメンバーです");
             }
@@ -898,9 +898,9 @@ public class ProjectRepository :
             // 2. UserProjectsレコード作成
             var userProject = new EntityUserProject
             {
-                UserId = userId.Item.ToString(),
+                UserId = userId.Value,
                 ProjectId = projectId.Item,
-                UpdatedBy = updatedBy.Item.ToString(),
+                UpdatedBy = updatedBy.Value,
                 UpdatedAt = DateTime.UtcNow
             };
 
@@ -934,16 +934,16 @@ public class ProjectRepository :
         try
         {
             _logger.LogDebug("プロジェクトメンバー削除開始: UserId={UserId}, ProjectId={ProjectId}",
-                userId.Item, projectId.Item);
+                userId.Value, projectId.Item);
 
             // UserProjectsレコード取得
             var userProject = await _context.Set<EntityUserProject>()
-                .FirstOrDefaultAsync(up => up.UserId == userId.Item.ToString() && up.ProjectId == projectId.Item);
+                .FirstOrDefaultAsync(up => up.UserId == userId.Value && up.ProjectId == projectId.Item);
 
             if (userProject == null)
             {
                 _logger.LogWarning("UserProjectsレコードが見つかりません: UserId={UserId}, ProjectId={ProjectId}",
-                    userId.Item, projectId.Item);
+                    userId.Value, projectId.Item);
                 return FSharpResult<Unit, string>.NewError(
                     "指定されたユーザーはこのプロジェクトのメンバーではありません");
             }
@@ -953,7 +953,7 @@ public class ProjectRepository :
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("プロジェクトメンバー削除成功: UserProjectId={UserProjectId}, UserId={UserId}, ProjectId={ProjectId}",
-                userProject.UserProjectId, userId.Item, projectId.Item);
+                userProject.UserProjectId, userId.Value, projectId.Item);
 
             return FSharpResult<Unit, string>.NewOk(null!);
         }
@@ -989,20 +989,20 @@ public class ProjectRepository :
             var fsharpUserIds = userIds
                 .Select(userId =>
                 {
-                    if (long.TryParse(userId, out var userIdLong))
+                    if (!string.IsNullOrEmpty(userId))
                     {
-                        return UserId.NewUserId(userIdLong);
+                        return UserId.create(userId);
                     }
                     else
                     {
-                        _logger.LogWarning("UserIdのlong変換失敗: UserId={UserId}", userId);
-                        return UserId.NewUserId(1L); // デフォルト値
+                        _logger.LogWarning("UserIdが空文字列です: UserId={UserId}", userId);
+                        return UserId.create("unknown"); // デフォルト値
                     }
                 })
                 .ToList();
 
             _logger.LogInformation("プロジェクトメンバー一覧取得成功: ProjectId={ProjectId}, Count={Count}",
-                projectId.Item, fsharpUserIds.Count);
+                projectId.Value, fsharpUserIds.Count);
 
             return FSharpResult<FSharpList<UserId>, string>.NewOk(
                 ListModule.OfSeq(fsharpUserIds));
@@ -1027,14 +1027,14 @@ public class ProjectRepository :
         try
         {
             _logger.LogDebug("プロジェクトメンバー判定開始: UserId={UserId}, ProjectId={ProjectId}",
-                userId.Item, projectId.Item);
+                userId.Value, projectId.Item);
 
             var isMember = await _context.Set<EntityUserProject>()
                 .AsNoTracking()
-                .AnyAsync(up => up.UserId == userId.Item.ToString() && up.ProjectId == projectId.Item);
+                .AnyAsync(up => up.UserId == userId.Value && up.ProjectId == projectId.Item);
 
             _logger.LogInformation("プロジェクトメンバー判定完了: UserId={UserId}, ProjectId={ProjectId}, IsMember={IsMember}",
-                userId.Item, projectId.Item, isMember);
+                userId.Value, projectId.Item, isMember);
 
             return FSharpResult<bool, string>.NewOk(isMember);
         }
@@ -1165,9 +1165,9 @@ public class ProjectRepository :
             // 4. UserProjects作成（Owner追加）
             var userProject = new EntityUserProject
             {
-                UserId = ownerId.Item.ToString(),
+                UserId = ownerId.Value,
                 ProjectId = projectEntity.ProjectId,
-                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedBy = ownerId.Value,
                 UpdatedAt = DateTime.UtcNow
             };
 
@@ -1261,9 +1261,9 @@ public class ProjectRepository :
             // 4. UserProjects作成（Owner追加）
             var userProject = new EntityUserProject
             {
-                UserId = ownerId.Item.ToString(),
+                UserId = ownerId.Value,
                 ProjectId = projectEntity.ProjectId,
-                UpdatedBy = ownerId.Item.ToString(),
+                UpdatedBy = ownerId.Value,
                 UpdatedAt = DateTime.UtcNow
             };
 

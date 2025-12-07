@@ -17,7 +17,7 @@ open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // (使用�
 // 📋 プロジェクト一覧取得Query
 // REQ-3.1.1準拠: 権限別表示制御・ページング対応
 type GetProjectsQuery = {
-    UserId: Guid                   // 要求ユーザーID
+    UserId: string                 // 要求ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
     PageNumber: int               // ページ番号（1から開始）
     PageSize: int                 // 1ページあたりの項目数
@@ -31,28 +31,28 @@ type GetProjectsQuery = {
         elif this.PageSize < 1 || this.PageSize > 100 then
             Error "ページサイズは1-100の範囲で指定してください"
         else
-            let userId = UserId(int64(this.UserId.GetHashCode()))
+            let userId = UserId this.UserId
             Ok (userId, this.UserRole)
 
 // 🔍 プロジェクト詳細取得Query
 // REQ-10.2.1準拠: 権限チェック統合
 type GetProjectDetailQuery = {
     ProjectId: Guid               // 取得対象プロジェクトID
-    UserId: Guid                 // 要求ユーザーID
+    UserId: string               // 要求ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
 } with
     member this.toDomainTypes() : ProjectId * UserId * Role =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.UserId.GetHashCode())), this.UserRole)
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.UserId, this.UserRole)
 
 // 👥 プロジェクトユーザー一覧取得Query
 // プロジェクトに参加しているユーザーの一覧を取得
 type GetProjectUsersQuery = {
     ProjectId: Guid               // 対象プロジェクトID
-    UserId: Guid                 // 要求ユーザーID
+    UserId: string               // 要求ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
 } with
     member this.toDomainTypes() : ProjectId * UserId * Role =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.UserId.GetHashCode())), this.UserRole)
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.UserId, this.UserRole)
 
 // 👥 Phase B2: プロジェクトメンバー一覧取得Query
 // 【Phase B2: ユーザー・プロジェクト関連管理】
@@ -60,43 +60,43 @@ type GetProjectUsersQuery = {
 // - 権限制御マトリックス準拠（SuperUser/ProjectManager/所属メンバーのみ表示可能）
 type GetProjectMembersQuery = {
     ProjectId: Guid               // 対象プロジェクトID
-    UserId: Guid                 // 要求ユーザーID
+    UserId: string               // 要求ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
 } with
     member this.toDomainTypes() : ProjectId * UserId * Role =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.UserId.GetHashCode())), this.UserRole)
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.UserId, this.UserRole)
 
 // 🏷️ プロジェクトドメイン一覧取得Query
 // プロジェクト内のドメイン一覧を取得
 type GetProjectDomainsQuery = {
     ProjectId: Guid               // 対象プロジェクトID
-    UserId: Guid                 // 要求ユーザーID
+    UserId: string               // 要求ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
     IncludeInactive: bool        // 非アクティブドメイン含有フラグ
 } with
     member this.toDomainTypes() : ProjectId * UserId * Role =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.UserId.GetHashCode())), this.UserRole)
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.UserId, this.UserRole)
 
 // 📊 ユーザー別プロジェクト一覧取得Query
 // 特定ユーザーが参加しているプロジェクトの一覧を取得
 type GetUserProjectsQuery = {
-    TargetUserId: Guid           // 対象ユーザーID
-    RequestUserId: Guid          // 要求ユーザーID（権限チェック用）
+    TargetUserId: string         // 対象ユーザーID
+    RequestUserId: string        // 要求ユーザーID（権限チェック用）
     UserRole: Role               // 要求ユーザーのロール
     IncludeInactive: bool        // 非アクティブプロジェクト含有フラグ
 } with
     member this.toDomainTypes() : Result<UserId * UserId * Role, string> =
-        let targetUserId = UserId(int64(this.TargetUserId.GetHashCode()))
-        let requestUserId = UserId(int64(this.RequestUserId.GetHashCode()))
+        let targetUserId = UserId this.TargetUserId
+        let requestUserId = UserId this.RequestUserId
         Ok (targetUserId, requestUserId, this.UserRole)
 
 // 🎯 プロジェクト検索Query
 // 高度な検索機能対応
 type SearchProjectsQuery = {
-    UserId: Guid                 // 検索ユーザーID
+    UserId: string               // 検索ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
     SearchKeyword: string option // 検索キーワード
-    OwnerId: Guid option         // 所有者ID絞り込み
+    OwnerId: string option       // 所有者ID絞り込み
     CreatedDateFrom: DateTime option  // 作成日FROM
     CreatedDateTo: DateTime option    // 作成日TO
     IsActive: bool option        // アクティブ状態絞り込み
@@ -109,19 +109,19 @@ type SearchProjectsQuery = {
         elif this.PageSize < 1 || this.PageSize > 100 then
             Error "ページサイズは1-100の範囲で指定してください"
         else
-            let userId = UserId(int64(this.UserId.GetHashCode()))
-            let ownerIdOpt = this.OwnerId |> Option.map (fun guid -> UserId(int64(guid.GetHashCode())))
+            let userId = UserId this.UserId
+            let ownerIdOpt = this.OwnerId |> Option.map UserId
             Ok (userId, this.UserRole, ownerIdOpt)
 
 // 📊 プロジェクト統計情報Query
 // ダッシュボード表示用の統計データ
 type GetProjectStatisticsQuery = {
-    UserId: Guid                 // 要求ユーザーID
+    UserId: string               // 要求ユーザーID
     UserRole: Role               // ユーザーロール（権限制御用）
     ProjectId: Guid option       // 特定プロジェクトの統計（Noneの場合は全体統計）
 } with
     member this.toDomainTypes() : UserId * Role * ProjectId option =
-        let userId = UserId(int64(this.UserId.GetHashCode()))
+        let userId = UserId this.UserId
         let projectIdOpt = this.ProjectId |> Option.map (fun guid -> ProjectId(int64(guid.GetHashCode())))
         (userId, this.UserRole, projectIdOpt)
 

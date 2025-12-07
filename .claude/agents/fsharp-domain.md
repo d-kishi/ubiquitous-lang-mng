@@ -1,5 +1,6 @@
 ---
 name: fsharp-domain
+model: sonnet
 description: "F#ドメインモデル設計・ビジネスロジック実装・関数型プログラミングパターン適用の専門Agent"
 tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash
 ---

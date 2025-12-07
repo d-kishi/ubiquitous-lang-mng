@@ -1,5 +1,6 @@
 ---
 name: contracts-bridge
+model: sonnet
 description: "F#↔C#型変換・相互運用・TypeConverter実装・双方向データ変換の境界専門Agent"
 tools: Read, Write, Edit, MultiEdit, Grep, Glob, mcp__serena__find_symbol, mcp__serena__replace_symbol_body
 ---

@@ -1471,9 +1471,19 @@ public class UserRepository :
     /// </summary>
     private static string ConvertUserIdToGuid(UserId userId)
     {
-        // UserRepository.ToEntityメソッドと同じロジックを使用
-        // 注意: この変換は後方互換性のために維持されていますが、衝突リスクがあります
-        return new Guid((int)(userId.Item % int.MaxValue), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
+        // UserIdがstring型に変更されたため、GUID形式であればそのまま使用
+        var userIdString = userId.Value;
+
+        // GUID形式のチェック
+        if (Guid.TryParse(userIdString, out var guidValue))
+        {
+            return guidValue.ToString();
+        }
+
+        // GUID形式でない場合はHashCodeから生成（後方互換性のため）
+        // 注意: この変換は衝突リスクがあります
+        var hashCode = userIdString.GetHashCode();
+        return new Guid(hashCode, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
     }
 
     /// <summary>
@@ -1527,8 +1537,7 @@ public class UserRepository :
             var role = roleResult.IsOk ? roleResult.ResultValue : Role.GeneralUser;
 
             // UserId変換（GUID文字列 → F# UserId）
-            var userIdValue = (long)appUser.Id.GetHashCode();
-            var userId = UserId.NewUserId(userIdValue);
+            var userId = UserId.create(appUser.Id);
 
             // 【C#初学者向け解説】
             // データベースのIsDeletedフラグをF# User.IsActiveに変換します。
@@ -1599,7 +1608,19 @@ public class UserRepository :
         }
 
         // F# UserId → GUID文字列変換
-        var guidId = new Guid((int)(user.Id.Item % int.MaxValue), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
+        var userIdString = user.Id.Value;
+
+        // GUID形式であればそのまま使用、そうでなければHashCodeから生成
+        string guidId;
+        if (Guid.TryParse(userIdString, out var guidValue))
+        {
+            guidId = guidValue.ToString();
+        }
+        else
+        {
+            var hashCode = userIdString.GetHashCode();
+            guidId = new Guid(hashCode, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0).ToString();
+        }
 
         return new ApplicationUser
         {

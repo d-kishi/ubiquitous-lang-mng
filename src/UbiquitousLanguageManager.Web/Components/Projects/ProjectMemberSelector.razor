@@ -37,9 +37,10 @@
     /// 【Blazor Server初学者向け解説】
     /// EventCallbackにより、子コンポーネント（このコンポーネント）から親コンポーネントへ
     /// イベントを通知できます。選択されたユーザーIDを親に伝えます。
+    /// 【Issue #79対応】Identity IDはstring型のまま扱います。
     /// </summary>
     [Parameter]
-    public EventCallback<Guid?> OnMemberSelected { get; set; }
+    public EventCallback<string?> OnMemberSelected { get; set; }
 
     // ================================================================================
     // Fields
@@ -92,6 +93,7 @@
     /// 【データフィルタリングロジック】
     /// ASP.NET Core Identity UserManagerから全ユーザーを取得し、
     /// 既存メンバーを除外したリストを作成します。
+    /// 【Issue #79対応】Identity IDはstring型のまま扱います。
     /// </summary>
     private Task LoadAvailableUsersAsync()
     {
@@ -100,20 +102,17 @@
             // ASP.NET Core Identity: 全ユーザーを取得
             var allUsers = UserManager.Users.ToList();
 
-            // 既存メンバーのGUID一覧を作成
-            // 【F#型変換パターン】
-            // F# UserId型からC# Guid型への変換が必要です
-            // 注意: 現在の実装はTDD段階のため、簡易的な変換を使用しています
-            var existingUserIds = new HashSet<Guid>();
+            // 既存メンバーのID一覧を作成（string型）
+            // 【Issue #79対応】F# UserId型のItem（string）を直接使用
+            var existingUserIdStrings = new HashSet<string>();
             foreach (var memberId in ExistingMemberIds)
             {
-                // TODO: 実際のアプリケーションでは、UserIdからGuidへの適切な変換が必要
-                // 現在は簡易的にHashCodeを使用していますが、本番環境では改善が必要です
+                existingUserIdStrings.Add(memberId.Item);
             }
 
-            // 既存メンバーを除外
+            // 既存メンバーを除外（string比較）
             availableUsers = allUsers
-                .Where(u => !existingUserIds.Contains(Guid.Parse(u.Id)))
+                .Where(u => !existingUserIdStrings.Contains(u.Id))
                 .OrderBy(u => u.UserName)
                 .ToList();
         }
@@ -135,24 +134,13 @@
     /// 選択変更時の処理
     /// 【イベント駆動パターン】
     /// ユーザーがドロップダウンで選択を変更した際に、親コンポーネントに通知します。
+    /// 【Issue #79対応】Identity IDはstring型のまま親コンポーネントに通知します。
+    /// Guid.TryParse変換は不要になりました。
     /// </summary>
     private async Task OnSelectionChanged()
     {
-        if (string.IsNullOrEmpty(selectedUserId))
-        {
-            // 未選択の場合はnullを通知
-            await OnMemberSelected.InvokeAsync(null);
-        }
-        else if (Guid.TryParse(selectedUserId, out var userId))
-        {
-            // 有効なGUIDの場合は、そのIDを通知
-            await OnMemberSelected.InvokeAsync(userId);
-        }
-        else
-        {
-            // パースエラーの場合はnullを通知
-            await OnMemberSelected.InvokeAsync(null);
-        }
+        // Identity IDをstring型のまま通知（Guid変換不要）
+        await OnMemberSelected.InvokeAsync(string.IsNullOrEmpty(selectedUserId) ? null : selectedUserId);
     }
 }
 

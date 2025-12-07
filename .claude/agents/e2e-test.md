@@ -1,5 +1,6 @@
 ---
 name: e2e-test
+model: sonnet
 description: "TypeScript/Playwright Test E2E実装・Playwright Test Generator/Healer Agent活用・UIインタラクション・Blazor Server SignalR対応・playwright-e2e-patterns Skill活用の専門Agent"
 tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__get_symbols_overview, mcp__playwright__browser_navigate, mcp__playwright__browser_navigate_back, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_drag, mcp__playwright__browser_hover, mcp__playwright__browser_fill_form, mcp__playwright__browser_select_option, mcp__playwright__browser_type, mcp__playwright__browser_press_key, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_handle_dialog, mcp__playwright__browser_file_upload, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_tabs, mcp__playwright__browser_resize, mcp__playwright__browser_install, mcp__playwright__browser_close, Bash, Read, Write, Edit, MultiEdit
 ---

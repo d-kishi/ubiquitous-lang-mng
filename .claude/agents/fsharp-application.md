@@ -1,5 +1,6 @@
 ---
 name: fsharp-application
+model: sonnet
 description: "F#アプリケーションサービス・ユースケース実装・ドメインロジックオーケストレーションの専門Agent"
 tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash
 ---

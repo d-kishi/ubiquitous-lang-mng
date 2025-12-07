@@ -200,10 +200,10 @@ public class DomainRepository :
                     Description = FSharpOption<string>.get_IsSome(domain.Description.Value)
                         ? domain.Description.Value.Value
                         : null,
-                    OwnerId = domain.OwnerId.Value,  // Phase B1で追加されたOwnerId
+                    OwnerId = long.Parse(domain.OwnerId.Value),  // string → long変換（DB Entity型はlong）
                     IsDefault = domain.IsDefault,    // Phase B1で追加されたIsDefaultフラグ
                     CreatedAt = domain.CreatedAt,    // Phase B1で追加されたCreatedAt
-                    UpdatedBy = domain.OwnerId.Value.ToString(),  // long → string変換
+                    UpdatedBy = domain.OwnerId.Value,  // stringのまま使用（DB UpdatedBy型はstring）
                     UpdatedAt = DateTime.UtcNow,
                     IsActive = domain.IsActive,      // Phase B1で追加されたIsActive
                     IsDeleted = false
@@ -371,8 +371,8 @@ public class DomainRepository :
         // ProjectId: long → F# ProjectId
         var projectId = ProjectId.NewProjectId(entity.ProjectId);
 
-        // UserId: long → F# UserId
-        var ownerId = UserId.NewUserId(entity.OwnerId);
+        // UserId: long → F# UserId（string型に変更）
+        var ownerId = UserId.create(entity.OwnerId.ToString());
 
         // F# Domain レコード型を直接構築（IsDefaultフラグを正しく設定）
         // 【F#初学者向け解説】

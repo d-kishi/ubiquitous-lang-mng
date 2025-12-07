@@ -123,7 +123,7 @@ public static class TypeConverters
         catch (Exception ex) when (!(ex is ArgumentNullException))
         {
             _logger?.LogError(ex, "F# User→C# UserDTO変換で予期しないエラーが発生 UserId: {UserId}, ConversionTime: {ConversionTime}ms",
-                user?.Id?.Value ?? -1, stopwatch.ElapsedMilliseconds);
+                user?.Id?.Value ?? "unknown", stopwatch.ElapsedMilliseconds);
             throw;
         }
         finally
@@ -594,15 +594,15 @@ public static class TypeConverters
     // =================================================================
 
     /// <summary>
-    /// long型からF#のUserId判別共用体を作成
+    /// string型からF#のUserId判別共用体を作成
     /// </summary>
     /// <param name="id">ユーザーID</param>
     /// <returns>F#のResult型（成功時はUserId、失敗時はエラーメッセージ）</returns>
-    private static Microsoft.FSharp.Core.FSharpResult<UserId, string> CreateUserId(long id)
+    private static Microsoft.FSharp.Core.FSharpResult<UserId, string> CreateUserId(string id)
     {
-        if (id <= 0)
-            return Microsoft.FSharp.Core.FSharpResult<UserId, string>.NewError("ユーザーIDは正の値である必要があります");
-        return Microsoft.FSharp.Core.FSharpResult<UserId, string>.NewOk(UserId.NewUserId(id));
+        if (string.IsNullOrWhiteSpace(id))
+            return Microsoft.FSharp.Core.FSharpResult<UserId, string>.NewError("ユーザーIDは必須です");
+        return Microsoft.FSharp.Core.FSharpResult<UserId, string>.NewOk(UserId.create(id));
     }
 
     /// <summary>

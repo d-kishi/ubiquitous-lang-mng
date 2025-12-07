@@ -1,5 +1,6 @@
 ---
 name: code-review
+model: opus
 description: "コード品質保守性評価・Clean Architecture準拠確認・パフォーマンスセキュリティレビュー・ベストプラクティス適用の専門Agent"
 tools: mcp__serena__find_symbol, mcp__serena__get_symbols_overview, mcp__serena__find_referencing_symbols, Read, Edit, Grep, Bash
 ---

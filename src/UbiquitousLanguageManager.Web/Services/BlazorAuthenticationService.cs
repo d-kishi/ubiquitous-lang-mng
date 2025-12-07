@@ -136,7 +136,8 @@ public class BlazorAuthenticationService
                     passwordResult.ErrorValue);
             }
 
-            var userId = UserId.NewUserId(domainUserId.Value);
+            // 【Issue #79 根本修正】UserId型はstring型に変更されたため、ToString()で変換
+            var userId = UserId.NewUserId(domainUserId.Value.ToString());
 
             // Application層認証サービスへ委譲
             var result = await _authenticationService.ChangePasswordAsync(

@@ -12,13 +12,14 @@ namespace UbiquitousLanguageManager.Domain.Common
 // 🆔 識別子型: 型安全なIDの実装
 // 【F#初学者向け解説】
 // | (バーティカルライン) は判別共用体のケース定義です。
-// UserId型は内部的にint64を保持しますが、外部から見ると独立した型として扱われます。
+// UserId型は内部的にstring（GUID文字列）を保持しますが、外部から見ると独立した型として扱われます。
 // これを「Wrapper型」と呼び、型の誤用を防ぐ重要なパターンです。
+// ASP.NET Core IdentityのユーザーIDと直接連携するため、stringを使用します。
 
 type UserId =
-    | UserId of int64
+    | UserId of string
 with
-    // Valueプロパティ: 内部のint64値を取得
+    // Valueプロパティ: 内部のstring値を取得
     // 【F#初学者向け解説】
     // パターンマッチングで内部値を取り出します。
     // let (UserId id) = this は「分解（Deconstruction）」と呼ばれる操作です。
@@ -26,8 +27,8 @@ with
         let (UserId id) = this
         id
 
-    // 静的ファクトリーメソッド: int64からUserIdを作成
-    static member create(id: int64) = UserId id
+    // 静的ファクトリーメソッド: stringからUserIdを作成
+    static member create(id: string) = UserId id
 
 type ProjectId =
     | ProjectId of int64

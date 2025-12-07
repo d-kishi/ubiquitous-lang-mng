@@ -47,7 +47,7 @@ public class DomainDto
     /// <summary>
     /// 最終更新者ID
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 
     /// <summary>
     /// 所属プロジェクト情報（参照用）
@@ -94,7 +94,7 @@ public class CreateDomainDto
     /// <summary>
     /// 作成者ID
     /// </summary>
-    public long CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -131,5 +131,5 @@ public class UpdateDomainDto
     /// <summary>
     /// 更新者ID
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 }

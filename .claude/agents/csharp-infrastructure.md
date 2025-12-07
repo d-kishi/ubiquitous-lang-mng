@@ -1,5 +1,6 @@
 ---
 name: csharp-infrastructure
+model: sonnet
 description: "Entity Framework Repository実装・データベースアクセス・外部サービス連携・インフラ設定の専門Agent"
 tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__get_symbols_overview, mcp__serena__find_referencing_symbols, Read, Write, Edit, MultiEdit, Bash
 ---

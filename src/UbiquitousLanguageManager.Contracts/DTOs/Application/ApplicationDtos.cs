@@ -51,8 +51,7 @@ public class CreateProjectCommandDto
     /// F# UserId判別共用体に変換される
     /// </summary>
     [Required]
-    [Range(1, long.MaxValue, ErrorMessage = "有効な所有者IDを指定してください")]
-    public long OwnerId { get; set; }
+    public string OwnerId { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -83,8 +82,7 @@ public class UpdateProjectCommandDto
     /// F# UserId判別共用体に変換される
     /// </summary>
     [Required]
-    [Range(1, long.MaxValue, ErrorMessage = "有効なユーザーIDを指定してください")]
-    public long UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -106,8 +104,7 @@ public class DeleteProjectCommandDto
     /// F# UserId判別共用体に変換される
     /// </summary>
     [Required]
-    [Range(1, long.MaxValue, ErrorMessage = "有効なユーザーIDを指定してください")]
-    public long UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// 削除理由（オプション）
@@ -134,8 +131,7 @@ public class GetProjectsQueryDto
     /// F# UserId判別共用体に変換される
     /// </summary>
     [Required]
-    [Range(1, long.MaxValue, ErrorMessage = "有効なユーザーIDを指定してください")]
-    public long UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     /// <summary>
     /// 要求者ユーザーロール（権限フィルタリング用）

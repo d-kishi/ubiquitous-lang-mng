@@ -37,7 +37,7 @@ public class ProjectDto
     /// プロジェクト所有者ID
     /// F# UserId判別共用体からの変換値（Phase B1で追加）
     /// </summary>
-    public long OwnerId { get; set; }
+    public string OwnerId { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成日時（UTC）
@@ -55,7 +55,7 @@ public class ProjectDto
     /// 最終更新者ID
     /// F# UserId判別共用体からの変換値
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 
     /// <summary>
     /// アクティブ状態フラグ
@@ -102,7 +102,7 @@ public class CreateProjectCommand
     /// プロジェクト所有者ID
     /// F# UserId判別共用体に変換される
     /// </summary>
-    public long OwnerId { get; set; }
+    public string OwnerId { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -139,7 +139,7 @@ public class UpdateProjectDto
     /// <summary>
     /// 更新者ID
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 }
 
 /// <summary>

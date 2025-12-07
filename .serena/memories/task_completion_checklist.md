@@ -73,10 +73,12 @@ ${1}2025-11-18（**Phase B-F2完了・品質スコア85%達成・次回Phase B3�
   - [x] Stage 1-6: UI実装・bUnitテスト・修正完了
   - [x] Stage 7: Index.razor動作確認 9/9項目完了
   - [~] Stage 7: Create/Edit.razor動作確認中 → Issue #79発見で一時中断
-  - [!] **Issue #79: ID体系統一リファクタリング**（約20-25h・次回セッション対応）
-    - 根本原因: ASP.NET Core Identity ID（string）vs F# UserId（long）の二重体系
-    - InitialDataの人間可読ID（admin-001等）がGUID前提コードと不整合
-    - 影響範囲: 認証・ユーザー管理・プロジェクト管理全体（40+箇所）
+  - [~] **Issue #79: ID体系統一リファクタリング**（進行中・約20-27h・35%完了）
+    - [x] Step 1: 準備（現状分析・設計）
+    - [x] Step 2: Domain層ID型変更（int64→string・13箇所）
+    - [x] Step 3: Application層対応（GetHashCode排除41箇所）
+    - [ ] Step 4: Infrastructure層修正（次回セッション）
+    - [ ] Step 5-8: Contracts/Web層、InitialData、テスト、ドキュメント
     - 対応後: Stage 7 Create/Edit確認再開 → Stage 8 E2Eテスト
   - [ ] **Step2: Phase A対応漏れ（認証補助機能UI）**（5-8h）
     - プロフィール変更・パスワードリセット送信・実行画面実装

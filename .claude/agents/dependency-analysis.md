@@ -1,5 +1,6 @@
 ---
 name: dependency-analysis
+model: sonnet
 description: "技術的依存関係の特定・実装順序決定・依存関係制約リスク分析の専門Agent"
 tools: mcp__serena__find_referencing_symbols, mcp__serena__find_symbol, Grep, Read, Bash
 ---

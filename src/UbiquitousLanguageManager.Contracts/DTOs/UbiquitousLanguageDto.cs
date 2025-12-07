@@ -55,7 +55,7 @@ public class UbiquitousLanguageDto
     /// <summary>
     /// 最終更新者ID
     /// </summary>
-    public long UpdatedBy { get; set; }
+    public string UpdatedBy { get; set; } = string.Empty;
 
     /// <summary>
     /// 承認日時（正式版のみ）
@@ -65,7 +65,7 @@ public class UbiquitousLanguageDto
     /// <summary>
     /// 承認者ID（正式版のみ）
     /// </summary>
-    public long? ApprovedBy { get; set; }
+    public string? ApprovedBy { get; set; }
 }
 
 /// <summary>
@@ -104,7 +104,7 @@ public class CreateUbiquitousLanguageDto
     /// <summary>
     /// 作成者ID
     /// </summary>
-    public long CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 /// <summary>

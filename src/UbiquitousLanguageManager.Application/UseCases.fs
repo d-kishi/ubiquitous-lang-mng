@@ -59,7 +59,7 @@ type RegisterUserCommand = {
     Email: string
     Name: string
     Role: string
-    CreatedBy: int64
+    CreatedBy: string
 }
 
 // C#からのアクセス用ファクトリメソッド
@@ -86,7 +86,7 @@ module LoginCommand =
 
 // パスワード変更コマンド: セキュリティポリシー適用
 type ChangePasswordCommand = {
-    UserId: int64
+    UserId: string
     OldPassword: string
     NewPassword: string
     ConfirmPassword: string
@@ -107,20 +107,20 @@ type CreateUbiquitousLanguageCommand = {
     JapaneseName: string
     EnglishName: string
     Description: string
-    CreatedBy: int64
+    CreatedBy: string
 }
 
 // 承認申請コマンド: ワークフロー開始処理用
 type SubmitForApprovalCommand = {
     UbiquitousLanguageId: int64
-    SubmittedBy: int64
+    SubmittedBy: string
     Comment: string option // 申請時のコメント（オプション）
 }
 
 // 承認処理コマンド: 承認者による最終決定用
 type ApprovalCommand = {
     UbiquitousLanguageId: int64
-    ApprovedBy: int64
+    ApprovedBy: string
     ApprovalComment: string option // 承認時のコメント（オプション）
     IsApproved: bool // true: 承認, false: 却下
 }
@@ -198,7 +198,7 @@ type UserManagementUseCase(userAppService: UserApplicationService) =
                 | Error err -> return UseCaseResult.validationError [("NewPassword", err)]
                 | Ok password ->
                     let systemAdmin = User.createSystemAdmin() // 仮のシステム管理者
-                    let! result = userAppService.ChangePasswordAsync(UserId command.UserId, command.OldPassword, password, systemAdmin)
+                    let! result = userAppService.ChangePasswordAsync(UserId(command.UserId), command.OldPassword, password, systemAdmin)
                     return UseCaseResult.fromResult result
         }
 
@@ -218,11 +218,11 @@ type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: Ubiquitou
             | Ok japaneseName, Ok englishName, Ok description ->
                 // ✅ 検証成功: ドメイン処理実行
                 let! result = ubiquitousLanguageAppService.CreateDraftAsync(
-                    DomainId command.DomainId, 
-                    japaneseName, 
-                    englishName, 
-                    description, 
-                    UserId command.CreatedBy)
+                    DomainId command.DomainId,
+                    japaneseName,
+                    englishName,
+                    description,
+                    UserId(command.CreatedBy))
                 return UseCaseResult.fromResult result
                 
             | _ ->
@@ -244,7 +244,7 @@ type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: Ubiquitou
             // 🎯 承認申請の実行: ID変換とドメイン処理
             let! result = ubiquitousLanguageAppService.SubmitForApprovalAsync(
                 UbiquitousLanguageId command.UbiquitousLanguageId,
-                UserId command.SubmittedBy)
+                UserId(command.SubmittedBy))
             return UseCaseResult.fromResult result
         }
     
@@ -255,7 +255,7 @@ type UbiquitousLanguageManagementUseCase(ubiquitousLanguageAppService: Ubiquitou
                 // ✅ 承認処理の実行
                 let! result = ubiquitousLanguageAppService.ApproveAsync(
                     UbiquitousLanguageId command.UbiquitousLanguageId,
-                    UserId command.ApprovedBy)
+                    UserId(command.ApprovedBy))
                 return UseCaseResult.fromResult result
             else
                 // ❌ 却下処理（今後実装予定）

@@ -169,7 +169,7 @@
     /// <summary>
     /// 現在のユーザーID
     /// </summary>
-    private Guid currentUserId;
+    private string currentUserId = string.Empty;
 
     /// <summary>
     /// コンポーネント初期化
@@ -182,9 +182,9 @@
         var user = authState.User;
 
         var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
-        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        if (userIdClaim != null)
         {
-            currentUserId = userId;
+            currentUserId = userIdClaim;
         }
     }
 

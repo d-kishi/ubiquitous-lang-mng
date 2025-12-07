@@ -591,12 +591,13 @@
 
             // 【Blazor初学者向け解説】
             // F# Application層のGetProjectsQuery型を構築します。
-            // UserId: Guid型で渡す（ASP.NET Core Identity IDをGuid.Parseで変換）
+            // UserId: string型で渡す（ASP.NET Core Identity IDをそのまま使用）
             // UserRole: F#のRole型（string→Role変換が必要）
             // SearchKeyword: F#のOption型（Microsoft.FSharp.Core.FSharpOption.None）
 
-            // ASP.NET Core Identity ID（文字列）をGuidに変換（失敗時はGuid.Emptyで継続）
-            var userGuid = Guid.TryParse(identityIdClaim.Value, out var guid) ? guid : Guid.Empty;
+            // 【Issue #79 根本修正】ASP.NET Core Identity IDはstring型のまま使用
+            // Guid変換は不要（GetProjectsQueryがstring型Identity IDを受け取るため）
+            var operatorUserId = identityIdClaim.Value ?? string.Empty;
 
             // Role文字列をF# Role型に変換
             var userRole = roleClaim.Value switch
@@ -613,7 +614,7 @@
             // F#レコードはC#からは位置引数で構築します。
             // パラメータ順序: UserId, UserRole, PageNumber, PageSize, IncludeInactive, SearchKeyword
             var query = new GetProjectsQuery(
-                userGuid,       // UserId: Guid
+                operatorUserId, // UserId: string（ASP.NET Core Identity ID）
                 userRole,       // UserRole: Role
                 1,              // PageNumber: int
                 100,            // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）
@@ -799,7 +800,8 @@
             // 【Blazor初学者向け解説】
             // F# UserId型の生成
             // modelに保存されているUserIdを使用（LoadUserAsyncで設定済み）
-            if (!long.TryParse(model.UserId, out var userId))
+            // 【Issue #79 根本修正】UserId型はstring型に変更されたため、TryParseは不要
+            if (string.IsNullOrEmpty(model.UserId))
             {
                 passwordResetError = "ユーザーIDが無効です";
                 isResettingPassword = false;
@@ -807,7 +809,7 @@
                 return;
             }
 
-            var targetId = UserId.NewUserId(userId);
+            var targetId = UserId.NewUserId(model.UserId);
 
             // 【Blazor初学者向け解説】
             // IUserManagementService.ResetPasswordAsyncを呼び出します。

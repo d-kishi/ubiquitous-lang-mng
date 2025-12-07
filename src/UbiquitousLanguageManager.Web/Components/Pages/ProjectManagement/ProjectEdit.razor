@@ -238,7 +238,7 @@
     /// <summary>
     /// 現在のユーザーID
     /// </summary>
-    private Guid currentUserId;
+    private string currentUserId = string.Empty;
 
     /// <summary>
     /// 現在のユーザーロール
@@ -272,9 +272,9 @@
         var user = authState.User;
 
         var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
-        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        if (userIdClaim != null)
         {
-            currentUserId = userId;
+            currentUserId = userIdClaim;
         }
 
         var roleClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Role);
@@ -341,7 +341,7 @@
                     UpdatedAt = p.UpdatedAt != null && FSharpOption<DateTime>.get_IsSome(p.UpdatedAt)
                         ? p.UpdatedAt.Value
                         : (DateTime?)null,
-                    UpdatedBy = 0,  // F# Projectエンティティには存在しないプロパティ（Phase B1では未実装）
+                    UpdatedBy = "0",  // F# Projectエンティティには存在しないプロパティ（Phase B1では未実装）
                     IsActive = p.IsActive,
                     Domains = new List<DomainDto>(), // Phase B1では簡易実装
                     MemberCount = detailResult.UserCount

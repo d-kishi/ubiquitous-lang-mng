@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-**最終更新**: 2025-12-07（**Phase B-F3 Step1.5 Stage4 Step 7動作確認中 - Issue #79（ID体系統一リファクタリング）作成・次回対応**）
+**最終更新**: 2025-12-07（**Phase Issue79 Step 9.5完了・恒久化成果物作成**）
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -17,24 +17,30 @@
 
 ### 現在のPhase/Step状況
 
-🔄 **Phase B-F3 Step1.5 Stage4作業中**（Web層リファクタ・動作確認中）
-- **状態**: Step1.5 Stage4 Step 1-6完了、Step 7動作確認3/25項目完了
-- **Phase目的**: Phase A完全完成（25% → 100%） + Phase B完全完成（100%） + ユーザー動作確認
-- **Phase構成**: Part 1（Step1→Step1.5→Step2-4: 前提タスク対処）+ Part 2（Step5-10: Phase B機能完成）
-- **推定期間**: 32-51.5h + α（9-12セッション）※Step1.5追加で6-10h増加
-- **Step1.5 Stage4進捗**（2025-12-03）:
-  - ✅ Step 1-6完了（Application/Infrastructure/Web層リファクタ、ビルド0 Error、UI設計書修正）
-  - ✅ バグ修正: 「削除済み表示」チェックボックス（Global Query Filter問題→IgnoreQueryFilters対処）
-  - ✅ バグ修正: GetHashCode()問題解決（IdentityId追加・9ファイル修正・削除機能正常化）
-  - 🔄 Step 7動作確認: Index.razor 9/9項目完了、Create.razor 0/7項目、Edit.razor 0/9項目
+🔄 **Phase Issue79実施中**（ID体系統一リファクタリング）
+- **状態**: Step 10完了（2025-12-08）、Step 11準備中
+- **累積達成率**: 70%
+- **Phase目的**: ID体系統一（GetHashCode排除 + InitialData GUID化）
+- **Phase構成**: 7 Step構成（約20-25h・3-4セッション）
+- **進捗**（2025-12-07 ぶっ通し対応完了）:
+  - ✅ Step 1完了: 準備（現状分析・設計）
+  - ❌ Step 2-5失敗: 全ID型string化（リバート・教訓記録）
+  - ✅ Step 6完了: Domain層UserId型変更
+  - ✅ Step 7完了: Application層対応
+  - ✅ Step 8完了: Infrastructure層修正
+  - ✅ Step 9完了: Contracts層修正（16ファイル・ぶっ通し対応）
+  - ✅ Step 9.5完了: プロセス改善（層間影響分析プロセス恒久化）
+  - ✅ Step 10完了: Web層修正（23エラー解消・Guid.TryParse/long.TryParse削除）
+  - 📋 Step 11-13: 未着手
+- **関連Issue**: [GitHub Issue #79](https://github.com/d-kishi/ubiquitous-lang-mng/issues/79)
+- **組織設計ファイル**: `Doc/08_Organization/Active/Phase_Issue79/`
+- **次回**: Step 11（InitialData対応）開始 - step-startコマンドから
+- **重要**: CLAUDE.mdにProject-Specific Constitution追加済み（プロセス違反対策）
+
+⏸️ **Phase B-F3 Step1.5 Stage4一時停止**（Issue #79対応完了まで）
+- **状態**: Step1.5 Stage4 Step 7動作確認3/25項目完了で中断
+- **再開条件**: Phase Issue79 Step 6（テスト・検証）完了後
 - **Issue #77,78**: 実装完了・クローズ済み
-- **Issue #79**: ID体系統一リファクタリング（約20-25h）作成済み・次回対応
-  - 根本原因: ASP.NET Core Identity ID（string）vs F# UserId（long）の二重体系
-  - InitialDataの人間可読ID（admin-001等）がGUID前提コードと不整合
-  - 影響範囲: 認証・ユーザー管理・プロジェクト管理全体（40+箇所）
-- **次回**: Issue #79対応（ID体系統一リファクタリング実施）
-- **次々回**: Stage4 Step 7再実施（全機能再確認）→ Stage5テスト
-- **読込推奨**: GitHub Issue #79、`Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md`（3.6-3.8章）
 
 ### Phase完了状況（サマリ）
 
@@ -175,3 +181,14 @@
 ---
 
 **最終更新**: 2025-12-02（Step1.5 Stage4作業中・動作確認3/25項目完了）
+
+---
+## 2025-12-07 セッション引き継ぎ
+
+### 前回セッション成果（2025-12-07）
+- ✅ Step 8完了承認取得
+- ✅ Step 9完了: Contracts層UserId型統一（16ファイル修正）
+- ✅ Step 9.5完了: プロセス改善（層間影響分析プロセス恒久化）
+
+### 次回セッション作業
+- **Step 10開始**: Web層修正（22エラー解消）- step-startコマンドから

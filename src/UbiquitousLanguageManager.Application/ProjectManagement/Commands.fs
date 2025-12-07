@@ -19,8 +19,8 @@ open UbiquitousLanguageManager.Domain.UbiquitousLanguageManagement  // (使用�
 type CreateProjectCommand = {
     Name: string                    // プロジェクト名（Smart Constructor適用前の生値）
     Description: string option      // プロジェクト説明（任意項目）
-    OwnerId: Guid                  // プロジェクト所有者ID
-    OperatorUserId: Guid           // 操作実行者ID（権限チェック用）
+    OwnerId: string                // プロジェクト所有者ID
+    OperatorUserId: string         // 操作実行者ID（権限チェック用）
 } with
     // 🔧 Smart Constructorパターン: 型安全な変換処理
     // 【F#初学者向け解説】
@@ -36,8 +36,8 @@ type CreateProjectCommand = {
             | Error err -> Error $"プロジェクト説明エラー: {err}"
             | Ok projectDescription ->
                 // ID変換: UserId型への変換
-                let ownerId = UserId(int64(this.OwnerId.GetHashCode()))  // TDD: 一時的な変換
-                let operatorId = UserId(int64(this.OperatorUserId.GetHashCode()))
+                let ownerId = UserId this.OwnerId
+                let operatorId = UserId this.OperatorUserId
                 Ok (projectName, projectDescription, ownerId, operatorId)
 
 // 📝 プロジェクト編集Command
@@ -45,7 +45,7 @@ type CreateProjectCommand = {
 type UpdateProjectCommand = {
     ProjectId: Guid                // 更新対象プロジェクトID
     Description: string option     // 新しいプロジェクト説明
-    OperatorUserId: Guid          // 操作実行者ID（権限チェック用）
+    OperatorUserId: string        // 操作実行者ID（権限チェック用）
 } with
     // 🔧 Domain型変換: 権限チェック統合
     member this.toDomainTypes() : Result<ProjectId * ProjectDescription * UserId, string> =
@@ -53,37 +53,37 @@ type UpdateProjectCommand = {
         match ProjectDescription.create this.Description with
         | Error err -> Error $"プロジェクト説明エラー: {err}"
         | Ok projectDescription ->
-            let operatorId = UserId(int64(this.OperatorUserId.GetHashCode()))
+            let operatorId = UserId this.OperatorUserId
             Ok (projectId, projectDescription, operatorId)
 
 // 🗑️ プロジェクト削除Command
 // REQ-3.1.4準拠: 論理削除・関連データ影響確認・スーパーユーザーのみ
 type DeleteProjectCommand = {
     ProjectId: Guid                // 削除対象プロジェクトID
-    OperatorUserId: Guid          // 操作実行者ID（スーパーユーザー権限必須）
+    OperatorUserId: string        // 操作実行者ID（スーパーユーザー権限必須）
     ConfirmRelatedDataDeletion: bool  // 関連データ削除確認フラグ
 } with
     member this.toDomainTypes() : ProjectId * UserId =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.OperatorUserId.GetHashCode())))
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.OperatorUserId)
 
 // 👤 プロジェクト所有者変更Command
 // プロジェクト所有権の移譲処理
 type ChangeProjectOwnerCommand = {
     ProjectId: Guid                // 対象プロジェクトID
-    NewOwnerId: Guid              // 新しい所有者ID
-    OperatorUserId: Guid          // 操作実行者ID
+    NewOwnerId: string            // 新しい所有者ID
+    OperatorUserId: string        // 操作実行者ID
 } with
     member this.toDomainTypes() : ProjectId * UserId * UserId =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.NewOwnerId.GetHashCode())), UserId(int64(this.OperatorUserId.GetHashCode())))
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.NewOwnerId, UserId this.OperatorUserId)
 
 // ✅ プロジェクト有効化Command
 // 論理削除されたプロジェクトの再有効化
 type ActivateProjectCommand = {
     ProjectId: Guid                // 有効化対象プロジェクトID
-    OperatorUserId: Guid          // 操作実行者ID
+    OperatorUserId: string        // 操作実行者ID
 } with
     member this.toDomainTypes() : ProjectId * UserId =
-        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId(int64(this.OperatorUserId.GetHashCode())))
+        (ProjectId(int64(this.ProjectId.GetHashCode())), UserId this.OperatorUserId)
 
 // 🎯 プロジェクト作成結果DTO
 // 【F#初学者向け解説】
@@ -111,11 +111,11 @@ type ActivateCommandResult = CommandResult<Project>
 // 📊 プロジェクト統計情報Command
 // ビジネスインテリジェンス機能の一部
 type GetProjectStatisticsCommand = {
-    OperatorUserId: Guid          // 統計情報要求者ID
+    OperatorUserId: string        // 統計情報要求者ID
     IncludeInactiveProjects: bool // 非アクティブプロジェクト含有フラグ
 } with
     member this.toDomainTypes() : UserId =
-        UserId(int64(this.OperatorUserId.GetHashCode()))
+        UserId this.OperatorUserId
 
 // 👥 Phase B2: UserProjects多対多関連管理Command
 
@@ -126,18 +126,18 @@ type GetProjectStatisticsCommand = {
 // - SuperUser/ProjectManager権限のみ実行可能
 type AddMemberToProjectCommand = {
     ProjectId: Guid               // 対象プロジェクトID
-    UserId: Guid                 // 追加するユーザーID
-    OperatorUserId: Guid         // 操作実行者ID（権限チェック用）
+    UserId: string               // 追加するユーザーID
+    OperatorUserId: string       // 操作実行者ID（権限チェック用）
     OperatorRole: Role           // 操作実行者ロール（権限チェック用）
 } with
     // 🔧 Domain型変換
     // 【F#初学者向け解説】
-    // Command レコードの生値（Guid型）をF# Domain層の型に変換します。
+    // Command レコードの生値をF# Domain層の型に変換します。
     // Result型により、変換エラーを安全に処理します。
     member this.toDomainTypes() : Result<ProjectId * UserId * UserId * Role, string> =
         let projectId = ProjectId(int64(this.ProjectId.GetHashCode()))
-        let userId = UserId(int64(this.UserId.GetHashCode()))
-        let operatorId = UserId(int64(this.OperatorUserId.GetHashCode()))
+        let userId = UserId this.UserId
+        let operatorId = UserId this.OperatorUserId
         Ok (projectId, userId, operatorId, this.OperatorRole)
 
 // プロジェクトメンバー削除Command
@@ -147,15 +147,15 @@ type AddMemberToProjectCommand = {
 // - SuperUser/ProjectManager権限のみ実行可能
 type RemoveMemberFromProjectCommand = {
     ProjectId: Guid               // 対象プロジェクトID
-    UserId: Guid                 // 削除するユーザーID
-    OperatorUserId: Guid         // 操作実行者ID（権限チェック用）
+    UserId: string               // 削除するユーザーID
+    OperatorUserId: string       // 操作実行者ID（権限チェック用）
     OperatorRole: Role           // 操作実行者ロール（権限チェック用）
 } with
     // 🔧 Domain型変換
     member this.toDomainTypes() : Result<ProjectId * UserId * UserId * Role, string> =
         let projectId = ProjectId(int64(this.ProjectId.GetHashCode()))
-        let userId = UserId(int64(this.UserId.GetHashCode()))
-        let operatorId = UserId(int64(this.OperatorUserId.GetHashCode()))
+        let userId = UserId this.UserId
+        let operatorId = UserId this.OperatorUserId
         Ok (projectId, userId, operatorId, this.OperatorRole)
 
 // 🎯 Command結果型追加

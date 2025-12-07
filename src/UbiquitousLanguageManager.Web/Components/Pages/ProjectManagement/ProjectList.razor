@@ -277,7 +277,7 @@
     private string deleteConfirmMessage = "";
 
     // 認証状態
-    private Guid currentUserId;
+    private string currentUserId = string.Empty;
     private Role currentUserRole = Role.GeneralUser;  // デフォルト値設定
 
     /// <summary>
@@ -294,9 +294,9 @@
 
         // ユーザーID取得（Claim from Identity）
         var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst("id")?.Value;
-        if (userIdClaim != null && Guid.TryParse(userIdClaim, out var userId))
+        if (userIdClaim != null)
         {
-            currentUserId = userId;
+            currentUserId = userIdClaim;
         }
 
         // ユーザーロール取得
@@ -372,7 +372,7 @@
                         UpdatedAt = p.UpdatedAt != null && FSharpOption<DateTime>.get_IsSome(p.UpdatedAt)
                             ? p.UpdatedAt.Value
                             : (DateTime?)null,
-                        UpdatedBy = 0,  // F# Projectエンティティには存在しないプロパティ（Phase B1では未実装）
+                        UpdatedBy = "0",  // F# Projectエンティティには存在しないプロパティ（Phase B1では未実装）
                         IsActive = p.IsActive,
                         Domains = new List<DomainDto>(), // Phase B1では簡易実装
                         MemberCount = 0 // Phase B2で実装
