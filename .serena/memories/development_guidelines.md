@@ -12,6 +12,21 @@
 
 **詳細**: `.serena/memories/tech_stack_and_conventions.md` 参照
 
+### 🔴 新規Skill追加時の必須手順
+
+**原則**: 新規Skill追加時はHooks再ビルド必須（skills-triggers.json更新のため）
+
+**手順**:
+1. `.claude/skills/{skill-name}/SKILL.md` 作成（descriptionに「」でトリガーキーワード記載）
+2. Windowsホスト環境で `cd .claude/hooks && npm run build` 実行
+3. `skills-triggers.json` に新規Skillが追加されていることを確認
+
+**例**: 新規Skill "foo-bar" 追加時 → SKILL.md作成後、Hooks再ビルド実行
+
+**注意**: DevContainerではなくWindowsホスト環境で実行すること
+
+**詳細**: `CLAUDE.md` - 新規Skill追加時の必須手順 + `.claude/hooks/README.md` 参照
+
 ---
 
 ## 📋 ADR vs Agent Skills判断基準

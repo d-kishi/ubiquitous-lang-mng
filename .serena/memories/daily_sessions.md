@@ -1,5 +1,51 @@
 # Daily Sessions
 
+## 2025-12-09（月）
+
+### セッション1: Skills自動発動改善（B+C両対応実装）
+
+**Phase**: Phase B-F3（継続セッション）
+**目的達成度**: 100%
+
+**実施内容**:
+1. **Skills Triggers自動生成機能実装（B+C両対応）**
+   - `generate-triggers.ts`新規作成: SKILL.mdから「」キーワード自動抽出
+   - `skills-triggers.json`自動生成: 12 Skills登録
+   - `index.ts`修正: ハードコード→JSON動的読み込み
+   - CRLF問題解決: Windows環境でのfrontmatter解析正規化
+
+2. **ドキュメント整備**
+   - CLAUDE.md: 「新規Skill追加時の必須手順」セクション追加
+   - Serenaメモリー: development_guidelines更新
+   - README.md: B+Cアーキテクチャ・ワークアラウンド明記
+
+3. **ワークアラウンド位置づけ明記**
+   - README.md: Issue #9716修正時に削除可能と明記
+   - GitHub Issue #81: コメント追加（削除判断基準記載）
+
+4. **ユーザー説明**
+   - Forced eval hook（Skills強制評価フック）の仕組み説明
+   - Hooks自動実行の仕組み説明
+   - ワークアラウンドとしての位置づけ確認
+
+**作成・更新ファイル**:
+- `.claude/hooks/scripts/generate-triggers.ts`（新規）
+- `.claude/hooks/skills-triggers.json`（自動生成）
+- `.claude/hooks/src/index.ts`（更新）
+- `.claude/hooks/package.json`（更新）
+- `.claude/hooks/README.md`（更新）
+- `CLAUDE.md`（更新）
+
+**技術的知見**:
+- CRLF問題: YAML frontmatter解析時、`\r\n`→`\n`正規化必須
+- Forced eval hook: Claude Code Issue #9716のワークアラウンド
+- Hooks自動実行: UserPromptSubmit Hookはメッセージ送信時に自動実行
+
+**次回セッション予定**:
+- Phase B-F3 Step 12開始（step-start Command）
+
+---
+
 ## 2025-12-08（日）
 
 ### セッション1: Phase Issue79 Step 11完了

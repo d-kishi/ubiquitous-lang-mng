@@ -1,6 +1,6 @@
 ---
 name: db-schema-management
-description: EF Migrationsによるデータベーススキーマ変更の実装パターンをガイド。新規テーブル追加・列変更・CHECK制約追加・データベース設計書同期時に使用。
+description: EF Migrationsでデータベーススキーマを変更する。「テーブル追加」「列変更」「マイグレーション作成」「CHECK制約追加」「データベース設計書更新」の際に使用する。
 allowed-tools: Read, Edit, Bash
 ---
 

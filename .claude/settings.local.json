@@ -1,4 +1,16 @@
 {
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/dist/index.js userPromptSubmit"
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Read(./**)",
@@ -71,25 +83,16 @@
       "Bash(Select-Object -Last:*)",
       "Bash(Select-String -Pattern:*)",
       "WebFetch(domain:bunit.dev)",
-      "WebFetch(domain:gsscoder.github.io)",
       "WebFetch(domain:playwright.dev)",
-      "WebFetch(domain:chrisdunderdale.medium.com)",
       "WebFetch(domain:gist.github.com)",
       "SlashCommand(/:*)",
       "WebFetch(domain:docs.github.com)",
       "WebFetch(domain:devblogs.microsoft.com)",
-      "WebFetch(domain:gor-grigoryan.medium.com)",
       "WebFetch(domain:www.anthropic.com)",
-      "WebFetch(domain:www.datacamp.com)",
       "Bash(python:*)",
       "WebFetch(domain:developer.microsoft.com)",
       "WebFetch(domain:dev.to)",
-      "WebFetch(domain:www.ministryoftesting.com)",
-      "WebFetch(domain:bug0.com)",
-      "WebFetch(domain:til.simonwillison.net)",
-      "WebFetch(domain:www.checklyhq.com)",
       "WebFetch(domain:claudelog.com)",
-      "WebFetch(domain:medium.com)",
       "Bash(claude mcp add:*)",
       "Bash(move Doc07_DecisionsADR_010_実装規約.md Doc07_Decisionsbackup )",
       "Bash(move Doc07_DecisionsADR_019_namespace設計規約.md Doc07_Decisionsbackup)",
@@ -115,7 +118,6 @@
       "Bash(node --version:*)",
       "Bash(docker --version:*)",
       "Bash(docker logs:*)",
-      "WebFetch(domain:www.marcusturewicz.com)",
       "WebFetch(domain:code.claude.com)",
       "Bash(env)",
       "Bash(tasklist:*)",
@@ -130,7 +132,10 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_take_screenshot",
-      "Skill"
+      "Skill",
+      "Bash(npx tsc)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:docs.claude.com)"
     ],
     "deny": [],
     "ask": [],

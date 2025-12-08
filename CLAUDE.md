@@ -194,6 +194,24 @@ ADRとAgent Skillsの使い分けについては、以下のガイドライン�
 - Skills一覧: `.claude/skills/README.md`
 - 効果測定: `Doc/08_Organization/Active/AgentSkills_Phase1_効果測定.md`
 
+### 🔴 新規Skill追加時の必須手順
+
+**重要**: 新規Skillを追加した場合、以下の手順を必ず実行すること。
+
+1. **SKILL.md作成**: `.claude/skills/{skill-name}/SKILL.md`
+   - descriptionに「」でトリガーキーワードを記載（例: 「技術決定」「設計判断」）
+
+2. **Hooks再ビルド（Windowsホスト環境で実行）**:
+   ```bash
+   cd .claude/hooks && npm run build
+   ```
+
+3. **確認**: `skills-triggers.json`に新規Skillが追加されていることを確認
+
+**理由**: Skills自動発動Hookがdescriptionの「」内キーワードを使用してSkills評価を行うため、ビルドしないと新規Skillが認識されない。
+
+**参照**: GitHub Issue #81、`.claude/hooks/README.md`
+
 ---
 
 ## 実装指針

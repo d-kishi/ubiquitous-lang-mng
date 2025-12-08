@@ -1,6 +1,6 @@
 ---
 name: subagent-patterns
-description: SubAgent組み合わせパターン・選択ロジック提供。14種類のAgent定義・選択原則・Phase特性別組み合わせパターン・SubAgent責務境界判定・並列実行判断ロジック。Step開始時のSubAgent選択に使用。
+description: SubAgentを選択・組み合わせる。「Step開始」「Agent選択」「SubAgent責務判定」「並列実行判断」の際に使用する。
 allowed-tools: Read, Grep
 ---
 

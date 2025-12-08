@@ -1,0 +1,134 @@
+{
+  "generatedAt": "2025-12-08T15:08:10.348Z",
+  "skills": [
+    {
+      "name": "adr-knowledge-base",
+      "triggers": [
+        "技術決定",
+        "設計判断",
+        "ADR確認",
+        "アーキテクチャ選定"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "clean-architecture-guardian",
+      "triggers": [
+        "新規クラス作成",
+        "namespace変更",
+        "プロジェクト参照変更",
+        "リファクタリング",
+        "Step完了",
+        "ビルドエラー"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "db-schema-management",
+      "triggers": [
+        "テーブル追加",
+        "列変更",
+        "マイグレーション作成",
+        "CHECK制約追加",
+        "データベース設計書更新"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "devcontainer-web-app",
+      "triggers": [
+        "アプリ起動",
+        "動作確認",
+        "画面確認",
+        "ログイン確認",
+        "UI確認"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "fsharp-csharp-bridge",
+      "triggers": [
+        "F#↔C#境界実装",
+        "型変換エラー",
+        "Option/Result型変換",
+        "Contracts層実装"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "github-issues-management",
+      "triggers": [
+        "Issue作成",
+        "技術的負債記録",
+        "バグ報告",
+        "課題管理",
+        "ラベル設定"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "playwright-e2e-patterns",
+      "triggers": [
+        "E2Eテスト実装",
+        "data-testid設計",
+        "Blazor Server対応",
+        "SignalR待機",
+        "ログインフロー"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "playwright-ui-verification",
+      "triggers": [
+        "画面確認",
+        "UI確認",
+        "デザイン確認",
+        "バグ調査",
+        "動作検証",
+        "スクリーンショット取得"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "spec-compliance-auto",
+      "triggers": [
+        "新機能実装",
+        "仕様確認",
+        "仕様書参照",
+        "要件検証",
+        "仕様逸脱リスク確認"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "subagent-patterns",
+      "triggers": [
+        "Step開始",
+        "Agent選択",
+        "SubAgent責務判定",
+        "並列実行判断"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "tdd-red-green-refactor",
+      "triggers": [
+        "テスト駆動開発",
+        "単体テスト作成",
+        "テストファースト",
+        "リファクタリング"
+      ],
+      "source": "auto"
+    },
+    {
+      "name": "test-architecture",
+      "triggers": [
+        "テストプロジェクト作成",
+        "テスト命名",
+        "テスト参照関係",
+        "テスト配置"
+      ],
+      "source": "auto"
+    }
+  ]
+}

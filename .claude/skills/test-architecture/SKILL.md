@@ -1,6 +1,6 @@
 ---
 name: test-architecture
-description: テストアーキテクチャ自律適用Skill。ADR_020レイヤー×テストタイプ分離方式・命名規則・参照関係原則・新規テストプロジェクト作成チェックリスト適用。unit-test/integration-test Agent作業時・新規テストプロジェクト作成時に使用。
+description: テストアーキテクチャ規約を適用する。「テストプロジェクト作成」「テスト命名」「テスト参照関係」「テスト配置」の際に使用する。
 allowed-tools: Read, mcp__serena__find_symbol, mcp__serena__get_symbols_overview, Grep
 ---
 

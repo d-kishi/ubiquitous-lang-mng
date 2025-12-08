@@ -1,6 +1,6 @@
 ---
 name: clean-architecture-guardian
-description: Clean Architecture準拠性を自動チェック（循環依存・namespace階層・レイヤー間参照制約）。新規実装時・リファクタリング時・Step完了時に使用。Phase B1で97点品質を達成した知見を適用。
+description: Clean Architecture準拠性をチェックする（循環依存・namespace階層・レイヤー間参照制約）。「新規クラス作成」「namespace変更」「プロジェクト参照変更」「リファクタリング」「Step完了」「ビルドエラー」の際に使用する。
 allowed-tools: Read, Grep
 ---
 

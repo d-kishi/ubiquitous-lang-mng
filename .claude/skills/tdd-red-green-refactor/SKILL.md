@@ -1,6 +1,6 @@
 ---
 name: tdd-red-green-refactor
-description: TDD Red-Green-Refactorサイクル実践パターン提供。unit-test Agent活用・テスタブルコード設計原則・テストカバレッジ管理方法。Phase C以降の新機能実装時に使用。
+description: TDD Red-Green-Refactorサイクルを実践する。「テスト駆動開発」「単体テスト作成」「テストファースト」「リファクタリング」の際に使用する。
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: adr-knowledge-base
-description: ADR知見の体系的参照・適用。主要ADR抜粋（ADR_010, 013, 016, 019, 020, 021）・ADR検索・参照方法・技術決定パターン集・ADR作成判断基準。Phase C以降の技術決定時に使用。
+description: ADR知見を参照・適用する。「技術決定」「設計判断」「ADR確認」「アーキテクチャ選定」の際、または新規ADR作成要否の判断時に使用する。
 allowed-tools: Read, Grep
 ---
 

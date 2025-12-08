@@ -11,6 +11,7 @@
  */
 
 import * as fs from 'fs/promises';
+import * as path from 'path';
 
 // ============================================================================
 // 型定義（define-claude-code-hooks パッケージより）
@@ -97,6 +98,35 @@ interface PostToolUseHookInput {
 interface PostToolUseHookOutput {
   /**
    * Claudeへの追加コンテキスト（成果物確認結果）
+   */
+  additionalContext?: string;
+}
+
+/**
+ * UserPromptSubmit Hook入力型
+ *
+ * ユーザーメッセージ送信時に呼び出され、Skills評価を強制する
+ */
+interface UserPromptSubmitHookInput {
+  /**
+   * ユーザーのメッセージ内容
+   */
+  user_message: string;
+
+  /**
+   * 会話トランスクリプトファイルのパス
+   */
+  transcript_path: string;
+}
+
+/**
+ * UserPromptSubmit Hook出力型
+ *
+ * Skills評価指示を追加コンテキストとして注入
+ */
+interface UserPromptSubmitHookOutput {
+  /**
+   * Claudeへの追加コンテキスト（Skills評価指示）
    */
   additionalContext?: string;
 }
@@ -408,15 +438,140 @@ async function postToolUseHook(input: PostToolUseHookInput): Promise<PostToolUse
 }
 
 // ============================================================================
+// UserPromptSubmit Hook実装（Skills Forced Eval）
+// ============================================================================
+
+/**
+ * Skills Triggersの型定義
+ */
+interface SkillTrigger {
+  name: string;
+  triggers: string[];
+  source: 'auto' | 'manual';
+}
+
+interface TriggersConfig {
+  generatedAt: string;
+  skills: SkillTrigger[];
+}
+
+/**
+ * skills-triggers.jsonからSkillsリストを読み込む
+ *
+ * B+C両対応: 自動生成されたJSONファイルを読み込む
+ * - npm run build 時に generate-triggers.ts で自動生成
+ * - 手動オーバーライドも skills-triggers-manual.json で可能
+ */
+function loadProjectSkills(): SkillTrigger[] {
+  try {
+    const triggersPath = path.resolve(__dirname, '../skills-triggers.json');
+    const triggersContent = require(triggersPath) as TriggersConfig;
+    console.log(`[UserPromptSubmit] Loaded ${triggersContent.skills.length} skills from skills-triggers.json (generated: ${triggersContent.generatedAt})`);
+    return triggersContent.skills;
+  } catch (error) {
+    console.error(`[UserPromptSubmit] Failed to load skills-triggers.json: ${error}`);
+    // フォールバック: 空配列を返す（Skills評価なし）
+    return [];
+  }
+}
+
+// 起動時にSkillsを読み込む
+const PROJECT_SKILLS = loadProjectSkills();
+
+/**
+ * メッセージからトリガーキーワードを検出
+ *
+ * @param userMessage - ユーザーメッセージ
+ * @returns マッチしたSkills名の配列
+ */
+function detectSkillTriggers(userMessage: string): string[] {
+  const matchedSkills: string[] = [];
+  const lowerMessage = userMessage.toLowerCase();
+
+  for (const skill of PROJECT_SKILLS) {
+    for (const trigger of skill.triggers) {
+      if (lowerMessage.includes(trigger.toLowerCase())) {
+        if (!matchedSkills.includes(skill.name)) {
+          matchedSkills.push(skill.name);
+        }
+        break; // 1つマッチしたら次のSkillへ
+      }
+    }
+  }
+
+  return matchedSkills;
+}
+
+/**
+ * UserPromptSubmit Hook: Skills Forced Eval
+ *
+ * Skills自動発動問題対策:
+ * 1. メッセージからトリガーキーワード検出
+ * 2. マッチしたSkillsの評価・活性化を強制指示
+ * 3. EVALUATE → ACTIVATE → IMPLEMENT 3ステッププロセス
+ *
+ * 参照: Scott Spence "How to Make Claude Code Skills Activate Reliably"
+ *
+ * @param input - UserPromptSubmit Hook入力
+ * @returns UserPromptSubmit Hook出力（additionalContext）
+ */
+async function userPromptSubmitHook(input: UserPromptSubmitHookInput): Promise<UserPromptSubmitHookOutput> {
+  try {
+    console.log(`[UserPromptSubmit] Skills評価開始`);
+
+    // 1. メッセージからトリガーキーワード検出
+    const matchedSkills = detectSkillTriggers(input.user_message);
+
+    if (matchedSkills.length === 0) {
+      console.log(`[UserPromptSubmit] トリガーキーワード未検出`);
+      return {};
+    }
+
+    console.log(`[UserPromptSubmit] マッチしたSkills: ${matchedSkills.join(", ")}`);
+
+    // 2. Skills評価・活性化強制指示を生成
+    const skillsList = matchedSkills.map(name => `Skill("${name}")`).join(", ");
+    const evaluationInstruction = `
+<skills-evaluation-instruction>
+【MANDATORY】以下のSkillsがこのタスクに関連する可能性があります。
+
+**マッチしたSkills**: ${skillsList}
+
+**3ステッププロセス（CRITICAL）**:
+
+**Step 1 - EVALUATE**: 上記各Skillについて、このタスクに必要かどうかYES/NOで判定し、理由を述べてください。
+
+**Step 2 - ACTIVATE**: YES判定したSkillに対して、\`Skill("skill-name")\` を呼び出して活性化してください。
+
+**Step 3 - IMPLEMENT**: Skill活性化後、実際の作業を開始してください。
+
+⚠️ この評価プロセスをスキップして実装に進むことは禁止されています。
+</skills-evaluation-instruction>
+`;
+
+    console.log(`[UserPromptSubmit] Skills評価指示を注入`);
+
+    return {
+      additionalContext: evaluationInstruction
+    };
+
+  } catch (error) {
+    console.error(`[UserPromptSubmit] エラー発生: ${error}`);
+    return {};
+  }
+}
+
+// ============================================================================
 // Hooks登録（define-claude-code-hooks パッケージ使用）
 // ============================================================================
 
 /**
  * Claude Code Hooks登録
  *
- * Phase 1実装:
+ * 実装:
  * - PreToolUse Hook: Task tool監視（ADR_016違反検出）
  * - PostToolUse Hook: SubAgent成果物実体確認
+ * - UserPromptSubmit Hook: Skills Forced Eval（Skills自動発動問題対策）
  */
 export default {
   preToolUse: {
@@ -426,5 +581,98 @@ export default {
   postToolUse: {
     matcher: "Task", // Task toolのみ監視
     handler: postToolUseHook
+  },
+  userPromptSubmit: {
+    handler: userPromptSubmitHook
   }
 };
+
+// ============================================================================
+// CLI エントリーポイント（標準入出力処理）
+// ============================================================================
+
+/**
+ * 標準入力からJSONを読み込む
+ */
+async function readStdin(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (chunk) => {
+      data += chunk;
+    });
+    process.stdin.on('end', () => {
+      resolve(data);
+    });
+    process.stdin.on('error', reject);
+  });
+}
+
+/**
+ * CLIメイン関数
+ *
+ * 使用方法:
+ *   echo '{"user_message": "..."}' | node dist/index.js userPromptSubmit
+ *   echo '{"tool_name": "Task", ...}' | node dist/index.js preToolUse
+ */
+async function main(): Promise<void> {
+  const hookType = process.argv[2];
+
+  if (!hookType) {
+    console.error('[CLI] Hook type required: preToolUse | postToolUse | userPromptSubmit');
+    process.exit(1);
+  }
+
+  try {
+    const inputJson = await readStdin();
+    const input = JSON.parse(inputJson);
+
+    let result: any;
+
+    switch (hookType) {
+      case 'userPromptSubmit':
+        result = await userPromptSubmitHook(input as UserPromptSubmitHookInput);
+        // UserPromptSubmit は additionalContext を返す
+        if (result.additionalContext) {
+          // 公式フォーマットに従い、stdoutに直接コンテキストを出力
+          console.log(result.additionalContext);
+        }
+        process.exit(0);
+        break;
+
+      case 'preToolUse':
+        result = await preToolUseHook(input as PreToolUseHookInput);
+        // PreToolUse は decision と additionalContext を返す
+        if (result.decision === 'block') {
+          console.error(result.additionalContext || 'Blocked by hook');
+          process.exit(2); // Exit code 2 = block
+        }
+        if (result.additionalContext) {
+          console.log(result.additionalContext);
+        }
+        process.exit(0);
+        break;
+
+      case 'postToolUse':
+        result = await postToolUseHook(input as PostToolUseHookInput);
+        // PostToolUse は additionalContext を返す
+        if (result.additionalContext) {
+          console.log(result.additionalContext);
+        }
+        process.exit(0);
+        break;
+
+      default:
+        console.error(`[CLI] Unknown hook type: ${hookType}`);
+        process.exit(1);
+    }
+  } catch (error) {
+    console.error(`[CLI] Error: ${error}`);
+    process.exit(1);
+  }
+}
+
+// 直接実行時のみCLIを起動（モジュールとしてインポート時は実行しない）
+if (require.main === module) {
+  main();
+}

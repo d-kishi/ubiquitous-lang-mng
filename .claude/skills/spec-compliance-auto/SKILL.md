@@ -1,6 +1,6 @@
 ---
 name: spec-compliance-auto
-description: 仕様準拠自動チェック機能の自律適用。spec-compliance-check Command活用・仕様書参照方法・仕様準拠率95%維持手順・仕様逸脱リスク特定方法。Phase C以降の新機能実装時に使用。
+description: 仕様準拠をチェックする。「新機能実装」「仕様確認」「仕様書参照」「要件検証」「仕様逸脱リスク確認」の際に使用する。
 allowed-tools: Read, Grep, WebFetch
 ---
 

@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(require("fs/promises"));
+const path = __importStar(require("path"));
 async function checkStepStartExecuted(transcriptPath) {
     try {
         const transcriptContent = await fs.readFile(transcriptPath, 'utf-8');
@@ -206,6 +207,71 @@ async function postToolUseHook(input) {
         };
     }
 }
+function loadProjectSkills() {
+    try {
+        const triggersPath = path.resolve(__dirname, '../skills-triggers.json');
+        const triggersContent = require(triggersPath);
+        console.log(`[UserPromptSubmit] Loaded ${triggersContent.skills.length} skills from skills-triggers.json (generated: ${triggersContent.generatedAt})`);
+        return triggersContent.skills;
+    }
+    catch (error) {
+        console.error(`[UserPromptSubmit] Failed to load skills-triggers.json: ${error}`);
+        return [];
+    }
+}
+const PROJECT_SKILLS = loadProjectSkills();
+function detectSkillTriggers(userMessage) {
+    const matchedSkills = [];
+    const lowerMessage = userMessage.toLowerCase();
+    for (const skill of PROJECT_SKILLS) {
+        for (const trigger of skill.triggers) {
+            if (lowerMessage.includes(trigger.toLowerCase())) {
+                if (!matchedSkills.includes(skill.name)) {
+                    matchedSkills.push(skill.name);
+                }
+                break;
+            }
+        }
+    }
+    return matchedSkills;
+}
+async function userPromptSubmitHook(input) {
+    try {
+        console.log(`[UserPromptSubmit] Skills評価開始`);
+        const matchedSkills = detectSkillTriggers(input.user_message);
+        if (matchedSkills.length === 0) {
+            console.log(`[UserPromptSubmit] トリガーキーワード未検出`);
+            return {};
+        }
+        console.log(`[UserPromptSubmit] マッチしたSkills: ${matchedSkills.join(", ")}`);
+        const skillsList = matchedSkills.map(name => `Skill("${name}")`).join(", ");
+        const evaluationInstruction = `
+<skills-evaluation-instruction>
+【MANDATORY】以下のSkillsがこのタスクに関連する可能性があります。
+
+**マッチしたSkills**: ${skillsList}
+
+**3ステッププロセス（CRITICAL）**:
+
+**Step 1 - EVALUATE**: 上記各Skillについて、このタスクに必要かどうかYES/NOで判定し、理由を述べてください。
+
+**Step 2 - ACTIVATE**: YES判定したSkillに対して、\`Skill("skill-name")\` を呼び出して活性化してください。
+
+**Step 3 - IMPLEMENT**: Skill活性化後、実際の作業を開始してください。
+
+⚠️ この評価プロセスをスキップして実装に進むことは禁止されています。
+</skills-evaluation-instruction>
+`;
+        console.log(`[UserPromptSubmit] Skills評価指示を注入`);
+        return {
+            additionalContext: evaluationInstruction
+        };
+    }
+    catch (error) {
+        console.error(`[UserPromptSubmit] エラー発生: ${error}`);
+        return {};
+    }
+}
 exports.default = {
     preToolUse: {
         matcher: "Task",
@@ -214,6 +280,71 @@ exports.default = {
     postToolUse: {
         matcher: "Task",
         handler: postToolUseHook
+    },
+    userPromptSubmit: {
+        handler: userPromptSubmitHook
     }
 };
+async function readStdin() {
+    return new Promise((resolve, reject) => {
+        let data = '';
+        process.stdin.setEncoding('utf8');
+        process.stdin.on('data', (chunk) => {
+            data += chunk;
+        });
+        process.stdin.on('end', () => {
+            resolve(data);
+        });
+        process.stdin.on('error', reject);
+    });
+}
+async function main() {
+    const hookType = process.argv[2];
+    if (!hookType) {
+        console.error('[CLI] Hook type required: preToolUse | postToolUse | userPromptSubmit');
+        process.exit(1);
+    }
+    try {
+        const inputJson = await readStdin();
+        const input = JSON.parse(inputJson);
+        let result;
+        switch (hookType) {
+            case 'userPromptSubmit':
+                result = await userPromptSubmitHook(input);
+                if (result.additionalContext) {
+                    console.log(result.additionalContext);
+                }
+                process.exit(0);
+                break;
+            case 'preToolUse':
+                result = await preToolUseHook(input);
+                if (result.decision === 'block') {
+                    console.error(result.additionalContext || 'Blocked by hook');
+                    process.exit(2);
+                }
+                if (result.additionalContext) {
+                    console.log(result.additionalContext);
+                }
+                process.exit(0);
+                break;
+            case 'postToolUse':
+                result = await postToolUseHook(input);
+                if (result.additionalContext) {
+                    console.log(result.additionalContext);
+                }
+                process.exit(0);
+                break;
+            default:
+                console.error(`[CLI] Unknown hook type: ${hookType}`);
+                process.exit(1);
+        }
+    }
+    catch (error) {
+        console.error(`[CLI] Error: ${error}`);
+        process.exit(1);
+    }
+}
+if (require.main === module) {
+    main();
+}
 //# sourceMappingURL=index.js.map

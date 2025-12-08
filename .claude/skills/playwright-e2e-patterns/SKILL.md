@@ -1,6 +1,6 @@
 ---
 name: playwright-e2e-patterns
-description: TypeScript/Playwright Test + Generator/Healer Agents活用によるE2Eテスト作成パターンガイド。E2Eテスト実装時・data-testid属性設計時・Blazor Server SignalR対応時に使用。Phase B2で確立した93.3%効率化パターン + Phase B2-F2でTypeScript移行完了。
+description: TypeScript/Playwright TestでE2Eテストを作成する。「E2Eテスト実装」「data-testid設計」「Blazor Server対応」「SignalR待機」「ログインフロー」の際に使用する。
 allowed-tools: Read, Grep
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: fsharp-csharp-bridge
-description: F# Domain/Application層とC# Infrastructure/Web層の型変換パターンを自律的に適用。F#↔C#境界コード実装時・型変換エラー発生時・contracts-bridge Agent作業時に使用。Phase B1で確立した4つの変換パターンをガイド。
+description: F#とC#間の型変換パターンを適用する。「F#↔C#境界実装」「型変換エラー」「Option/Result型変換」「Contracts層実装」の際に使用する。
 allowed-tools: Read, Grep
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: playwright-ui-verification
-description: Playwright MCPを活用したUI確認手順。ユーザーとClaudeの視覚的コミュニケーション支援。動作確認・デザイン議論・バグ調査で使用。
+description: Playwright MCPでブラウザを操作しUI状態を確認する。「画面確認」「UI確認」「デザイン確認」「バグ調査」「動作検証」「スクリーンショット取得」の際に使用する。
 allowed-tools: mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_wait_for, mcp__playwright__browser_close, Bash, Read
 ---
 

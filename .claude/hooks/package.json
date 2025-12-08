@@ -1,25 +1,29 @@
 {
   "name": "claude-code-hooks",
-  "version": "1.0.0",
-  "description": "Claude Code Hooks for Agent SDK Phase 1 (Issue #55)",
+  "version": "1.1.0",
+  "description": "Claude Code Hooks - ADR_016 compliance & Skills auto-activation",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run generate-triggers && tsc",
+    "build:hooks": "tsc",
     "watch": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "generate-triggers": "npx ts-node scripts/generate-triggers.ts",
+    "prebuild": "npm run generate-triggers"
   },
   "keywords": [
     "claude-code",
     "agent-sdk",
     "hooks",
-    "adr-016"
+    "adr-016",
+    "skills"
   ],
   "author": "Ubiquitous Language Manager Project",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
-  },
-  "dependencies": {}
+  }
 }

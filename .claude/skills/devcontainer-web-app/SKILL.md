@@ -1,6 +1,6 @@
 ---
 name: devcontainer-web-app
-description: DevContainer環境でのWebアプリ起動/停止管理。視覚的UI確認・動作確認フェーズで使用。ホットリロード vs 再起動の判断基準を提供。
+description: DevContainer環境でWebアプリケーションを起動・停止・再起動する。「アプリ起動」「動作確認」「画面確認」「ログイン確認」「UI確認」の作業時、またはStep完了後の検証時に使用する。
 allowed-tools: Bash, Read
 ---
 
