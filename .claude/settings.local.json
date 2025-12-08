@@ -120,7 +120,6 @@
       "Bash(env)",
       "Bash(tasklist:*)",
       "Bash(uvx:*)",
-      "Bash(nul)",
       "mcp__serena__activate_project",
       "mcp__serena__edit_memory",
       "mcp__serena__initial_instructions",
@@ -130,7 +129,8 @@
       "mcp__playwright__browser_click",
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_evaluate",
-      "mcp__playwright__browser_take_screenshot"
+      "mcp__playwright__browser_take_screenshot",
+      "Skill"
     ],
     "deny": [],
     "ask": [],

@@ -28,12 +28,18 @@ public class DbInitializer
     private readonly ILogger<DbInitializer> _logger;
     private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
 
-    // 初期データ投入で使用する管理者ユーザーID
-    private const string AdminUserId = "admin-001";
-    private const string ProjectManagerUserId = "pm-001";
-    private const string DomainApproverUserId = "da-001";
-    private const string GeneralUserId = "gu-001";
-    private const string E2eTestUserId = "e2e-test@ubiquitous-lang.local";
+    // 初期データ投入で使用する管理者ユーザーID（GUID形式）
+    private const string AdminUserId = "00000000-0000-0000-0000-000000000001";
+    private const string ProjectManagerUserId = "00000000-0000-0000-0000-000000000002";
+    private const string DomainApproverUserId = "00000000-0000-0000-0000-000000000003";
+    private const string GeneralUserId = "00000000-0000-0000-0000-000000000004";
+    private const string E2eTestUserId = "00000000-0000-0000-0000-000000000099";
+
+    // ロールID定数（GUID形式）
+    private const string SuperUserRoleId = "00000000-0000-0000-0001-000000000001";
+    private const string ProjectManagerRoleId = "00000000-0000-0000-0001-000000000002";
+    private const string DomainApproverRoleId = "00000000-0000-0000-0001-000000000003";
+    private const string GeneralUserRoleId = "00000000-0000-0000-0001-000000000004";
 
     /// <summary>
     /// コンストラクタ: 依存関係の注入
@@ -169,16 +175,16 @@ public class DbInitializer
 
     /// <summary>
     /// ロール初期データ投入（4件）
-    /// バックアップSQL準拠: super-user, project-manager, domain-approver, general-user
+    /// バックアップSQL準拠: SuperUser, ProjectManager, DomainApprover, GeneralUser
     /// </summary>
     private async Task SeedRolesAsync()
     {
         var roles = new[]
         {
-            new { Id = "super-user", Name = "super-user", NormalizedName = "SUPER-USER" },
-            new { Id = "project-manager", Name = "project-manager", NormalizedName = "PROJECT-MANAGER" },
-            new { Id = "domain-approver", Name = "domain-approver", NormalizedName = "DOMAIN-APPROVER" },
-            new { Id = "general-user", Name = "general-user", NormalizedName = "GENERAL-USER" }
+            new { Id = SuperUserRoleId, Name = "SuperUser", NormalizedName = "SUPERUSER" },
+            new { Id = ProjectManagerRoleId, Name = "ProjectManager", NormalizedName = "PROJECTMANAGER" },
+            new { Id = DomainApproverRoleId, Name = "DomainApprover", NormalizedName = "DOMAINAPPROVER" },
+            new { Id = GeneralUserRoleId, Name = "GeneralUser", NormalizedName = "GENERALUSER" }
         };
 
         foreach (var role in roles)
@@ -219,11 +225,11 @@ public class DbInitializer
     {
         var users = new[]
         {
-            new { Id = "admin-001", Email = "admin@ubiquitous-lang.com", Name = "システム管理者", Role = "super-user", Password = "su", IsFirstLogin = true },
-            new { Id = "pm-001", Email = "project.manager@ubiquitous-lang.com", Name = "プロジェクト管理者", Role = "project-manager", Password = "su", IsFirstLogin = true },
-            new { Id = "da-001", Email = "domain.approver@ubiquitous-lang.com", Name = "ドメイン承認者", Role = "domain-approver", Password = "su", IsFirstLogin = true },
-            new { Id = "gu-001", Email = "general.user@ubiquitous-lang.com", Name = "一般ユーザー", Role = "general-user", Password = "su", IsFirstLogin = true },
-            new { Id = E2eTestUserId, Email = E2eTestUserId, Name = "E2Eテストユーザー", Role = "super-user", Password = "E2ETest#2025!Secure", IsFirstLogin = false }
+            new { Id = AdminUserId, Email = "admin@ubiquitous-lang.com", Name = "システム管理者", Role = "SuperUser", Password = "su", IsFirstLogin = true },
+            new { Id = ProjectManagerUserId, Email = "project.manager@ubiquitous-lang.com", Name = "プロジェクト管理者", Role = "ProjectManager", Password = "su", IsFirstLogin = true },
+            new { Id = DomainApproverUserId, Email = "domain.approver@ubiquitous-lang.com", Name = "ドメイン承認者", Role = "DomainApprover", Password = "su", IsFirstLogin = true },
+            new { Id = GeneralUserId, Email = "general.user@ubiquitous-lang.com", Name = "一般ユーザー", Role = "GeneralUser", Password = "su", IsFirstLogin = true },
+            new { Id = E2eTestUserId, Email = "e2e-test@ubiquitous-lang.local", Name = "E2Eテストユーザー", Role = "SuperUser", Password = "E2ETest#2025!Secure", IsFirstLogin = false }
         };
 
         foreach (var userData in users)
@@ -237,7 +243,7 @@ public class DbInitializer
                 Name = userData.Name,
                 IsFirstLogin = userData.IsFirstLogin, // E2Eテストユーザーは初回ログイン済み
                 InitialPassword = userData.Password, // 機能仕様書2.2.1準拠：平文管理
-                UpdatedBy = "admin-001",
+                UpdatedBy = AdminUserId,
                 UpdatedAt = DateTime.UtcNow
             };
 
@@ -384,8 +390,8 @@ public class DbInitializer
 
     /// <summary>
     /// UserProjects関連設定
-    /// pm-001, da-001, gu-001をプロジェクト1, 2に割り当て
-    /// e2e-test@ubiquitous-lang.localをE2Eテストプロジェクトに割り当て
+    /// ProjectManager, DomainApprover, GeneralUserをプロジェクト1, 2に割り当て
+    /// E2Eテストユーザーをテストプロジェクトに割り当て
     /// </summary>
     private async Task SeedUserProjectsAsync()
     {
@@ -465,7 +471,7 @@ public class DbInitializer
 
     /// <summary>
     /// DomainApprovers設定
-    /// da-001をドメイン1, 2, 3に割り当て
+    /// DomainApproverをドメイン1, 2, 3に割り当て
     /// </summary>
     private Task SeedDomainApproversAsync()
     {

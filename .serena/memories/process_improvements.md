@@ -387,5 +387,78 @@
 
 ---
 
+## Skills未使用による重大失策（2025-12-08記録）
+
+### 発生状況
+
+**Phase**: Issue79 Step11（InitialData GUID化）
+**タイミング**: DB再作成・アプリケーション起動・ログイン検証段階
+
+### 問題行動
+
+MainAgentがアプリケーション起動とUI検証を実施する際、以下の誤った対応を取った：
+
+1. **手動bashコマンドによる起動試行**
+   - `nohup dotnet run`、`curl`等のコマンドを直接実行
+   - 複数回の試行錯誤・エラー対応
+
+2. **既存Skills・スクリプトの存在を無視**
+   - `.devcontainer/scripts/web-app.sh` の存在を忘却
+   - `devcontainer-web-app` Skill の存在を忘却
+   - `playwright-ui-verification` Skill の存在を忘却
+
+### ユーザー指摘
+
+> 「アプリケーションの起動には、先日.devcontainer/scripts配下に作成したスクリプトを使用するはずです。また、あなたが実際にアプリケーションを動かしてPlaywright経由で動作検証を実施するケースを想定したSkillsも作成しているはずです。なぜそちらを利用しないのですか？」
+
+> 「非常に重大な失策ですね。この点については反省点としてどこかに記録しておいてください。」
+
+### 根本原因分析
+
+1. **コンテキスト圧縮による情報損失**
+   - AutoCompactによるSkills存在情報の圧縮・喪失可能性
+
+2. **即時解決バイアス**
+   - 問題発生時に「とりあえず動かす」方向に傾斜
+   - 既存資産確認を怠る
+
+3. **メタ認知の欠如**
+   - 「このタスクに適用すべきSkillsは何か」という自問を怠った
+
+### 再発防止策
+
+1. **アプリケーション起動時の必須確認**
+   - `.devcontainer/scripts/` 配下のスクリプト存在確認
+   - `devcontainer-web-app` Skill の適用検討
+
+2. **UI検証時の必須確認**
+   - `playwright-ui-verification` Skill の適用検討
+   - Playwright MCP直接使用前にSkill確認
+
+3. **セッション開始時のSkills一覧確認**
+   - `.claude/skills/` の全Skill確認
+   - 当該セッションで適用可能なSkillsの事前特定
+
+4. **プロセス改善提案**
+   - step-start Commandに「適用可能Skills確認」セクション追加を検討
+
+### 教訓
+
+**Skills・スクリプトは「効率化のため」だけでなく「品質・一貫性確保のため」に存在する**
+
+手動コマンドによる試行錯誤は：
+- 時間の浪費
+- エラー発生リスク増大
+- 再現性の欠如
+- ユーザー信頼の毀損
+
+既存資産の活用は：
+- 検証済み手順の適用
+- 一貫した品質確保
+- 時間効率の向上
+- プロジェクト知見の蓄積
+
+---
+
 **作成**: 2025-09-22（プロセス改善・構成最適化・技術負債管理変革統合版）
 **統合元**: process_improvements, command_subagent_update_session, project_structure_optimization_2025_09_18, tech_debt_management_transformation
