@@ -41,7 +41,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
             var japaneseName = JapaneseName.create("ユーザー").ResultValue;
             var englishName = EnglishName.create("User").ResultValue;
             var description = Description.create("システムを利用するユーザー").ResultValue;
-            var userId = UserId.create(1L);
+            var userId = UserId.create("00000000-0000-0000-0000-000000000001");
 
             return DraftUbiquitousLanguage.create(domainId, japaneseName, englishName, description, userId);
         }
@@ -53,7 +53,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
         {
             // 実際のビジネスロジックを使って承認済みUbiquitousLanguageを作成
             var draft = CreateTestDraftUbiquitousLanguage();
-            var approverId = UserId.create(2L);
+            var approverId = UserId.create("00000000-0000-0000-0000-000000000002");
             
             // Draft -> Submitted -> Approved の流れでFormalUbiquitousLanguageを作成
             var submittedResult = draft.submitForApproval(draft.UpdatedBy);
@@ -83,7 +83,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
             // Phase B1対応: ProjectName, ProjectDescription型に変更
             var name = ProjectName.create("テストプロジェクト").ResultValue;
             var description = ProjectDescription.create(Some("テスト用のプロジェクト")).ResultValue;
-            var userId = UserId.create(1L);
+            var userId = UserId.create("00000000-0000-0000-0000-000000000001");
 
             return Project.create(name, description, userId);
         }
@@ -96,7 +96,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
             // Phase B1対応: DomainName型に変更、createメソッドのシグネチャ変更（3引数）
             var name = DomainName.create("認証ドメイン").ResultValue;
             var projectId = ProjectId.create(1L);
-            var userId = UserId.create(1L);
+            var userId = UserId.create("00000000-0000-0000-0000-000000000001");
 
             return DomainEntity.create(name, projectId, userId);
         }
@@ -207,7 +207,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
                 JapaneseName = "プロダクト",
                 EnglishName = "Product",
                 Description = "販売する商品",
-                CreatedBy = 1L
+                CreatedBy = "00000000-0000-0000-0000-000000000001"
             };
 
             // Act - C# → F# エンティティ変換実行
@@ -236,7 +236,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
                 JapaneseName = "", // 無効な日本語名
                 EnglishName = "Product",
                 Description = "販売する商品",
-                CreatedBy = 1L
+                CreatedBy = "00000000-0000-0000-0000-000000000001"
             };
 
             // Act - C# → F# エンティティ変換実行
@@ -257,7 +257,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
                 ProjectId = 1L,
                 Name = "認証ドメイン",
                 Description = "ユーザー認証機能に関するドメイン",
-                CreatedBy = 1L
+                CreatedBy = "00000000-0000-0000-0000-000000000001"
             };
 
             // Act - C# → F# エンティティ変換実行
@@ -292,7 +292,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
                 Email = "test@example.com",
                 Name = "テストユーザー",
                 Role = "GeneralUser",
-                CreatedBy = 1L
+                CreatedBy = "00000000-0000-0000-0000-000000000001"
             };
 
             // Act - C# → F# エンティティ変換実行
@@ -377,7 +377,7 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
             Assert.False(string.IsNullOrEmpty(draft.JapaneseName.Value)); // JapaneseName.Value アクセス確認
             Assert.False(string.IsNullOrEmpty(draft.EnglishName.Value)); // EnglishName.Value アクセス確認
             Assert.False(string.IsNullOrEmpty(draft.Description.Value)); // Description.Value アクセス確認
-            Assert.True(draft.UpdatedBy.Value > 0); // UserId.Value アクセス確認
+            Assert.False(string.IsNullOrEmpty(draft.UpdatedBy.Value)); // UserId.Value（GUID文字列）アクセス確認
 
             // F#エンティティの基本構造確認
             Assert.True(project.Id.Value >= 0); // ProjectId.Value アクセス確認
@@ -389,6 +389,8 @@ namespace UbiquitousLanguageManager.Contracts.Unit.Tests
             Assert.IsType<long>(draft.Id.Value); // UbiquitousLanguageId.Valueはlong型であるべき
             Assert.IsType<string>(project.Name.Value); // ProjectName.Valueはstring型であるべき
             Assert.IsType<bool>(domain.IsActive); // IsActiveはbool型であるべき
+            // Phase Issue79: UserId.Valueの型はstring（GUID）に変更
+            Assert.IsType<string>(draft.UpdatedBy.Value); // UserId.Valueはstring型であるべき
         }
 
         #endregion

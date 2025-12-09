@@ -14,6 +14,18 @@
   - `development_guidelines` メモリー確認（現在の開発方針・制約把握）
   - `tech_stack_and_conventions` メモリー確認（技術構成・規約把握）
 
+### 1.5. セッション状態更新（必須）
+- [ ] **session_stateメモリー更新**: 状態をACTIVEに変更
+  ```
+  edit_memory:
+    memory_file_name: session_state.md
+    needle: \| \*\*状態\*\* \| .* \|
+    repl: | **状態** | ACTIVE |
+    mode: regex
+  ```
+- [ ] **セッションID更新**: 新規セッションIDを発行（YYYY-MM-DD-NNN形式）
+- [ ] **開始日時更新**: 現在日時を記録
+
 ### 2. 基本状況確認（必須・3分以内）
 - [ ] `/CLAUDE.md` - プロジェクト概要・技術構成・フェーズ状況確認
 - [ ] 直近1-2日の作業記録確認（必要に応じて）

@@ -309,6 +309,96 @@ public class UserManagementServiceMockBuilder
 
     #endregion
 
+    #region GetProjectIdsByEmailAsync モックセットアップ
+
+    /// <summary>
+    /// GetProjectIdsByEmailAsync成功モックセットアップ（デフォルト: 空リスト）
+    ///
+    /// 【引数】
+    /// - projectIds: 返却するプロジェクトIDリスト（省略時は空リスト）
+    ///
+    /// 【戻り値】
+    /// FSharpResult&lt;int64 list, string&gt;.NewOk
+    ///
+    /// 【補足】
+    /// - Index.razorの各ユーザーに対してプロジェクト情報を取得する際に使用
+    /// - モック未設定の場合、テストで例外が発生する
+    /// </summary>
+    public UserManagementServiceMockBuilder SetupGetProjectIdsByEmailSuccess(List<long>? projectIds = null)
+    {
+        // デフォルトは空リスト
+        var ids = projectIds ?? new List<long>();
+        var fsharpList = Microsoft.FSharp.Collections.ListModule.OfSeq(ids);
+        var fsharpResult = FSharpResult<FSharpList<long>, string>.NewOk(fsharpList);
+
+        _mockService
+            .Setup(s => s.GetProjectIdsByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// GetProjectIdsByEmailAsync失敗モックセットアップ
+    /// </summary>
+    public UserManagementServiceMockBuilder SetupGetProjectIdsByEmailFailure(string errorMessage)
+    {
+        var fsharpResult = FSharpResult<FSharpList<long>, string>.NewError(errorMessage);
+
+        _mockService
+            .Setup(s => s.GetProjectIdsByEmailAsync(It.IsAny<string>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    #endregion
+
+    #region GetProjectIdsByUserIdAsync モックセットアップ
+
+    /// <summary>
+    /// GetProjectIdsByUserIdAsync成功モックセットアップ（デフォルト: 空リスト）
+    ///
+    /// 【引数】
+    /// - projectIds: 返却するプロジェクトIDリスト（省略時は空リスト）
+    ///
+    /// 【戻り値】
+    /// FSharpResult&lt;int64 list, string&gt;.NewOk
+    ///
+    /// 【補足】
+    /// - Edit.razorのLoadUserAsync()内でユーザーのプロジェクト割り当て情報を取得
+    /// - AssignedProjectIds復元に使用（Phase B-F3 Stage4実装）
+    /// </summary>
+    public UserManagementServiceMockBuilder SetupGetProjectIdsByUserIdSuccess(List<long>? projectIds = null)
+    {
+        // デフォルトは空リスト
+        var ids = projectIds ?? new List<long>();
+        var fsharpList = Microsoft.FSharp.Collections.ListModule.OfSeq(ids);
+        var fsharpResult = FSharpResult<FSharpList<long>, string>.NewOk(fsharpList);
+
+        _mockService
+            .Setup(s => s.GetProjectIdsByUserIdAsync(It.IsAny<FSharpUserId>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    /// <summary>
+    /// GetProjectIdsByUserIdAsync失敗モックセットアップ
+    /// </summary>
+    public UserManagementServiceMockBuilder SetupGetProjectIdsByUserIdFailure(string errorMessage)
+    {
+        var fsharpResult = FSharpResult<FSharpList<long>, string>.NewError(errorMessage);
+
+        _mockService
+            .Setup(s => s.GetProjectIdsByUserIdAsync(It.IsAny<FSharpUserId>()))
+            .ReturnsAsync(fsharpResult);
+
+        return this;
+    }
+
+    #endregion
+
     #region ビルド
 
     /// <summary>

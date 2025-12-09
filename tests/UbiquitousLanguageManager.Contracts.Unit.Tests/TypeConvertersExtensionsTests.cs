@@ -29,11 +29,11 @@ public class TypeConvertersExtensionsTests
         };
     }
 
-    private User CreateTestUser(string email = "test@example.com", string name = "テストユーザー", Role? role = null, long id = 1L)
+    private User CreateTestUser(string email = "test@example.com", string name = "テストユーザー", Role? role = null, string id = "00000000-0000-0000-0000-000000000001")
     {
         var emailResult = Email.create(email);
         var nameResult = UserName.create(name);
-        
+
         Assert.True(emailResult.IsOk);
         Assert.True(nameResult.IsOk);
 
@@ -139,13 +139,13 @@ public class TypeConvertersExtensionsTests
         public void ToDto_UserWithCompleteProfile_ShouldConvertAllFields()
         {
             // Arrange
-            var user = CreateTestUser("user@example.com", "ユーザー", Role.ProjectManager, 1L);
+            var user = CreateTestUser("user@example.com", "ユーザー", Role.ProjectManager, "00000000-0000-0000-0000-000000000001");
 
             // Act
             var dto = TypeConverters.ToDto(user);
 
             // Assert
-            Assert.Equal(1L, dto.Id);
+            Assert.Equal("00000000-0000-0000-0000-000000000001", dto.Id);
             Assert.Equal("user@example.com", dto.Email);
             Assert.Equal("ユーザー", dto.Name);
             Assert.Equal("ProjectManager", dto.Role);
@@ -157,9 +157,9 @@ public class TypeConvertersExtensionsTests
             
             // 監査情報の確認
             Assert.True(dto.CreatedAt <= DateTime.UtcNow);
-            Assert.Equal(1L, dto.CreatedBy);
+            Assert.Equal("00000000-0000-0000-0000-000000000001", dto.CreatedBy);
             Assert.True(dto.UpdatedAt <= DateTime.UtcNow);
-            Assert.Equal(1L, dto.UpdatedBy);
+            Assert.Equal("00000000-0000-0000-0000-000000000001", dto.UpdatedBy);
         }
 
         [Theory]
@@ -302,13 +302,13 @@ public class TypeConvertersExtensionsTests
         public void ToDto_UserWithMinimumValidData_ShouldConvertSuccessfully()
         {
             // Arrange
-            var user = CreateTestUser("min@example.com", "最小ユーザー", Role.GeneralUser, 1L);
+            var user = CreateTestUser("min@example.com", "最小ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000001");
 
             // Act
             var dto = TypeConverters.ToDto(user);
 
             // Assert
-            Assert.Equal(1L, dto.Id);
+            Assert.Equal("00000000-0000-0000-0000-000000000001", dto.Id);
             Assert.Equal("min@example.com", dto.Email);
             Assert.Equal("最小ユーザー", dto.Name);
             Assert.Equal("GeneralUser", dto.Role);
@@ -319,7 +319,7 @@ public class TypeConvertersExtensionsTests
         public void ToDto_UserWithUnicodeCharacters_ShouldConvertCorrectly()
         {
             // Arrange
-            var user = CreateTestUser("unicode@例え.com", "田中太郎🌟", Role.GeneralUser, 1L);
+            var user = CreateTestUser("unicode@例え.com", "田中太郎🌟", Role.GeneralUser, "00000000-0000-0000-0000-000000000001");
 
             // Act
             var dto = TypeConverters.ToDto(user);
@@ -339,8 +339,8 @@ public class TypeConvertersExtensionsTests
         public void ToDto_MultipleUsers_ShouldConvertEfficiently()
         {
             // Arrange
-            var users = Enumerable.Range(1, 100).Select(i => 
-                CreateTestUser($"user{i}@example.com", $"ユーザー{i}", Role.GeneralUser, i)
+            var users = Enumerable.Range(1, 100).Select(i =>
+                CreateTestUser($"user{i}@example.com", $"ユーザー{i}", Role.GeneralUser, $"00000000-0000-0000-0000-{i:D12}")
             ).ToList();
 
             // Act

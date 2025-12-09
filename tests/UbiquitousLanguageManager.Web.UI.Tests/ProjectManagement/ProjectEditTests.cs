@@ -55,27 +55,35 @@ public class ProjectEditTests : BlazorComponentTestBase
 
         // 既存プロジェクトデータ準備（F# Domain型）
         var existingProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "既存プロジェクト",
             description: "既存の説明",
-            ownerId: 1L
+            ownerId: "00000000-0000-0000-0000-000000000001"
         );
 
         // 更新後プロジェクトデータ準備
         var updatedProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "既存プロジェクト",  // プロジェクト名は変更不可
             description: "更新後の説明",
-            ownerId: 1L
+            ownerId: "00000000-0000-0000-0000-000000000001"
         );
 
         // GetProjectDetailAsyncモック設定（既存データ読み込み）
-        var builder = new ProjectManagementServiceMockBuilder();
-        var mockService = builder
-            .SetupGetProjectDetailSuccess(existingProject)
-            .SetupUpdateProjectSuccess(updatedProject)
-            .BuildMock();
-        Services.AddSingleton(mockService.Object);
+        // 注: MockProjectServiceを直接セットアップ（builderで上書きしない）
+        var projectDetailResult = new UbiquitousLanguageManager.Application.ProjectManagement.ProjectDetailResultDto(
+            project: existingProject,
+            userCount: 0,
+            domainCount: 0,
+            ubiquitousLanguageCount: 0,
+            canEdit: true,
+            canDelete: true
+        );
+        MockProjectService.Setup(s => s.GetProjectDetailAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.GetProjectDetailQuery>()))
+            .ReturnsAsync(Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Application.ProjectManagement.ProjectDetailResultDto, string>.NewOk(projectDetailResult));
+
+        MockProjectService.Setup(s => s.UpdateProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.UpdateProjectCommand>()))
+            .ReturnsAsync(Microsoft.FSharp.Core.FSharpResult<FSharpDomainProject, string>.NewOk(updatedProject));
 
         // Act - ProjectEditコンポーネントレンダリング（ProjectId=1）
         var cut = RenderComponent<ProjectEdit>(parameters => parameters
@@ -122,27 +130,35 @@ public class ProjectEditTests : BlazorComponentTestBase
 
         // 担当プロジェクトデータ準備（OwnerId=1: ProjectManagerのID）
         var ownedProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "担当プロジェクト",
             description: "担当プロジェクトの説明",
-            ownerId: 1L  // ProjectManagerが所有
+            ownerId: "00000000-0000-0000-0000-000000000001"  // ProjectManagerが所有
         );
 
         // 更新後プロジェクトデータ
         var updatedProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "担当プロジェクト",
             description: "更新後の説明",
-            ownerId: 1L
+            ownerId: "00000000-0000-0000-0000-000000000001"
         );
 
         // モック設定
-        var builder = new ProjectManagementServiceMockBuilder();
-        var mockService = builder
-            .SetupGetProjectDetailSuccess(ownedProject)
-            .SetupUpdateProjectSuccess(updatedProject)
-            .BuildMock();
-        Services.AddSingleton(mockService.Object);
+        // 注: MockProjectServiceを直接セットアップ（builderで上書きしない）
+        var projectDetailResult = new UbiquitousLanguageManager.Application.ProjectManagement.ProjectDetailResultDto(
+            project: ownedProject,
+            userCount: 0,
+            domainCount: 0,
+            ubiquitousLanguageCount: 0,
+            canEdit: true,
+            canDelete: true
+        );
+        MockProjectService.Setup(s => s.GetProjectDetailAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.GetProjectDetailQuery>()))
+            .ReturnsAsync(Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Application.ProjectManagement.ProjectDetailResultDto, string>.NewOk(projectDetailResult));
+
+        MockProjectService.Setup(s => s.UpdateProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.UpdateProjectCommand>()))
+            .ReturnsAsync(Microsoft.FSharp.Core.FSharpResult<FSharpDomainProject, string>.NewOk(updatedProject));
 
         // Act - ProjectEditコンポーネントレンダリング
         var cut = RenderComponent<ProjectEdit>(parameters => parameters
@@ -174,10 +190,10 @@ public class ProjectEditTests : BlazorComponentTestBase
     /// F# Domain型のProjectテストデータ生成
     /// </summary>
     private static FSharpDomainProject CreateTestProject(
-        long id,
+        string id,
         string name,
         string? description = null,
-        long ownerId = 1L,
+        string ownerId = "00000000-0000-0000-0000-000000000001",
         bool isActive = true)
     {
         var projectName = FSharpProjectName.create(name);
@@ -192,8 +208,11 @@ public class ProjectEditTests : BlazorComponentTestBase
         if (projectDescription.IsError)
             throw new InvalidOperationException($"Invalid project description: {description}. Error: {projectDescription.ErrorValue}");
 
+        // GUID文字列からlong値を抽出（最後の12桁を数値化）
+        long projectIdLong = long.Parse(id.Substring(id.Length - 12));
+
         return new FSharpDomainProject(
-            id: FSharpProjectId.create(id),
+            id: FSharpProjectId.create(projectIdLong),
             name: projectName.ResultValue,
             description: projectDescription.ResultValue,
             ownerId: FSharpUserId.create(ownerId),

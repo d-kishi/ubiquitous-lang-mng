@@ -41,7 +41,7 @@ type ApplicationServiceTests() =
             Email = email,
             Name = name,
             Role = role,
-            CreatedBy = 1L
+            CreatedBy = "00000000-0000-0000-0000-000000000001"
         )
 
     /// <summary>
@@ -89,7 +89,7 @@ type ApplicationServiceTests() =
             )
 
             let expectedUserDto = UserDto(
-                Id = 1L,
+                Id = "00000000-0000-0000-0000-000000000001",
                 Email = "user@example.com",
                 Name = "テストユーザー",
                 Role = "GeneralUser",

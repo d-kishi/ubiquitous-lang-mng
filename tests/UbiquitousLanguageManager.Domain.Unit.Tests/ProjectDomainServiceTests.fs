@@ -32,7 +32,8 @@ type ProjectDomainServiceTests() =
            | Ok projectDesc -> projectDesc
            | Error _ -> failwith "テストデータエラー"
 
-    let createTestUserId id = UserId.create id
+    let createTestUserId (id: int) =
+        UserId.create (sprintf "00000000-0000-0000-0000-%012d" id)
 
     let createExistingProject name description ownerId isActive =
         let projectName = createValidProjectName name
@@ -53,7 +54,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Test Project"
         let description = createValidProjectDescription (Some "Test Description")
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
         let existingProjects = []  // 重複なし
 
         // Act
@@ -85,7 +86,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Duplicate Project"
         let description = createValidProjectDescription None
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
 
         // 既存プロジェクト（同名・アクティブ）
         let existingProject = createExistingProject "Duplicate Project" None ownerId true
@@ -109,7 +110,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Inactive Project"
         let description = createValidProjectDescription None
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
 
         // 既存プロジェクト（同名だが非アクティブ）
         let inactiveProject = createExistingProject "Inactive Project" None ownerId false
@@ -132,7 +133,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Test Project"
         let description = createValidProjectDescription None
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
 
         // 複数の既存プロジェクト（重複なし）
         let project1 = createExistingProject "Project 1" None ownerId true
@@ -156,7 +157,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Pipeline Test Project"
         let description = createValidProjectDescription (Some "Pipeline test")
-        let ownerId = createTestUserId 2L
+        let ownerId = createTestUserId 2
         let existingProjects = []
 
         // Act
@@ -177,7 +178,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Pipeline Duplicate"
         let description = createValidProjectDescription None
-        let ownerId = createTestUserId 2L
+        let ownerId = createTestUserId 2
 
         let existingProject = createExistingProject "Pipeline Duplicate" None ownerId true
         let existingProjects = [existingProject]
@@ -203,8 +204,8 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Unique Project"
         let existingProjects = [
-            createExistingProject "Existing Project 1" None (createTestUserId 1L) true
-            createExistingProject "Existing Project 2" None (createTestUserId 2L) true
+            createExistingProject "Existing Project 1" None (createTestUserId 1) true
+            createExistingProject "Existing Project 2" None (createTestUserId 2) true
         ]
 
         // Act
@@ -223,7 +224,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Existing Project"
         let existingProjects = [
-            createExistingProject "Existing Project" None (createTestUserId 1L) true
+            createExistingProject "Existing Project" None (createTestUserId 1) true
         ]
 
         // Act
@@ -244,7 +245,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "existing project"  // 小文字
         let existingProjects = [
-            createExistingProject "Existing Project" None (createTestUserId 1L) true  // 大文字
+            createExistingProject "Existing Project" None (createTestUserId 1) true  // 大文字
         ]
 
         // Act
@@ -268,7 +269,7 @@ type ProjectDomainServiceTests() =
         // Arrange
         let name = createValidProjectName "Inactive Project Name"
         let existingProjects = [
-            createExistingProject "Inactive Project Name" None (createTestUserId 1L) false  // 非アクティブ
+            createExistingProject "Inactive Project Name" None (createTestUserId 1) false  // 非アクティブ
         ]
 
         // Act

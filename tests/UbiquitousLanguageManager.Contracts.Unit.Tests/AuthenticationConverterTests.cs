@@ -514,7 +514,7 @@ public class AuthenticationConverterTests
         var email = Email.create("test@example.com").ResultValue;
         var userName = UserName.create("Test User").ResultValue;
         var role = Role.GeneralUser;
-        var createdBy = UserId.create(1L);
+        var createdBy = UserId.create("00000000-0000-0000-0000-000000000001");
 
         return User.create(email, userName, role, createdBy);
     }

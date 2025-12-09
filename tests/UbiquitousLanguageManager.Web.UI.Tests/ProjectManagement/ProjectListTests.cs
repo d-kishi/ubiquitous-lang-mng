@@ -55,16 +55,16 @@ public class ProjectListTests : BlazorComponentTestBase
         var testProjects = new List<FSharpDomainProject>
         {
             CreateTestProject(
-                id: 1L,
+                id: "00000000-0000-0000-0000-000000000001",
                 name: "テストプロジェクト1",
                 description: "テスト説明1",
-                ownerId: 1L
+                ownerId: "00000000-0000-0000-0000-000000000001"
             ),
             CreateTestProject(
-                id: 2L,
+                id: "00000000-0000-0000-0000-000000000002",
                 name: "テストプロジェクト2",
                 description: "テスト説明2",
-                ownerId: 1L
+                ownerId: "00000000-0000-0000-0000-000000000001"
             )
         };
 
@@ -116,10 +116,10 @@ public class ProjectListTests : BlazorComponentTestBase
 
         // テストデータ準備: ProjectManagerの担当プロジェクトのみ（1件）
         var assignedProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "担当プロジェクト",
             description: "ProjectManagerが担当",
-            ownerId: 1L  // ProjectManagerのID
+            ownerId: "00000000-0000-0000-0000-000000000001"  // ProjectManagerのID
         );
 
         var testProjects = new List<FSharpDomainProject> { assignedProject };
@@ -176,7 +176,7 @@ public class ProjectListTests : BlazorComponentTestBase
         // テストデータ準備
         var testProjects = new List<FSharpDomainProject>
         {
-            CreateTestProject(id: 1L, name: "削除対象PJ", description: "削除テスト", ownerId: 1L)
+            CreateTestProject(id: "00000000-0000-0000-0000-000000000001", name: "削除対象PJ", description: "削除テスト", ownerId: "00000000-0000-0000-0000-000000000001")
         };
 
         // GetProjectsAsyncモック設定
@@ -224,7 +224,7 @@ public class ProjectListTests : BlazorComponentTestBase
         // テストデータ準備
         var testProjects = new List<FSharpDomainProject>
         {
-            CreateTestProject(id: 1L, name: "担当PJ", description: "削除不可", ownerId: 1L)
+            CreateTestProject(id: "00000000-0000-0000-0000-000000000001", name: "担当PJ", description: "削除不可", ownerId: "00000000-0000-0000-0000-000000000001")
         };
 
         // GetProjectsAsyncモック設定
@@ -300,10 +300,10 @@ public class ProjectListTests : BlazorComponentTestBase
     /// - None: 値が存在しない場合
     /// </summary>
     private static FSharpDomainProject CreateTestProject(
-        long id,
+        string id,
         string name,
         string? description = null,
-        long ownerId = 1L,
+        string ownerId = "00000000-0000-0000-0000-000000000001",
         bool isActive = true)
     {
         // F# Smart Constructorを使用して値オブジェクト生成
@@ -322,8 +322,11 @@ public class ProjectListTests : BlazorComponentTestBase
 
         // F# Record型を生成
         // 【重要】F# Discriminated Unionは静的メソッド create() で生成します
+        // GUID文字列からlong値を抽出（最後の12桁を数値化）
+        long projectIdLong = long.Parse(id.Substring(id.Length - 12));
+
         return new FSharpDomainProject(
-            id: FSharpProjectId.create(id),
+            id: FSharpProjectId.create(projectIdLong),
             name: projectName.ResultValue,
             description: projectDescription.ResultValue,
             ownerId: FSharpUserId.create(ownerId),

@@ -145,17 +145,17 @@ public class AuthenticationServiceTests
             emailResult.ResultValue,
             nameResult.ResultValue,
             Role.GeneralUser,
-            UserId.create(1L)
+            UserId.create("00000000-0000-0000-0000-000000000001")
         );
 
         var identityUser = new ApplicationUser
         {
-            Id = "1",
+            Id = "00000000-0000-0000-0000-000000000001",
             Email = "test@example.com",
             UserName = "test@example.com"
         };
 
-        _mockUserManager.Setup(x => x.FindByIdAsync("1"))
+        _mockUserManager.Setup(x => x.FindByIdAsync("00000000-0000-0000-0000-000000000001"))
                        .ReturnsAsync(identityUser);
         _mockUserManager.Setup(x => x.GeneratePasswordResetTokenAsync(identityUser))
                        .ReturnsAsync("generated-token");
@@ -281,11 +281,11 @@ public class AuthenticationServiceTests
         Assert.True(emailResult.IsOk);
         var email = emailResult.ResultValue;
 
-        var identityUser = new ApplicationUser 
-        { 
+        var identityUser = new ApplicationUser
+        {
             Email = email.Value,
             Name = "テストユーザー",
-            Id = "1"
+            Id = "00000000-0000-0000-0000-000000000001"
         };
 
         _mockUserManager.Setup(x => x.FindByEmailAsync(email.Value))
@@ -369,7 +369,7 @@ public class AuthenticationServiceTests
     public async Task EnableTwoFactorAsync_ShouldReturnNotImplementedError()
     {
         // Arrange
-        var userId = UserId.create(1L);
+        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
 
         // Act
         var result = await _service.EnableTwoFactorAsync(userId);
@@ -383,7 +383,7 @@ public class AuthenticationServiceTests
     public async Task DisableTwoFactorAsync_ShouldReturnNotImplementedError()
     {
         // Arrange
-        var userId = UserId.create(1L);
+        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
 
         // Act
         var result = await _service.DisableTwoFactorAsync(userId);
@@ -397,7 +397,7 @@ public class AuthenticationServiceTests
     public async Task VerifyTwoFactorCodeAsync_ShouldReturnNotImplementedError()
     {
         // Arrange
-        var userId = UserId.create(1L);
+        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
         var code = "123456";
 
         // Act
@@ -430,7 +430,7 @@ public class AuthenticationServiceTests
     public async Task ConfirmEmailAsync_ShouldReturnOk()
     {
         // Arrange
-        var userId = UserId.create(1L);
+        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
         var token = "confirmation-token";
 
         // Act

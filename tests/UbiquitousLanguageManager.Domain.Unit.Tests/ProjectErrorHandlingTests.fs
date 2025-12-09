@@ -26,7 +26,8 @@ type ProjectErrorHandlingTests() =
         ProjectDescription.create desc
         |> function | Ok d -> d | Error _ -> failwith "テストデータエラー"
 
-    let createTestUserId id = UserId.create id
+    let createTestUserId (id: int) =
+        UserId.create (sprintf "00000000-0000-0000-0000-%012d" id)
 
     // 🧪 ProjectCreationError toString テスト
     [<Fact>]
@@ -163,7 +164,7 @@ type ProjectErrorHandlingTests() =
         // Arrange
         let name = createValidProjectName "ROP Integration Test"
         let description = createValidProjectDescription (Some "Railway-oriented programming test")
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
         let existingProjects = []
 
         // Act
@@ -190,7 +191,7 @@ type ProjectErrorHandlingTests() =
         // Arrange
         let name = createValidProjectName "Performance Test Project"
         let description = createValidProjectDescription (Some "Performance test")
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
         let stopwatch = Stopwatch.StartNew()
 
         // Act
@@ -208,7 +209,7 @@ type ProjectErrorHandlingTests() =
     [<Fact>]
     member this.``ProjectDomainService_BatchCreation_PerformanceAcceptable``() =
         // Arrange
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
         let existingProjects = []
         let stopwatch = Stopwatch.StartNew()
 
@@ -239,7 +240,7 @@ type ProjectErrorHandlingTests() =
     member this.``ProjectDomainService_MemoryUsage_NoMemoryLeak``() =
         // Arrange
         let initialMemory = GC.GetTotalMemory(true)
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
 
         // Act
         // 大量のプロジェクト作成・破棄を繰り返してメモリリークをチェック
@@ -272,7 +273,7 @@ type ProjectErrorHandlingTests() =
         let emptyList = []
         let name = createValidProjectName "Edge Case Test"
         let description = createValidProjectDescription None
-        let ownerId = createTestUserId 1L
+        let ownerId = createTestUserId 1
 
         let result1 = validateUniqueProjectName name emptyList
         match result1 with

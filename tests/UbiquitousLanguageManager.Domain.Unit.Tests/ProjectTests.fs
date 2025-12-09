@@ -33,7 +33,7 @@ type ProjectTests() =
            | Ok desc -> desc
            | Error _ -> failwith "テストデータエラー"
 
-    let createTestUserId() = UserId.create 1L
+    let createTestUserId() = UserId.create "00000000-0000-0000-0000-000000000001"
 
     // ✅ ProjectName Smart Constructor テスト（正常系）
     [<Fact>]

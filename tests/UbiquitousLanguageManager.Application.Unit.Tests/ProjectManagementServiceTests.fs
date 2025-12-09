@@ -41,7 +41,7 @@ type ProjectManagementServiceTests() =
     /// <summary>
     /// テスト用Project作成ヘルパー
     /// </summary>
-    member private _.CreateTestProject(projectId: int64, ownerId: int64) : Project =
+    member private _.CreateTestProject(projectId: int64, ownerId: string) : Project =
         let projectName =
             match ProjectName.create("テストプロジェクト") with
             | Ok name -> name
@@ -55,7 +55,7 @@ type ProjectManagementServiceTests() =
     /// <summary>
     /// テスト用User作成ヘルパー
     /// </summary>
-    member private _.CreateTestUser(userId: int64, role: Role) : User =
+    member private _.CreateTestUser(userId: string, role: Role) : User =
         let email =
             match Email.create("test@example.com") with
             | Ok e -> e
@@ -92,8 +92,8 @@ type ProjectManagementServiceTests() =
     member this.``AddMemberToProjectAsync_正常系_SuperUser権限_成功を返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
-            let user = this.CreateTestUser(2L, Role.GeneralUser)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
+            let user = this.CreateTestUser("00000000-0000-0000-0000-000000000002", Role.GeneralUser)
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -116,10 +116,12 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let command: AddMemberToProjectCommand = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
-                OperatorUserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
+                OperatorUserId = "00000000-0000-0000-0000-000000000003"
                 OperatorRole = Role.SuperUser
             }
 
@@ -141,8 +143,8 @@ type ProjectManagementServiceTests() =
     member this.``AddMemberToProjectAsync_重複エラー_既存メンバー追加時エラーを返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
-            let user = this.CreateTestUser(2L, Role.GeneralUser)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
+            let user = this.CreateTestUser("00000000-0000-0000-0000-000000000002", Role.GeneralUser)
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -165,10 +167,12 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let command: AddMemberToProjectCommand = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
-                OperatorUserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
+                OperatorUserId = "00000000-0000-0000-0000-000000000003"
                 OperatorRole = Role.SuperUser
             }
 
@@ -190,7 +194,7 @@ type ProjectManagementServiceTests() =
     member this.``AddMemberToProjectAsync_権限エラー_DomainApprover権限時エラーを返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -202,10 +206,12 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let command: AddMemberToProjectCommand = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
-                OperatorUserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
+                OperatorUserId = "00000000-0000-0000-0000-000000000003"
                 OperatorRole = Role.DomainApprover
             }
 
@@ -231,8 +237,8 @@ type ProjectManagementServiceTests() =
     member this.``RemoveMemberFromProjectAsync_正常系_成功を返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
-            let user = this.CreateTestUser(2L, Role.GeneralUser)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
+            let user = this.CreateTestUser("00000000-0000-0000-0000-000000000002", Role.GeneralUser)
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -255,10 +261,12 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let command: RemoveMemberFromProjectCommand = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
-                OperatorUserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
+                OperatorUserId = "00000000-0000-0000-0000-000000000003"
                 OperatorRole = Role.SuperUser
             }
 
@@ -280,8 +288,8 @@ type ProjectManagementServiceTests() =
     member this.``RemoveMemberFromProjectAsync_最後の管理者削除エラー_エラーを返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
-            let user = this.CreateTestUser(2L, Role.ProjectManager)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
+            let user = this.CreateTestUser("00000000-0000-0000-0000-000000000002", Role.ProjectManager)
 
             // Mock設定: 最後のProjectManager（メンバー1名のみ）
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -300,15 +308,17 @@ type ProjectManagementServiceTests() =
             // メンバー一覧取得（1名のみ）
             mockProjectRepository
                 .Setup(fun x -> x.GetProjectMembersAsync(It.IsAny<ProjectId>()))
-                .ReturnsAsync(Ok [UserId(2L)])
+                .ReturnsAsync(Ok [UserId "00000000-0000-0000-0000-000000000002"])
                 |> ignore
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let command: RemoveMemberFromProjectCommand = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
-                OperatorUserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
+                OperatorUserId = "00000000-0000-0000-0000-000000000003"
                 OperatorRole = Role.SuperUser
             }
 
@@ -334,7 +344,7 @@ type ProjectManagementServiceTests() =
     member this.``GetProjectMembersAsync_SuperUser権限_全メンバー取得成功``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -350,9 +360,9 @@ type ProjectManagementServiceTests() =
                 |> ignore
 
             let memberList = [
-                UserId(1L)
-                UserId(2L)
-                UserId(3L)
+                UserId "00000000-0000-0000-0000-000000000001"
+                UserId "00000000-0000-0000-0000-000000000002"
+                UserId "00000000-0000-0000-0000-000000000003"
             ]
 
             mockProjectRepository
@@ -362,9 +372,11 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let query: GetProjectMembersQuery = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
                 UserRole = Role.SuperUser
             }
 
@@ -386,7 +398,7 @@ type ProjectManagementServiceTests() =
     member this.``GetProjectMembersAsync_DomainApprover権限非メンバー_エラーを返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
 
             // Mock設定: 非メンバー
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -403,9 +415,11 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let query: GetProjectMembersQuery = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
                 UserRole = Role.DomainApprover
             }
 
@@ -431,8 +445,8 @@ type ProjectManagementServiceTests() =
     member _.``IsUserProjectMemberAsync_メンバー判定_正常動作``() =
         task {
             // Arrange
-            let projectId = ProjectId(1L)
-            let userId = UserId(2L)
+            let projectId = ProjectId 1L
+            let userId = UserId "00000000-0000-0000-0000-000000000002"
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -471,7 +485,7 @@ type ProjectManagementServiceTests() =
     member this.``GetProjectDetailAsync_UserCount実装_成功を返すべき``() =
         task {
             // Arrange
-            let project = this.CreateTestProject(1L, 1L)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000001")
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -505,9 +519,11 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let query: GetProjectDetailQuery = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
                 UserRole = Role.SuperUser
             }
 
@@ -545,8 +561,8 @@ type ProjectManagementServiceTests() =
                 | "GeneralUser" -> Role.GeneralUser
                 | _ -> Role.GeneralUser
 
-            let project = this.CreateTestProject(1L, 3L) // ProjectManager = operatorId
-            let user = this.CreateTestUser(2L, Role.GeneralUser)
+            let project = this.CreateTestProject(1L, "00000000-0000-0000-0000-000000000003") // ProjectManager = operatorId
+            let user = this.CreateTestUser("00000000-0000-0000-0000-000000000002", Role.GeneralUser)
 
             // Mock設定
             mockProjectRepository <- Mock<IProjectRepository>()
@@ -575,10 +591,12 @@ type ProjectManagementServiceTests() =
 
             let service = this.CreateService()
 
+            let testGuid = Guid.NewGuid()
+
             let command: AddMemberToProjectCommand = {
-                ProjectId = Guid.NewGuid()
-                UserId = Guid.NewGuid()
-                OperatorUserId = Guid.NewGuid()
+                ProjectId = testGuid
+                UserId = "00000000-0000-0000-0000-000000000002"
+                OperatorUserId = "00000000-0000-0000-0000-000000000003"
                 OperatorRole = role
             }
 

@@ -34,7 +34,7 @@ public class NotificationServiceTests
             emailResult.ResultValue,
             nameResult.ResultValue,
             role ?? Role.GeneralUser,
-            UserId.create(1L)
+            UserId.create("00000000-0000-0000-0000-000000000001")
         );
     }
 

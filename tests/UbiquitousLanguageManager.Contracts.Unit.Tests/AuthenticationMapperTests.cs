@@ -75,7 +75,7 @@ public class AuthenticationMapperTests
                 NewPassword = "newPassword123",
                 ConfirmPassword = "newPassword123"
             };
-            var userId = 123L;
+            var userId = "00000000-0000-0000-0000-000000000123";
 
             // Act
             var command = AuthenticationMapper.ToChangePasswordCommand(dto, userId);
@@ -103,18 +103,18 @@ public class AuthenticationMapperTests
             Assert.True(emailResult.IsOk);
             Assert.True(nameResult.IsOk);
 
-            var user = User.create(
+            var user = User.createWithId(
                 emailResult.ResultValue,
                 nameResult.ResultValue,
                 Role.GeneralUser,
-                UserId.create(1L)
+                UserId.create("00000000-0000-0000-0000-000000000001")
             );
 
             // Act
             var dto = AuthenticationMapper.ToAuthenticatedUserDto(user);
 
             // Assert
-            Assert.Equal(0L, dto.Id); // User.createはID=0を設定する
+            Assert.Equal("00000000-0000-0000-0000-000000000001", dto.Id); // User.createWithIdで指定したIDを設定
             Assert.Equal("test@example.com", dto.Email);
             Assert.Equal("テストユーザー", dto.Name);
             Assert.Equal("GeneralUser", dto.Role);

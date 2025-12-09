@@ -36,7 +36,7 @@ type UserDomainServiceTests() =
         | _ -> Role.GeneralUser
 
     /// テスト用ユーザー作成ヘルパー
-    member this.CreateTestUser(email: string, name: string, role: Role, id: int64, isActive: bool) : User =
+    member this.CreateTestUser(email: string, name: string, role: Role, id: string, isActive: bool) : User =
         let emailValue =
             match Email.create email with
             | Ok e -> e
@@ -50,7 +50,7 @@ type UserDomainServiceTests() =
         let user = User.create emailValue nameValue role (UserId.create id)
 
         if not isActive then
-            let adminUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, 999L, true)
+            let adminUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, "00000000-0000-0000-0000-000000000999", true)
             match user.deactivate adminUser adminUser.Id with
             | Ok deactivatedUser -> deactivatedUser
             | Error _ -> failwith "ユーザー無効化失敗"
@@ -58,11 +58,11 @@ type UserDomainServiceTests() =
             user
 
     /// テスト用ユーザー作成（デフォルトパラメータ）
-    member this.CreateTestUserDefault(?email: string, ?name: string, ?role: Role, ?id: int64, ?isActive: bool) : User =
+    member this.CreateTestUserDefault(?email: string, ?name: string, ?role: Role, ?id: string, ?isActive: bool) : User =
         let defaultEmail = defaultArg email "test@example.com"
         let defaultName = defaultArg name "テストユーザー"
         let defaultRole = defaultArg role Role.GeneralUser
-        let defaultId = defaultArg id 1L
+        let defaultId = defaultArg id "00000000-0000-0000-0000-000000000001"
         let defaultIsActive = defaultArg isActive true
         this.CreateTestUser(defaultEmail, defaultName, defaultRole, defaultId, defaultIsActive)
 
@@ -76,7 +76,7 @@ type ValidateUserCreationPermissionTests() =
     [<Fact>]
     member this.``ValidateUserCreationPermission_SuperUserCreatingGeneralUser_ShouldReturnOk``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, 1L, true)
+        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, "00000000-0000-0000-0000-000000000001", true)
         let targetRole = Role.GeneralUser
 
         // Act
@@ -90,7 +90,7 @@ type ValidateUserCreationPermissionTests() =
     [<Fact>]
     member this.``ValidateUserCreationPermission_SuperUserCreatingSuperUser_ShouldReturnOk``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, 1L, true)
+        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, "00000000-0000-0000-0000-000000000001", true)
         let targetRole = Role.SuperUser
 
         // Act
@@ -104,7 +104,7 @@ type ValidateUserCreationPermissionTests() =
     [<Fact>]
     member this.``ValidateUserCreationPermission_ProjectManagerCreatingGeneralUser_ShouldReturnOk``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, 1L, true)
+        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, "00000000-0000-0000-0000-000000000001", true)
         let targetRole = Role.GeneralUser
 
         // Act
@@ -118,7 +118,7 @@ type ValidateUserCreationPermissionTests() =
     [<Fact>]
     member this.``ValidateUserCreationPermission_ProjectManagerCreatingSuperUser_ShouldReturnError``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, 1L, true)
+        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, "00000000-0000-0000-0000-000000000001", true)
         let targetRole = Role.SuperUser
 
         // Act
@@ -132,7 +132,7 @@ type ValidateUserCreationPermissionTests() =
     [<Fact>]
     member this.``ValidateUserCreationPermission_GeneralUserCreatingAnyUser_ShouldReturnError``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("user@example.com", "一般ユーザー", Role.GeneralUser, 1L, true)
+        let operatorUser = this.CreateTestUser("user@example.com", "一般ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000001", true)
         let targetRole = Role.GeneralUser
 
         // Act
@@ -146,7 +146,7 @@ type ValidateUserCreationPermissionTests() =
     [<Fact>]
     member this.``ValidateUserCreationPermission_InactiveUserCreatingAnyUser_ShouldReturnError``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("inactive@example.com", "無効ユーザー", Role.SuperUser, 1L, false)
+        let operatorUser = this.CreateTestUser("inactive@example.com", "無効ユーザー", Role.SuperUser, "00000000-0000-0000-0000-000000000001", false)
         let targetRole = Role.GeneralUser
 
         // Act
@@ -179,7 +179,7 @@ type ValidateUserCreationPermissionTests() =
         // Arrange
         let operatorRole = this.ConvertIntToRole operatorRoleInt
         let targetRole = this.ConvertIntToRole targetRoleInt
-        let operatorUser = this.CreateTestUser("operator@example.com", "操作者", operatorRole, 1L, true)
+        let operatorUser = this.CreateTestUser("operator@example.com", "操作者", operatorRole, "00000000-0000-0000-0000-000000000001", true)
 
         // Act
         let result = UserDomainService.validateUserCreationPermission operatorUser targetRole
@@ -208,8 +208,8 @@ type ValidateUniqueEmailTests() =
 
         let existingUsers =
             [
-                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, 1L, true)
-                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, 2L, true)
+                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, "00000000-0000-0000-0000-000000000001", true)
+                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
             ]
 
         // Act
@@ -230,9 +230,9 @@ type ValidateUniqueEmailTests() =
 
         let existingUsers =
             [
-                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, 1L, true)
-                this.CreateTestUser("duplicate@example.com", "重複ユーザー", Role.GeneralUser, 2L, true)
-                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, 3L, true)
+                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, "00000000-0000-0000-0000-000000000001", true)
+                this.CreateTestUser("duplicate@example.com", "重複ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
+                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, "00000000-0000-0000-0000-000000000003", true)
             ]
 
         // Act
@@ -253,9 +253,9 @@ type ValidateUniqueEmailTests() =
 
         let existingUsers =
             [
-                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, 1L, true)
-                this.CreateTestUser("inactive@example.com", "無効ユーザー", Role.GeneralUser, 2L, false)
-                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, 3L, true)
+                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, "00000000-0000-0000-0000-000000000001", true)
+                this.CreateTestUser("inactive@example.com", "無効ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", false)
+                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, "00000000-0000-0000-0000-000000000003", true)
             ]
 
         // Act
@@ -294,7 +294,7 @@ type ValidateUniqueEmailTests() =
 
         let existingUsers =
             [
-                this.CreateTestUser("user@example.com", "既存ユーザー", Role.GeneralUser, 1L, true)
+                this.CreateTestUser("user@example.com", "既存ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000001", true)
             ]
 
         // Act
@@ -315,8 +315,8 @@ type ValidateRoleChangeAuthorizationTests() =
     [<Fact>]
     member this.``ValidateRoleChangeAuthorization_SuperUserChangingAnyRole_ShouldReturnOk``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, 1L, true)
-        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, 2L, true)
+        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
         let newRole = Role.ProjectManager
 
         // Act
@@ -330,8 +330,8 @@ type ValidateRoleChangeAuthorizationTests() =
     [<Fact>]
     member this.``ValidateRoleChangeAuthorization_SuperUserChangingSuperUser_ShouldReturnOk``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("admin1@example.com", "管理者1", Role.SuperUser, 1L, true)
-        let targetUser = this.CreateTestUser("admin2@example.com", "管理者2", Role.SuperUser, 2L, true)
+        let operatorUser = this.CreateTestUser("admin1@example.com", "管理者1", Role.SuperUser, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("admin2@example.com", "管理者2", Role.SuperUser, "00000000-0000-0000-0000-000000000002", true)
         let newRole = Role.ProjectManager
 
         // Act
@@ -345,8 +345,8 @@ type ValidateRoleChangeAuthorizationTests() =
     [<Fact>]
     member this.``ValidateRoleChangeAuthorization_NonSuperUserChangingSuperUser_ShouldReturnError``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, 1L, true)
-        let targetUser = this.CreateTestUser("admin@example.com", "スーパーユーザー", Role.SuperUser, 2L, true)
+        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("admin@example.com", "スーパーユーザー", Role.SuperUser, "00000000-0000-0000-0000-000000000002", true)
         let newRole = Role.ProjectManager
 
         // Act
@@ -360,8 +360,8 @@ type ValidateRoleChangeAuthorizationTests() =
     [<Fact>]
     member this.``ValidateRoleChangeAuthorization_NonSuperUserPromotingToSuperUser_ShouldReturnError``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, 1L, true)
-        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, 2L, true)
+        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
         let newRole = Role.SuperUser
 
         // Act
@@ -375,8 +375,8 @@ type ValidateRoleChangeAuthorizationTests() =
     [<Fact>]
     member this.``ValidateRoleChangeAuthorization_ProjectManagerChangingLowerRoles_ShouldReturnOk``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, 1L, true)
-        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, 2L, true)
+        let operatorUser = this.CreateTestUser("manager@example.com", "管理者", Role.ProjectManager, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
         let newRole = Role.DomainApprover
 
         // Act
@@ -390,8 +390,8 @@ type ValidateRoleChangeAuthorizationTests() =
     [<Fact>]
     member this.``ValidateRoleChangeAuthorization_InsufficientPermission_ShouldReturnError``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("approver@example.com", "承認者", Role.DomainApprover, 1L, true)
-        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, 2L, true)
+        let operatorUser = this.CreateTestUser("approver@example.com", "承認者", Role.DomainApprover, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("user@example.com", "ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
         let newRole = Role.ProjectManager
 
         // Act
@@ -418,8 +418,8 @@ type ValidateRoleChangeAuthorizationTests() =
         let operatorRole = this.ConvertIntToRole operatorRoleInt
         let targetCurrentRole = this.ConvertIntToRole targetCurrentRoleInt
         let targetNewRole = this.ConvertIntToRole targetNewRoleInt
-        let operatorUser = this.CreateTestUser("operator@example.com", "操作者", operatorRole, 1L, true)
-        let targetUser = this.CreateTestUser("target@example.com", "対象ユーザー", targetCurrentRole, 2L, true)
+        let operatorUser = this.CreateTestUser("operator@example.com", "操作者", operatorRole, "00000000-0000-0000-0000-000000000001", true)
+        let targetUser = this.CreateTestUser("target@example.com", "対象ユーザー", targetCurrentRole, "00000000-0000-0000-0000-000000000002", true)
 
         // Act
         let result = UserDomainService.validateRoleChangeAuthorization operatorUser targetUser targetNewRole
@@ -441,7 +441,7 @@ type AdditionalDomainServiceTests() =
     [<Fact>]
     member this.``UserDomainService_MultipleValidations_ShouldWorkTogether``() =
         // Arrange
-        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, 1L, true)
+        let operatorUser = this.CreateTestUser("admin@example.com", "管理者", Role.SuperUser, "00000000-0000-0000-0000-000000000001", true)
         let newEmail =
             match Email.create "newuser@example.com" with
             | Ok e -> e
@@ -449,8 +449,8 @@ type AdditionalDomainServiceTests() =
 
         let existingUsers =
             [
-                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, 2L, true)
-                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, 3L, true)
+                this.CreateTestUser("user1@example.com", "ユーザー1", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
+                this.CreateTestUser("user2@example.com", "ユーザー2", Role.GeneralUser, "00000000-0000-0000-0000-000000000003", true)
             ]
 
         // Act - ユーザー作成権限チェック
@@ -471,7 +471,7 @@ type AdditionalDomainServiceTests() =
     [<Fact>]
     member this.``UserDomainService_ComplexScenario_ShouldHandleBusinessRules``() =
         // Arrange - 複雑なシナリオ：ProjectManagerが新しいDomainApproverを作成しようとする
-        let operatorUser = this.CreateTestUser("manager@example.com", "プロジェクト管理者", Role.ProjectManager, 1L, true)
+        let operatorUser = this.CreateTestUser("manager@example.com", "プロジェクト管理者", Role.ProjectManager, "00000000-0000-0000-0000-000000000001", true)
         let newEmail =
             match Email.create "approver@example.com" with
             | Ok e -> e
@@ -480,7 +480,7 @@ type AdditionalDomainServiceTests() =
         let existingUsers =
             [
                 operatorUser
-                this.CreateTestUser("existing@example.com", "既存ユーザー", Role.GeneralUser, 2L, true)
+                this.CreateTestUser("existing@example.com", "既存ユーザー", Role.GeneralUser, "00000000-0000-0000-0000-000000000002", true)
             ]
 
         // Act

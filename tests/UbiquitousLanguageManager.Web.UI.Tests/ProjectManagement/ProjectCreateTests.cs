@@ -59,18 +59,18 @@ public class ProjectCreateTests : BlazorComponentTestBase
 
         // テストデータ準備: 作成されたプロジェクト（F# Domain型）
         var createdProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "新規テストプロジェクト",
             description: "テスト説明",
-            ownerId: 1L
+            ownerId: "00000000-0000-0000-0000-000000000001"
         );
 
         // デフォルトドメイン準備（F# Domain型）
         // 注: 実際のデフォルトドメイン名は「{ProjectName}_Default」形式
         var defaultDomain = CreateTestDomain(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "新規テストプロジェクト_Default",
-            projectId: 1L,
+            projectId: "00000000-0000-0000-0000-000000000001",
             isDefault: true
         );
 
@@ -125,11 +125,9 @@ public class ProjectCreateTests : BlazorComponentTestBase
         SetupSuperUser("admin@test.com");
 
         // CreateProjectAsyncモック設定（失敗・重複名エラー）
-        var builder = new ProjectManagementServiceMockBuilder();
-        var mockService = builder
-            .SetupCreateProjectFailure("プロジェクト名が重複しています")
-            .BuildMock();
-        Services.AddSingleton(mockService.Object);
+        // 注: MockProjectServiceを直接セットアップ
+        MockProjectService.Setup(s => s.CreateProjectAsync(It.IsAny<UbiquitousLanguageManager.Application.ProjectManagement.CreateProjectCommand>()))
+            .ReturnsAsync(Microsoft.FSharp.Core.FSharpResult<UbiquitousLanguageManager.Application.ProjectManagement.ProjectCreationResultDto, string>.NewError("プロジェクト名が重複しています"));
 
         // Act - ProjectCreateコンポーネントレンダリング
         var cut = RenderComponent<ProjectCreate>();
@@ -177,18 +175,18 @@ public class ProjectCreateTests : BlazorComponentTestBase
 
         // テストデータ準備: 作成されたプロジェクト
         var createdProject = CreateTestProject(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "新規プロジェクト",
             description: "説明",
-            ownerId: 1L
+            ownerId: "00000000-0000-0000-0000-000000000001"
         );
 
         // デフォルトドメイン準備
         // 注: 実際のデフォルトドメイン名は「{ProjectName}_Default」形式
         var defaultDomain = CreateTestDomain(
-            id: 1L,
+            id: "00000000-0000-0000-0000-000000000001",
             name: "新規プロジェクト_Default",  // デフォルトドメイン名
-            projectId: 1L,
+            projectId: "00000000-0000-0000-0000-000000000001",
             isDefault: true
         );
 
@@ -242,10 +240,10 @@ public class ProjectCreateTests : BlazorComponentTestBase
     /// - None: 値が存在しない場合
     /// </summary>
     private static FSharpDomainProject CreateTestProject(
-        long id,
+        string id,
         string name,
         string? description = null,
-        long ownerId = 1L,
+        string ownerId = "00000000-0000-0000-0000-000000000001",
         bool isActive = true)
     {
         // F# Smart Constructorを使用して値オブジェクト生成
@@ -264,8 +262,11 @@ public class ProjectCreateTests : BlazorComponentTestBase
 
         // F# Record型を生成
         // 【重要】F# Discriminated Unionは静的メソッド create() で生成します
+        // GUID文字列からlong値を抽出（最後の12桁を数値化）
+        long projectIdLong = long.Parse(id.Substring(id.Length - 12));
+
         return new FSharpDomainProject(
-            id: FSharpProjectId.create(id),
+            id: FSharpProjectId.create(projectIdLong),
             name: projectName.ResultValue,
             description: projectDescription.ResultValue,
             ownerId: FSharpUserId.create(ownerId),
@@ -282,12 +283,12 @@ public class ProjectCreateTests : BlazorComponentTestBase
     /// デフォルトドメイン「共通」のテストデータ生成
     /// </summary>
     private static FSharpDomainDomain CreateTestDomain(
-        long id,
+        string id,
         string name,
-        long projectId,
+        string projectId,
         bool isDefault = false,
         bool isActive = true,
-        long ownerId = 1L)
+        string ownerId = "00000000-0000-0000-0000-000000000001")
     {
         // F# Smart Constructorを使用してドメイン名生成
         var domainName = FSharpDomainName.create(name);
@@ -301,9 +302,13 @@ public class ProjectCreateTests : BlazorComponentTestBase
 
         // F# Domain Record型を生成
         // 【重要】Domain型のフィールド順序: Id, ProjectId, Name, Description, OwnerId, IsDefault, CreatedAt, UpdatedAt, IsActive
+        // GUID文字列からlong値を抽出（最後の12桁を数値化）
+        long domainIdLong = long.Parse(id.Substring(id.Length - 12));
+        long projectIdLong = long.Parse(projectId.Substring(projectId.Length - 12));
+
         return new FSharpDomainDomain(
-            id: FSharpDomainId.create(id),
-            projectId: FSharpProjectId.create(projectId),
+            id: FSharpDomainId.create(domainIdLong),
+            projectId: FSharpProjectId.create(projectIdLong),
             name: domainName.ResultValue,
             description: emptyDescription.ResultValue,
             ownerId: FSharpUserId.create(ownerId),

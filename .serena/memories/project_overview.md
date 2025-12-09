@@ -18,8 +18,8 @@
 ### 現在のPhase/Step状況
 
 🔄 **Phase Issue79実施中**（ID体系統一リファクタリング）
-- **状態**: Step 11完了（2025-12-08）、Step 12準備中
-- **累積達成率**: 80%
+- **状態**: Step 12完了（2025-12-10）、Step 13待機中
+- **累積達成率**: 95%
 - **Phase目的**: ID体系統一（GetHashCode排除 + InitialData GUID化）
 - **Phase構成**: 7 Step構成（約20-25h・3-4セッション）
 - **進捗**（2025-12-07 ぶっ通し対応完了）:
@@ -31,10 +31,12 @@
   - ✅ Step 9完了: Contracts層修正（16ファイル・ぶっ通し対応）
   - ✅ Step 9.5完了: プロセス改善（層間影響分析プロセス恒久化）
   - ✅ Step 10完了: Web層修正（23エラー解消・Guid.TryParse/long.TryParse削除）
-  - 📋 Step 11-13: 未着手
+  - ✅ Step 11完了: InitialData GUID化（SQL 51件・DbInitializer 9件）
+  - ✅ Step 12完了: テストコード修正（384 Pass, 0 Failed, 21 Skipped）
+  - 📋 Step 13: 統合テスト・完了（E2Eテスト・ADR作成）
 - **関連Issue**: [GitHub Issue #79](https://github.com/d-kishi/ubiquitous-lang-mng/issues/79)
 - **組織設計ファイル**: `Doc/08_Organization/Active/Phase_Issue79/`
-- **次回**: Step 11（InitialData対応）開始 - step-startコマンドから
+- **次回**: Step 13（統合テスト・完了）開始 - step-startコマンドから
 - **重要**: CLAUDE.mdにProject-Specific Constitution追加済み（プロセス違反対策）
 
 ⏸️ **Phase B-F3 Step1.5 Stage4一時停止**（Issue #79対応完了まで）

@@ -276,6 +276,7 @@ public abstract class BlazorComponentTestBase : TestContext
         var builder = new UserManagementServiceMockBuilder();
         MockUserManagementService = builder
             .SetupGetAllUsersWithIdentitySuccess(userTuples)
+            .SetupGetProjectIdsByEmailSuccess() // GetProjectIdsByEmailAsyncのモック追加（デフォルト空リスト）
             .BuildMock();
 
         // サービス再登録（既存のモックを置き換え）
