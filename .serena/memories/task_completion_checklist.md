@@ -1,6 +1,6 @@
 # タスク完了チェックリスト
 
-${1}2025-11-18（**Phase B-F2完了・品質スコア85%達成・次回Phase B3開始準備**）
+**最終更新**: 2025-12-10（**Phase Issue79完了・品質スコア92/100・次回Phase B-F3 Step2開始準備**）
 **管理方針**: 完了タスク・継続タスク・新規タスクの一元管理・状態更新方式
 
 ## 📊 Phase別完了状況
@@ -73,13 +73,19 @@ ${1}2025-11-18（**Phase B-F2完了・品質スコア85%達成・次回Phase B3�
   - [x] Stage 1-6: UI実装・bUnitテスト・修正完了
   - [x] Stage 7: Index.razor動作確認 9/9項目完了
   - [~] Stage 7: Create/Edit.razor動作確認中 → Issue #79発見で一時中断
-  - [~] **Issue #79: ID体系統一リファクタリング**（進行中・約20-27h・35%完了）
+  - [x] **Issue #79: ID体系統一リファクタリング**（✅2025-12-10完了・92/100点）
     - [x] Step 1: 準備（現状分析・設計）
-    - [x] Step 2: Domain層ID型変更（int64→string・13箇所）
-    - [x] Step 3: Application層対応（GetHashCode排除41箇所）
-    - [ ] Step 4: Infrastructure層修正（次回セッション）
-    - [ ] Step 5-8: Contracts/Web層、InitialData、テスト、ドキュメント
-    - 対応後: Stage 7 Create/Edit確認再開 → Stage 8 E2Eテスト
+    - [x] Step 2-5: 失敗した試行（全ID型string化・リバート）
+    - [x] Step 6: Domain層UserId型変更（int64→string）
+    - [x] Step 7: Application層対応（GetHashCode排除27箇所）
+    - [x] Step 8: Infrastructure層修正（GetHashCode排除2箇所）
+    - [x] Step 9: Contracts層修正（DTO型変更・TypeConverters修正）
+    - [x] Step 10: Web層修正（Guid.TryParse/long.TryParse削除）
+    - [x] Step 11: InitialData GUID化
+    - [x] Step 12: テストコード修正（384 Pass, 0 Failed, 21 Skipped）
+    - [x] Step 13: 統合テスト・完了（E2E 11 passed・ADR_027作成）
+    - **GitHub Issue #79 クローズ済み**
+    - 対応後: Phase B-F3 Step2開始準備完了
   - [ ] **Step2: Phase A対応漏れ（認証補助機能UI）**（5-8h）
     - プロフィール変更・パスワードリセット送信・実行画面実装
     - E2Eテスト拡張（authentication.spec.ts 9/9シナリオ）
@@ -116,29 +122,26 @@ ${1}2025-11-18（**Phase B-F2完了・品質スコア85%達成・次回Phase B3�
 
 ## 🔄 次回セッション継続タスク
 
-### 🚀 最優先（次セッション・Phase B3開始準備）
-1. [ ] **Issue #59完了: UserProjects E2Eテスト再設計**（次セッション最優先・1.5-2.5時間）：
-   - **実施内容**: user-projects.spec.ts改善・3シナリオ全成功確認
-   - **前提条件**: User Projects機能実装完了待ち（Phase B3 Step2-3で実施）
-   - **確認項目**:
-     - ① user-projects.spec.ts 3シナリオ全成功（100%）
-     - ② TestPassword統一維持（`E2ETest#2025!Secure`）
-     - ③ Phase B2技術負債解消（ProjectEdit.razor統一方針決定）
-   - **参照ファイル**:
-     - `tests/e2e/user-projects.spec.ts`
-     - `Doc/08_Organization/Completed/Phase_B2/Phase_Summary.md`（Step8申し送り事項）
-   - **成功基準**: Issue #59 Close準備完了
+### 🚀 最優先（次セッション・Phase B-F3 Step2開始準備）
 
-2. [ ] **Issue #46完了: Commands刷新実施**（Issue #59完了後・2-3時間）：
-   - **実施内容**: Skills展開経験を踏まえたCommands改善適用
-   - **対象Commands**: phase-end.md, step-end-review.md, subagent-selection.md等
-   - **前提条件**: Phase B-F2 Agent Skills Phase 2展開完了
-   - **成功基準**: Commands品質向上・Issue #46 Close準備完了
+**Phase Issue79完了（2025-12-10）** → Phase B-F3再開可能
 
-3. [ ] **Issue #57 Close実施**（Issue #59完了時に同時実施・5分）：
-   - **実施内容**: e2e-test Agent動作確認完了・Issue #57 Close
-   - **前提条件**: Issue #59完了（E2Eテスト全成功確認）
-   - **成功基準**: Issue #57 Close完了
+1. [ ] **Phase B-F3 Step1.5 Stage4再開: Create/Edit.razor動作確認**
+   - **状態**: Stage 7 動作確認途中で中断（Issue #79発見）
+   - **再開内容**: Create/Edit.razor動作確認 → Stage 8 E2Eテスト
+
+2. [ ] **Phase B-F3 Step2開始: Phase A対応漏れ（認証補助機能UI）**（5-8h）
+   - **実施内容**: プロフィール変更・パスワードリセット送信・実行画面実装
+   - **E2Eテスト拡張**: authentication.spec.ts 9/9シナリオ
+
+3. [ ] **Issue #82対応: Skipテスト21件再確認**
+   - **概要**: Phase Issue79でSkipしたテスト21件の対応要否確認
+   - **参照**: GitHub Issue #82
+
+### 📋 中優先（次セッション以降）
+1. [ ] **Issue #59完了: UserProjects E2Eテスト再設計**
+2. [ ] **Issue #46完了: Commands刷新実施**
+3. [ ] **Issue #57 Close実施**
 
 $2
 - [x] **Issue #49実装**（✅2025-10-13完了・テストアーキテクチャドキュメント参照タイミング標準化）

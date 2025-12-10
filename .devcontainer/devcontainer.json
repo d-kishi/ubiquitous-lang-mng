@@ -60,7 +60,8 @@
   },
 
   // コンテナ起動後の初期化コマンド
-  "postCreateCommand": "bash .devcontainer/scripts/setup-https.sh && bash .devcontainer/scripts/setup-mcp.sh && dotnet restore && dotnet build tests/UbiquitousLanguageManager.E2E.Tests && pwsh -File tests/UbiquitousLanguageManager.E2E.Tests/bin/Debug/net8.0/playwright.ps1 install",
+  // Note: TypeScript/Playwright Test移行完了（Phase B2-F2）のため、npx playwright installを使用
+  "postCreateCommand": "bash .devcontainer/scripts/setup-https.sh && bash .devcontainer/scripts/setup-mcp.sh && dotnet restore && cd tests/UbiquitousLanguageManager.E2E.Tests && npm install && npx playwright install chromium",
 
   // ポートフォワーディング設定
   "forwardPorts": [

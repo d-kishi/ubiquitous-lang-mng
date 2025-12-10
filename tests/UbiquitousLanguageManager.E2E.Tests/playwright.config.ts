@@ -15,7 +15,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'https://localhost:5001',
+    baseURL: process.env.BASE_URL || 'https://localhost:5001',
     trace: 'on-first-retry',
     viewport: { width: 1920, height: 1080 }, // Full HD
     ignoreHTTPSErrors: true, // 自己署名証明書対応

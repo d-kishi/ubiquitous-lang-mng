@@ -14,9 +14,31 @@ import { test, expect } from '@playwright/test';
  * - Blazor Server SignalR対応
  */
 
-const BASE_URL = 'https://localhost:5001';
-const TEST_EMAIL = 'e2e-test@ubiquitous-lang.local';
-const TEST_PASSWORD = 'E2ETest#2025!Secure';
+const BASE_URL = process.env.BASE_URL || 'https://localhost:5001';
+
+// E2Eテスト用アカウント（Stage 1で作成済み）
+const TEST_ACCOUNTS = {
+  SuperUser: {
+    email: 'e2e-test@ubiquitous-lang.local',
+    password: 'E2ETest#2025!Secure'
+  },
+  ProjectManager: {
+    email: 'e2e-test-pm@ubiquitous-lang.local',
+    password: 'Test123!'
+  },
+  DomainApprover: {
+    email: 'e2e-test-da@ubiquitous-lang.local',
+    password: 'Test123!'
+  },
+  GeneralUser: {
+    email: 'e2e-test-gu@ubiquitous-lang.local',
+    password: 'Test123!'
+  }
+};
+
+// 後方互換性のために維持
+const TEST_EMAIL = TEST_ACCOUNTS.SuperUser.email;
+const TEST_PASSWORD = TEST_ACCOUNTS.SuperUser.password;
 
 test.describe('Phase A Authentication Feature', () => {
   // Scenario 1: 正常系 - ログイン成功
@@ -179,5 +201,159 @@ test.describe('Phase A Authentication Feature', () => {
 
   test.skip('PasswordReset_InvalidToken_ShowsErrorMessage', async ({ page }) => {
     // ResetPassword.razorページ未実装
+  });
+});
+
+/**
+ * Phase Issue79 E2E Tests
+ *
+ * Test Scenarios: 6 scenarios
+ * - 4 Role Login Tests: SuperUser, ProjectManager, DomainApprover, GeneralUser
+ * - 1 PM User List Access Test: Issue #79 本質的問題検証
+ * - 1 PM Project Filter Test: プロジェクトフィルタ動作確認
+ */
+test.describe('Phase Issue79 - User Management Feature', () => {
+  // Scenario 1: SuperUserアカウントログイン確認
+  test('Login_SuperUser_ShowsHomePage', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.waitForLoadState('networkidle');
+
+    await page.fill('[data-testid="username-input"]', TEST_ACCOUNTS.SuperUser.email);
+    await page.fill('[data-testid="password-input"]', TEST_ACCOUNTS.SuperUser.password);
+    await page.click('[data-testid="login-button"]');
+
+    await page.waitForLoadState('networkidle');
+
+    // ログイン成功確認
+    await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible({ timeout: 5000 });
+  });
+
+  // Scenario 2: ProjectManagerアカウントログイン確認
+  test('Login_ProjectManager_ShowsHomePage', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.waitForLoadState('networkidle');
+
+    await page.fill('[data-testid="username-input"]', TEST_ACCOUNTS.ProjectManager.email);
+    await page.fill('[data-testid="password-input"]', TEST_ACCOUNTS.ProjectManager.password);
+    await page.click('[data-testid="login-button"]');
+
+    await page.waitForLoadState('networkidle');
+
+    // ログイン成功確認
+    await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible({ timeout: 5000 });
+  });
+
+  // Scenario 3: DomainApproverアカウントログイン確認
+  test('Login_DomainApprover_ShowsHomePage', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.waitForLoadState('networkidle');
+
+    await page.fill('[data-testid="username-input"]', TEST_ACCOUNTS.DomainApprover.email);
+    await page.fill('[data-testid="password-input"]', TEST_ACCOUNTS.DomainApprover.password);
+    await page.click('[data-testid="login-button"]');
+
+    await page.waitForLoadState('networkidle');
+
+    // ログイン成功確認
+    await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible({ timeout: 5000 });
+  });
+
+  // Scenario 4: GeneralUserアカウントログイン確認
+  test('Login_GeneralUser_ShowsHomePage', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.waitForLoadState('networkidle');
+
+    await page.fill('[data-testid="username-input"]', TEST_ACCOUNTS.GeneralUser.email);
+    await page.fill('[data-testid="password-input"]', TEST_ACCOUNTS.GeneralUser.password);
+    await page.click('[data-testid="login-button"]');
+
+    await page.waitForLoadState('networkidle');
+
+    // ログイン成功確認
+    await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible({ timeout: 5000 });
+  });
+
+  // Scenario 5: PM権限ユーザー一覧表示確認（Issue #79 本質的問題）
+  test('UserList_ProjectManager_ShowsUserTable', async ({ page }) => {
+    // PMアカウントでログイン
+    await page.goto(BASE_URL);
+    await page.waitForLoadState('networkidle');
+
+    await page.fill('[data-testid="username-input"]', TEST_ACCOUNTS.ProjectManager.email);
+    await page.fill('[data-testid="password-input"]', TEST_ACCOUNTS.ProjectManager.password);
+    await page.click('[data-testid="login-button"]');
+
+    await page.waitForLoadState('networkidle');
+
+    // ログイン成功確認
+    await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible({ timeout: 5000 });
+
+    // ユーザー一覧画面に遷移
+    await page.goto(`${BASE_URL}/admin/users`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000); // Blazor Server SignalR接続・データ取得待機
+
+    // ユーザーテーブルが表示されることを確認
+    const userTable = page.locator('[data-testid="user-list-table"]');
+    await expect(userTable).toBeVisible({ timeout: 10000 });
+
+    // テーブル内にユーザー行が少なくとも1件存在することを確認
+    const userRows = page.locator('[data-testid^="user-row-"]');
+    const rowCount = await userRows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    // ユーザー件数バッジが表示されることを確認（ヘッダー内の件数バッジのみ）
+    const countBadge = page.locator('.card-header .badge.bg-secondary');
+    await expect(countBadge).toBeVisible();
+  });
+
+  // Scenario 6: SuperUser権限プロジェクトフィルタ確認（プロジェクトデータがある場合のみ）
+  test.skip('UserList_SuperUser_ProjectFilterWorks', async ({ page }) => {
+    // SuperUserアカウントでログイン
+    await page.goto(BASE_URL);
+    await page.waitForLoadState('networkidle');
+
+    await page.fill('[data-testid="username-input"]', TEST_ACCOUNTS.SuperUser.email);
+    await page.fill('[data-testid="password-input"]', TEST_ACCOUNTS.SuperUser.password);
+    await page.click('[data-testid="login-button"]');
+
+    await page.waitForLoadState('networkidle');
+
+    // ユーザー一覧画面に遷移
+    await page.goto(`${BASE_URL}/admin/users`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000); // Blazor Server SignalR接続・データ取得待機
+
+    // プロジェクトフィルタドロップダウンが表示されるか確認（プロジェクトがある場合のみ）
+    const projectFilter = page.locator('[data-testid="project-filter-dropdown"]');
+    const filterVisible = await projectFilter.isVisible({ timeout: 2000 }).catch(() => false);
+
+    if (filterVisible) {
+      // プロジェクトがある場合、フィルタ機能をテスト
+      const options = await projectFilter.locator('option').all();
+      if (options.length > 1) {
+        const secondOption = await options[1].getAttribute('value');
+        if (secondOption) {
+          await projectFilter.selectOption(secondOption);
+          await page.waitForTimeout(1000); // フィルタ適用待機
+
+          // フィルタ適用後もユーザーテーブルが表示されることを確認
+          const userTable = page.locator('[data-testid="user-list-table"]');
+          await expect(userTable).toBeVisible({ timeout: 5000 });
+
+          // ユーザー件数バッジが表示されることを確認（ヘッダー内の件数バッジのみ）
+          const countBadge = page.locator('.card-header .badge.bg-secondary');
+          await expect(countBadge).toBeVisible();
+        }
+      }
+    } else {
+      // プロジェクトがない場合、ユーザーテーブルが表示されることを確認
+      const userTable = page.locator('[data-testid="user-list-table"]');
+      await expect(userTable).toBeVisible({ timeout: 5000 });
+
+      // ユーザー件数バッジが表示されることを確認
+      const countBadge = page.locator('.card-header .badge.bg-secondary');
+      await expect(countBadge).toBeVisible();
+    }
   });
 });

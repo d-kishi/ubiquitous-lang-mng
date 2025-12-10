@@ -34,6 +34,9 @@ public class DbInitializer
     private const string DomainApproverUserId = "00000000-0000-0000-0000-000000000003";
     private const string GeneralUserId = "00000000-0000-0000-0000-000000000004";
     private const string E2eTestUserId = "00000000-0000-0000-0000-000000000099";
+    private const string E2eTestPmUserId = "00000000-0000-0000-0000-000000000098";
+    private const string E2eTestDaUserId = "00000000-0000-0000-0000-000000000097";
+    private const string E2eTestGuUserId = "00000000-0000-0000-0000-000000000096";
 
     // ロールID定数（GUID形式）
     private const string SuperUserRoleId = "00000000-0000-0000-0001-000000000001";
@@ -217,9 +220,9 @@ public class DbInitializer
     }
 
     /// <summary>
-    /// ユーザー初期データ投入（5件）
+    /// ユーザー初期データ投入（8件）
     /// 全ユーザーの初期パスワード: "su"
-    /// E2Eテストユーザー: "E2ETest#2025!Secure"
+    /// E2Eテストユーザー（4件）: "E2ETest#2025!Secure"（SuperUser）、"Test123!"（PM/DA/GU）
     /// </summary>
     private async Task SeedUsersAsync()
     {
@@ -229,7 +232,10 @@ public class DbInitializer
             new { Id = ProjectManagerUserId, Email = "project.manager@ubiquitous-lang.com", Name = "プロジェクト管理者", Role = "ProjectManager", Password = "su", IsFirstLogin = true },
             new { Id = DomainApproverUserId, Email = "domain.approver@ubiquitous-lang.com", Name = "ドメイン承認者", Role = "DomainApprover", Password = "su", IsFirstLogin = true },
             new { Id = GeneralUserId, Email = "general.user@ubiquitous-lang.com", Name = "一般ユーザー", Role = "GeneralUser", Password = "su", IsFirstLogin = true },
-            new { Id = E2eTestUserId, Email = "e2e-test@ubiquitous-lang.local", Name = "E2Eテストユーザー", Role = "SuperUser", Password = "E2ETest#2025!Secure", IsFirstLogin = false }
+            new { Id = E2eTestUserId, Email = "e2e-test@ubiquitous-lang.local", Name = "E2Eテストユーザー", Role = "SuperUser", Password = "E2ETest#2025!Secure", IsFirstLogin = false },
+            new { Id = E2eTestPmUserId, Email = "e2e-test-pm@ubiquitous-lang.local", Name = "E2Eテスト用PM", Role = "ProjectManager", Password = "Test123!", IsFirstLogin = false },
+            new { Id = E2eTestDaUserId, Email = "e2e-test-da@ubiquitous-lang.local", Name = "E2Eテスト用DA", Role = "DomainApprover", Password = "Test123!", IsFirstLogin = false },
+            new { Id = E2eTestGuUserId, Email = "e2e-test-gu@ubiquitous-lang.local", Name = "E2Eテスト用GU", Role = "GeneralUser", Password = "Test123!", IsFirstLogin = false }
         };
 
         foreach (var userData in users)
@@ -465,6 +471,15 @@ public class DbInitializer
             UpdatedAt = DateTime.UtcNow
         });
 
+        // E2Eテスト用PMをプロジェクト1に割り当て
+        userProjects.Add(new UserProject
+        {
+            UserId = E2eTestPmUserId,
+            ProjectId = projects[0].ProjectId,
+            UpdatedBy = E2eTestUserId,
+            UpdatedAt = DateTime.UtcNow
+        });
+
         await _context.UserProjects.AddRangeAsync(userProjects);
         _logger.LogInformation("UserProjects関連設定完了: {Count}件", userProjects.Count);
     }
@@ -527,15 +542,15 @@ public class DbInitializer
     private void LogInitialDataSummary()
     {
         _logger.LogInformation("===== 初期データ投入完了サマリー =====");
-        _logger.LogInformation("作成ユーザー数: 5（開発用4件 + E2Eテスト用1件）");
+        _logger.LogInformation("作成ユーザー数: 8（開発用4件 + E2Eテスト用4件）");
         _logger.LogInformation("作成ロール数: 4");
         _logger.LogInformation("作成プロジェクト数: 3（開発用2件 + E2Eテスト用1件）");
         _logger.LogInformation("作成ドメイン数: 4（開発用3件 + E2Eテスト用1件）");
-        _logger.LogInformation("UserProjects関連設定: 7件（開発用6件 + E2Eテスト用1件）");
+        _logger.LogInformation("UserProjects関連設定: 8件（開発用6件 + E2Eテスト用2件）");
         _logger.LogInformation("DomainApprovers設定: 後続Stepで実装予定");
         _logger.LogInformation("E2Eテストドラフト用語: 1件");
         _logger.LogInformation("デフォルトパスワード: su（機能仕様書2.0.1準拠）");
-        _logger.LogInformation("E2Eテストパスワード: E2ETest#2025!Secure（IsFirstLogin=false）");
+        _logger.LogInformation("E2Eテストパスワード: E2ETest#2025!Secure（SuperUser）、Test123!（PM/DA/GU、IsFirstLogin=false）");
         _logger.LogInformation("認証システム: ASP.NET Core Identity");
         _logger.LogInformation("用語統一: ADR_003準拠（UbiquitousLang表記）");
         _logger.LogInformation("初期パスワード管理: US-005準拠（InitialPassword保存）");
