@@ -180,6 +180,28 @@
 - ✅ ドキュメント整備（CLAUDE.md・Serenaメモリー・README.md・GitHub Issue #81）
 - ✅ ワークアラウンド位置づけ明記（Issue #9716修正時に削除可能）
 
-### 次回セッション作業
-- **Phase B-F3 Step 12開始**: step-startコマンドから実施
-- **注意**: 新規Skill追加時は `cd .claude/hooks && npm run build` 実行必須（Windowsホスト環境）
+### 現在のプロジェクト状況
+
+### 完了Phase
+- Phase A1-A6: 認証・ユーザー管理（完了）
+- Phase Issue79: ID体系統一リファクタリング（完了・GitHub Issue #79クローズ済み）
+
+### 進行中Phase
+- **Phase B-F3**: ユーザー管理UI全面リファクタ（Step1.5 Stage4 Step7継続）
+
+### 待機中Issue
+- GitHub Issue #83: `.claude/rules/`機能活用によるルール管理基盤改善（Phase 1-6）
+- GitHub Issue #81: Skills効果測定施策
+- GitHub Issue #82: テストケース過剰問題対応
+
+### 次回セッション予定作業
+
+**優先度1: Issue #83 Phase 1実装**
+- `.claude/rules/core/`ディレクトリ作成
+- CLAUDE.mdから4ファイル抽出・移行
+- 動作検証
+
+**優先度2: Phase B-F3再開**
+- Step1.5 Stage4 Step7継続（動作確認チェックリスト22項目）
+
+**注意**: 新規Skill追加時は `cd .claude/hooks && npm run build` 実行必須（Windowsホスト環境）
