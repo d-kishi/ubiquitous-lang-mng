@@ -126,6 +126,33 @@
 - ❌ Step単体で「OK」判定 → 積み上げ不足 → Phase完了時に対応漏れ（37.5%完成）
 - ✅ 常にPhaseゴール視点 → 累積達成率追跡 → Phase完了時に100%達成
 
+### 6. Skills使用サマリー（効果測定・Issue #81）
+
+**目的**: Skills活性化状況の定量的追跡
+**データソース**: Step組織設計ファイルのStage実行記録
+
+#### Step組織設計ファイルからの集約
+- [ ] **Stage実行記録の参照**:
+  - `Doc/08_Organization/Active/Phase_XX/StepXX_[内容].md`を確認
+  - 各StageのSkills使用報告セクションを集約
+
+- [ ] **Skills使用サマリー作成**:
+  | Stage | 使用者 | Skill名 | 判断・適用内容 |
+  |-------|--------|---------|---------------|
+  | Stage 1 | [MainAgent/SubAgent名] | [Skill名] | [判断内容要約] |
+  | Stage 2 | [MainAgent/SubAgent名] | [Skill名] | [判断内容要約] |
+  | ... | ... | ... | ... |
+
+#### 効果測定データ（Step全体集計）
+- **Skills活性化合計**: X回（Y種類）
+- **Stage別活性化率**: Stage 1: X回、Stage 2: Y回、...
+- **最も活用されたSkill**: [Skill名]（Z回）
+- **効果実感**: [時間短縮/品質向上/リスク低減/効果なし]
+
+#### Skills未使用の場合
+- 全StageでSkills参照がなかった場合: 「本Step Skills参照なし」と明記
+- 理由の考察: [Skills活用機会がなかった/トリガー条件不一致/等]
+
 ## 実行後アクション
 ✅ 全チェック完了 → Step完了・次step-start実行準備  
 ⚠️ 未完了項目あり → 該当項目完了後・次Step進行準備  

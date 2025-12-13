@@ -119,7 +119,7 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3 Step1.5 Stage4継続（即座に開始可能）
+### Phase B-F3 Step1.5 Stage4再開（即座に開始可能）
 
 **優先度**: 🔴 Critical（動作確認継続）
 
@@ -172,13 +172,14 @@
 **最終更新**: 2025-12-02（Step1.5 Stage4作業中・動作確認3/25項目完了）
 
 ---
-## 2025-12-09 セッション引き継ぎ
+## 2025-12-13 セッション引き継ぎ
 
-### 前回セッション成果（2025-12-09）
-- ✅ Skills自動発動改善対策完了（B+C両対応実装）
-- ✅ Skills Triggers自動生成機能実装（generate-triggers.ts + skills-triggers.json）
-- ✅ ドキュメント整備（CLAUDE.md・Serenaメモリー・README.md・GitHub Issue #81）
-- ✅ ワークアラウンド位置づけ明記（Issue #9716修正時に削除可能）
+### 前回セッション成果（2025-12-13）
+- ✅ **GitHub Issue #81 効果測定施策 Phase 1完了**
+  - SubAgent定義14ファイルにSkills使用報告テンプレート追加
+  - step-end-review.mdにSection 6「Skills使用サマリー」追加
+  - GitHub Issue #81にコメント追加・進捗記録
+- ✅ 効果測定基盤構築完了（次回SubAgent起動時から試験運用開始）
 
 ### 現在のプロジェクト状況
 
@@ -187,21 +188,35 @@
 - Phase Issue79: ID体系統一リファクタリング（完了・GitHub Issue #79クローズ済み）
 
 ### 進行中Phase
-- **Phase B-F3**: ユーザー管理UI全面リファクタ（Step1.5 Stage4 Step7継続）
+- **Phase B-F3**: ユーザー管理UI全面リファクタ（Step1.5 Stage4 Step7継続・再開準備完了）
 
 ### 待機中Issue
 - GitHub Issue #83: `.claude/rules/`機能活用によるルール管理基盤改善（Phase 1-6）
-- GitHub Issue #81: Skills効果測定施策
+- ~~GitHub Issue #81: Skills効果測定施策~~ → ✅ Phase 1完了（効果測定データ収集開始）
 - GitHub Issue #82: テストケース過剰問題対応
 
 ### 次回セッション予定作業
 
-**優先度1: Issue #83 Phase 1実装**
+**優先度1: Phase B-F3再開**（即座に開始可能）
+- Step1.5 Stage4 Step7継続（動作確認チェックリスト22項目残り）
+- `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`参照
+
+**優先度2: Issue #83 Phase 1実装**（オプション）
 - `.claude/rules/core/`ディレクトリ作成
 - CLAUDE.mdから4ファイル抽出・移行
 - 動作検証
 
-**優先度2: Phase B-F3再開**
-- Step1.5 Stage4 Step7継続（動作確認チェックリスト22項目）
-
 **注意**: 新規Skill追加時は `cd .claude/hooks && npm run build` 実行必須（Windowsホスト環境）
+
+### Issue #81 効果測定施策 参照情報
+- **SubAgent報告テンプレート**: `.claude/agents/*.md`（14ファイル）
+- **Stage実行記録テンプレート**: `.claude/commands/step-start.md`（Stage毎永続化）
+- **MainAgent集約セクション**: `.claude/commands/step-end-review.md` Section 6（組織設計ファイルから集約）
+- **GitHub Issue**: #81（効果測定コメント2件追加済み）
+
+**データフロー**:
+```
+Stage完了時 → Step組織設計ファイルに記録（永続化・AutoCompact耐性）
+    ↓
+Step完了時 → step-end-reviewで組織設計ファイルから集約
+```

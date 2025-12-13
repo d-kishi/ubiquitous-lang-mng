@@ -256,6 +256,16 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 
 ### テスト検証推奨項目
 - [仕様準拠を確認するテストケース]
+
+### Skills使用報告（効果測定用）
+
+作業完了時に以下の形式で報告:
+
+| Skill名 | 参照回数 | 参照タイミング | 判断・適用内容 |
+|---------|---------|---------------|---------------|
+| [使用したSkill] | [回数] | [どの作業時か] | [Skillにより行った判断] |
+
+**Skills未使用の場合**: 「本作業でSkills参照なし」と明記
 ```
 
 ## 仕様準拠確認の重要パターン
