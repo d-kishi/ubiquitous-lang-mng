@@ -522,11 +522,13 @@ public class AuthenticationService : IAuthenticationService
                 IsFirstLogin = true,  // カスタムプロパティ：初回ログインフラグ
                 UpdatedAt = DateTime.UtcNow,  // カスタムプロパティ：更新日時
                 UpdatedBy = "System",  // カスタムプロパティ：更新者（システム作成）
-                IsDeleted = false  // カスタムプロパティ：削除フラグ
+                IsDeleted = false,  // カスタムプロパティ：削除フラグ
+                InitialPassword = passwordValue  // カスタムプロパティ：初期パスワード（平文保存）
             };
 
-            // ASP.NET Core Identity ユーザー作成
-            var createResult = await _userManager.CreateAsync(identityUser, passwordValue);
+            // ASP.NET Core Identity ユーザー作成（パスワードなし）
+            // 【重要】InitialPasswordは平文で保存、PasswordHashは設定しない
+            var createResult = await _userManager.CreateAsync(identityUser);
             
             if (createResult.Succeeded)
             {

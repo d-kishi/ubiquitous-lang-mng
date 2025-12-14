@@ -1,7 +1,8 @@
 @page "/admin/users"
 @using Microsoft.AspNetCore.Authorization
 @using UbiquitousLanguageManager.Contracts.DTOs
-@using UbiquitousLanguageManager.Domain.Common
+@using UbiquitousLanguageManager.Contracts.Enums
+@using UbiquitousLanguageManager.Contracts.TypeConverters
 @using UbiquitousLanguageManager.Application
 @using UbiquitousLanguageManager.Application.ProjectManagement
 @using System.Security.Claims
@@ -278,8 +279,8 @@
 
     // 操作者情報
     // 【Issue #79 根本修正】UserId型はstring型に変更されました
-    private UserId currentUserId = UserId.NewUserId("0");
-    private Role currentRole = Role.GeneralUser;
+    private string currentUserId = "0";
+    private RoleType currentRole = RoleType.GeneralUser;
     private string operatorIdentityId = string.Empty;
 
     // 【Blazor初学者向け解説】
@@ -320,8 +321,8 @@
     // 現在のユーザー情報取得
     // 【Blazor初学者向け解説】
     // ASP.NET Core IdentityのClaimsPrincipalから、ユーザーID・ロール・Identity IDを取得します。
-    // Stage3.5申し送り事項: F#レコード構築は位置引数のみ使用（名前付き引数NG）
-    private async Task<(UserId userId, Role role, string identityId)> GetCurrentUserAsync()
+    // 【Clean Architecture準拠】RoleTypeConverter.FromString()を使用してDomain層への直接参照を回避
+    private async Task<(string userId, RoleType role, string identityId)> GetCurrentUserAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
@@ -330,21 +331,17 @@
         var identityId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
 
         // ロール文字列取得
+        // 【Blazor初学者向け解説】
+        // RoleTypeConverter.FromString()を使用することで、Web層がDomain層を直接参照せず、
+        // Contracts層のRoleType enumを使用してClean Architectureの依存関係を保ちます。
         var roleString = user.FindFirst(ClaimTypes.Role)?.Value ?? "GeneralUser";
-        var role = roleString switch
-        {
-            "SuperUser" => Role.SuperUser,
-            "ProjectManager" => Role.ProjectManager,
-            "DomainApprover" => Role.DomainApprover,
-            _ => Role.GeneralUser
-        };
+        var role = RoleTypeConverter.FromString(roleString);
 
         // UserID取得（カスタムクレーム）
         // 【Issue #79 根本修正】UserId型はstring型に変更されたため、TryParseは不要
         var userIdString = user.FindFirst("UserId")?.Value ?? "0";
-        var userId = UserId.NewUserId(userIdString);
 
-        return (userId, role, identityId);
+        return (userIdString, role, identityId);
     }
 
     // プロジェクト一覧取得
@@ -363,12 +360,14 @@
             // 【Blazor初学者向け解説】
             // F#レコードはC#からは位置引数で構築します（名前付き引数NG）。
             // パラメータ順序: UserId, UserRole, PageNumber, PageSize, IncludeInactive, SearchKeyword
+            // 【Clean Architecture準拠】
+            // RoleTypeConverter.ToRole()でC#のRoleType→F#のRoleに変換し、Application層に渡します。
             var query = new GetProjectsQuery(
-                operatorUserId, // UserId: string（ASP.NET Core Identity ID）
-                currentRole,    // UserRole: Role
-                1,              // PageNumber: int
-                100,            // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）
-                false,          // IncludeInactive: bool
+                operatorUserId,                         // UserId: string（ASP.NET Core Identity ID）
+                RoleTypeConverter.ToRole(currentRole),  // UserRole: Role（RoleType→Role変換）
+                1,                                      // PageNumber: int
+                100,                                    // PageSize: int（最大100件 - Queries.fs制約準拠: PageSize 1-100）
+                false,                                  // IncludeInactive: bool
                 Microsoft.FSharp.Core.FSharpOption<string>.None  // SearchKeyword
             );
 
@@ -509,14 +508,15 @@
     // 【UI設計書3.6章準拠】
     // - SuperUser: 全ユーザー表示
     // - ProjectManager: 自分が担当するプロジェクトに所属するユーザーのみ表示
+    // 【Clean Architecture準拠】Contracts層のRoleTypeを使用
     private List<UserDto> FilterUsersByRole(List<UserDto> users)
     {
-        if (currentRole == Role.SuperUser)
+        if (currentRole == RoleType.SuperUser)
         {
             // SuperUserは全ユーザー表示
             return users;
         }
-        else if (currentRole == Role.ProjectManager)
+        else if (currentRole == RoleType.ProjectManager)
         {
             // ProjectManagerは自分が担当するプロジェクトに所属するユーザーのみ表示
             var myProjectIds = availableProjects.Select(p => p.Id).ToHashSet();

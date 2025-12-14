@@ -1,10 +1,10 @@
 @page "/admin/users/create"
 @using Microsoft.AspNetCore.Authorization
 @using UbiquitousLanguageManager.Contracts.DTOs
-@using UbiquitousLanguageManager.Domain.Common
+@using UbiquitousLanguageManager.Contracts.Enums
+@using UbiquitousLanguageManager.Contracts.TypeConverters
 @using UbiquitousLanguageManager.Application
 @using UbiquitousLanguageManager.Application.ProjectManagement
-@using UbiquitousLanguageManager.Domain.ProjectManagement
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
 @attribute [Authorize(Roles = "SuperUser,ProjectManager")]
@@ -112,9 +112,9 @@
                                 <div class="form-text">1文字以上100文字以内で入力してください</div>
                             </div>
 
-                            @* パスワード *@
+                            @* 初期パスワード *@
                             <div class="mb-3">
-                                <label for="password" class="form-label fw-bold fs-6">🔑 パスワード <span class="text-danger">*</span></label>
+                                <label for="password" class="form-label fw-bold fs-6">🔑 初期パスワード <span class="text-danger">*</span></label>
                                 <InputText id="password"
                                           type="password"
                                           class="form-control"
@@ -305,10 +305,10 @@
         [StringLength(100, MinimumLength = 1, ErrorMessage = "氏名は1文字以上100文字以内で入力してください")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "パスワードは必須です")]
-        [StringLength(100, MinimumLength = 8, ErrorMessage = "パスワードは8文字以上100文字以内で入力してください")]
+        [Required(ErrorMessage = "初期パスワードは必須です")]
+        [StringLength(100, MinimumLength = 8, ErrorMessage = "初期パスワードは8文字以上100文字以内で入力してください")]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
-            ErrorMessage = "パスワードは英大文字・小文字・数字・記号を含む必要があります")]
+            ErrorMessage = "初期パスワードは英大文字・小文字・数字・記号を含む必要があります")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "ロールを選択してください")]
@@ -472,14 +472,11 @@
             var operatorUserId = operatorIdentityId ?? string.Empty;
 
             // Role文字列をF# Role型に変換
-            var userRole = currentUserRole switch
-            {
-                "SuperUser" => Role.SuperUser,
-                "ProjectManager" => Role.ProjectManager,
-                "DomainApprover" => Role.DomainApprover,
-                "GeneralUser" => Role.GeneralUser,
-                _ => Role.GeneralUser
-            };
+            // 【Clean Architecture準拠】
+            // RoleTypeConverter.FromString()でC# RoleType enumに変換後、
+            // RoleTypeConverter.ToRole()でF# Domain.Role型に変換します。
+            // これにより、Web層がDomain層を直接参照しません。
+            var userRole = RoleTypeConverter.ToRole(RoleTypeConverter.FromString(currentUserRole));
 
             // GetProjectsQuery構築
             // 【Blazor初学者向け解説】

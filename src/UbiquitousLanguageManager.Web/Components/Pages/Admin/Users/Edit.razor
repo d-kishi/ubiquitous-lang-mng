@@ -1,10 +1,10 @@
 @page "/admin/users/edit/{IdentityId}"
 @using Microsoft.AspNetCore.Authorization
 @using UbiquitousLanguageManager.Contracts.DTOs
-@using UbiquitousLanguageManager.Domain.Common
+@using UbiquitousLanguageManager.Contracts.Enums
+@using UbiquitousLanguageManager.Contracts.TypeConverters
 @using UbiquitousLanguageManager.Application
 @using UbiquitousLanguageManager.Application.ProjectManagement
-@using UbiquitousLanguageManager.Domain.ProjectManagement
 @using System.ComponentModel.DataAnnotations
 @attribute [Authorize(Roles = "SuperUser,ProjectManager")]
 @inject IUserManagementService UserManagementService
@@ -258,13 +258,14 @@
                             ─────────────────────────────────────────────── *@
                             <hr class="my-4" />
 
-                            @* ステータス（アクティブ/非アクティブ） *@
+                            @* ステータス（有効/無効） *@
                             @* 【Blazor初学者向け解説】
-                               UI設計書3.8章: ステータス変更（アクティブ/非アクティブ切り替え）
+                               UI設計書3.8章: ステータス変更（有効/無効切り替え）
                                トグルスイッチ（form-switch）で視覚的に分かりやすく表示
+                               ON=有効（ログイン可能）、OFF=無効（ログイン不可）の直感的UIパターン
                             *@
                             <div class="mb-3">
-                                <label class="form-label fw-bold fs-6">📊 ユーザー状態</label>
+                                <label class="form-label fw-bold fs-6">📊 アカウント有効</label>
                                 <div class="form-check form-switch">
                                     <InputCheckbox id="isActive"
                                                   class="form-check-input"
@@ -273,16 +274,16 @@
                                     <label class="form-check-label" for="isActive">
                                         @if (model.IsActive)
                                         {
-                                            <span class="badge bg-success">✅ アクティブ</span>
+                                            <span class="badge bg-success">有効</span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary">❌ 非アクティブ</span>
+                                            <span class="badge bg-secondary">無効</span>
                                         }
                                     </label>
                                 </div>
                                 <div class="form-text">
-                                    <i class="fas fa-exclamation-triangle text-warning"></i> 非アクティブに設定すると、ログインできなくなります
+                                    <i class="fas fa-exclamation-triangle text-warning"></i> 無効に設定すると、ログインできなくなります
                                 </div>
                             </div>
 
@@ -600,14 +601,11 @@
             var operatorUserId = identityIdClaim.Value ?? string.Empty;
 
             // Role文字列をF# Role型に変換
-            var userRole = roleClaim.Value switch
-            {
-                "SuperUser" => UbiquitousLanguageManager.Domain.Common.Role.SuperUser,
-                "ProjectManager" => UbiquitousLanguageManager.Domain.Common.Role.ProjectManager,
-                "DomainApprover" => UbiquitousLanguageManager.Domain.Common.Role.DomainApprover,
-                "GeneralUser" => UbiquitousLanguageManager.Domain.Common.Role.GeneralUser,
-                _ => UbiquitousLanguageManager.Domain.Common.Role.GeneralUser
-            };
+            // 【Clean Architecture準拠】
+            // RoleTypeConverter.FromString()でC# RoleType enumに変換後、
+            // RoleTypeConverter.ToRole()でF# Domain.Role型に変換します。
+            // これにより、Web層がDomain層を直接参照しません。
+            var userRole = RoleTypeConverter.ToRole(RoleTypeConverter.FromString(roleClaim.Value ?? "GeneralUser"));
 
             // GetProjectsQuery構築
             // 【Blazor初学者向け解説】
@@ -809,7 +807,10 @@
                 return;
             }
 
-            var targetId = UserId.NewUserId(model.UserId);
+            // 【Clean Architecture注記】
+            // ResetPasswordAsyncがF# UserId型を要求するため、完全修飾名で参照します。
+            // 将来的にApplication層がDTOを返すようになれば、この参照も解消できます。
+            var targetId = UbiquitousLanguageManager.Domain.Common.UserId.NewUserId(model.UserId);
 
             // 【Blazor初学者向け解説】
             // IUserManagementService.ResetPasswordAsyncを呼び出します。

@@ -239,13 +239,30 @@ public class UserRepository :
         try
         {
             _logger.LogDebug("Saving user: {Email}", user.Email.Value);
-            
+
             // F# User → ApplicationUser変換
             var appUser = ConvertToApplicationUser(user);
-            
+
             // 既存ユーザーの検索（更新の場合）
-            var existingUser = await _userManager.FindByEmailAsync(user.Email.Value);
-            
+            // 【Phase B-F3 Step1.5 修正】Entity Tracking conflict回避
+            // GetByIdentityIdAsyncでFindByIdAsyncを使用してトラッキングしたエンティティと同じインスタンスを取得するため、
+            // まずIdで検索し、見つからない場合のみEmailで検索する
+            ApplicationUser? existingUser = null;
+            var userIdValue = user.Id.Value;
+            if (!string.IsNullOrEmpty(userIdValue) && Guid.TryParse(userIdValue, out _))
+            {
+                // 有効なGUID形式のIdがある場合、FindByIdAsyncを使用
+                existingUser = await _userManager.FindByIdAsync(userIdValue);
+                _logger.LogDebug("FindByIdAsync result for {UserId}: {Found}", userIdValue, existingUser != null);
+            }
+
+            // Idで見つからない場合はEmailで検索（新規ユーザーまたはId未設定の場合）
+            if (existingUser == null)
+            {
+                existingUser = await _userManager.FindByEmailAsync(user.Email.Value);
+                _logger.LogDebug("FindByEmailAsync result for {Email}: {Found}", user.Email.Value, existingUser != null);
+            }
+
             IdentityResult result;
             
             if (existingUser == null)
