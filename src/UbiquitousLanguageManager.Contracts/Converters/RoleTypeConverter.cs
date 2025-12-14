@@ -1,7 +1,7 @@
 using UbiquitousLanguageManager.Contracts.Enums;
 using UbiquitousLanguageManager.Domain.Common;
 
-namespace UbiquitousLanguageManager.Contracts.TypeConverters;
+namespace UbiquitousLanguageManager.Contracts.Converters;
 
 /// <summary>
 /// F# Domain.Role ↔ C# RoleType 変換ユーティリティ

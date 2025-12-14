@@ -454,7 +454,6 @@ Doc/
 ├── 01_Requirements/   # 要件・仕様書
 ├── 02_Design/        # 設計書
 ├── 04_Daily/         # 作業記録
-├── 06_Issues/        # 課題管理
 ├── 07_Decisions/     # ADR
 └── 10_Debt/          # 技術負債
 ```

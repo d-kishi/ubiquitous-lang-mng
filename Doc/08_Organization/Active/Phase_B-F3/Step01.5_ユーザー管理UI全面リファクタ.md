@@ -525,34 +525,200 @@ builder.Services.AddScoped<Application.ProjectManagement.IUserRepository, ...>()
 
 ## Stage 5: テスト
 
-**目的**: 全層を通した動作確認
+**目的**: Step1.5 Stage1-4.5で実装したユーザー管理UI全面リファクタのテストを実施し、**徹底的な高品質を確保する**
 
-**推定時間**: 2-3時間
+**品質方針**: Phase Aの成果物を今後の製造の「基準」とするため、時間効率ではなく品質を最優先する
 
-### Task構成
+**推定時間**: 2時間25分〜3時間25分（参考値・品質優先のため超過可）
 
-| Task | 内容 | SubAgent |
-|------|------|----------|
-| 5-1 | 単体テスト | `unit-test` |
-| 5-2 | 統合テスト | `integration-test` |
-| 5-3 | E2Eテスト | `e2e-test` |
+**適用Skills**:
+- `tdd-red-green-refactor`: テスト後付け方式（Green確認→テスト追加→リファクタリング）
+- `test-architecture`: ADR_020準拠、命名規則、参照関係
+- `playwright-e2e-patterns`: data-testid属性、Blazor Server SignalR対応
 
-### E2Eテスト環境（TypeScript/Playwright Test）
+### 🔴 前回セッション教訓（2025-12-14）
 
-```bash
-# 一括実行（推奨）
-docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
+**試行→取り消し（全て変更破棄済み）**:
+- ❌ Task 5-1: RoleTypeConverter単体テスト → SubAgentが実装したが、**変更取り消し済み**
+- ❌ Task 5-2: UserRepository統合テスト → SubAgentが実装したが、DbInitializer競合で失敗。**変更取り消し済み**
+- ❌ Task 5-3: E2Eテスト → SubAgentが実装したが、認証/セレクタ問題で全失敗。**変更取り消し済み**
 
-# 特定テストファイル
-docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh user-management.spec.ts
+**特定された問題（次回実装時の対策必須）**:
+1. **DbInitializer競合**: WebApplicationFactoryがSeedUsersAsync実行 → 既存シードデータとPK衝突
+   - **対策**: Task 5-1.5でDbInitializer.cs修正を**先に**実施すること
+2. **E2Eテスト認証問題**: ログインフロー・セレクタ指定に問題あり
+   - **対策**: 既存authentication.spec.tsのパターンを参照すること
+
+### Task構成（🆕改訂版・2025-12-14）
+
+```
+[5-0] Issue #82 Phase1 事前清掃（MainAgent）     15-20分
+       ↓
+[5-1] 単体テスト（unit-test Agent）              45-60分
+       ↓
+[5-1.5] DbInitializer重複チェック追加（MainAgent）15-20分 ← 🆕追加
+       ↓
+[5-2] 統合テスト（integration-test Agent）       30-45分
+       ↓
+[5-3] E2Eテスト（e2e-test Agent）                30-45分
+       ↓
+[5-4] 全体ビルド・テスト確認（MainAgent）        10-15分
 ```
 
-### 完了基準
-- [ ] 単体テスト全件Pass
-- [ ] 統合テスト全件Pass
-- [ ] E2Eテスト全件Pass
-- [ ] ユーザー手動確認完了
-- [ ] Step1 Stage3で発見された7件の問題解消確認
+### Task 5-0: Issue #82 Phase1 事前清掃
+
+**実行者**: MainAgent | **推定時間**: 15-20分
+
+**実施内容**:
+1. 未実装機能テスト削除（5-6件）: 2FA関連、TokenValidation関連
+2. Skipテスト整理（3-4件）: 計画外Skipテストの実装または削除
+3. ValueObjects重複テスト確認: 類似パターンの統合検討
+
+**品質ゲート**:
+- [ ] ビルド成功（0 Warning, 0 Error）
+- [ ] 既存テストPass維持
+
+### Task 5-1: 単体テスト
+
+**実行者**: unit-test Agent | **推定時間**: 45-60分
+
+**対象ファイル**:
+- 新規: `tests/UbiquitousLanguageManager.Contracts.Unit.Tests/Converters/RoleTypeConverterTests.cs`
+- テスト対象: `src/UbiquitousLanguageManager.Contracts/Converters/RoleTypeConverter.cs`
+
+**テストケース（23件）**:
+
+| カテゴリ | テスト数 | 内容 |
+|---------|---------|------|
+| ToRoleType | 4 | F# Role → C# RoleType変換 |
+| ToRole | 5 | C# RoleType → F# Role変換（フォールバック含む） |
+| FromString | 9 | 文字列 → RoleType変換（大小文字・無効値） |
+| ToDisplayString | 5 | 日本語表示名変換 |
+
+**品質ゲート**:
+- [ ] 23テストケース全Pass
+- [ ] ビルド成功
+
+### Task 5-1.5: DbInitializer重複チェック追加 🆕
+
+**実行者**: MainAgent | **推定時間**: 15-20分
+
+**背景**: Task 5-2（統合テスト）で以下のエラーが発生
+```
+System.InvalidOperationException:
+An error occurred while saving the entity changes.
+See the inner exception for details.
+----> Npgsql.PostgresException (0x80004005): 23505:
+duplicate key value violates unique constraint "PK_AspNetUsers"
+```
+
+**原因**: `DbInitializer.SeedUsersAsync`が重複チェックなしでINSERT実行
+
+**修正対象ファイル**:
+- `src/UbiquitousLanguageManager.Infrastructure/Data/DbInitializer.cs`
+
+**修正内容**:
+```csharp
+// 修正前
+var superUser = new ApplicationUser { ... };
+await userManager.CreateAsync(superUser, "SuperUser123!");
+
+// 修正後
+var existingSuperUser = await userManager.FindByEmailAsync("superuser@example.com");
+if (existingSuperUser == null)
+{
+    var superUser = new ApplicationUser { ... };
+    await userManager.CreateAsync(superUser, "SuperUser123!");
+}
+```
+
+**品質ゲート**:
+- [ ] ビルド成功（0 Error）
+- [ ] 統合テスト実行時にDbInitializerエラーが発生しない
+
+### Task 5-2: 統合テスト
+
+**実行者**: integration-test Agent | **推定時間**: 30-45分
+
+**前提条件**: Task 5-1.5（DbInitializer修正）完了後に実施すること
+
+**対象ファイル**:
+- 新規: `tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests/Repositories/UserRepositoryTests.cs`
+
+**テストケース（14件）**:
+
+| メソッド | テスト数 |
+|---------|---------|
+| GetAllUsersWithIdentityAsync | 3 |
+| GetByIdentityIdAsync | 2 |
+| GetProjectIdsByIdentityIdAsync | 3 |
+| AssignProjectsToUserByIdentityIdAsync | 2 |
+| UpdateUserProjectsByIdentityIdAsync | 2 |
+| DeleteByIdentityIdAsync | 2 |
+
+**SubAgent指示に含めるべき注意点**:
+- DbInitializer.SeedUsersAsyncが既に重複チェック済みであることを前提とする
+- 既存の統合テストパターン（ProjectRepositoryTests等）を参照
+
+**品質ゲート**:
+- [ ] 14テストケース全Pass
+- [ ] 既存統合テストPass維持
+
+### Task 5-3: E2Eテスト
+
+**実行者**: e2e-test Agent | **推定時間**: 30-45分
+
+**対象ファイル**:
+- 新規: `tests/UbiquitousLanguageManager.E2E.Tests/user-management.spec.ts`
+
+**テストシナリオ（8件）**:
+
+| # | シナリオ | 内容 |
+|---|---------|------|
+| 1 | UserList_SuperUser | 全ユーザー表示確認 |
+| 2 | CreateUser_SuperUser | ユーザー作成成功 |
+| 3 | EditUser_SuperUser | ユーザー編集成功 |
+| 4 | DeleteUser_SuperUser | ユーザー削除成功 |
+| 5 | UserList_PM | 権限フィルタ確認 |
+| 6 | CreateUser_PM_RoleRestriction | ロール制限確認 |
+| 7 | UserList_GeneralUser | アクセス拒否確認 |
+| 8 | CreateUser_InvalidEmail | バリデーションエラー確認 |
+
+**SubAgent指示に含めるべき注意点（前回セッション教訓）**:
+- **必須参照**: 既存動作E2Eテスト `tests/UbiquitousLanguageManager.E2E.Tests/authentication.spec.ts`（19テスト）のパターンを踏襲
+- **ログインヘルパー**: 既存の`login`関数を使用すること
+- **待機処理**: Blazor Server SignalR接続完了・再描画待機を適切に設定
+- **セレクタ**: data-testid属性を使用（Stage4で全要素に付与済み）
+
+**品質ゲート**:
+- [ ] 8シナリオ全Pass
+- [ ] 既存E2Eテスト（19テスト）維持
+
+### Task 5-4: 全体ビルド・テスト確認
+
+**実行者**: MainAgent | **推定時間**: 10-15分
+
+**実施コマンド**:
+```bash
+# ビルド
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet build
+
+# 全テスト
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 dotnet test
+
+# E2Eテスト
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-tests.sh
+```
+
+### 最終完了基準
+
+- [ ] ビルド成功（0 Warning, 0 Error）
+- [ ] Core層テスト Pass
+- [ ] Web.UI.Tests: 50+ Pass、8 Failed維持（対象外）、6 Skipped維持
+- [ ] E2Eテスト: 27 Pass（既存19 + 新規8）
+- [ ] 新規Contracts単体テスト: 23 Pass
+- [ ] 新規統合テスト: 14 Pass
+- [ ] ユーザー手動確認完了（Stage4で22項目確認済み）
 
 ---
 
