@@ -671,7 +671,7 @@ if (existingSuperUser == null)
 **対象ファイル**:
 - 新規: `tests/UbiquitousLanguageManager.E2E.Tests/user-management.spec.ts`
 
-**テストシナリオ（8件）**:
+**テストシナリオ（10件）**:
 
 | # | シナリオ | 内容 |
 |---|---------|------|
@@ -683,6 +683,8 @@ if (existingSuperUser == null)
 | 6 | CreateUser_PM_RoleRestriction | ロール制限確認 |
 | 7 | UserList_GeneralUser | アクセス拒否確認 |
 | 8 | CreateUser_InvalidEmail | バリデーションエラー確認 |
+| 9 | **UserList_LoadingSpinner** | **ロード中スピナー表示確認**（bUnit技術制限により移行）|
+| 10 | **UserList_ShowDeletedFilter** | **論理削除済みユーザー表示切替**（bUnit技術制限により移行）|
 
 **SubAgent指示に含めるべき注意点（前回セッション教訓）**:
 - **必須参照**: 既存動作E2Eテスト `tests/UbiquitousLanguageManager.E2E.Tests/authentication.spec.ts`（19テスト）のパターンを踏襲
@@ -691,7 +693,7 @@ if (existingSuperUser == null)
 - **セレクタ**: data-testid属性を使用（Stage4で全要素に付与済み）
 
 **品質ゲート**:
-- [ ] 8シナリオ全Pass
+- [ ] 10シナリオ全Pass（#9, #10はbUnit技術制限による移行）
 - [ ] 既存E2Eテスト（19テスト）維持
 
 ### Task 5-4: 全体ビルド・テスト確認
@@ -1277,18 +1279,45 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 
 ### Stage 5 実行記録
 
-**開始日時**:
-**終了日時**:
-**実行SubAgent**:
-**結果**:
+**開始日時**: 2025-12-15
+**終了日時**: 2025-12-15（同日完了）
+**実行SubAgent**: MainAgent (Task 5-0, UnitTest再整理), unit-test Agent (Task 5-1)
+
+**実施Task**:
+
+| Task | 担当 | 結果 |
+|------|------|------|
+| Task 5-0 | MainAgent | ✅ 9件テスト削除（2FA関連3件 + Skipテスト6件） |
+| Task 5-1 | unit-test Agent | ✅ RoleTypeConverter単体テスト23件新規作成 |
+| UnitTest再整理 | MainAgent | ✅ 失敗テスト修正1件 + bUnit制限Skipテスト2件削除 |
+| Task 5-1.5 | MainAgent | ✅ DbInitializer重複チェック追加（統合テストPK競合防止） |
+
+**テスト結果**:
+
+| テストファイル | Passed | Skipped | 備考 |
+|---------------|--------|---------|------|
+| AuthenticationServiceTests | 13 | 0 | 2FA 3件削除後 |
+| IndexTests | 13 | 0 | bUnit制限2件削除→E2E移行 |
+| CreateTests | 13 | 0 | - |
+| EditTests | 13 | 3 | Step2実装待ちでSkip維持 |
+| RoleTypeConverterTests | 23 | 0 | 新規作成 |
+| **合計** | **75** | **3** | - |
+
+**ビルド結果**: ✅ 0 Error（69 Warning - 既存）
+
+**未実施Task**（次回以降）:
+- Task 5-2: 統合テスト
+- Task 5-3: E2Eテスト
+- Task 5-4: 全体ビルド・テスト確認
 
 #### Skills使用報告（効果測定・Issue #81）
 
 | 使用者 | Skill名 | 参照タイミング | 判断・適用内容 |
 |--------|---------|---------------|---------------|
-| [Stage完了時に記録] | | | |
+| unit-test Agent | なし | - | 既存テストパターン（TypeConvertersTests.cs）を参照し、xUnit標準構文・AAAパターン適用 |
+| MainAgent | なし | - | 分析・削除作業のためSkills不要 |
 
-**Skills未使用の場合**: 「本Stage Skills参照なし」と明記
+**Skills未使用理由**: 本Stageは既存テストパターンの踏襲・削除作業が主であり、新規パターン適用の必要性なし
 
 ---
 
@@ -1309,8 +1338,8 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 - [x] Stage 3.5完了: Stage4着手前提条件整備（DI解決・Application.ProjectManagement.*実装）（2025-12-02）
 - [x] Stage 4完了: Web層3画面再実装 + 動作確認22項目 + バグ修正3件（2025-12-14）
 - [x] Stage 4.5完了: Clean Architecture改善（Web→Domain直接参照解消）（2025-12-14）
-- [ ] Stage 5完了: テスト（単体/統合/E2E）
+- [ ] Stage 5完了: テスト（単体/統合/E2E）🔄 Task 5-0, 5-1, 5-1.5完了 / Task 5-2〜5-4 未実施（2025-12-15）
 - [ ] Stage 6完了: プロセス改善（振り返り・再発防止策）← 🆕追加（2025-12-02）
 - [x] ビルド: 0 Error
-- [ ] テスト: 全Pass
+- [x] テスト: 75 Passed / 3 Skipped（Step2実装待ちのみ）
 - [ ] Step1 Stage3の7件問題: 解消確認

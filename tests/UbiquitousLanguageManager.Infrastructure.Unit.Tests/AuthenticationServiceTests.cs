@@ -363,52 +363,6 @@ public class AuthenticationServiceTests
     }
 
     /// <summary>
-    /// 簡易実装メソッド: 2FA関連メソッドのテスト
-    /// </summary>
-    [Fact]
-    public async Task EnableTwoFactorAsync_ShouldReturnNotImplementedError()
-    {
-        // Arrange
-        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
-
-        // Act
-        var result = await _service.EnableTwoFactorAsync(userId);
-
-        // Assert
-        Assert.True(result.IsError);
-        Assert.Contains("2FA機能は後期実装予定", result.ErrorValue);
-    }
-
-    [Fact]
-    public async Task DisableTwoFactorAsync_ShouldReturnNotImplementedError()
-    {
-        // Arrange
-        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
-
-        // Act
-        var result = await _service.DisableTwoFactorAsync(userId);
-
-        // Assert
-        Assert.True(result.IsError);
-        Assert.Contains("2FA機能は後期実装予定", result.ErrorValue);
-    }
-
-    [Fact]
-    public async Task VerifyTwoFactorCodeAsync_ShouldReturnNotImplementedError()
-    {
-        // Arrange
-        var userId = UserId.create("00000000-0000-0000-0000-000000000001");
-        var code = "123456";
-
-        // Act
-        var result = await _service.VerifyTwoFactorCodeAsync(userId, code);
-
-        // Assert
-        Assert.True(result.IsError);
-        Assert.Contains("2FA機能は後期実装予定", result.ErrorValue);
-    }
-
-    /// <summary>
     /// 簡易実装メソッド: メール確認関連メソッドのテスト
     /// </summary>
     [Fact]

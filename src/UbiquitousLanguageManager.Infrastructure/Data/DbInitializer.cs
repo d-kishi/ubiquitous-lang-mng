@@ -240,6 +240,14 @@ public class DbInitializer
 
         foreach (var userData in users)
         {
+            // 既存ユーザーチェック（PK重複エラー防止・統合テスト対応）
+            var existingUser = await _userManager.FindByIdAsync(userData.Id);
+            if (existingUser != null)
+            {
+                _logger.LogInformation("ユーザー既存のためスキップ: {Email}", userData.Email);
+                continue;
+            }
+
             var user = new ApplicationUser
             {
                 Id = userData.Id,

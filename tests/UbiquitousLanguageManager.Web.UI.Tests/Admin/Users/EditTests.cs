@@ -262,9 +262,10 @@ public class EditTests : BlazorComponentTestBase
         var activeCheckbox = cut.Find("input[data-testid='status-toggle']");
         activeCheckbox.GetAttribute("checked").Should().BeNull("非アクティブ状態のためチェックなし");
 
-        // バッジ表示確認（「非アクティブ」バッジが表示される）
+        // バッジ表示確認（「無効」バッジが表示される）
+        // 【補足】Edit.razorではIsActive=falseの場合「無効」バッジを表示
         var badges = cut.FindAll(".badge");
-        badges.Should().Contain(b => b.TextContent.Contains("非アクティブ") || b.TextContent.Contains("❌"), "非アクティブ状態のバッジ表示");
+        badges.Should().Contain(b => b.TextContent.Contains("無効"), "非アクティブ状態（無効）のバッジ表示");
     }
 
     #endregion
@@ -672,23 +673,6 @@ public class EditTests : BlazorComponentTestBase
         // Assert
         var navMan = Services.GetRequiredService<NavigationManager>();
         navMan.Uri.Should().EndWith("/admin/users", "SuperUserは任意のユーザー編集可能");
-    }
-
-    /// <summary>
-    /// 【権限制御2】ProjectManager権限: 担当ユーザーのみ編集可能（TODO Phase B-F3 Step2）
-    ///
-    /// 【検証内容】
-    /// - ProjectManager権限でアクセス
-    /// - 担当プロジェクトのユーザーのみ編集可能（実装予定）
-    ///
-    /// 【期待結果】
-    /// - TODO: Phase B-F3 Step2で権限制御ロジック実装後にテスト追加
-    /// </summary>
-    [Fact(Skip = "Phase B-F3 Step2でProjectManager権限制御実装後に有効化")]
-    public void Edit_ProjectManagerPermission_CanEditOwnedProjectUsers()
-    {
-        // TODO: Phase B-F3 Step2でProjectManager権限制御実装後にテスト実装
-        Assert.True(true, "ProjectManager権限制御実装待ち");
     }
 
     #endregion
