@@ -1291,6 +1291,7 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 | Task 5-1 | unit-test Agent | ✅ RoleTypeConverter単体テスト23件新規作成 |
 | UnitTest再整理 | MainAgent | ✅ 失敗テスト修正1件 + bUnit制限Skipテスト2件削除 |
 | Task 5-1.5 | MainAgent | ✅ DbInitializer重複チェック追加（統合テストPK競合防止） |
+| Task 5-2 | integration-test Agent | ✅ UserRepository統合テスト14件新規作成（2025-12-15） |
 
 **テスト結果**:
 
@@ -1301,12 +1302,12 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 | CreateTests | 13 | 0 | - |
 | EditTests | 13 | 3 | Step2実装待ちでSkip維持 |
 | RoleTypeConverterTests | 23 | 0 | 新規作成 |
-| **合計** | **75** | **3** | - |
+| **UserRepositoryTests** | **14** | **0** | **新規作成（Task 5-2）** |
+| **合計** | **89** | **3** | - |
 
 **ビルド結果**: ✅ 0 Error（69 Warning - 既存）
 
 **未実施Task**（次回以降）:
-- Task 5-2: 統合テスト
 - Task 5-3: E2Eテスト
 - Task 5-4: 全体ビルド・テスト確認
 
@@ -1316,8 +1317,33 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 |--------|---------|---------------|---------------|
 | unit-test Agent | なし | - | 既存テストパターン（TypeConvertersTests.cs）を参照し、xUnit標準構文・AAAパターン適用 |
 | MainAgent | なし | - | 分析・削除作業のためSkills不要 |
+| MainAgent | test-architecture | Task 5-2実装計画時 | ADR_020準拠の参照関係・命名規則・Integration Tests標準パッケージ確認 |
+| integration-test Agent | なし | - | 純粋な統合テスト実装であり、既存Skillsの適用範囲外 |
 
-**Skills未使用理由**: 本Stageは既存テストパターンの踏襲・削除作業が主であり、新規パターン適用の必要性なし
+**Skills未使用理由（Task 5-0〜5-1.5）**: 既存テストパターンの踏襲・削除作業が主であり、新規パターン適用の必要性なし
+**Skills使用理由（Task 5-2）**: MainAgentがtest-architecture Skillを参照し、ADR_020準拠の統合テスト設計パターンを確認
+
+#### Task 5-2 詳細（2025-12-15）
+
+**新規作成ファイル**:
+1. `tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests/Fixtures/IntegrationTestFixture.cs` (177行)
+2. `tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests/Repositories/UserRepositoryTests.cs` (658行)
+
+**テストケース一覧（14件）**:
+
+| # | メソッド | テスト名 | 結果 |
+|---|---------|---------|------|
+| 1-3 | GetAllUsersWithIdentityAsync | ActiveUsersOnly, WithDeleted, EmptyDatabase | ✅ Pass |
+| 4-5 | GetByIdentityIdAsync | ExistingId, NonExistingId | ✅ Pass |
+| 6-8 | GetProjectIdsByIdentityIdAsync | UserWithProjects, UserWithoutProjects, NonExistingUser | ✅ Pass |
+| 9-10 | AssignProjectsToUserByIdentityIdAsync | ValidInput, EmptyList | ✅ Pass |
+| 11-12 | UpdateUserProjectsByIdentityIdAsync | ReplacesProjects, RemovesAllProjects | ✅ Pass |
+| 13-14 | DeleteByIdentityIdAsync | LogicallyDeletes, NonExistingUser | ✅ Pass |
+
+**技術的成果**:
+- WebApplicationFactory<Program>統合テストパターン確立
+- F#↔C#統合テスト技術（FSharpList変換、Result/Option型検証）
+- ADR_020準拠（命名規則、参照関係）
 
 ---
 

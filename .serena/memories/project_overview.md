@@ -174,23 +174,29 @@
 ---
 ## 2025-12-15 セッション引き継ぎ
 
-### 前回セッション成果（2025-12-15 セッション2）
-- ✅ **Task 5-1.5完了**: DbInitializer.SeedUsersAsyncに既存ユーザーチェック追加
+### 前回セッション成果（2025-12-15 セッション3）
+- ✅ **Task 5-2完了**: UserRepository統合テスト14件新規作成
+  - IntegrationTestFixture.cs（177行）: WebApplicationFactory<Program>基盤
+  - UserRepositoryTests.cs（658行）: 14テストケース全Pass
+- ✅ **Skills効果測定**: MainAgentがtest-architecture Skill参照
 - ✅ **Stage5実行記録更新**: 組織設計ファイル更新完了
 
 ### Stage5進捗状況
 - ✅ Task 5-0: 事前清掃（11件テスト削除）
 - ✅ Task 5-1: RoleTypeConverter単体テスト（23件新規）
 - ✅ Task 5-1.5: DbInitializer重複チェック追加
-- ⏳ Task 5-2: 統合テスト ← 次回実施
-- ❌ Task 5-3以降: 実施しない
+- ✅ Task 5-2: UserRepository統合テスト14件新規作成 ← **完了**
+- ❌ Task 5-3以降: 実施しない（Stage6でE2Eテスト実施予定）
+
+### テスト結果サマリ（Task 5-2完了時点）
+- **Total**: 89 Passed / 3 Skipped
+- **UserRepositoryTests**: 14件全Pass
 
 ### 次回セッション予定作業
 
-**Task 5-2: 統合テスト**
-- 対象: UserRepositoryの統合テスト
-- 前提: Task 5-1.5完了済み（DbInitializer PK重複エラー防止済み）
-- 参照: 既存統合テストパターン（ProjectRepositoryTests等）
+**Stage5完了 → Stage6: E2Eテスト実施**
+- Task 5-3: E2Eテスト（Playwright Test）
+- Task 5-4: 全体ビルド・テスト確認
 
 ### 重要プロセス改善（厳守）
 
