@@ -135,6 +135,15 @@
      - repl: [新規タスク追記]
   ```
 
+- [ ] **skills_effectiveness_tempクリア（`.serena/memories/skills_effectiveness_temp.md`）**:
+  ```
+  1. edit_memoryツールでregex実行:
+     - memory_file_name: skills_effectiveness_temp.md
+     - regex: (\| SubAgent名 \| Skill名 \| 適用内容 \|\n\|------------|---------|----------\|\n)[\s\S]*?(\n\n## 運用ルール)
+     - repl: $1| - | - | 記録なし |\n$2
+  目的: セッション終了時に一時記録をクリアし、次回セッションでのゴミ情報残存を防止
+  ```
+
 - [ ] **メモリー更新品質確認**:
   - 各メモリーの差分更新が適切に実行されたか確認
   - 既存重要情報が維持されているか確認（破壊的変更なし）

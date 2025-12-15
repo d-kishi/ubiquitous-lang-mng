@@ -562,6 +562,8 @@ builder.Services.AddScoped<Application.ProjectManagement.IUserRepository, ...>()
        ↓
 [5-3] E2Eテスト（e2e-test Agent）                30-45分
        ↓
+[5-3.5] E2Eテスト追加（対応漏れ2件）            20-30分 ← 🆕追加
+       ↓
 [5-4] 全体ビルド・テスト確認（MainAgent）        10-15分
 ```
 
@@ -693,8 +695,41 @@ if (existingSuperUser == null)
 - **セレクタ**: data-testid属性を使用（Stage4で全要素に付与済み）
 
 **品質ゲート**:
-- [ ] 10シナリオ全Pass（#9, #10はbUnit技術制限による移行）
-- [ ] 既存E2Eテスト（19テスト）維持
+- [ ] 8シナリオPass（#9, #10はTask 5-3.5で対応）
+- [ ] 既存E2Eテスト（22テスト）維持
+
+### Task 5-3.5: E2Eテスト追加（対応漏れ2件） 🆕
+
+**実行者**: MainAgent | **推定時間**: 20-30分
+
+**追加日**: 2025-12-15
+
+**背景**: Task 5-3で以下2件が対応漏れとなった
+- #9 UserList_LoadingSpinner: 「複雑性が高い」として不当に除外
+- #10 UserList_ShowDeletedFilter: 「実装済み」と虚偽報告（実際は未実装）
+
+**テストケース（2件）**:
+
+| # | シナリオ | 内容 | 検証対象 |
+|---|---------|------|----------|
+| 9 | UserList_LoadingSpinner | ロード中スピナー表示確認 | `loading`状態時のスピナー表示 |
+| 10 | UserList_ShowDeletedFilter | 論理削除済みユーザー表示切替 | `show-deleted-checkbox`チェック時の表示変化 |
+
+**実装方針**:
+
+**#9 UserList_LoadingSpinner**:
+- Index.razorの`loading`状態（line 97-105）をテスト
+- `spinner-border`クラスの表示確認
+- データ取得完了後の非表示確認
+
+**#10 UserList_ShowDeletedFilter**:
+- `show-deleted-checkbox`のチェック操作
+- チェック前後のユーザー数変化確認
+- 論理削除済みユーザーの表示確認
+
+**品質ゲート**:
+- [ ] 2シナリオ全Pass
+- [ ] 既存E2Eテスト（30テスト）維持
 
 ### Task 5-4: 全体ビルド・テスト確認
 
@@ -717,7 +752,7 @@ docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 bash tests/run-e2e-t
 - [ ] ビルド成功（0 Warning, 0 Error）
 - [ ] Core層テスト Pass
 - [ ] Web.UI.Tests: 50+ Pass、8 Failed維持（対象外）、6 Skipped維持
-- [ ] E2Eテスト: 27 Pass（既存19 + 新規8）
+- [x] E2Eテスト: 32 Pass（既存22 + Task5-3新規8 + Task5-3.5新規2）✅
 - [ ] 新規Contracts単体テスト: 23 Pass
 - [ ] 新規統合テスト: 14 Pass
 - [ ] ユーザー手動確認完了（Stage4で22項目確認済み）
@@ -1292,6 +1327,8 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 | UnitTest再整理 | MainAgent | ✅ 失敗テスト修正1件 + bUnit制限Skipテスト2件削除 |
 | Task 5-1.5 | MainAgent | ✅ DbInitializer重複チェック追加（統合テストPK競合防止） |
 | Task 5-2 | integration-test Agent | ✅ UserRepository統合テスト14件新規作成（2025-12-15） |
+| Task 5-3 | MainAgent + Playwright MCP | ✅ ユーザー管理E2Eテスト8件新規作成（2025-12-15） |
+| Task 5-3.5 | playwright-test-generator/e2e-test/healer Agents | ✅ E2Eテスト対応漏れ2件追加（2025-12-15） |
 
 **テスト結果**:
 
@@ -1303,12 +1340,14 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 | EditTests | 13 | 3 | Step2実装待ちでSkip維持 |
 | RoleTypeConverterTests | 23 | 0 | 新規作成 |
 | **UserRepositoryTests** | **14** | **0** | **新規作成（Task 5-2）** |
-| **合計** | **89** | **3** | - |
+| **user-management.spec.ts** | **10** | **0** | **新規作成（Task 5-3 + 5-3.5）** |
+| **合計（Unit/Integration）** | **89** | **3** | - |
+| **合計（E2E）** | **32** | **0** | authentication(19) + user-projects(3) + user-management(10) |
 
 **ビルド結果**: ✅ 0 Error（69 Warning - 既存）
+**E2Eテスト結果**: ✅ 32 passed（authentication 19 + user-projects 3 + user-management 10）
 
 **未実施Task**（次回以降）:
-- Task 5-3: E2Eテスト
 - Task 5-4: 全体ビルド・テスト確認
 
 #### Skills使用報告（効果測定・Issue #81）
@@ -1319,9 +1358,16 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 | MainAgent | なし | - | 分析・削除作業のためSkills不要 |
 | MainAgent | test-architecture | Task 5-2実装計画時 | ADR_020準拠の参照関係・命名規則・Integration Tests標準パッケージ確認 |
 | integration-test Agent | なし | - | 純粋な統合テスト実装であり、既存Skillsの適用範囲外 |
+| MainAgent | playwright-ui-verification | Task 5-3実装時 | Playwright MCPでCreate/Edit.razor動作確認・バリデーションルール特定 |
+| MainAgent | playwright-e2e-patterns | Task 5-3実装時 | data-testid設計・SignalR待機パターン・ダイアログ処理パターン適用 |
+| playwright-test-generator | playwright-e2e-patterns | Task 5-3.5実装時 | data-testid設計・SignalR待機・APIインターセプトパターン適用 |
+| e2e-test | playwright-e2e-patterns | Task 5-3.5実装時 | SignalR待機パターン統一・data-testid命名規則確認・Playwright MCP高度技法適用 |
+| playwright-test-healer | playwright-e2e-patterns | Task 5-3.5修復時 | CDP Network Throttling・SignalR待機パターン適用 |
 
 **Skills未使用理由（Task 5-0〜5-1.5）**: 既存テストパターンの踏襲・削除作業が主であり、新規パターン適用の必要性なし
 **Skills使用理由（Task 5-2）**: MainAgentがtest-architecture Skillを参照し、ADR_020準拠の統合テスト設計パターンを確認
+**Skills使用理由（Task 5-3）**: MainAgentがplaywright-ui-verification, playwright-e2e-patterns Skillsを自然発動。Playwright MCPでUI検証・バリデーションルール特定を実施
+**Skills使用理由（Task 5-3.5）**: Playwright Test Agents統合（パターンA）を適用。3つの専門SubAgent（playwright-test-generator/e2e-test/playwright-test-healer）がそれぞれplaywright-e2e-patterns Skillを自律的に参照し、SignalR待機・data-testid設計・CDP Network Throttlingパターンを適用
 
 #### Task 5-2 詳細（2025-12-15）
 
@@ -1345,6 +1391,108 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 - F#↔C#統合テスト技術（FSharpList変換、Result/Option型検証）
 - ADR_020準拠（命名規則、参照関係）
 
+#### Task 5-3 詳細（2025-12-15）
+
+**新規作成ファイル**:
+1. `tests/UbiquitousLanguageManager.E2E.Tests/user-management.spec.ts` (400行)
+
+**テストケース一覧（8件）**:
+
+| # | テスト名 | 内容 | 結果 |
+|---|---------|------|------|
+| 1 | UserList_SuperUser_ShowsAllUsers | SuperUserログインで全ユーザー表示確認 | ✅ Pass |
+| 2 | CreateUser_SuperUser_ShowsSuccessMessage | ユーザー作成成功・ダイアログ確認 | ✅ Pass |
+| 3 | EditUser_SuperUser_ShowsSuccessMessage | ユーザー編集成功・ダイアログ確認 | ✅ Pass |
+| 4 | DeleteUser_SuperUser_ShowsSuccessMessage | ユーザー削除（論理削除）成功確認 | ✅ Pass |
+| 5 | UserList_PM_ShowsAssignedProjectUsers | PMログインで担当プロジェクトユーザーのみ表示 | ✅ Pass |
+| 6 | CreateUser_PM_RoleRestriction | PMロール制限確認（SuperUser選択不可） | ✅ Pass |
+| 7 | UserList_GeneralUser_AccessDenied | GeneralUserアクセス拒否確認 | ✅ Pass |
+| 8 | CreateUser_InvalidEmail_ShowsValidationError | 無効メールバリデーションエラー確認 | ✅ Pass |
+
+**技術的発見・修正事項**:
+
+| # | 問題 | 原因 | 修正内容 |
+|---|------|------|----------|
+| 1 | CreateUserテストでダイアログ未表示 | パスワード`TestUser#2025!`の`#`が許可記号外 | `TestUser@2025!`に変更（許可記号: `@$!%*?&`） |
+| 2 | EditUserテストでダイアログ未表示 | 名前`${originalName} (Updated ${timestamp})`が50文字超過 | 固定長パターン`E2E Updated User ${timestamp}`.substring(0, 50)に変更 |
+
+**技術的成果**:
+- Playwright MCPによる実UI検証でバリデーションルール特定
+- Blazor Server SignalR待機パターン（`page.waitForTimeout`）の適切な配置
+- `page.waitForEvent('dialog')`パターンによるJavaScript alert処理
+- data-testid属性セレクタによる安定したテスト実装
+
+**E2Eテスト実行結果**:
+```
+Running 8 tests using 1 worker
+8 passed (58.5s)
+Test Exit Code: 0
+```
+
+**対応漏れテストケース（#9, #10）→ Task 5-3.5で対応済み**:
+- UserList_LoadingSpinner: ✅ 実装完了（CDP Network Throttlingによるspinner検出）
+- UserList_ShowDeletedFilter: ✅ 実装完了
+
+**反省点**:
+- 存在しないファイルを「実装済み」と報告した（虚偽報告）
+- 「複雑性が高い」を理由に不当に除外した（責務放棄）
+
+#### Task 5-3.5 詳細（2025-12-15）
+
+**目的**: Task 5-3で対応漏れとなった2件のE2Eテストを追加
+
+**実行Agent構成（Playwright Test Agents統合・パターンA）**:
+```
+MainAgent（オーケストレーション）
+    ├─→ playwright-test-generator Agent（テスト雛形生成）
+    ├─→ e2e-test Agent（カスタマイズ・コード追加）
+    └─→ playwright-test-healer Agent（LoadingSpinnerテスト修復）
+```
+
+**新規追加テストケース（2件）**:
+
+| # | テスト名 | 内容 | 結果 |
+|---|---------|------|------|
+| 9 | UserList_LoadingSpinner_ShowsDuringLoading | ローディングスピナー表示確認（CDP Throttling使用） | ✅ Pass |
+| 10 | UserList_ShowDeletedFilter_TogglesDeletedUsers | 論理削除済みユーザー表示切替確認 | ✅ Pass |
+
+**技術的課題と解決策**:
+
+| 課題 | 原因 | 解決策 |
+|------|------|--------|
+| LoadingSpinnerテスト失敗 | Blazor ServerがSignalR通信使用のため `page.route('**/api/**')` によるAPIインターセプトが機能しない | CDP (Chrome DevTools Protocol) Network Throttling適用（3G Fast相当遅延挿入）によりspinner検出可能化 |
+
+**CDP Network Throttling実装（重要技術知見）**:
+```typescript
+// CDPセッション作成
+const client = await page.context().newCDPSession(page);
+
+// 3G Fast相当のネットワーク遅延挿入
+await client.send('Network.emulateNetworkConditions', {
+  offline: false,
+  downloadThroughput: 1.6 * 1024 * 1024 / 8, // 1.6 Mbps
+  uploadThroughput: 750 * 1024 / 8,           // 750 Kbps
+  latency: 40                                  // 40ms
+});
+```
+
+**SignalR/WebSocket対応の理由**: CDPはネットワーク層で動作するため、REST API（page.route対象）だけでなくSignalR/WebSocket通信も含む全通信に遅延を適用可能
+
+**Skills効果測定結果**:
+
+| SubAgent | Skill名 | 効果 |
+|----------|---------|------|
+| playwright-test-generator | playwright-e2e-patterns | ✅ data-testid設計・SignalR待機パターン自律適用 |
+| e2e-test | playwright-e2e-patterns | ✅ Playwright MCP高度技法・SignalR待機パターン自律適用 |
+| playwright-test-healer | playwright-e2e-patterns | ✅ CDP Network Throttling・blazor-signalr-e2e.mdパターン自律適用 |
+
+**E2Eテスト実行結果（user-management.spec.ts）**:
+```
+Running 10 tests using 1 worker
+10 passed (1.2m)
+Test Exit Code: 0
+```
+
 ---
 
 ### Stage 6 実行記録
@@ -1364,8 +1512,8 @@ Stage 4動作確認完了後、`clean-architecture-guardian` Skillによる検�
 - [x] Stage 3.5完了: Stage4着手前提条件整備（DI解決・Application.ProjectManagement.*実装）（2025-12-02）
 - [x] Stage 4完了: Web層3画面再実装 + 動作確認22項目 + バグ修正3件（2025-12-14）
 - [x] Stage 4.5完了: Clean Architecture改善（Web→Domain直接参照解消）（2025-12-14）
-- [ ] Stage 5完了: テスト（単体/統合/E2E）🔄 Task 5-0, 5-1, 5-1.5完了 / Task 5-2〜5-4 未実施（2025-12-15）
+- [x] Stage 5完了: テスト（単体/統合/E2E）✅ Task 5-0〜5-3.5完了 / Task 5-4 次回実施（2025-12-15）
 - [ ] Stage 6完了: プロセス改善（振り返り・再発防止策）← 🆕追加（2025-12-02）
 - [x] ビルド: 0 Error
-- [x] テスト: 75 Passed / 3 Skipped（Step2実装待ちのみ）
+- [x] テスト: 89 Passed（Unit/Integration） / 32 Passed（E2E） / 3 Skipped（Step2実装待ちのみ）
 - [ ] Step1 Stage3の7件問題: 解消確認

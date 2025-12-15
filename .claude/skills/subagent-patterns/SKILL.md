@@ -286,6 +286,22 @@ Step5: code-review (テスト品質確認)
 - [ ] 責務マッピングでSubAgent選定した
 - [ ] Fix-Mode指示テンプレート使用した
 
+### SubAgent実行完了後（即時実施・必須）
+
+- [ ] SubAgentからの応答を受領した
+- [ ] Skills利用報告を確認した（報告有無・使用Skill名）
+- [ ] Serenaメモリ `skills_effectiveness_temp` に即時記録した
+  - 記録形式: `[SubAgent名] | [Skill名/なし/不明] | [適用内容]`
+- [ ] 報告なしの場合も「Skills使用: なし」または「不明」と記録した
+
+**重要**: Context summarization前にSerenaメモリに記録することで記録漏れを防止
+
+### Stage/Task終了時
+
+- [ ] Serenaメモリ `skills_effectiveness_temp` の内容を確認した
+- [ ] 該当Phase/Stepの組織設計ファイルに集積・整理して出力した
+  - 記録項目: 使用者 / Skill名 / 参照タイミング / 判断・適用内容
+
 ---
 
 ## 参照元ADR・Rules

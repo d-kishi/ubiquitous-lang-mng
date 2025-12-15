@@ -1,6 +1,6 @@
 ---
 name: playwright-e2e-patterns
-description: TypeScript/Playwright TestでE2Eテストを作成する。「E2Eテスト実装」「data-testid設計」「Blazor Server対応」「SignalR待機」「ログインフロー」の際に使用する。
+description: TypeScript/Playwright TestでE2Eテストを作成する。「E2Eテスト実装」「data-testid設計」「Blazor Server対応」「SignalR待機」「ログインフロー」「ローディング状態テスト」「CDP Network Throttling」の際に使用する。
 allowed-tools: Read, Grep
 ---
 
@@ -79,19 +79,28 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 ---
 
-### 3. Blazor Server SignalR対応パターン
+### 3. Blazor Server SignalR対応パターン（7パターン）
 
 **詳細**: [`patterns/blazor-signalr-e2e.md`](./patterns/blazor-signalr-e2e.md)
 
-**概要**:
-- **StateHasChanged()待機**: `await page.WaitForTimeoutAsync(1000);` による非同期UI更新待機
-- **SignalR接続確立確認**: `await page.WaitForLoadStateAsync(LoadState.NetworkIdle);`
-- **Toast通知検証**: `.toast-success`, `[role='alert']` セレクタ使用
-- **JavaScript confirmダイアログ処理**: `page.Dialog` イベントハンドラ登録
+**概要（7パターン）**:
+- **パターン1 SignalR接続確立待機**: `await page.WaitForLoadStateAsync(LoadState.NetworkIdle);`
+- **パターン2 StateHasChanged()待機**: `await page.WaitForTimeoutAsync(1000);` による非同期UI更新待機
+- **パターン3 Toast通知検証**: `.toast-success`, `[role='alert']` セレクタ使用
+- **パターン4 JavaScript confirmダイアログ処理**: `page.Dialog` イベントハンドラ登録
+- **パターン5 URL遷移確認**: `await page.WaitForURLAsync("**/path");`
+- **パターン6 要素表示待機**: `WaitForSelectorState.Visible` 明示指定
+- **パターン7 CDP Network Throttling**: ローディング状態テスト（SignalR対応） 🆕
+
+**パターン7詳細（2025-12-15追加）**:
+- **課題**: Blazor ServerはSignalR通信のため `page.route()` によるAPIインターセプトが効かない
+- **解決**: CDP (Chrome DevTools Protocol) でネットワーク層に遅延を挿入
+- **用途**: ローディングスピナー・スケルトンスクリーン・プログレスバー表示確認
 
 **適用場面**:
 - Blazor Server E2Eテスト実装時に自律的に適用
 - 非同期UI更新・SignalR接続の考慮が必要な場面
+- **ローディング状態のE2Eテスト実装時**（パターン7）
 
 ---
 
@@ -174,6 +183,7 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 ---
 
 **Skill作成日**: 2025-10-26
-**Phase**: Phase B2 Step6 Stage 4
+**最終更新**: 2025-12-15（パターン7 CDP Network Throttling追加）
+**Phase**: Phase B2 Step6 Stage 4 / Phase B-F3 Step1.5
 **実証結果**: 93.3%効率化達成
 **GitHub Issue #54**: Phase 1実験的導入 前倒し完了 🎉

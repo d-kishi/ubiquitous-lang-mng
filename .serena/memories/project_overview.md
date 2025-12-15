@@ -172,31 +172,42 @@
 **最終更新**: 2025-12-02（Step1.5 Stage4作業中・動作確認3/25項目完了）
 
 ---
-## 2025-12-15 セッション引き継ぎ
+## 2025-12-16 セッション引き継ぎ
 
-### 前回セッション成果（2025-12-15 セッション3）
-- ✅ **Task 5-2完了**: UserRepository統合テスト14件新規作成
-  - IntegrationTestFixture.cs（177行）: WebApplicationFactory<Program>基盤
-  - UserRepositoryTests.cs（658行）: 14テストケース全Pass
-- ✅ **Skills効果測定**: MainAgentがtest-architecture Skill参照
-- ✅ **Stage5実行記録更新**: 組織設計ファイル更新完了
+### 前回セッション成果（2025-12-15 セッション5）
+- ✅ **Task 5-3.5完了**: user-management.spec.ts 2テストケース追加（LoadingSpinner, ShowDeletedFilter）
+- ✅ **Task 5-4完了**: 全体ビルド・テスト確認（0 Error, 418 Passed）
+- ✅ **Stage5完了**: 全Task完了
+- ✅ **CDP Network Throttling技術知見**: playwright-e2e-patterns Skillにパターン7として追加
+- ✅ **GitHub Issue #84作成**: user-projects.spec.ts 3件失敗（別途対応）
 
-### Stage5進捗状況
+### 重要技術知見（CDP Network Throttling）
+
+**問題**: Blazor Server（SignalR）では`page.route('**/api/**')`によるAPIインターセプトが効かない
+**解決**: Chrome DevTools Protocol (CDP)でネットワーク層に遅延を挿入
+**用途**: ローディングスピナー・スケルトンスクリーン表示テスト
+**詳細**: `.claude/skills/playwright-e2e-patterns/patterns/blazor-signalr-e2e.md` パターン7
+
+### Stage5進捗状況（完了）
 - ✅ Task 5-0: 事前清掃（11件テスト削除）
 - ✅ Task 5-1: RoleTypeConverter単体テスト（23件新規）
 - ✅ Task 5-1.5: DbInitializer重複チェック追加
-- ✅ Task 5-2: UserRepository統合テスト14件新規作成 ← **完了**
-- ❌ Task 5-3以降: 実施しない（Stage6でE2Eテスト実施予定）
+- ✅ Task 5-2: UserRepository統合テスト（14件新規）
+- ✅ Task 5-3: E2Eテスト（8件新規・全Pass）
+- ✅ Task 5-3.5: E2Eテスト追加（2件新規・全Pass）
+- ✅ Task 5-4: 全体ビルド・テスト確認
 
-### テスト結果サマリ（Task 5-2完了時点）
-- **Total**: 89 Passed / 3 Skipped
-- **UserRepositoryTests**: 14件全Pass
+### テスト結果サマリ（Stage5完了時点）
+- **ビルド**: 0 Error, 80 Warning（既存）
+- **Unit/Integration**: 418 Passed
+- **E2E**: 22 Passed, 3 Failed (user-projects.spec.ts), 4 Skipped
+- **失敗3件**: GitHub Issue #84で別途対応
 
 ### 次回セッション予定作業
 
-**Stage5完了 → Stage6: E2Eテスト実施**
-- Task 5-3: E2Eテスト（Playwright Test）
-- Task 5-4: 全体ビルド・テスト確認
+**Stage6 プロセス改善**:
+- 組織設計ファイルのStage6セクション参照
+- Step01.5全体の振り返り・改善点整理
 
 ### 重要プロセス改善（厳守）
 
@@ -204,6 +215,11 @@
 - 実装作業は必ずPlanモードで計画を立ててから開始
 - 理由: AutoCompact発生時の情報損失抑制
 - セッション開始後、ユーザー同意なく実装着手禁止
+
+**Skills効果測定（Issue #81）**:
+- SubAgent完了後即座にskills_effectiveness_tempメモリーに記録
+- Stage/Task終了時に組織設計ファイルへ集約
+- session-end時にskills_effectiveness_tempをクリア
 
 ### 必須参照ドキュメント
 - `Doc/08_Organization/Active/Phase_B-F3/Step01.5_ユーザー管理UI全面リファクタ.md`

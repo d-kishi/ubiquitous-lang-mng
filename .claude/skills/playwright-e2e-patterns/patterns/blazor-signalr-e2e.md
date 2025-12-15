@@ -211,6 +211,97 @@ await memberSelector.SelectOptionAsync(new SelectOptionValue { Index = 1 });
 
 ---
 
+## パターン7: CDP Network Throttling（ローディング状態テスト）
+
+### 問題
+
+Blazor Serverのローディング状態（スピナー等）は、高速環境では瞬間的に表示・消滅するため捕捉困難です。
+従来の `page.route('**/api/**')` によるAPIインターセプトは **SignalR（WebSocket）には効かない** ため、Blazor Serverでは使用できません。
+
+### 原因
+
+- **Blazor Server**: SignalR（WebSocket）経由でデータ取得
+- **page.route()**: HTTPリクエストのみ対象（WebSocket非対応）
+- **結果**: APIインターセプトによる遅延挿入が機能しない
+
+### 解決パターン
+
+**Chrome DevTools Protocol (CDP)** を使用してネットワーク層で遅延を挿入します。CDPはWebSocket/SignalRを含む全ネットワーク通信に影響します。
+
+```typescript
+// CDPセッション作成
+const client = await page.context().newCDPSession(page);
+
+// ネットワークスロットリング有効化（3G Fast相当）
+await client.send('Network.enable');
+await client.send('Network.emulateNetworkConditions', {
+  offline: false,
+  downloadThroughput: 1.6 * 1024 * 1024 / 8, // 1.6 Mbps
+  uploadThroughput: 750 * 1024 / 8,           // 750 Kbps
+  latency: 40                                  // 40ms latency
+});
+
+// ページ遷移（ネットワーク遅延によりスピナー表示時間延長）
+const navigationPromise = page.goto(`${BASE_URL}/admin/users`);
+
+// ローディングスピナー検出（遅延により観測可能に）
+const spinner = page.locator('.spinner-border.text-primary');
+await expect(spinner).toBeVisible({ timeout: 5000 });
+
+// ナビゲーション完了待機
+await navigationPromise;
+await page.waitForLoadState('networkidle');
+
+// スピナー非表示確認（データ取得完了）
+await expect(spinner).not.toBeVisible({ timeout: 5000 });
+
+// テスト完了後のクリーンアップ（必須）
+await client.send('Network.emulateNetworkConditions', {
+  offline: false,
+  downloadThroughput: -1, // 無制限に戻す
+  uploadThroughput: -1,
+  latency: 0
+});
+await client.send('Network.disable');
+```
+
+### 推奨スロットリング設定
+
+| プリセット | Download | Upload | Latency | 用途 |
+|-----------|----------|--------|---------|------|
+| **3G Fast（推奨）** | 1.6 Mbps | 750 Kbps | 40ms | ローディング状態検出 |
+| 3G Slow | 400 Kbps | 400 Kbps | 400ms | 低速環境テスト |
+| 4G | 4 Mbps | 3 Mbps | 20ms | 軽度遅延テスト |
+
+### 適用場面
+
+- ✅ ローディングスピナー表示確認
+- ✅ スケルトンスクリーン表示確認
+- ✅ プログレスバー動作確認
+- ✅ 遅延環境でのUX検証
+- ✅ SignalR通信を含む全ネットワーク遅延が必要な場合
+
+### 従来手法との比較
+
+| 手法 | REST API対応 | SignalR対応 | WebSocket対応 | 適用範囲 |
+|------|-------------|-------------|---------------|----------|
+| `page.route()` | ✅ | ❌ | ❌ | HTTPリクエストのみ |
+| **CDP Throttling** | ✅ | ✅ | ✅ | **全ネットワーク通信** |
+
+### 注意事項
+
+1. **クリーンアップ必須**: テスト終了後に必ずスロットリングを無効化（`downloadThroughput: -1`）
+2. **テスト時間増加**: ネットワーク遅延により実行時間が延長（+3-10秒程度）
+3. **Chromium限定**: CDPはChromium系ブラウザでのみ使用可能（Firefox/WebKit非対応）
+
+### 実証結果（Phase B-F3 Step1.5 Task 5-3.5）
+
+- **テスト**: `UserList_LoadingSpinner_ShowsDuringLoading`
+- **結果**: ✅ Pass（CDPスロットリングによりspinner検出成功）
+- **従来手法での失敗理由**: `page.route('**/api/**')` がSignalRに効かず、spinnerが瞬時に消滅
+
+---
+
 ## 統合パターン（実践例）
 
 ### UserProjects E2Eテスト完全フロー
@@ -273,9 +364,11 @@ public async Task ProjectMembers_AddMember_ShowsSuccessMessage()
 
 ---
 
-## Phase B2 Step6実証結果
+## 実証結果
 
-### 適用パターン
+### Phase B2 Step6実証結果
+
+**適用パターン（パターン1-6）**:
 - ✅ **パターン1**: SignalR接続確立待機（全シナリオで使用）
 - ✅ **パターン2**: StateHasChanged()待機（メンバー追加・削除で使用）
 - ✅ **パターン3**: Toast通知検証（全シナリオで使用）
@@ -283,10 +376,20 @@ public async Task ProjectMembers_AddMember_ShowsSuccessMessage()
 - ✅ **パターン5**: URL遷移確認（メンバー管理画面遷移で使用）
 - ✅ **パターン6**: 要素表示待機（全シナリオで使用）
 
-### 信頼性
+**信頼性**:
 - **テスト成功率**: 100%（3シナリオ全て成功・想定）
 - **待機パターンの有効性**: 100%（SignalR対応待機により失敗ゼロ）
 - **GitHub Issue #56対応**: bUnit困難範囲の完全実証
+
+### Phase B-F3 Step1.5 Task 5-3.5実証結果
+
+**適用パターン（パターン7）**:
+- ✅ **パターン7**: CDP Network Throttling（ローディングスピナー検出で使用）
+
+**課題と解決**:
+- **課題**: `page.route('**/api/**')` によるAPIインターセプトがSignalRに効かず、spinnerが検出不可
+- **解決**: CDP Network Throttlingで全ネットワーク通信に遅延を挿入
+- **結果**: `UserList_LoadingSpinner_ShowsDuringLoading` テストがPass
 
 ---
 
@@ -328,6 +431,10 @@ _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
 ---
 
 **作成日**: 2025-10-26
-**Phase**: Phase B2 Step6
-**実装実績**: UserProjectsTests.cs（3シナリオ・100%成功想定）
+**最終更新**: 2025-12-15（パターン7追加）
+**Phase**: Phase B2 Step6 / Phase B-F3 Step1.5
+**実装実績**:
+- UserProjectsTests.cs（3シナリオ・100%成功）
+- user-management.spec.ts（10シナリオ・100%成功）
 **GitHub Issue #56対応**: Blazor Server SignalR対応パターン実証完了
+**パターン7追加**: CDP Network Throttling（ローディング状態テスト）
