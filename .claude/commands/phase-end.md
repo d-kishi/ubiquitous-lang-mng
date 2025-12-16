@@ -12,6 +12,39 @@
 - [ ] **仕様準拠最終確認**: Phase全体での仕様準拠率100%確認
 - [ ] **技術負債確認**: Phase中に発生した技術負債の記録確認
 
+### 1.5. 残課題・仮実装チェック（必須・🆕 Step1.5教訓）
+
+**目的**: Phase内で発生した仮実装・TODO・スタブを棚卸しし、次Phaseへの引き継ぎ漏れを防止
+**背景**: Phase B-F3 Step1.5で、Phase A実装時の仮実装が記録されておらず、大規模リファクタ（11h+）が必要となった教訓
+
+#### 自動検出実行
+```bash
+# TODO/FIXME/HACK自動検出（DevContainer内で実行）
+docker exec ubiquitous-lang-mng_devcontainer-devcontainer-1 grep -rn "TODO\|FIXME\|HACK" src/ --include="*.cs" --include="*.fs"
+```
+
+#### チェックリスト
+- [ ] **自動検出実行**: 上記コマンドで残課題を検出
+- [ ] **検出結果の対応判断**:
+  - 即時対応（Phase完了前に修正）
+  - 次Phase申し送り（Phase_Summary.mdに記録）
+  - GitHub Issue登録（tech-debtラベル付き）
+- [ ] **仮実装・スタブの棚卸し**: 一時的な実装がないか確認
+- [ ] **未実装機能リスト作成**: Phase計画にあったが未実装の機能を列挙
+- [ ] **次Phase引き継ぎ事項として明示的に記録**: Phase_Summary.mdの「申し送り事項」セクションに記載
+- [ ] **GitHub Issues登録**: 対応が必要な項目は `tech-debt` ラベル付きで登録
+
+#### 記録フォーマット（Phase_Summary.md追記用）
+```markdown
+### 残課題・仮実装リスト（Phase完了時棚卸し）
+
+| 項目 | 種別 | 対応判断 | 備考 |
+|------|------|----------|------|
+| [検出項目] | TODO/仮実装/未実装 | 次Phase/Issue登録/対応不要 | [理由] |
+```
+
+---
+
 ### 2. Phase総括レポート作成（必須）
 - [ ] **Phase実行結果記録**:
   - 開始日・完了日・実行期間

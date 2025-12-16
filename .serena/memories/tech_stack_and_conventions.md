@@ -102,6 +102,48 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ---
 
+## Claude Code ステータスライン設定（2025-12-16追加）
+
+### 概要
+
+**目的**: コンテキストウィンドウ使用率のリアルタイム表示（80%ルール監視）
+
+**設定ファイル**:
+- `.claude/statusline.js` - スクリプト本体（Windows/Linux両対応）
+- `.claude/settings.local.json` - statusLine設定
+
+### 表示内容
+
+```
+[Opus 4.5] | 🌿 feature/PhaseB-F3 | ✓ Context: 30% (60k/200k)
+```
+
+| 要素 | 説明 |
+|------|------|
+| モデル名 | 使用中のモデル（Opus 4.5等） |
+| Gitブランチ | 現在のブランチ名 |
+| コンテキスト使用率 | 使用量/最大量（色分け表示） |
+
+### 色分けルール（80%ルール準拠）
+
+| 使用率 | 表示 | アクション |
+|--------|------|------------|
+| 0-69% | ✓ 緑 | 正常継続 |
+| 70-84% | ⚡ 黄 | 手動compact検討 |
+| 85%+ | ⚠️ 赤 | セッション終了推奨 |
+
+### Windows互換性
+
+**注意**: Unix専用の`2>/dev/null`は使用不可
+**解決策**: `stdio: ['pipe', 'pipe', 'ignore']`でstderrを無視
+
+### current_usageフィールド（v2.0.70新機能）
+
+**用途**: 正確なコンテキストウィンドウ使用量取得
+**計算式**: `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`
+
+---
+
 ## PostgreSQL 識別子規約（2025-10-26確立・重要）
 
 ### 🔴 必須ルール: 全識別子Quote必須

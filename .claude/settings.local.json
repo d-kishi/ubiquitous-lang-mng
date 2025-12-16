@@ -128,7 +128,9 @@
       "mcp__playwright__browser_fill_form",
       "mcp__playwright-test__test_run",
       "mcp__playwright-test__test_list",
-      "mcp__playwright__browser_handle_dialog"
+      "mcp__playwright__browser_handle_dialog",
+      "Bash(where jq:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": [],
@@ -150,6 +152,10 @@
         ]
       }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/statusline.js"
   },
   "sandbox": {
     "enabled": true,
