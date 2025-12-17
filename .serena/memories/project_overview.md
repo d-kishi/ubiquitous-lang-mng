@@ -119,25 +119,35 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3 Step1.5完了・プロセス改善Issue実施
+### Issue #83 対応計画策定・Phase_Issue83立ち上げ
 
 **優先度**: 🔴 Critical
 
-**Step1.5完了状態**:
-- ✅ Stage1-6全て完了
-- ✅ ユーザー承認取得済み（2025-12-16）
-- ✅ ビルド: 0 Error, 0 Warning
-- ✅ テスト: 57 Passed, 13 Skipped
+**前回セッション完了状態**:
+- ✅ Issue #76完了（CLAUDE.md追記・クローズ済み）
+- ✅ Step1.5全Stage完了
 
 **次回実施内容**:
 
-1. **Issue #76**: Claude修正報告時の自己検証プロセス必須化（30分）
-2. **Issue #83**: .claude/rules/機能活用によるルール管理基盤改善 Phase1-6（5-6時間）
-3. **Step2開始準備**（Issue完了後）
+1. **Issue #83読み込み**（必須・セッション開始時）
+   - 実行コマンド: `gh issue view 83`
+   - 内容: .claude/rules/機能活用によるルール管理基盤改善
+
+2. **Phase_Issue83組織設計ファイル作成**
+   - `Doc/08_Organization/Active/Phase_Issue83/`配下に作成
+   - Phase_Summary.md + Step設計
+
+3. **Issue #83 Phase 1-6段階的実施**（2-3セッション想定）
+   - Phase 1: Core Rules移行
+   - Phase 2: Operations Rules移行
+   - Phase 3: 条件付きRules移行
+   - Phase 4: ADRルール抽出
+   - Phase 5: Skills統合・Doc/08整理
+   - Phase 6: 参照リンク最終更新・検証
 
 **読み込み必須ファイル（🔴CRITICAL）**:
-- `gh issue view 76` - 自己検証プロセスIssue
-- `gh issue view 83` - rules/機能活用Issue
+- `gh issue view 83` - rules/機能活用Issue（セッション開始時に必ず実行）
+
 
 ---
 
