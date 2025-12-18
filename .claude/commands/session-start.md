@@ -60,7 +60,7 @@
 
 ## 関連プロセス
 - SubAgent活用: subagent-selection Command連携
-- 情報源: /Doc/08_Organization/Rules/SubAgent組み合わせパターン.md
+- 情報源: `.claude/skills/subagent-patterns/` (Agent Skills)
 - 管理: TodoWriteツールでのタスク管理体系
 
 ## 自動実行トリガー

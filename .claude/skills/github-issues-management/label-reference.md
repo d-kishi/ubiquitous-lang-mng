@@ -2,7 +2,7 @@
 
 **目的**: GitHub Issueラベル体系の迅速な参照
 
-**参照元**: `Doc/08_Organization/Rules/GitHub_Issues運用規則.md`
+**参照元**: `.claude/rules/operations/github-issues-rules.md`
 
 ## 📊 ラベル体系全体像
 

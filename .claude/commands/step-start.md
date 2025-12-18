@@ -163,7 +163,7 @@
   - 計画ファイルをPlans/またはResearch/ディレクトリに保存するか判断
   - 保存先: `Doc/08_Organization/Active/Phase_XX/Plans/YYYY-MM-DD_StepXX計画.md`
 
-**参照**: `Doc/08_Organization/Rules/組織管理運用マニュアル.md` - PlanMode活用ガイドライン
+**参照**: `.claude/rules/operations/organization-manual.md` - PlanMode活用ガイドライン
 
 ### 2.5 タスク分解・TodoList生成（🆕 新機能追加）
 ```bash
@@ -307,7 +307,7 @@ echo "📋 Step作業のタスク分解・TodoList生成を開始..."
   - SubAgentへの指示に以下を自動追加：
     * ADR_020: テストアーキテクチャ決定
     * `/Doc/02_Design/テストアーキテクチャ設計書.md`
-    * `/Doc/08_Organization/Rules/新規テストプロジェクト作成ガイドライン.md`
+    * `/Doc/08_Organization/Guide/新規テストプロジェクト作成ガイドライン.md`
 
 - [ ] **✅ チェックリスト実施確認**:
   - SubAgent実行前に必須確認事項の明示的提示

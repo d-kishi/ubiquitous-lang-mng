@@ -35,7 +35,7 @@
 
 **例**: 歴史的記録が必要か？→YES: ADR作成
 
-**詳細**: `Doc/08_Organization/Rules/ADRとAgent_Skills判断ガイドライン.md` 参照
+**詳細**: `.claude/rules/operations/adr-skills-decision-guide.md` 参照
 
 ---
 
@@ -63,7 +63,7 @@
 
 **例**: 3回試行後も失敗 → アプローチ変更判断
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+**詳細**: `.claude/rules/operations/development-methodology.md` 参照
 
 ### Step再実行プロセス
 
@@ -71,7 +71,7 @@
 
 **例**: 仕様理解不足 → Issue記録 → 同一Step再実行
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+**詳細**: `.claude/rules/operations/development-methodology.md` 参照
 
 ### 技術調査時のアーキテクチャ図作成標準
 
@@ -79,7 +79,7 @@
 
 **例**: Playwright統合調査 → 統合アーキテクチャ図作成（プロセス境界・通信方式明示）
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+**詳細**: `.claude/rules/operations/development-methodology.md` 参照
 
 ### 品質vs効率トレードオフ判断基準
 
@@ -87,7 +87,7 @@
 
 **例**: Phase A-B（基盤確立期） → 品質優先、Phase E-F（最適化期） → 効率優先
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+**詳細**: `.claude/rules/operations/development-methodology.md` 参照
 
 ### Step目的の明確化プロセス
 
@@ -95,7 +95,7 @@
 
 **例**: Step目的不明確 → ユーザー確認必須
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+**詳細**: `.claude/rules/operations/development-methodology.md` 参照
 
 ### VSCode拡張機能更新時の検証プロセス
 
@@ -103,7 +103,7 @@
 
 **例**: C#拡張更新 → ビルド検証 → 問題なければ適用
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` 参照
+**詳細**: `.claude/rules/operations/development-methodology.md` 参照
 
 ---
 
@@ -115,7 +115,7 @@
 
 **例**: 認証機能実装完了 → 即座にE2Eテスト実装
 
-**詳細**: `Doc/08_Organization/Rules/Playwright_運用統合ガイドライン.md` 参照
+**詳細**: `Doc/08_Organization/Guide/Playwright_運用統合ガイドライン.md` 参照
 
 ### Playwright Test Agents活用指針
 
@@ -123,7 +123,7 @@
 
 **例**: 新機能E2E → パターンA（planner→generator→e2e-test→healer）
 
-**詳細**: `Doc/08_Organization/Rules/Playwright_運用統合ガイドライン.md` 参照
+**詳細**: `Doc/08_Organization/Guide/Playwright_運用統合ガイドライン.md` 参照
 
 ### E2Eテスト作成前の前提条件確認プロセス
 
@@ -131,7 +131,7 @@
 
 **例**: 機能実装未完了 → E2E作成延期
 
-**詳細**: `Doc/08_Organization/Rules/Playwright_運用統合ガイドライン.md` 参照
+**詳細**: `Doc/08_Organization/Guide/Playwright_運用統合ガイドライン.md` 参照
 
 ---
 

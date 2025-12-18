@@ -47,6 +47,8 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 **詳細**: [`patterns/data-testid-design.md`](./patterns/data-testid-design.md)
 
+**命名規則**: [`.claude/rules/tests/e2e-test-data-testid-naming.md`](../../../rules/tests/e2e-test-data-testid-naming.md)
+
 **概要**:
 - **ボタン**: `{action}-button` (例: `member-add-button`, `member-delete-button`)
 - **入力フィールド**: `{field}-input` (例: `username-input`, `password-input`)

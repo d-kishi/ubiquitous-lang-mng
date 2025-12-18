@@ -225,7 +225,7 @@ mv tests/[ProjectName]/.claude/agents/*.md .claude/agents/
 - **失敗時**: 実用性不足として保留・Phase B4で再評価検討
 
 **統合時の更新ドキュメント**（healer Agent評価成功時のみ）:
-1. **組織管理運用マニュアル**（`Doc/08_Organization/Rules/組織管理運用マニュアル.md`）
+1. **組織管理運用マニュアル**（`.claude/rules/operations/organization-manual.md`）
    - 追加セクション: 「E2Eテスト失敗時の自動修復フロー」
 
 2. **step-end-review Command**（`.claude/commands/step-end-review.md`）

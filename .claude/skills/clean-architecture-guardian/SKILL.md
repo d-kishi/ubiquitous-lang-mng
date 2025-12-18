@@ -38,7 +38,7 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 ### 1. レイヤー分離原則
 
-**詳細**: [`rules/layer-separation.md`](./rules/layer-separation.md)
+**詳細**: [`.claude/rules/architecture/layer-separation.md`](../../../rules/architecture/layer-separation.md)
 
 **チェックポイント**:
 - ✅ C# → F#依存は許可（Application層・UI層からDomain層呼び出し）
@@ -50,7 +50,7 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 ### 2. namespace階層化ルール
 
-**詳細**: [`rules/namespace-design.md`](./rules/namespace-design.md)
+**詳細**: [`.claude/rules/architecture/namespace-design.md`](../../../rules/architecture/namespace-design.md)
 
 **チェックポイント**:
 - ✅ Bounded Context別サブnamespace使用
@@ -230,6 +230,14 @@ type User = ...
 2. **検証プロセス実行**: Step開始時・Phase完了時の検証必須
 3. **97点品質維持**: Phase B1で確立した品質基準を下回らない
 4. **Bounded Context追加時**: ADR_019再確認必須
+
+## ルール移行情報
+
+**移行先**: `.claude/rules/architecture/`
+- `layer-separation.md` - レイヤー分離原則
+- `namespace-design.md` - namespace設計規約
+
+---
 
 ## 参考資料
 

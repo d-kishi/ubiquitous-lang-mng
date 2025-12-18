@@ -227,7 +227,7 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
   | npx @playwright/mcp@latest | jq '.result.tools[].name'
 ```
 
-**詳細**: `Doc/08_Organization/Rules/開発手法詳細ガイド.md` - MCP仕様・メンテナンス
+**詳細**: `.claude/rules/operations/development-methodology.md` - MCP仕様・メンテナンス
 
 ### MCPメンテナンスパターン（半自動推奨）
 
@@ -236,7 +236,7 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' \
 **例**: バージョン確認 → ツール変更検出 → 変更レポート作成 → SubAgent定義更新判断
 
 **詳細**:
-- `Doc/08_Organization/Rules/開発手法詳細ガイド.md` - 週次メンテナンスフロー
+- `.claude/rules/operations/development-methodology.md` - 週次メンテナンスフロー
 - `Doc/07_Decisions/ADR_024_Playwright専用SubAgent新設決定.md` - 5段階手順・トラブルシューティング
 
 ---

@@ -74,7 +74,7 @@ Claudeは以下の状況でこのSkillを自律的に使用すべきです：
 
 ## SubAgent責務境界判定
 
-**詳細**: [`rules/agent-responsibility-boundary.md`](./rules/agent-responsibility-boundary.md)
+**詳細**: [`.claude/rules/agents/agent-responsibility-boundary.md`](../../../rules/agents/agent-responsibility-boundary.md)
 
 ### 実装系Agent責務境界（重要）
 
@@ -276,7 +276,7 @@ Step5: code-review (テスト品質確認)
 
 ### SubAgent選択迷い時
 
-- [ ] 責務境界を確認した（`rules/agent-responsibility-boundary.md`）
+- [ ] 責務境界を確認した（`.claude/rules/agents/agent-responsibility-boundary.md`）
 - [ ] 該当AgentのSubtypeがあるか確認した
 - [ ] 並列実行判断ロジックを適用した
 
@@ -319,6 +319,13 @@ Step5: code-review (テスト品質確認)
 - **clean-architecture-guardian Skill**: Clean Architecture準拠性チェック
 - **tdd-red-green-refactor Skill**: unit-test Agent活用パターン
 - **playwright-e2e-patterns Skill**: e2e-test Agent専用・3つのE2Eテストパターン（data-testid/MCP/SignalR）・93.3%効率化実証済み
+
+---
+
+## ルール移行情報
+
+**移行先**: `.claude/rules/agents/`
+- `agent-responsibility-boundary.md` - SubAgent責務境界判定ルール
 
 ---
 

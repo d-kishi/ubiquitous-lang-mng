@@ -352,7 +352,7 @@
 
 #### 詳細ガイドライン
 
-**迷った時の詳細参照**: `Doc/08_Organization/Rules/ADRとAgent_Skills判断ガイドライン.md`
+**迷った時の詳細参照**: `.claude/rules/operations/adr-skills-decision-guide.md`
 
 **提供内容**:
 - 判断フローチャート

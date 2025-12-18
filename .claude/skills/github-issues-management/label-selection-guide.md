@@ -2,7 +2,7 @@
 
 **目的**: GitHub Issue作成時のラベル判断基準・選択ロジックを提供
 
-**参照元**: `Doc/08_Organization/Rules/GitHub_Issues運用規則.md`
+**参照元**: `.claude/rules/operations/github-issues-rules.md`
 
 ## 📊 ラベル選択の3段階プロセス
 

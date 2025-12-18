@@ -2,7 +2,7 @@
 
 **目的**: GitHub Issue作成の判断基準を提供
 
-**参照元**: `Doc/08_Organization/Rules/GitHub_Issues運用規則.md`
+**参照元**: `.claude/rules/operations/github-issues-rules.md`
 
 ## 📊 Issue作成対象の判断
 

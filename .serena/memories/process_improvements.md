@@ -74,8 +74,8 @@ AutoCompact発生時の情報損失を抑える効果がある
 #### 更新対象ファイル（5件）
 1. `.claude/commands/subagent-selection.md` - Pattern D・E追加
 2. `.claude/commands/phase-start.md` - Phase規模判定機能追加
-3. `Doc/08_Organization/Rules/Phase特性別テンプレート.md` - 5-8段階対応全面改訂
-4. `Doc/08_Organization/Rules/SubAgent組み合わせパターン.md` - Pattern D・E詳細追加
+3. `Doc/08_Organization/Guide/Phase特性別テンプレート.md` - 5-8段階対応全面改訂
+4. `.claude/skills/subagent-patterns/` - Pattern D・E詳細追加
 5. `.claude/commands/step-start.md` - 段階種別判定拡張
 
 #### 新規技術的改善

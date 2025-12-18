@@ -2,7 +2,7 @@
 
 **目的**: GitHub Issue作成時のテンプレート活用パターンを提供
 
-**参照元**: `Doc/08_Organization/Rules/GitHub_Issues運用規則.md`
+**参照元**: `.claude/rules/operations/github-issues-rules.md`
 
 ## 📋 基本テンプレート構造
 

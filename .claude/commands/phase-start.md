@@ -7,7 +7,7 @@
 
 ### 0. Phase情報自動収集（最初に実行）
 - [ ] **プロジェクト現状確認**: Serenaメモリー`project_overview`から現在Phase状況・次期Phase実施予定確認
-- [ ] **実装マスタープラン取得**: `/Doc/08_Organization/Rules/縦方向スライス実装マスタープラン.md`から実装順序・Phase特性・基本計画取得
+- [ ] **実装マスタープラン取得**: `/Doc/08_Organization/Guide/縦方向スライス実装マスタープラン.md`から実装順序・Phase特性・基本計画取得
 - [ ] **前Phase継承事項確認**: `/Doc/08_Organization/Completed/Phase_XX/Phase_Summary.md`から技術基盤・継承事項・申し送り事項確認
 - [ ] **GitHub Issues確認**: Phase A7等の課題対応Phaseの場合、関連Issue（#5, #6等）の内容確認
 
@@ -129,7 +129,7 @@
   - 計画ファイルをPlans/ディレクトリに保存するか判断
   - 保存先: `Doc/08_Organization/Active/Phase_XX/Plans/YYYY-MM-DD_Phase計画.md`
 
-**参照**: `Doc/08_Organization/Rules/組織管理運用マニュアル.md` - PlanMode活用ガイドライン
+**参照**: `.claude/rules/operations/organization-manual.md` - PlanMode活用ガイドライン
 
 ### 1.7. 層間影響分析（全Phase共通・適用レベル可変・🆕 新規追加）
 

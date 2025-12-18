@@ -154,6 +154,15 @@ Phase A1-A6において、技術的負債は`/Doc/10_Debt/`配下のMarkdownフ�
 
 ---
 
-**記録者**: Claude Code  
-**決定日**: 2025-08-17  
+## ルール抽出情報
+
+**抽出先**: `.claude/rules/operations/github-issues-rules.md`
+**抽出日**: 2025-12-17
+**抽出内容**: GitHub Issues操作コマンド・機能活用・期待効果
+**Issue**: #83 ルール管理基盤改善
+
+---
+
+**記録者**: Claude Code
+**決定日**: 2025-08-17
 **次回見直し**: Phase A7完了時（効果測定）

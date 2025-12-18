@@ -130,7 +130,9 @@
       "mcp__playwright-test__test_list",
       "mcp__playwright__browser_handle_dialog",
       "Bash(where jq:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(move:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": [],

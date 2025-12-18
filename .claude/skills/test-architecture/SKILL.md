@@ -162,13 +162,13 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 
 - [ ] **ADR_020テストアーキテクチャ決定確認**: `/Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md`
 - [ ] **テストアーキテクチャ設計書確認**: `/Doc/02_Design/テストアーキテクチャ設計書.md`
-- [ ] **新規プロジェクト作成ガイドライン確認**: `/Doc/08_Organization/Rules/新規テストプロジェクト作成ガイドライン.md`
+- [ ] **新規プロジェクト作成ガイドライン確認**: `/Doc/08_Organization/Guide/新規テストプロジェクト作成ガイドライン.md`
 - [ ] **既存テストプロジェクトとの重複確認**: 同一レイヤー・同一テストタイプのプロジェクト存在確認
 - [ ] **レイヤー・テストタイプの分類明確化**: Layer（Domain/Application/Contracts/Infrastructure/Web）とTestType（Unit/Integration/UI/E2E）の明確化
 
 ### プロジェクト作成チェックリスト
 
-**詳細**: [`rules/new-test-project-checklist.md`](./rules/new-test-project-checklist.md)
+**詳細**: [`.claude/rules/tests/new-test-project-checklist.md`](../../../rules/tests/new-test-project-checklist.md)
 
 - [ ] **プロジェクト作成コマンド実行**: F#（`dotnet new xunit -lang F#`）またはC#（`dotnet new xunit`）
 - [ ] **命名規則確認**: `UbiquitousLanguageManager.{Layer}.{TestType}.Tests`
@@ -214,7 +214,7 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 6. **ビルド確認**: `dotnet build tests/UbiquitousLanguageManager.Domain.Unit.Tests`
 7. **ソリューション追加**: `dotnet sln add tests/UbiquitousLanguageManager.Domain.Unit.Tests`
 
-**詳細**: [`rules/test-project-naming-convention.md`](./rules/test-project-naming-convention.md)
+**詳細**: [`.claude/rules/tests/test-project-naming-convention.md`](../../../rules/tests/test-project-naming-convention.md)
 
 ---
 
@@ -231,7 +231,7 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 6. **ビルド確認**: `dotnet build tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests`
 7. **ソリューション追加**: `dotnet sln add tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests`
 
-**詳細**: [`rules/test-project-reference-rules.md`](./rules/test-project-reference-rules.md)
+**詳細**: [`.claude/rules/tests/test-project-reference-rules.md`](../../../rules/tests/test-project-reference-rules.md)
 
 ---
 
@@ -249,7 +249,16 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 7. **ビルド確認**: `dotnet build tests/UbiquitousLanguageManager.Web.E2E.Tests`
 8. **ソリューション追加**: `dotnet sln add tests/UbiquitousLanguageManager.Web.E2E.Tests`
 
-**詳細**: [`rules/new-test-project-checklist.md`](./rules/new-test-project-checklist.md)
+**詳細**: [`.claude/rules/tests/new-test-project-checklist.md`](../../../rules/tests/new-test-project-checklist.md)
+
+---
+
+## ルール移行情報
+
+**移行先**: `.claude/rules/tests/`
+- `test-project-naming-convention.md` - 命名規則
+- `test-project-reference-rules.md` - 参照関係原則
+- `new-test-project-checklist.md` - 作成チェックリスト
 
 ---
 
@@ -416,7 +425,7 @@ dotnet add package Microsoft.AspNetCore.Mvc.Testing
 ## 参照元ADR・Rules
 
 - **ADR_020**: `/Doc/07_Decisions/ADR_020_テストアーキテクチャ決定.md` - レイヤー×テストタイプ分離方式決定
-- **新規テストプロジェクト作成ガイドライン**: `/Doc/08_Organization/Rules/新規テストプロジェクト作成ガイドライン.md` - 詳細手順・チェックリスト
+- **新規テストプロジェクト作成ガイドライン**: `/Doc/08_Organization/Guide/新規テストプロジェクト作成ガイドライン.md` - 詳細手順・チェックリスト
 - **テストアーキテクチャ設計書**: `/Doc/02_Design/テストアーキテクチャ設計書.md` - プロジェクト構成図・参照関係
 
 ---
