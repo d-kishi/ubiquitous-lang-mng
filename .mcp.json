@@ -11,13 +11,6 @@
         "--project",
         "C:\\Develop\\ubiquitous-lang-mng"
       ]
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@latest"
-      ]
     }
   }
 }
