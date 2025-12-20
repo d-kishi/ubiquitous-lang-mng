@@ -1,8 +1,3 @@
----
-paths:
-  - tests/**
----
-
 # テストプロジェクトアーキテクチャ（ADR_020準拠）
 
 ## 概要
@@ -180,7 +175,6 @@ tests/
 
 - **ADR_020**: テストアーキテクチャ決定
 - **new-test-project-checklist.md**: 新規プロジェクト作成チェックリスト
-- **e2e-test-data-testid-naming.md**: E2Eテストdata-testid命名規則
 
 ---
 

@@ -168,7 +168,7 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 
 ### プロジェクト作成チェックリスト
 
-**詳細**: [`.claude/rules/tests/new-test-project-checklist.md`](../../../rules/tests/new-test-project-checklist.md)
+**詳細**: [`./rules/new-test-project-checklist.md`](./rules/new-test-project-checklist.md)
 
 - [ ] **プロジェクト作成コマンド実行**: F#（`dotnet new xunit -lang F#`）またはC#（`dotnet new xunit`）
 - [ ] **命名規則確認**: `UbiquitousLanguageManager.{Layer}.{TestType}.Tests`
@@ -214,7 +214,7 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 6. **ビルド確認**: `dotnet build tests/UbiquitousLanguageManager.Domain.Unit.Tests`
 7. **ソリューション追加**: `dotnet sln add tests/UbiquitousLanguageManager.Domain.Unit.Tests`
 
-**詳細**: [`.claude/rules/tests/test-project-naming-convention.md`](../../../rules/tests/test-project-naming-convention.md)
+**詳細**: [`./rules/test-project-architecture.md`](./rules/test-project-architecture.md)
 
 ---
 
@@ -231,7 +231,7 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 6. **ビルド確認**: `dotnet build tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests`
 7. **ソリューション追加**: `dotnet sln add tests/UbiquitousLanguageManager.Infrastructure.Integration.Tests`
 
-**詳細**: [`.claude/rules/tests/test-project-reference-rules.md`](../../../rules/tests/test-project-reference-rules.md)
+**詳細**: [`./rules/test-project-architecture.md`](./rules/test-project-architecture.md)
 
 ---
 
@@ -249,16 +249,7 @@ UbiquitousLanguageManager.{Layer}.{TestType}.Tests
 7. **ビルド確認**: `dotnet build tests/UbiquitousLanguageManager.Web.E2E.Tests`
 8. **ソリューション追加**: `dotnet sln add tests/UbiquitousLanguageManager.Web.E2E.Tests`
 
-**詳細**: [`.claude/rules/tests/new-test-project-checklist.md`](../../../rules/tests/new-test-project-checklist.md)
-
----
-
-## ルール移行情報
-
-**移行先**: `.claude/rules/tests/`
-- `test-project-naming-convention.md` - 命名規則
-- `test-project-reference-rules.md` - 参照関係原則
-- `new-test-project-checklist.md` - 作成チェックリスト
+**詳細**: [`./rules/new-test-project-checklist.md`](./rules/new-test-project-checklist.md)
 
 ---
 

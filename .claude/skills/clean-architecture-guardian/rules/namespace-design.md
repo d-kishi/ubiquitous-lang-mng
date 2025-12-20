@@ -1,8 +1,3 @@
----
-paths:
-  - src/**
----
-
 # namespace設計規約（Bounded Context別）
 
 ## 概要
@@ -140,4 +135,3 @@ using DomainEntity = UbiquitousLanguageManager.Infrastructure.Data.Entities.Doma
 - **DDD**: Eric Evans著 "Domain-Driven Design"
 - **F# for fun and profit**: Scott Wlaschin
 - **Phase B1 Step5記録**: `Doc/08_Organization/Completed/Phase_B1/Step05_namespace階層化.md`
-- **移行元**: `.claude/skills/clean-architecture-guardian/rules/namespace-design.md`

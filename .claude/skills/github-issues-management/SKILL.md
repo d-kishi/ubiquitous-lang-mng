@@ -17,7 +17,7 @@ GitHub Issue作成時のラベル判断・運用規則の自律的適用を実�
 ## 🎯 目的
 
 - **ラベル判断ミス防止**: 適切なラベル体系に基づく正確な判断
-- **運用規則遵守**: `.claude/rules/operations/github-issues-rules.md` の自律的適用
+- **運用規則遵守**: `./rules/github-issues-rules.md` の自律的適用
 - **Issue品質向上**: テンプレート活用による標準化
 - **作業効率化**: ラベル選択・テンプレート記述の迅速化
 
@@ -47,7 +47,7 @@ GitHub Issue作成時のラベル判断・運用規則の自律的適用を実�
 
 ### 1. 運用規則の必須参照
 
-**原則**: GitHub Issue作成前に必ず `.claude/rules/operations/github-issues-rules.md` を参照
+**原則**: GitHub Issue作成前に必ず `./rules/github-issues-rules.md` を参照
 
 **理由**:
 - ラベル体系の正確な理解
@@ -147,7 +147,7 @@ GitHub Issue作成時のラベル判断・運用規則の自律的適用を実�
 
 ### 必須参照文書
 
-- **運用規則**: `.claude/rules/operations/github-issues-rules.md`
+- **運用規則**: `./rules/github-issues-rules.md`
 - **ADR**: `Doc/07_Decisions/ADR_015_技術的負債管理のGitHub_Issues移行.md`
 
 ### 関連Skills

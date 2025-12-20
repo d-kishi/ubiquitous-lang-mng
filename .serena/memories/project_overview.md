@@ -2,15 +2,20 @@
 
 **最終更新**: 2025-12-18（**Issue #83 rules圧縮完了・72%削減達成**）（**Phase B-F3 Step1.5完了**）
 
-## 📉 .claude/rules/圧縮成果（2025-12-18）
+## 📉 .claude/rules/最適化成果（2025-12-20・Issue #83 Step3完了）
 
-| 指標 | 圧縮前 | 圧縮後 | 削減率 |
+| 指標 | 最適化前 | 最適化後 | 削減率 |
 |-----|-------|-------|-------|
-| 総行数 | 8,100行 | 2,241行 | **72%** |
-| Context占有率 | 40% | 約11% | **73%** |
+| ファイル数 | 21 | 8 | **62%** |
+| Context占有率 | 18% | 約5% | **72%** |
 
-**主要削除**: Gemini連携（完全削除）、PlanMode（完全削除）
-**効果**: セッション効率大幅改善・AutoCompact頻度低減
+**実施内容**:
+- Phase 1: 10ファイル→Skillsに移行（6 Skills統合）
+- Phase 2: 4ファイル→1ファイル統合・terminology圧縮
+- Phase 3: adr-skills-decision-guide.md→Doc移行
+- Phase 4: Hooks再ビルド・動作確認
+
+**効果**: Playwright MCP有効化可能・セッション効率大幅改善
 
 ## 📌 Step状態分類定義（再発防止策・2025-11-10確立）
 
@@ -130,13 +135,30 @@
 
 ## 🎯 次回セッション推奨範囲
 
-### Phase B-F3 Step2 Stage 1-3（UI実装）
+### 優先度1: Skills改善（公式ベストプラクティス準拠）
 
-**優先度**: 🔴 High
+**優先度**: 🔴 Critical
+
+**背景**:
+- Issue #83 Step3完了でContext占有率18%→5%達成
+- 公式ガイドライン（https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices）に基づくSkills品質改善
+
+**改善ポイント**:
+1. **description第三人称化**: 全Skillsのdescription確認・修正
+2. **SKILL.md 500行制限**: ファイルサイズ確認・分割
+3. **Progressive Disclosure最適化**: 参照1階層確認
+4. **評価シナリオ作成**: 各Skillの効果測定
+
+**推定工数**: 2-3時間
+
+---
+
+### 優先度2: Phase B-F3 Step2 Stage 1-3（UI実装）
+
+**優先度**: 🟡 High（Rules最適化完了後）
 
 **前回セッション完了状態**:
-- ✅ Issue #83完了（.claude/rules/圧縮72%削減達成）
-- ✅ Issue #86作成・更新（Commands廃止・Skills/Rules移行計画：9件）
+- ✅ Issue #83 Step3計画策定・コメント投稿完了
 - ✅ Step2組織設計ファイル更新（7 Stages構成）
 
 **次回実施内容**:
@@ -149,13 +171,10 @@
 2. **Stage 4: 旧ファイル削除**
 
 3. **Stage 5: ユーザー確認・UIフィードバック対応**
-   - E2Eテスト前にUI成果物をユーザー確認
-   - フィードバック対応（必要時）
 
 **読み込み必須ファイル（🔴CRITICAL）**:
 - `Doc/08_Organization/Active/Phase_B-F3/Step02_Phase_A認証補助機能UI.md` - Step2組織設計
 - `Doc/02_Design/UI設計/01_認証・ユーザー管理画面設計.md` - UI仕様（3.2/3.4/3.5節）
-- `.claude/rules/tests/e2e-test-data-testid-naming.md` - data-testid命名規則
 
 ---
 

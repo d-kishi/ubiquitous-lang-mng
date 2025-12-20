@@ -89,7 +89,7 @@ Web (C# Blazor Server) → Contracts (C# DTOs/TypeConverters) → Application (F
 
 ADRとAgent Skillsの使い分けについては、以下のガイドラインを参照：
 
-**詳細**: `.claude/rules/operations/adr-skills-decision-guide.md`
+**詳細**: `Doc/08_Organization/Guide/ADRとAgent_Skills判断ガイドライン.md`
 
 **簡潔な判断フロー**（30秒チェック）:
 1. **歴史的記録が必要か？**（なぜこの決定をしたか） → ADR作成

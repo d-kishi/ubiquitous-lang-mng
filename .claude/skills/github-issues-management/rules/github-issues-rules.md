@@ -1,9 +1,3 @@
----
-paths:
-  - Doc/10_Debt/**
-  - .github/**
----
-
 # GitHub Issues管理規則
 
 ## 概要
@@ -93,7 +87,4 @@ gh issue close <番号>
 ---
 
 **抽出元ADR**: ADR_015_技術的負債管理のGitHub_Issues移行.md
-**関連Skills**: `.claude/skills/github-issues-management/`
 **作成日**: 2025-12-17
-**Phase**: Issue #83 ルール管理基盤改善
-

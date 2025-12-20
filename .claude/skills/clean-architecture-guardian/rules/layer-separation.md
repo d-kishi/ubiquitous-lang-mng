@@ -1,8 +1,3 @@
----
-paths:
-  - src/**
----
-
 # Clean Architecture レイヤー分離原則
 
 ## 概要
@@ -131,4 +126,3 @@ module ProjectDomainService =
 - **Clean Architecture**: Robert C. Martin著
 - **Domain Modeling Made Functional**: Scott Wlaschin著
 - **Phase B1実装記録**: `Doc/08_Organization/Completed/Phase_B1/Phase_Summary.md`
-- **移行元**: `.claude/skills/clean-architecture-guardian/rules/layer-separation.md`

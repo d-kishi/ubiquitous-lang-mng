@@ -98,7 +98,7 @@ ADR（Architectural Decision Record）とAgent Skillsの使い分け判断基準
 
 | 選択肢 | 配置 |
 |--------|------|
-| 組織管理ドキュメント | `.claude/rules/operations/` or `Doc/08_Organization/Guide/` |
+| 組織管理ドキュメント | `Doc/08_Organization/Guide/` |
 | Serenaメモリー | セッション開始時参照情報 |
 | 一時的メモ | `Doc/04_Daily/` セッション記録 |
 
@@ -113,3 +113,4 @@ ADR（Architectural Decision Record）とAgent Skillsの使い分け判断基準
 ---
 
 **作成日**: 2025-10-26
+**移行日**: 2025-12-20（Issue #83 Rules最適化）
