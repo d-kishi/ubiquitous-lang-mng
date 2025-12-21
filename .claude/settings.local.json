@@ -132,7 +132,9 @@
       "Bash(where jq:*)",
       "Bash(node:*)",
       "Bash(move:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(for f in /c/Develop/ubiquitous-lang-mng/.claude/skills/*/*.md /c/Develop/ubiquitous-lang-mng/.claude/skills/*/*/*.md)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": [],

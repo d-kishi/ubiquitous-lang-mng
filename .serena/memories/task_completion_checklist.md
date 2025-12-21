@@ -122,19 +122,28 @@
 
 ## 🔄 次回セッション継続タスク
 
-### 🚀 最優先（次セッション・Phase B-F3 Step2開始準備）
+### 🚀 最優先（次セッション・Issue #87 Skills改善）
 
-**Phase Issue79完了（2025-12-10）** → Phase B-F3再開可能
+**GitHub Issue #87作成（2025-12-21）** → Skills改善実装開始
 
-1. [ ] **Phase B-F3 Step1.5 Stage4再開: Create/Edit.razor動作確認**
-   - **状態**: Stage 7 動作確認途中で中断（Issue #79発見）
-   - **再開内容**: Create/Edit.razor動作確認 → Stage 8 E2Eテスト
+1. [ ] **Issue #87 Phase 0: skill-creatorスクリプト導入**（30分）
+   - **実施内容**: `.claude/skill-tools/`へスクリプトコピー
+   - **コピー元**: `~/.claude/plugins/marketplaces/anthropic-agent-skills/skills/skill-creator/`
 
-2. [ ] **Phase B-F3 Step2開始: Phase A対応漏れ（認証補助機能UI）**（5-8h）
+2. [ ] **Issue #87 Phase 1: 品質診断**（1-2h）
+   - **実施内容**: quick_validate.py全Skillsに実行、問題点特定
+   - **対象**: 13 Skills
+
+3. [ ] **Issue #87 Phase 2-4: 構造改善・評価シナリオ・ドキュメント**（5-8h）
+   - **参照必須**: `~/.claude/plans/graceful-plotting-lollipop.md`
+
+### 📋 中優先（Issue #87完了後・Phase B-F3 Step2開始）
+
+1. [ ] **Phase B-F3 Step2開始: Phase A対応漏れ（認証補助機能UI）**（5-8h）
    - **実施内容**: プロフィール変更・パスワードリセット送信・実行画面実装
    - **E2Eテスト拡張**: authentication.spec.ts 9/9シナリオ
 
-3. [ ] **Issue #82対応: Skipテスト21件再確認**
+2. [ ] **Issue #82対応: Skipテスト21件再確認**
    - **概要**: Phase Issue79でSkipしたテスト21件の対応要否確認
    - **参照**: GitHub Issue #82
 

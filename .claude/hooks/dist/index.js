@@ -235,8 +235,24 @@ function detectSkillTriggers(userMessage) {
     }
     return matchedSkills;
 }
+function loadHooksConfig() {
+    try {
+        const configPath = path.resolve(__dirname, '../config.json');
+        const configContent = require('fs').readFileSync(configPath, 'utf-8');
+        return JSON.parse(configContent);
+    }
+    catch (error) {
+        console.log(`[Config] config.json not found, defaulting to skillsEvalEnabled=true`);
+        return { skillsEvalEnabled: true };
+    }
+}
 async function userPromptSubmitHook(input) {
     try {
+        const config = loadHooksConfig();
+        if (!config.skillsEvalEnabled) {
+            console.log(`[UserPromptSubmit] Skills評価は無効化されています（config.json: skillsEvalEnabled=false）`);
+            return {};
+        }
         console.log(`[UserPromptSubmit] Skills評価開始`);
         const matchedSkills = detectSkillTriggers(input.user_message);
         if (matchedSkills.length === 0) {

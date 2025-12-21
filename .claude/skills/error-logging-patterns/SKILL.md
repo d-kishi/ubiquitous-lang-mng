@@ -6,94 +6,47 @@ allowed-tools: Read, Grep, mcp__serena__find_symbol
 
 # Error Logging Patterns Skill
 
-## 概要
-
-このSkillは、Clean ArchitectureとF#関数型プログラミングを活かした層別エラーハンドリング・ログ出力パターンの自律的適用を提供します。ADR_007（エラーハンドリング）・ADR_008（ログ出力指針）に基づく実装パターンを定義します。
+Clean ArchitectureとF#関数型プログラミングを活かした層別エラーハンドリング・ログ出力パターン。ADR_007・ADR_008に基づく。
 
 ---
 
 ## 使用タイミング
 
-Claudeは以下の状況でこのSkillを自律的に使用すべきです：
+1. **エラー処理実装時** - Domain/Application/Infrastructure/Presentation層でのエラー処理
+2. **ログ出力設計時** - 新規機能・既存機能へのログ追加・ログレベル判断
+3. **F#↔C#境界実装時** - Result型↔Exception型変換
 
-### 1. エラー処理実装時（最重要）
+---
 
-**タイミング**:
-- Domain層でのビジネスエラー定義
-- Application層でのエラー変換・統合
-- Infrastructure層での例外処理実装
-- Presentation層でのユーザー向けエラー表示
+## 層別エラー処理・ログ原則（概要）
 
-**必須確認事項**:
-- 層別エラー処理原則の遵守
+| 層 | エラー処理 | ログ出力 |
+|----|-----------|---------|
+| **Domain (F#)** | Result型必須・例外禁止 | **禁止**（純粋関数維持） |
+| **Application (F#)** | エラー伝播・変換 | ユースケース開始・終了 |
+| **Infrastructure (C#)** | 例外キャッチ・変換 | パフォーマンス・エラー詳細 |
+| **Presentation (C#)** | ユーザー向け表示 | 操作・認証状態 |
+
+---
+
+## 必須確認事項
+
+### エラー処理
 - Result型・Option型の適切な使用
-- 例外使用禁止原則（Domain層）
+- 層別エラー処理原則の遵守
+- Domain層での例外使用禁止
 
-### 2. ログ出力設計時
-
-**タイミング**:
-- 新規機能実装時のログ設計
-- 既存機能へのログ追加
-- ログレベル設定の判断
-
-**必須確認事項**:
-- 層別ログ責務の遵守
+### ログ出力
 - Domain層ログ出力禁止原則
-- 構造化ログ形式の適用
-
-### 3. F#↔C#境界実装時
-
-**タイミング**:
-- Result型からException型への変換
-- Exception型からResult型への変換
-- 境界でのエラー情報伝播
-
----
-
-## 層別エラー処理原則
-
-### Domain層 (F#)
-
-- **原則**: Result型による明示的エラー処理・例外使用禁止
-- **エラー型**: discriminated unionによる型安全なエラー表現
-- **ログ**: 出力禁止（純粋関数維持）
-
-### Application層 (F#)
-
-- **原則**: Domainエラーの伝播・技術エラーの例外変換
-- **エラー型**: DomainエラーからApplicationエラーへの変換
-- **ログ**: ユースケース開始・終了・重要分岐点
-
-### Infrastructure層 (C#)
-
-- **原則**: 外部システムエラーの適切なキャッチ・変換
-- **エラー型**: 技術例外からドメイン例外への変換
-- **ログ**: パフォーマンス情報・接続状態・エラー詳細
-
-### Presentation層 (C#)
-
-- **原則**: ユーザーフレンドリーなエラー表示
-- **エラー型**: UI状態管理・エラーメッセージ表示
-- **ログ**: 画面遷移・重要操作・認証状態
-
----
-
-## ログレベル戦略
-
-| レベル | 用途 |
-|--------|------|
-| **Critical** | システム停止レベルの致命的エラー |
-| **Error** | 機能レベルの問題・例外処理 |
-| **Warning** | 潜在的問題・ビジネスエラー |
-| **Information** | 重要な業務処理・状態変更 |
-| **Debug** | 開発時詳細情報（本番環境無効） |
+- 構造化ログ形式（{PropertyName}形式）
+- Microsoft.Extensions.Logging + Serilog使用
 
 ---
 
 ## 詳細ルール
 
-- **エラーハンドリング**: [`./rules/error-handling.md`](./rules/error-handling.md)
-- **ログ出力指針**: [`./rules/logging-guidelines.md`](./rules/logging-guidelines.md)
+- **エラーハンドリング**: [`./references/error-handling.md`](./references/error-handling.md)
+- **ログ出力指針**: [`./references/logging-guidelines.md`](./references/logging-guidelines.md)
 
 ---
 

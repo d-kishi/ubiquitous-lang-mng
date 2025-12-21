@@ -503,6 +503,28 @@ function detectSkillTriggers(userMessage: string): string[] {
 }
 
 /**
+ * 設定ファイル読み込み
+ *
+ * config.json でSkills評価のOn/Offを制御
+ */
+interface HooksConfig {
+  skillsEvalEnabled: boolean;
+}
+
+function loadHooksConfig(): HooksConfig {
+  try {
+    const configPath = path.resolve(__dirname, '../config.json');
+    // requireはキャッシュするため、動的読み込みにはfs.readFileSyncを使用
+    const configContent = require('fs').readFileSync(configPath, 'utf-8');
+    return JSON.parse(configContent) as HooksConfig;
+  } catch (error) {
+    // 設定ファイルがない場合は有効として扱う（後方互換性）
+    console.log(`[Config] config.json not found, defaulting to skillsEvalEnabled=true`);
+    return { skillsEvalEnabled: true };
+  }
+}
+
+/**
  * UserPromptSubmit Hook: Skills Forced Eval
  *
  * Skills自動発動問題対策:
@@ -517,6 +539,13 @@ function detectSkillTriggers(userMessage: string): string[] {
  */
 async function userPromptSubmitHook(input: UserPromptSubmitHookInput): Promise<UserPromptSubmitHookOutput> {
   try {
+    // 設定ファイルでSkills評価のOn/Offを制御
+    const config = loadHooksConfig();
+    if (!config.skillsEvalEnabled) {
+      console.log(`[UserPromptSubmit] Skills評価は無効化されています（config.json: skillsEvalEnabled=false）`);
+      return {};
+    }
+
     console.log(`[UserPromptSubmit] Skills評価開始`);
 
     // 1. メッセージからトリガーキーワード検出
