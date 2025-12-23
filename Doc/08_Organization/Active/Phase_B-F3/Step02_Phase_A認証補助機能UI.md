@@ -375,63 +375,91 @@ test('PasswordReset_InvalidToken_ShowsErrorMessage', async ({ page }) => {
 ## 📊 Step実行記録（随時更新）
 
 ### Stage 1: Profile.razor全面書き換え
-**開始**: - | **完了**: -
+**開始**: 2025-12-23 | **完了**: 2025-12-23
 
 #### 実行内容
-- [実行した作業内容]
-- [使用したSubAgent]
+- UI設計書3.2節準拠のプロフィール変更画面を新規作成
+- csharp-web-ui SubAgent使用（並列実行）
+- MainLayout適用（サイドバーあり）
+- data-testid付与（6種類）
+- using追加修正（System.ComponentModel.DataAnnotations）
+- ファイル配置修正（Components/Pages/ → Components/Pages/Auth/）
 
 #### Skills使用報告（効果測定・Issue #81）
 | 使用者 | Skill名 | 参照タイミング | 判断・適用内容 |
 |--------|---------|---------------|---------------|
-| - | - | - | - |
+| csharp-web-ui | なし | - | 既存実装パターン（ChangePassword.razor）を参考に標準実装 |
 
 #### Stage結果
-- [成果物・完了事項]
-- [次Stageへの申し送り（該当時）]
+- ✅ `src/UbiquitousLanguageManager.Web/Components/Pages/Auth/Profile.razor` 新規作成
+- ✅ ビルド成功（0 Warning, 0 Error）
 
 ---
 
 ### Stage 2: ForgotPassword.razor新規作成
-**開始**: - | **完了**: -
+**開始**: 2025-12-23 | **完了**: 2025-12-23
 
 #### 実行内容
-- [実行した作業内容]
+- UI設計書3.4節準拠のパスワードリセットメール送信画面を新規作成
+- csharp-web-ui SubAgent使用（並列実行）
+- EmptyLayout適用（サイドバーなし・中央配置）
+- IPasswordResetService.RequestPasswordResetAsync統合
+- data-testid付与（5種類）
 
 #### Skills使用報告（効果測定・Issue #81）
 | 使用者 | Skill名 | 参照タイミング | 判断・適用内容 |
 |--------|---------|---------------|---------------|
-| - | - | - | - |
+| csharp-web-ui | なし | - | 既存実装パターン（ChangePassword.razor）を参考に標準実装 |
 
 #### Stage結果
-- [成果物・完了事項]
+- ✅ `src/UbiquitousLanguageManager.Web/Components/Pages/Auth/ForgotPassword.razor` 新規作成
+- ✅ ビルド成功（0 Warning, 0 Error）
 
 ---
 
 ### Stage 3: ResetPassword.razor新規作成
-**開始**: - | **完了**: -
+**開始**: 2025-12-23 | **完了**: 2025-12-23
 
 #### 実行内容
-- [実行した作業内容]
+- UI設計書3.5節準拠のパスワードリセット実行画面を新規作成
+- csharp-web-ui SubAgent使用（並列実行）
+- EmptyLayout適用（サイドバーなし・中央配置）
+- IPasswordResetService統合（ValidateResetTokenAsync, ResetPasswordAsync）
+- クエリパラメータ対応（email, token）
+- data-testid付与（7種類）
+- ResultDto.Match()呼び出しをIsSuccess/Value/Errorパターンに修正
+- XMLコメントエラー修正（&エスケープ対応）
 
 #### Skills使用報告（効果測定・Issue #81）
 | 使用者 | Skill名 | 参照タイミング | 判断・適用内容 |
 |--------|---------|---------------|---------------|
-| - | - | - | - |
+| csharp-web-ui | なし | - | 既存実装パターン（ChangePassword.razor）を参考に標準実装 |
 
 #### Stage結果
-- [成果物・完了事項]
+- ✅ `src/UbiquitousLanguageManager.Web/Components/Pages/Auth/ResetPassword.razor` 新規作成
+- ✅ ResultDto使用パターン修正（Match→IsSuccess/Value/Error）
+- ✅ ビルド成功（0 Warning, 0 Error）
+- ✅ 全テスト成功（418 Passed, 0 Failed）
 
 ---
 
 ### Stage 4: 旧ファイル削除・ディレクトリ整理
-**開始**: - | **完了**: -
+**開始**: 2025-12-24 00:11 | **完了**: 2025-12-24 00:15
 
 #### 実行内容
-- [実行した作業内容]
+- MainAgent直接実行（軽量作業）
+- `Pages/Auth/`配下の旧ファイル3件を削除:
+  - `Profile.razor`
+  - `ForgotPassword.razor`
+  - `ResetPassword.razor`
+- `Pages/Auth/`ディレクトリは空に（削除せず残存）
+- ビルド確認・テスト実行
 
 #### Stage結果
-- [成果物・完了事項]
+- ✅ 旧ファイル3件削除完了
+- ✅ ビルド成功（80 Warning, 0 Error）※既存テストファイルのWarningのみ
+- ✅ 全テスト成功（Passed: 184, Skipped: 13, Failed: 0）
+- ✅ ルーティング整合性確認（競合なし）
 
 ---
 

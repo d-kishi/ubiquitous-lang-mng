@@ -1,5 +1,26 @@
 # 技術的学習・解決策データベース（2025-09-22拡張版）
 
+## ResultDto使用パターン（2025-12-24）
+
+**問題**: SubAgentがResultDto<T>.Match()メソッドを使用しようとしてコンパイルエラー
+**原因**: ResultDtoにはMatch()メソッドが存在しない（F# Railway-oriented Programming由来の誤解）
+**正解パターン**:
+```csharp
+if (result.IsSuccess)
+{
+    var value = result.Value;
+    // 成功処理
+}
+else
+{
+    var error = result.Error;
+    // エラー処理
+}
+```
+**教訓**: F#のResult型とC#のResultDtoは異なるAPI設計。SubAgentに型定義を明示的に提供すべき。
+
+---
+
 ## DevContainer構築・Sandboxモード統合（2025-11-03）
 
 ### DevContainer + Sandboxモード統合パターン

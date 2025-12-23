@@ -1,0 +1,378 @@
+@page "/profile"
+@using Microsoft.AspNetCore.Identity
+@using System.ComponentModel.DataAnnotations
+@using UbiquitousLanguageManager.Infrastructure.Data.Entities
+@attribute [Authorize]
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject ILogger<Profile> Logger
+
+<PageTitle>プロフィール設定</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>プロフィール設定
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" data-testid="profile-success-message">
+                            <i class="fas fa-check-circle me-2"></i>@successMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert" data-testid="profile-error-message">
+                            <i class="fas fa-exclamation-circle me-2"></i>@errorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">読み込み中...</p>
+                        </div>
+                    }
+                    else if (profileModel != null)
+                    {
+                        <EditForm Model="profileModel" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+
+                            <div class="mb-4">
+                                <label for="email" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-1"></i>メールアドレス
+                                </label>
+                                <input type="email"
+                                       class="form-control bg-light"
+                                       id="email"
+                                       value="@profileModel.Email"
+                                       readonly
+                                       data-testid="profile-email-display" />
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>メールアドレスは変更できません
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="name" class="form-label fw-bold">
+                                    <i class="fas fa-user me-1"></i>氏名 <span class="text-danger">*</span>
+                                </label>
+                                <InputText @bind-Value="profileModel.Name"
+                                           class="form-control"
+                                           id="name"
+                                           placeholder="氏名を入力してください"
+                                           data-testid="profile-name-input" />
+                                <ValidationMessage For="() => profileModel.Name" />
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button"
+                                        class="btn btn-secondary"
+                                        @onclick="HandleCancel"
+                                        disabled="@isSubmitting"
+                                        data-testid="profile-cancel-button">
+                                    <i class="fas fa-times me-1"></i>キャンセル
+                                </button>
+                                <button type="submit"
+                                        class="btn btn-primary"
+                                        disabled="@isSubmitting"
+                                        data-testid="profile-save-button">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        <span>更新中...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-save me-1"></i>
+                                        <span>更新</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // ===== Blazor Serverコンポーネント初学者向け解説 =====
+    // このコンポーネントは、プロフィール設定画面を提供します。
+    // ユーザーは氏名のみ変更可能で、メールアドレスは読み取り専用です。
+
+    /// <summary>
+    /// プロフィール編集用モデル
+    /// EditFormで使用するデータバインディング用モデル
+    ///
+    /// 【Blazor Server初学者向け解説】
+    /// EditFormは、このモデルの各プロパティとInputコンポーネントをバインドします。
+    /// DataAnnotationsValidatorにより、DataAnnotations属性でのバリデーションが自動実行されます。
+    /// </summary>
+    private ProfileEditModel? profileModel;
+
+    /// <summary>
+    /// 成功メッセージ（トースター表示用）
+    /// </summary>
+    private string? successMessage;
+
+    /// <summary>
+    /// エラーメッセージ（エラー表示用）
+    /// </summary>
+    private string? errorMessage;
+
+    /// <summary>
+    /// 読み込み中フラグ
+    /// UIの読み込みスピナー表示制御用
+    /// </summary>
+    private bool isLoading = true;
+
+    /// <summary>
+    /// 送信中フラグ
+    /// ボタンのdisabled制御・二重送信防止用
+    ///
+    /// 【Blazor Server初学者向け解説】
+    /// isSubmittingをtrueにすることで、送信ボタンを無効化し、
+    /// 二重クリックによる重複送信を防止します。
+    /// </summary>
+    private bool isSubmitting = false;
+
+    /// <summary>
+    /// 認証状態プロバイダー
+    /// 現在のログインユーザー情報を取得するために使用
+    /// </summary>
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    /// <summary>
+    /// Blazor Serverコンポーネントライフサイクル
+    /// OnInitializedAsync: コンポーネント初期化時に一度だけ実行される
+    ///
+    /// 【Blazor Server初学者向け解説】
+    /// サーバーサイドでの非同期データ取得に使用します。
+    /// この間、クライアントは待機状態（スピナー表示）となります。
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 現在のログインユーザー情報を取得
+            // 【Blazor Server初学者向け解説】
+            // AuthenticationStateTaskは、Blazor認証システムが自動提供するCascadingParameterです。
+            // ログインユーザーのEmailやロール情報を取得できます。
+            if (AuthenticationStateTask == null)
+            {
+                Logger.LogWarning("プロフィール設定画面: 認証状態が取得できません");
+                errorMessage = "認証情報の取得に失敗しました。再度ログインしてください。";
+                isLoading = false;
+                return;
+            }
+
+            var authState = await AuthenticationStateTask;
+            var userEmail = authState.User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                Logger.LogWarning("プロフィール設定画面: ユーザーメールアドレスが取得できません");
+                errorMessage = "認証情報の取得に失敗しました。再度ログインしてください。";
+                isLoading = false;
+                return;
+            }
+
+            // UserManagerでユーザー情報を取得
+            // 【Blazor Server初学者向け解説】
+            // UserManagerは、ASP.NET Core Identityのユーザー管理サービスです。
+            // @injectディレクティブにより、DIコンテナから自動注入されます。
+            var user = await UserManager.FindByEmailAsync(userEmail);
+
+            if (user == null)
+            {
+                Logger.LogWarning("プロフィール設定画面: ユーザーが見つかりません - {Email}", MaskUserId(userEmail));
+                errorMessage = "ユーザー情報の取得に失敗しました。";
+                isLoading = false;
+                return;
+            }
+
+            // プロフィール編集モデルを初期化
+            profileModel = new ProfileEditModel
+            {
+                Email = user.Email ?? string.Empty,
+                Name = user.Name
+            };
+
+            Logger.LogInformation("プロフィール設定画面: 初期化完了 - {Email}", MaskUserId(userEmail));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "プロフィール設定画面: 初期化中にエラーが発生");
+            errorMessage = "データの取得中にエラーが発生しました。";
+        }
+        finally
+        {
+            isLoading = false;
+
+            // StateHasChanged(): UIの再描画を明示的に指示
+            // 【Blazor Server初学者向け解説】
+            // Blazor Serverでは、サーバー側の状態変更をクライアントに通知する必要があります。
+            // StateHasChanged()を呼び出すことで、SignalR経由でUIが自動更新されます。
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// フォーム送信処理（バリデーション成功時）
+    /// EditFormのOnValidSubmitイベントハンドラー
+    ///
+    /// 【Blazor Server初学者向け解説】
+    /// OnValidSubmitは、DataAnnotationsValidatorによるバリデーションが
+    /// すべて成功した場合にのみ実行されます。
+    /// </summary>
+    private async Task HandleValidSubmit()
+    {
+        if (profileModel == null || AuthenticationStateTask == null)
+        {
+            errorMessage = "データの取得に失敗しました。";
+            return;
+        }
+
+        // 二重送信防止
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        successMessage = null;
+        errorMessage = null;
+
+        // StateHasChanged()でUI更新（送信ボタンのスピナー表示）
+        StateHasChanged();
+
+        try
+        {
+            var authState = await AuthenticationStateTask;
+            var userEmail = authState.User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                errorMessage = "認証情報の取得に失敗しました。";
+                return;
+            }
+
+            var user = await UserManager.FindByEmailAsync(userEmail);
+
+            if (user == null)
+            {
+                Logger.LogWarning("プロフィール更新: ユーザーが見つかりません - {Email}", MaskUserId(userEmail));
+                errorMessage = "ユーザー情報の取得に失敗しました。";
+                return;
+            }
+
+            // 氏名を更新
+            user.Name = profileModel.Name;
+            user.UpdatedAt = DateTime.UtcNow;
+            user.UpdatedBy = user.Id; // 自分自身を更新者として記録
+
+            // UserManagerで更新実行
+            // 【Blazor Server初学者向け解説】
+            // UserManager.UpdateAsyncは、ASP.NET Core Identityの標準更新メソッドです。
+            // 成功時はIdentityResult.Succeeded=true、失敗時はErrorsにエラー情報が格納されます。
+            var result = await UserManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                successMessage = "プロフィールを更新しました";
+                Logger.LogInformation("プロフィール更新成功 - {Email}", MaskUserId(userEmail));
+            }
+            else
+            {
+                // エラーメッセージを結合して表示
+                errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+                Logger.LogWarning("プロフィール更新失敗 - {Email}: {Errors}",
+                    MaskUserId(userEmail), errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "プロフィール更新処理中にエラーが発生");
+            errorMessage = "更新中にエラーが発生しました。再度お試しください。";
+        }
+        finally
+        {
+            isSubmitting = false;
+
+            // UIの再描画（成功/エラーメッセージ表示・ボタン状態復元）
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// キャンセルボタン処理
+    /// ホーム画面（ユビキタス言語一覧）に戻る
+    ///
+    /// 【Blazor Server初学者向け解説】
+    /// NavigationManagerは、Blazor Serverのページ遷移を管理するサービスです。
+    /// NavigateTo()でサーバーサイドルーティングによる画面遷移を実行します。
+    /// </summary>
+    private void HandleCancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    /// <summary>
+    /// ユーザーID（メールアドレス）のマスキング処理
+    /// セキュリティログ出力用
+    ///
+    /// 【セキュリティ考慮事項】
+    /// ログにメールアドレスを平文出力すると、個人情報漏洩リスクがあります。
+    /// 先頭2文字のみ表示し、残りをマスキングすることで、ログ監査性を保ちつつ
+    /// 個人情報保護を実現します。
+    /// </summary>
+    /// <param name="userId">ユーザーID（メールアドレス）</param>
+    /// <returns>マスキング済みユーザーID</returns>
+    private string MaskUserId(string userId)
+    {
+        if (string.IsNullOrEmpty(userId) || userId.Length < 3)
+        {
+            return "***";
+        }
+
+        return $"{userId.Substring(0, 2)}***";
+    }
+
+    /// <summary>
+    /// プロフィール編集モデルクラス
+    /// EditFormバインディング用の内部クラス
+    ///
+    /// 【Blazor Server初学者向け解説】
+    /// System.ComponentModel.DataAnnotationsの属性を使用することで、
+    /// クライアントサイド・サーバーサイドの両方でバリデーションが自動実行されます。
+    /// </summary>
+    private class ProfileEditModel
+    {
+        /// <summary>
+        /// メールアドレス（読み取り専用）
+        /// </summary>
+        public string Email { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 氏名（必須項目）
+        /// </summary>
+        [Required(ErrorMessage = "氏名は必須です。")]
+        [StringLength(100, ErrorMessage = "氏名は100文字以内で入力してください。")]
+        public string Name { get; set; } = string.Empty;
+    }
+}
