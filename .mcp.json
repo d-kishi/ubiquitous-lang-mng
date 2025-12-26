@@ -18,7 +18,8 @@
         "/c",
         "npx",
         "-y",
-        "@playwright/mcp@latest"
+        "@playwright/mcp@latest",
+        "--ignore-https-errors"
       ]
     }
   }
