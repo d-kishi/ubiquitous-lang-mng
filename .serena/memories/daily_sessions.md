@@ -1,3 +1,30 @@
+## 2025-12-26
+
+### セッション1（2025-12-26-001）
+**目的**: Phase B-F3 Step2 Stage 5（ユーザー検証・UIフィードバック）
+**達成率**: 100%
+
+**完了事項**:
+1. ForgotPassword画面確認・修正（「ログイン画面に戻る」ボタン→リンク変更）
+2. ResetPassword画面確認（問題なし）
+3. Profile画面確認（問題なし）
+4. SMTP設定修正（Host: localhost→ubiquitous-lang-smtp4dev, Port: 2525→25）
+5. Forced Eval Hook再有効化（skillsEvalEnabled=true）
+
+**技術的知見**:
+- EditForm内のbutton要素はtype="button"でも@onclickが動作しない場合がある（aタグ使用で解決）
+- DevContainer間通信はコンテナ名（ubiquitous-lang-smtp4dev）を使用
+- Claude Code Issue #9716: Skills自動起動問題はOPEN状態、Forced Eval Hookが有効な回避策
+
+**修正ファイル**:
+- `appsettings.Development.json`: SMTP設定修正
+- `ForgotPassword.razor`: ボタン→リンク修正
+- `.claude/hooks/config.json`: skillsEvalEnabled再有効化
+
+**次回予定**: Step2 Stage 6（E2Eテスト実装）
+
+---
+
 ## 2025-12-24
 
 ### セッション1（2025-12-24-001）
