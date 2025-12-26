@@ -190,17 +190,150 @@ test.describe('Phase A Authentication Feature', () => {
     await expect(errorMessage).toBeVisible({ timeout: 5000 });
   });
 
-  // Scenario 7-9: Skipped - パスワードリセット機能未実装
-  test.skip('PasswordReset_ValidEmail_ShowsSuccessMessage', async ({ page }) => {
-    // ForgotPassword.razorページ未実装
+  // Scenario 7: 正常系 - パスワードリセット申請成功
+  test('PasswordReset_ValidEmail_ShowsSuccessMessage', async ({ page }) => {
+    // パスワードリセット画面に遷移
+    await page.goto(`${BASE_URL}/forgot-password`);
+    await page.waitForLoadState('networkidle');
+
+    // メールアドレス入力
+    await page.fill('[data-testid="forgot-password-email-input"]', TEST_ACCOUNTS.GeneralUser.email);
+    await page.click('[data-testid="forgot-password-submit-button"]');
+
+    // 成功メッセージ表示確認（API応答待機）
+    const successMessage = page.locator('[data-testid="forgot-password-success-message"]');
+    await expect(successMessage).toBeVisible({ timeout: 10000 });
+
+    const successText = await successMessage.textContent();
+    expect(successText).toContain('パスワードリセットのリンクをメールで送信しました');
   });
 
-  test.skip('PasswordReset_ValidToken_ShowsSuccessMessage', async ({ page }) => {
-    // ResetPassword.razorページ未実装
+  // Scenario 8: 正常系 - パスワードリセット実行成功（Smtp4dev連携）
+  // 複雑なフローのためタイムアウトを60秒に延長
+  test('PasswordReset_ValidToken_ShowsSuccessMessage', async ({ page, request }) => {
+    test.setTimeout(60000);
+    // テスト用アカウント（GeneralUser）
+    const testEmail = TEST_ACCOUNTS.GeneralUser.email;
+    const originalPassword = TEST_ACCOUNTS.GeneralUser.password;
+    const newPassword = 'NewPassword123!';
+
+    // Step 1: ForgotPasswordでリセットメール送信
+    await page.goto(`${BASE_URL}/forgot-password`);
+    await page.waitForLoadState('networkidle');
+    await page.fill('[data-testid="forgot-password-email-input"]', testEmail);
+    await page.click('[data-testid="forgot-password-submit-button"]');
+
+    const forgotSuccessMessage = page.locator('[data-testid="forgot-password-success-message"]');
+    await expect(forgotSuccessMessage).toBeVisible({ timeout: 10000 });
+
+    // Step 2: Smtp4devからメール取得・トークン抽出
+    await page.waitForTimeout(2000); // メール送信待機
+
+    // Smtp4dev API（DevContainer内からはsmtp4dev:80、ホストからはlocalhost:5080）
+    const smtp4devUrl = process.env.SMTP4DEV_URL || 'http://smtp4dev:80';
+    const messagesResponse = await request.get(
+      `${smtp4devUrl}/api/messages?sortColumn=receivedDate&sortIsDescending=true`
+    );
+    const messagesData = await messagesResponse.json();
+    expect(messagesData.results.length).toBeGreaterThan(0);
+
+    // 🔧 FIX: 正しいテストユーザー宛のメールを取得
+    // Smtp4dev APIでは`to`フィールドは配列形式で返される
+    // 複数のパスワードリセットメールが存在する可能性があるため、
+    // testEmail宛の最新メールを確実に取得する
+    const targetMessage = messagesData.results.find((msg: any) => {
+      // msg.toが配列の場合
+      if (Array.isArray(msg.to)) {
+        return msg.to.some((recipient: string) =>
+          recipient.toLowerCase().includes(testEmail.toLowerCase())
+        );
+      }
+      // msg.toが文字列の場合
+      if (typeof msg.to === 'string') {
+        return msg.to.toLowerCase().includes(testEmail.toLowerCase());
+      }
+      return false;
+    });
+    expect(targetMessage).toBeTruthy(); // testEmail宛のメールが見つからない場合は失敗
+    const latestMessage = targetMessage!;
+
+    const htmlResponse = await request.get(
+      `${smtp4devUrl}/api/messages/${latestMessage.id}/html`
+    );
+    const htmlBody = await htmlResponse.text();
+
+    // 🔧 HTMLエンティティをデコード（&amp; → &）
+    // Smtp4devが返すHTMLには&amp;が含まれる可能性がある
+    const decodedHtml = htmlBody.replace(/&amp;/g, '&');
+
+    // トークン抽出（URLパターンから）
+    // パターン: reset-password?token=XXX&email=YYY または reset-password?email=YYY&token=XXX
+    const tokenMatch = decodedHtml.match(/reset-password\?[^"']*token=([^"'&\s]+)/i);
+    expect(tokenMatch).toBeTruthy();
+    const token = decodeURIComponent(tokenMatch![1]);
+
+    const emailMatch = decodedHtml.match(/reset-password\?[^"']*email=([^"'&\s]+)/i);
+    const email = emailMatch ? decodeURIComponent(emailMatch[1]) : testEmail;
+
+    // Step 3: ResetPassword画面でパスワード変更
+    await page.goto(`${BASE_URL}/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`);
+    await page.waitForLoadState('networkidle');
+
+    // トークン有効確認（エラーメッセージ非表示）
+    const invalidTokenMessage = page.locator('[data-testid="reset-password-invalid-token-message"]');
+    await expect(invalidTokenMessage).not.toBeVisible({ timeout: 3000 });
+
+    // 新パスワード入力・実行
+    await page.fill('[data-testid="reset-password-new-input"]', newPassword);
+    await page.fill('[data-testid="reset-password-confirm-input"]', newPassword);
+    await page.click('[data-testid="reset-password-submit-button"]');
+    await page.waitForLoadState('networkidle');
+
+    // 成功メッセージ確認
+    const resetSuccessMessage = page.locator('[data-testid="reset-password-success-message"]');
+    await expect(resetSuccessMessage).toBeVisible({ timeout: 10000 });
+
+    // Step 4: パスワード復元（テストデータ整合性維持）
+    await page.goto(`${BASE_URL}/login`);
+    await page.waitForLoadState('networkidle');
+    await page.fill('[data-testid="username-input"]', testEmail);
+    await page.fill('[data-testid="password-input"]', newPassword);
+    await page.click('[data-testid="login-button"]');
+    await page.waitForLoadState('networkidle');
+
+    // ログイン成功確認（ログアウトボタン表示を待機）
+    await expect(page.locator('[data-testid="logout-button"]').first()).toBeVisible({ timeout: 10000 });
+
+    // パスワード変更画面でパスワードを元に戻す
+    await page.goto(`${BASE_URL}/change-password`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000); // Blazor Server SignalR接続完了待機
+
+    // URL確認（リダイレクトされていないか）
+    const changePasswordUrl = page.url();
+    expect(changePasswordUrl).toContain('/change-password');
+
+    // パスワード復元（既存テストと同じセレクタを使用）
+    await page.fill('#currentPassword', newPassword);
+    await page.fill('#newPassword', originalPassword);
+    await page.fill('#confirmPassword', originalPassword);
+    await page.click('button[type="submit"]');
+    await page.waitForLoadState('networkidle');
+
+    // パスワード復元成功確認
+    const changeSuccessMessage = page.locator('.alert-success, [role="alert"]');
+    await expect(changeSuccessMessage).toBeVisible({ timeout: 5000 });
   });
 
-  test.skip('PasswordReset_InvalidToken_ShowsErrorMessage', async ({ page }) => {
-    // ResetPassword.razorページ未実装
+  // Scenario 9: 異常系 - 無効トークンでエラー表示
+  test('PasswordReset_InvalidToken_ShowsErrorMessage', async ({ page }) => {
+    // 無効なトークンでResetPassword画面にアクセス
+    await page.goto(`${BASE_URL}/reset-password?email=test@example.com&token=invalid-token-12345`);
+    await page.waitForLoadState('networkidle');
+
+    // 無効トークンメッセージ確認
+    const invalidTokenMessage = page.locator('[data-testid="reset-password-invalid-token-message"]');
+    await expect(invalidTokenMessage).toBeVisible({ timeout: 5000 });
   });
 });
 

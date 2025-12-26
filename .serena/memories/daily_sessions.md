@@ -1,5 +1,39 @@
 ## 2025-12-26
 
+### セッション2（2025-12-26-002）
+**目的**: Phase B-F3 Step2 Stage 6（E2Eテスト実装）
+**達成率**: 100%
+
+**完了事項**:
+1. playwright-test MCP有効化（.mcp.json.backup復元）
+2. 3シナリオE2Eテスト実装（authentication.spec.ts）
+   - Scenario 7: パスワードリセット申請成功
+   - Scenario 8: パスワードリセット実行成功（Smtp4dev連携フルフロー）
+   - Scenario 9: 無効トークンエラー表示
+3. テスト結果: 14 passed, 1 skipped（54.2秒）
+4. GitHub Issue #88作成（Phase A E2Eカバレッジ拡充）
+
+**技術的知見**:
+- Smtp4dev API: DevContainer内は`http://smtp4dev:80`使用
+- `to`フィールドは配列形式（Array.isArray対応必須）
+- HTMLエンティティ: `&amp;` → `&` デコード必要
+- ChangePassword画面: data-testid未設定、`#currentPassword`等のIDセレクタ使用
+
+**修正対応**:
+- ECONNREFUSED修正: localhost:5080 → smtp4dev:80
+- msg.to配列対応: Array.isArray + some()フィルタ
+- HTMLエンティティデコード: replace(/&amp;/g, '&')
+- セレクタ修正: data-testid → IDセレクタ
+- タイムアウト延長: 30秒 → 60秒
+
+**修正ファイル**:
+- `tests/UbiquitousLanguageManager.E2E.Tests/authentication.spec.ts`
+- `Doc/08_Organization/Active/Phase_B-F3/Step02_Phase_A認証補助機能UI.md`
+
+**次回予定**: Step2 Stage 7（統合テスト・品質検証）
+
+---
+
 ### セッション1（2025-12-26-001）
 **目的**: Phase B-F3 Step2 Stage 5（ユーザー検証・UIフィードバック）
 **達成率**: 100%

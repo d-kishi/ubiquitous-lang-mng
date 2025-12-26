@@ -464,37 +464,52 @@ test('PasswordReset_InvalidToken_ShowsErrorMessage', async ({ page }) => {
 ---
 
 ### Stage 5: ユーザー確認・UIフィードバック対応
-**開始**: - | **完了**: -
+**開始**: 2025-12-26 | **完了**: 2025-12-26
 
 #### ユーザー確認結果
-- [ ] Profile.razor確認完了
-- [ ] ForgotPassword.razor確認完了
-- [ ] ResetPassword.razor確認完了
+- [x] Profile.razor確認完了
+- [x] ForgotPassword.razor確認完了
+- [x] ResetPassword.razor確認完了
 
 #### フィードバック対応（該当時）
 | 画面 | 指摘内容 | 対応内容 |
 |------|---------|---------|
-| - | - | - |
+| ForgotPassword.razor | 「ログイン画面に戻る」がボタン形式 | リンク形式に変更 |
 
 #### Stage結果
-- [ユーザー承認取得日時]
-- [修正有無・内容]
+- ✅ ユーザー承認取得: 2025-12-26
+- ✅ ForgotPassword.razor修正（ボタン→リンク変更）
+- ✅ SMTP設定修正（DevContainer間通信対応: Host=smtp4dev, Port=25）
+- ✅ 3画面動作確認完了
 
 ---
 
 ### Stage 6: E2Eテスト実装
-**開始**: - | **完了**: -
+**開始**: 2025-12-26 | **完了**: 2025-12-26
 
 #### 実行内容
-- [実行した作業内容]
+- [x] playwright-test MCP有効化（.mcp.json.backup復元）
+- [x] 3シナリオE2Eテスト実装（authentication.spec.ts）
+  - Scenario 7: パスワードリセット申請成功（ForgotPassword）
+  - Scenario 8: パスワードリセット実行成功（Smtp4dev連携フルフロー）
+  - Scenario 9: 無効トークンエラー表示
+
+#### Smtp4dev連携実装詳細
+- **API**: `http://smtp4dev:80/api/messages`（DevContainer内）
+- **メール取得**: 宛先フィルタリング（配列/文字列両対応）
+- **トークン抽出**: HTMLエンティティデコード（`&amp;` → `&`）
+- **パスワード復元**: 既存セレクタ使用（#currentPassword等）
 
 #### Skills使用報告（効果測定・Issue #81）
 | 使用者 | Skill名 | 参照タイミング | 判断・適用内容 |
 |--------|---------|---------------|---------------|
-| - | - | - | - |
+| MainAgent | playwright-e2e-patterns | E2Eテスト設計時 | data-testid設計・Blazor Server対応パターン適用 |
+| MainAgent | devcontainer-web-app | テスト実行前 | アプリ起動確認 |
 
 #### Stage結果
-- [成果物・完了事項]
+- ✅ authentication.spec.ts: 14 passed, 1 skipped（54.2秒）
+- ✅ パスワードリセット申請→メール受信→トークン検証→パスワード変更→復元の一連フロー確認
+- ✅ テストアカウント整合性維持（e2e-test-gu@ubiquitous-lang.local）
 
 ---
 
